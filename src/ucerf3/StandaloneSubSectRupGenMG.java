@@ -51,11 +51,11 @@ public class StandaloneSubSectRupGenMG {
 		// this is the input fault section data file
 		File fsdFile = new File("./data/FaultModels/sectionsv5_full_testlabe7.xml");
 		// directory to write output files
-		File outputDir = new File("/tmp");
+		File outputDir = new File("./data/output");
 		// maximum sub section length (in units of DDW)
 		double maxSubSectionLength = 0.5;
 		// max distance for linking multi fault ruptures, km
-		double maxDistance = 2d;
+		double maxDistance = 0.5d;
 		boolean coulombFilter = false;
 		//FaultModels fm = FaultModels.FM3_1;
 		FaultModels fm = null;

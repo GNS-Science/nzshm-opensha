@@ -1,0 +1,7 @@
+version: '2'
+services:
+    opensha:
+        image:  nshm-nz/opensha:latest
+        volumes:
+         - ../src:/opensha/src
+         - ../data:/opensha/data       
