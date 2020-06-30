@@ -1,8 +1,6 @@
 # README
 
-This is a docker image for use in evaluating opensha alongside other PSHA
-tools.
-
+This is a docker image and `docker-compose` file to support our opensha-* experimnents.
 
 ## Build 
 
@@ -22,10 +20,10 @@ Now you're in the container, running the interactive bash shell
 bash-4.4# java -cp $OPENSHA_PY_CLASSPATH org.opensha.py.HazardCurveCalcGateway &
 bash-4.4# python3 opensha-py/src/test_gateway.py
 ```    
-   
-### 1.2) UCERF3
 
 ## Option 2) Run from bash 
+
+This uses the `docker-compose.yml` file to define some standard volumne mappings.
 
 ### 2.1) UCERF3 Rupture set generator
 
