@@ -1,0 +1,48 @@
+@startuml
+package scratch.UCERF3 { 
+
+ package scratch.UCERF3.logic { 
+  class LogicTreeBranch implements LogicTreeBranchNode /', Iterable '/
+  /' class LogicTreeBranch extends Cloneable, Serializable, Comparable, XMLSaveable '/
+ }
+
+ package scratch.UCERF3.enumTreeBranches {
+  enum FaultModels implements LogicTreeBranchNode {
+   FM2_1
+   FM3_1
+   FM3_2
+  }
+
+  enum DeformationModels implements LogicTreeBranchNode {
+   UCERF2_ALL
+   UCERF2_NCAL
+   UCERF2_BAYAREA
+   ...
+   MEAN_UCERF3
+  }
+
+  enum ScalingRelationships implements LogicTreeBranchNode {
+   AVE_UCERF2
+   SHAW_2009_MOD
+   ...
+   MEAN_UCERF3
+   ---
+   makeSlipAreaPlot()
+  }
+
+  enum SlipAlongRuptureModels implements LogicTreeBranchNode {
+   CHAR
+   UNIFORM
+   ...
+   TAPERED
+  }
+  
+  enum InversionModels implements LogicTreeBranchNode {
+   CHAR_CONSTRAINED
+   ...
+   GR_UNCONSTRAINED
+  }
+ }
+
+ }
+@enduml

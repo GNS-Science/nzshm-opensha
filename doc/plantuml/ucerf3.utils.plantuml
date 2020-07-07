@@ -1,0 +1,29 @@
+@startuml
+package scratch.UCERF3 {
+ class FaultSystemRupSet
+ class FaultSystemSolution
+
+ package scratch.UCERF3.utils {
+  class FaultSystemIO {
+   Loads a FaultSystemRupSet from a zip file. 
+   If possible, it will be loaded as an applicable subclass.
+   ----
+   +loadRupSet(File file) // Loads a FaultSystemRupSet
+   +loadInvRupSet(File file) // Loads an InversionFaultSystemRupSet 
+   +loadSol(File file) // Load an FaultSystemSolution 
+   +loadInvSol(File file) // Load an InversionFaultSystemSolution
+   + writeSol(FaultSystemSolution sol, File file)
+   ...
+   and many more load/write options
+  }
+
+  class DeformationModelFetcher {
+   +calculateDistances(maxDistance, subSections)
+  }
+ }
+
+ FaultSystemIO -> FaultSystemRupSet
+ FaultSystemIO -> FaultSystemSolution
+
+}
+@enduml
