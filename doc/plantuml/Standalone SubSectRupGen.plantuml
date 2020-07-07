@@ -1,0 +1,95 @@
+@startuml
+class StandaloneSubSectRupGen {
+ the 'getting started' example
+ ---
+ main(String[] args)
+ remapCoulombRates(...)
+ getRemappedSubSect(...) 
+}
+
+
+package org.opensha.refFaultParamDb.vo {
+ class FaultSectionPrefData {
+  This class contains preferred fault section data 
+   (rather than the estimates) from  FaultSectionData.
+
+  search ucerf3 hits: 1030 matches across 93 files
+  ---
+  -sectionId
+  -sectionName
+  -shortName
+  -aveLongTermSlipRate
+  -slipRateStdDev
+  -aveDip
+  -aveRake
+  -aveUpperDepth
+  -aveLowerDepth
+  -connector
+  -zonePolygon
+  ...
+ }
+}
+package scratch.UCERF3 { 
+ class FaultSystemRupSet{ 
+  This class represents the attributes of ruptures in a fault system, 
+  where the latter is composed of some number of fault sections.
+ }
+ abstract class SlipEnabledRupSet extends FaultSystemRupSet 
+
+ package scratch.UCERF3.inversion { 
+  class InversionFaultSystemRupSet extends SlipEnabledRupSet {
+   This class represents a FaultSystemRupSet 
+    for the Grand Inversion.
+  }
+
+  class SectionCluster 
+  class SectionClusterList 
+  SectionClusterList *-- SectionCluster
+
+  class LaughTestFilter
+ }
+
+ package scratch.UCERF3.utils {
+  /' class FaultSystemIO {
+   Loads a FaultSystemRupSet from a zip file. 
+   If possible, it will be loaded as an applicable subclass.
+   ----
+   +loadRupSet(File file) // Loads a FaultSystemRupSet
+   +loadInvRupSet(File file) // Loads an InversionFaultSystemRupSet 
+   +loadSol(File file) // Load an FaultSystemSolution 
+   +loadInvSol(File file) // Load an InversionFaultSystemSolution
+   + writeSol(FaultSystemSolution sol, File file)
+   ...
+   and many more load/write options
+  }
+  '/
+
+  class DeformationModelFetcher {
+   +calculateDistances(maxDistance, subSections)
+  }
+ }
+
+ package scratch.UCERF3.logic { 
+  class LogicTreeBranch implements LogicTreeBranchNode /', Iterable '/
+  /' class LogicTreeBranch extends Cloneable, Serializable, Comparable, XMLSaveable '/
+ }
+
+ enum ScalingRelationships implements LogicTreeBranchNode
+ note left
+  and the other 
+  enumTreeBranches enums
+ end note
+}
+
+
+StandaloneSubSectRupGen --> FaultSectionPrefData
+StandaloneSubSectRupGen --> LogicTreeBranch
+StandaloneSubSectRupGen --> InversionFaultSystemRupSet
+StandaloneSubSectRupGen --> SectionClusterList
+StandaloneSubSectRupGen --> DeformationModelFetcher
+StandaloneSubSectRupGen --> LaughTestFilter
+SectionCluster --> FaultSectionPrefData
+InversionFaultSystemRupSet --> LogicTreeBranch
+InversionFaultSystemRupSet --> FaultSectionPrefData
+FaultSystemRupSet --> FaultSectionPrefData
+@enduml

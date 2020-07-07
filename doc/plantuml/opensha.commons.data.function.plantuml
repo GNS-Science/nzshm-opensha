@@ -1,0 +1,27 @@
+@startuml
+package org.opensha.commons.data.function {
+ abstract class AbstractDiscretizedFunc extends AbstractXY_DataSet implements DiscretizedFunc {
+  A Discretized Function is a collection of x and y values grouped together as
+  the points that describe a function. A discretized form of a function is the
+  only ways computers can represent functions. Instead of having y=x^2, you
+  would have a sample of possible x and y values. 
+ }
+ class EvenlyDiscretizedFunc extends AbstractDiscretizedFunc {
+  Assumes even spacing between the x points represented by
+  the delta distance. Y Values are stored as doubles in an array of primitives. This
+  allows replacement of values at specified indexes.
+ }
+ class ArbitrarilyDiscretizedFunc extends AbstractDiscretizedFunc
+
+ class IntegerPDF_FunctionSampler extends EvenlyDiscretizedFunc 
+ class HistogramFunction extends EvenlyDiscretizedFunc 
+ class EvenlyDiscrFuncWithParams extends EvenlyDiscretizedFunc implements FuncWithParams
+ class ArbDiscrFuncWithParams extends ArbitrarilyDiscretizedFunc implements FuncWithParams
+}
+
+package org.opensha.sha.magdist {
+ interface IncrementalMagFreqDistAPI 
+ class IncrementalMagFreqDist extends EvenlyDiscretizedFunc implements IncrementalMagFreqDistAPI
+ class ArbIncrementalMagFreqDist extends IncrementalMagFreqDist
+}
+@enduml
