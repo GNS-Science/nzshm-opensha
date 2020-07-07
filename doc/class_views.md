@@ -2,6 +2,13 @@
 
 These diagrams were produced using [PlantUML](http://www.plantuml.com/planuml/uml) ++
 
+ - dashed line & hollow head: **Class X implements Interface Y**
+ - solid line & hollow head: **Class X extends Class Y** aka inherits-from/specializes/sub-classes
+ - solid line & solid head: **X depends on Y** or **X references Y**
+ - packages are sometimes simplified to improve layout
+ 
+ The textual plantuml for each diagram can be [found here](./plantuml)
+ 
 ## Available ucerf3.enumTreeBranches
  
 !["Available ucerf3.enumTreeBranches"](./plantuml/img/enumTreeBranches.png "src: ./plantuml/ucerf3.enumTreeBranches.plantuml")
