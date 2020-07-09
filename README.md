@@ -1,13 +1,10 @@
 # nshm-nz-opensha
 NSHM NZ Programme opensha applications (patterned on opensha-ucerf3 &amp; opensha-dev)
 
-THis repo capture NHSM-NZ exploits based on opensha-ucerf3. 
-
-Priorities:
+## Priorities:
 
  - adapt the NZ Fault model from CFM NZ to suit the opensha tools
- - extend opensha to support subduction interface models - needed for the infamous Hikurangi
-
+ - extend opensha to support subduction interface fault models. This is needed for the (in)famous 'Hikurangi'. 
 
  ## Getting started 
 
@@ -39,17 +36,13 @@ git clone https://github.com/GNS-Science/nshm-nz-opensha.git
  .\gradlew localTests --info
 ```
  
- Test reports are found at  `file://$(pwd)/build/reports/tests/localTests/index.html`
-
+Test reports are found at  `./build/reports/tests/localTests/index.html`
 
 ### or test all the dependencies
 
 ```
  .\gradlew test
 ```
-
-
-### open test outputs in your browwer
 
 
 
