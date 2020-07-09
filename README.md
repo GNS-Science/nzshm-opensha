@@ -18,7 +18,7 @@ git clone https://github.com/opensha/opensha-ucerf3.git &&\
 git clone https://github.com/GNS-Science/nshm-nz-opensha.git
  ```
 
-### Now you can `cd` into this peoject
+### Now you can jump into this project
 
  ```
  cd nshm-nz-opensha
@@ -38,8 +38,7 @@ git clone https://github.com/GNS-Science/nshm-nz-opensha.git
  
 Test reports are found at  `./build/reports/tests/localTests/index.html`
 
-### or test all the dependencies
-
+### or test everything (slow....)
 ```
  .\gradlew test
 ```
