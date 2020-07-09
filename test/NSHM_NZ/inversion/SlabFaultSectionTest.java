@@ -1,80 +1,65 @@
 package NSHM_NZ.inversion;
 
-import java.io.File;
-// import java.io.FileWriter;
-import java.io.IOException;
-import java.util.List;
-// import org.dom4j.Document;
-import org.dom4j.DocumentException;
-
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
-import scratch.UCERF3.enumTreeBranches.FaultModels;
+import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
-
-
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.dom4j.DocumentException;
 import org.junit.BeforeClass;
 import org.junit.Test;
-// import org.opensha.commons.data.Container2DImpl;
+
+import org.opensha.commons.geo.Location;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import org.opensha.sha.faultSurface.FaultTrace;
+import scratch.UCERF3.enumTreeBranches.FaultModels;
+
 
 public class SlabFaultSectionTest {
 
     static List<FaultSectionPrefData> fsd;
+	private static FaultTrace straight_trace;
+	private static Location start_loc = new Location(44, -159, 5);
+	private static Location end_loc = new Location(45, -157, 5);
+	
+	private static FaultSectionPrefData buildFSD(FaultTrace trace, double upper, double lower, double dip) {
+		FaultSectionPrefData fsd = new FaultSectionPrefData();
+		fsd.setFaultTrace(trace);
+		fsd.setAveUpperDepth(upper);
+		fsd.setAveLowerDepth(lower);
+		fsd.setAveDip(dip);
+		fsd.setDipDirection((float) trace.getDipDirection());
+		return fsd;
+	}		
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-
 		// this is the input fault section data file
-		File fsdFile = new File("./data/FaultModels/sectionsv5_full_testlabe7.xml");
+		File fsdFile = new File("./data/FaultModels/alderman_sections.xml");
 		// load in the fault section data ("parent sections")
 		fsd = FaultModels.loadStoredFaultSections(fsdFile);
 
+		straight_trace = new FaultTrace("straight");
+		straight_trace.add(start_loc);
+		straight_trace.add(end_loc);
 	}
 	
+	@Test
+	public void testBuildFsd() {
+		FaultSectionPrefData fsd2 = buildFSD(straight_trace, 0d, 10d, 90);
+		
+		System.out.println("FSD name: "+fsd2.getFaultTrace().getName());		
+		System.out.println("FSD toString: "+fsd2.toString());		
+
+		assertTrue("test faultName", fsd2.getFaultTrace().getName() == "straight");
+		assertTrue("test aveDip", fsd2.getAveDip() == 90);
+	}
 
     @Test 
 	public void testSlabFSD() {
 
-		// directory to write output files
-		// File outputDir = new File("./data/output");
-		// maximum sub section length (in units of DDW)
-		
 		double maxSubSectionLength = 0.5;
-		// max distance for linking multi fault ruptures, km
-		double maxDistance = 0.5d;
-		boolean coulombFilter = false;
-		//FaultModels fm = FaultModels.FM3_1;
-		FaultModels fm = null;
-
-		// // this is a list of parent fault sections to remove. can be empty or null
-		// // currently set to remove Garlock to test Coulomb remapping.
-		// //List<Integer> sectsToRemove = Lists.newArrayList(49, 341);
-		// List<Integer> sectsToRemove = Lists.newArrayList();
-		// // this is a list of sections to keep. if non null and non empty, only these
-		// // ids will be kept
-		// List<Integer> sectsToKeep = Lists.newArrayList();
-		// //Preconditions.checkState(!coulombFilter || fm == FaultModels.FM3_1 || fm == FaultModels.FM3_2);
-		
-		// load in the fault section data ("parent sections")
-		//List<FaultSectionPrefData> fsd = FaultModels.loadStoredFaultSections(fsdFile);
-		
-		// if (sectsToRemove != null && !sectsToRemove.isEmpty()) {
-		// 	System.out.println("Removing these parent fault sections: "
-		// 			+Joiner.on(",").join(sectsToRemove));
-		// 	// iterate backwards as we will be removing from the list
-		// 	for (int i=fsd.size(); --i>=0;)
-		// 		if (sectsToRemove.contains(fsd.get(i).getSectionId()))
-		// 			fsd.remove(i);
-		// }
-		
-		// if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
-		// 	System.out.println("Only keeping these parent fault sections: "
-		// 			+Joiner.on(",").join(sectsToKeep));
-		// 	// iterate backwards as we will be removing from the list
-		// 	for (int i=fsd.size(); --i>=0;)
-		// 		if (!sectsToKeep.contains(fsd.get(i).getSectionId()))
-		// 			fsd.remove(i);
-		// }
 		
 		System.out.println(fsd.size()+" Parent Fault Sections");
 		// this list will store our subsections

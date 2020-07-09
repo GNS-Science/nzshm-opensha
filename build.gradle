@@ -8,9 +8,6 @@ apply from: '../opensha-commons/build-common.gradle'
 apply plugin: 'jacoco'
 
 dependencies {
-
-    // compileOnly project(path: ':opensha-core', configuration: 'compileOnly')
-    // compileAndResource project(path: ':opensha-core')
     
     compileOnly project(path: ':opensha-ucerf3', configuration: 'compileOnly')
     compileAndResource project(path: ':opensha-ucerf3')
