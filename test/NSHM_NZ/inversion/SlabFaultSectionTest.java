@@ -11,7 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.opensha.commons.geo.Location;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
@@ -21,7 +22,7 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
 */
 public class SlabFaultSectionTest {
 
-    static List<FaultSectionPrefData> fsd;
+    static List<FaultSection> fsd;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -38,15 +39,15 @@ public class SlabFaultSectionTest {
 		
 		System.out.println(fsd.size()+" Parent Fault Sections");
 		// this list will store our subsections
-		List<FaultSectionPrefData> subSections = Lists.newArrayList();
+		List<FaultSection> subSections = Lists.newArrayList();
 		
 		// build the subsections
 		int sectIndex = 0;
-		for (FaultSectionPrefData parentSect : this.fsd) {
+		for (FaultSection parentSect : this.fsd) {
 			double ddw = parentSect.getOrigDownDipWidth();
 			double maxSectLength = ddw*maxSubSectionLength;
 			// the "2" here sets a minimum number of sub sections
-			List<FaultSectionPrefData> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
+			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
 			subSections.addAll(newSubSects);
 			sectIndex += newSubSects.size();
 		}
