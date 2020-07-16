@@ -12,23 +12,24 @@ import org.junit.Test;
 
 import org.opensha.commons.geo.Location;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.RuptureSurface;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 /*
  * Some exploratory tests, based on TestQuadSurface which is found in package org.opensha.sha
- * note this was written just before opensha-core chaanges to FaultSectionPrefData
- * but survived these so far
- * 
+  * this tires to use the new FaultScection
  * @author chrisbc
 */
-public class BasicSurfaceFaultSectionTest {
+public class SurfaceFaultSectionTest {
 
 	private static FaultTrace straight_trace;
 	private static Location start_loc = new Location(44, -159, 0);
 	private static Location end_loc = new Location(44, -158.2, 0);
-	private static FaultSectionPrefData fsd0;
+	// private static FaultSectionPrefData fsd0;
+	private static FaultSection fs0;
+
 
 	private static final double grid_disc = 5d;
 	//TODO mode to a utils class
@@ -39,7 +40,7 @@ public class BasicSurfaceFaultSectionTest {
 		fsd.setAveLowerDepth(lower);
 		fsd.setAveDip(dip);
 		fsd.setDipDirection((float) trace.getDipDirection());
-		return fsd;
+		return fsd.clone();
 	}		
 
 	@BeforeClass
@@ -47,41 +48,50 @@ public class BasicSurfaceFaultSectionTest {
 		FaultTrace straight_trace = new FaultTrace("straight");
 		straight_trace.add(start_loc);
 		straight_trace.add(end_loc);
-		fsd0 = buildFSD(straight_trace, 0d, 10d, 66);
+		fs0 = (FaultSection)buildFSD(straight_trace, 0d, 10d, 66);
 	}
 	
+
 	// play around with the fsd fixture we built in test setup
 	@Test
-	public void testFsdFixture() {
+	public void testFsdAsFaultSection() {
 		
-		System.out.println("FSD name: "+fsd0.getFaultTrace().getName());		
-		System.out.println("FSD toString: "+fsd0.toString());		
+		// FaultSection fs0	= (FaultSection)fsd0;
+		System.out.println("FaultSection name: "+fs0.getFaultTrace().getName());		
+		System.out.println("FaultSection toString: "+fs0.toString());		
 
-		assertTrue("test faultName", fsd0.getFaultTrace().getName() == "straight");
-		assertTrue("test aveDip", fsd0.getAveDip() == 66);
+		assertTrue("test faultName", fs0.getFaultTrace().getName() == "straight");
+		assertTrue("test aveDip", fs0.getAveDip() == 66);
 	}
 
-	// An fsd can create a StirlingGriddedSurface object
+
+	// A FaultSection  can create a StirlingGriddedSurface object
+	/*
+ 		TODO: should FaultSection provide this method at all?
+	*/
 	@Test
 	public void testFsdAsStirlingGriddedSurface() {
 
-		RuptureSurface stirling_gridded = fsd0.getStirlingGriddedSurface(grid_disc); //, false, false);
+		// fs0	= (FaultSection)fsd0.clone();
+		RuptureSurface stirling_gridded = fs0.getStirlingGriddedSurface(grid_disc); //, false, false);
 
 		System.out.println("stirling_gridded toString: "+stirling_gridded.toString());		
 		System.out.println("stirling_gridded getInfo: "+stirling_gridded.getInfo());		
 
-		assertTrue("stirling_gridded.aveDip == fsd.aveDip", stirling_gridded.getAveDip() == fsd0.getAveDip());
+		assertTrue("stirling_gridded.aveDip == fsd.aveDip", stirling_gridded.getAveDip() == fs0.getAveDip());
 	}
 
-	// An fsd can create a QuadSurface object
-	@Test
-	public void testFsdAsQuadSurface() {
+	// A FaultSection can create a QuadSurface object
+	// @Test
+	// public void testFsdAsQuadSurface() {
+		
+	// 	FaultSection fs	= (FaultSection)fsd0;
 
-		RuptureSurface quad_gridded = fsd0.getQuadSurface(false, grid_disc);
+	// 	RuptureSurface quad_gridded = fsd0.getQuadSurface(false, grid_disc);
 
-		System.out.println("quad_gridded toString: "+quad_gridded.toString());		
-		System.out.println("quad_gridded getInfo: "+quad_gridded.getInfo());		
+	// 	System.out.println("quad_gridded toString: "+quad_gridded.toString());		
+	// 	System.out.println("quad_gridded getInfo: "+quad_gridded.getInfo());		
 
-		assertTrue("quad_gridded.aveDip == fsd.aveDip", quad_gridded.getAveDip() == fsd0.getAveDip());
-	}
+	// 	assertTrue("quad_gridded.aveDip == fsd.aveDip", quad_gridded.getAveDip() == fsd0.getAveDip());
+	// }
 }

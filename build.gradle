@@ -17,10 +17,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-
 test {
+    filter { includeTestsMatching('*NSHM_NZ.*')}
 }
-
 
 task localTests( type: Test, dependsOn: testClasses ){
     //filter { excludeTestsMatching('*.opensha.commons.*')} 
