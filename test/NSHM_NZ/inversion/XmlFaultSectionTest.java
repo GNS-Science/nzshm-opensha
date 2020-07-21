@@ -20,7 +20,7 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
  * Some exploratory tests, based StandaloneSubSectRupGen which is found in package opensha-dev::scratch.kevin.ucerf3
  * @author chrisbc
 */
-public class SlabFaultSectionTest {
+public class XmlFaultSectionTest {
 
     static List<FaultSection> fsd;
 	
@@ -33,7 +33,7 @@ public class SlabFaultSectionTest {
 	}
 	
     @Test 
-	public void loadSlabFSDfromXml() {
+	public void loadFSDfromXml() {
 
 		double maxSubSectionLength = 0.5;
 		
