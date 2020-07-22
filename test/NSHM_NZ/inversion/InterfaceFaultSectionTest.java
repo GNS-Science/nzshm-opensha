@@ -2,21 +2,44 @@ package NSHM_NZ.inversion;
 
 import static org.junit.Assert.*;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
+import org.opensha.commons.util.IDPairing;
+import org.opensha.commons.util.XMLUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
+
+import scratch.UCERF3.enumTreeBranches.DeformationModels;
+import scratch.UCERF3.enumTreeBranches.FaultModels;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
+import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
+import scratch.UCERF3.inversion.coulomb.CoulombRates;
+import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.inversion.laughTest.LaughTestFilter;
+import scratch.UCERF3.inversion.SectionCluster;
+import scratch.UCERF3.inversion.SectionClusterList;
+import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.utils.DeformationModelFetcher;
+import scratch.UCERF3.utils.FaultSystemIO;
+// import scratch.UCERF3.inversion.InversionFaultSystemRupSetFactory;
+
 // import org.opensha.sha.faultSurface.RuptureSurface;
 // import scratch.UCERF3.enumTreeBranches.FaultModels;
 
@@ -30,8 +53,9 @@ public class InterfaceFaultSectionTest {
 	private static final double grid_disc = 5d;
 
 	//TODO move this helper to a utils.* class
-	private static FaultSectionPrefData buildFSD(FaultTrace trace, double upper, double lower, double dip) {
+	private static FaultSectionPrefData buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
 		FaultSectionPrefData fsd = new FaultSectionPrefData();
+		fsd.setSectionId(sectionId);
 		fsd.setFaultTrace(trace);
 		fsd.setAveUpperDepth(upper);
 		fsd.setAveLowerDepth(lower);
@@ -40,68 +64,142 @@ public class InterfaceFaultSectionTest {
 		return fsd.clone();
 	}		
 
-	private FaultSection buildFaultSectionFromCsvRow(List row) {
+	private FaultSection buildFaultSectionFromCsvRow(int sectionId, List row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
 		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]
 		
-		FaultTrace trace = new FaultTrace("SubSectionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
-		trace.add(new Location(Float.parseFloat((String)row.get(3)), Float.parseFloat((String)row.get(2)), 0.0));
-		trace.add(new Location(Float.parseFloat((String)row.get(5)), Float.parseFloat((String)row.get(4)), 0.0));
+		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
+		trace.add(new Location(Float.parseFloat((String)row.get(3)), 
+			Float.parseFloat((String)row.get(2)), 
+			Float.parseFloat((String)row.get(7)))
+		);
+		trace.add(new Location(Float.parseFloat((String)row.get(5)),    //lat
+			Float.parseFloat((String)row.get(4)), 						//lon
+			Float.parseFloat((String)row.get(7)))						//top_depth (km)
+		);
 	
-		return (FaultSection)buildFSD(trace, 
+		return (FaultSection)buildFSD(sectionId, trace, 
 			Float.parseFloat((String)row.get(7)), //top
 			Float.parseFloat((String)row.get(8)), //bottom
 			Float.parseFloat((String)row.get(6))); //dip	
 	}
 
-
 	@Test
-	public void testParseSubSectionsFromCsvFixture() throws IOException {
-		
+	public void testBuildSubSectionsFromCsvFixture() throws IOException {
 		FaultSection fs = null;
 		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
-		System.out.println(csv.getHeader());
+		List<FaultSection> subductionSections = Lists.newArrayList();
 
 		for (int row=1; row<csv.getNumRows(); row++) {
-			fs = buildFaultSectionFromCsvRow(csv.getLine(row));
-		}		
-
-		String last_trace_name = "SubSectionTile_5_11";
-		assertEquals(last_trace_name, fs.getFaultTrace().getName());
+			fs = buildFaultSectionFromCsvRow(row-1, csv.getLine(row));
+			subductionSections.add(fs);
 		}
+		
+		// System.out.println(subductionSections.size() + " Subduction Fault Sections");
+
+		String last_trace_name = "SubductionTile_5_11";
+		assertEquals(last_trace_name, fs.getFaultTrace().getName());
+		assertEquals(9, subductionSections.size());
+	}
 
 	@Test
-	public void testBuildSubSectionsFromCsvFixture() throws IOException {
+	public void testRuptures() throws IOException {
 		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
-		// System.out.println(csv.getHeader());
-		FaultSectionPrefData interfaceFsd = new FaultSectionPrefData();
-		List<FaultSection> subSections = Lists.newArrayList();
+		FaultSectionPrefData parentSection = new FaultSectionPrefData();
+		parentSection.setSectionId(100);
+		parentSection.setSectionName("ParentSection 100");
 
+		List<FaultSection> subSections = Lists.newArrayList();
 		for (int row=1; row<csv.getNumRows(); row++) {
-			FaultSection fs = buildFaultSectionFromCsvRow(csv.getLine(row));
+			FaultSection fs = buildFaultSectionFromCsvRow(row-1, csv.getLine(row));
+			fs.setParentSectionId(parentSection.getSectionId());
+			fs.setParentSectionName(parentSection.getSectionName());
 			subSections.add(fs);
 		}
 		
-		System.out.println(subSections.size() + "Fault Sections");
+		System.out.println(subSections.size() + " Subduction Fault Sections");
+
+		// directory to write output files
+		File outputDir = new File("/tmp");
+		// maximum sub section length (in units of DDW)
+		double maxSubSectionLength = 0.5;
+		// max distance for linking multi fault ruptures, km
+		double maxDistance = 5d;
+
+		// write subduction section data to file
+		File subductionSectDataFile = new File(outputDir, "subduction_sections.xml");
+		Document doc0 = XMLUtils.createDocumentWithRoot();
+		FaultSystemIO.fsDataToXML(doc0.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
+		XMLUtils.writeDocumentToFile(subductionSectDataFile, doc0);
+
+
+		// calculate distances between each subsection
+		Map<IDPairing, Double> subSectionDistances = DeformationModelFetcher.calculateDistances(maxDistance, subSections);
+		Map<IDPairing, Double> reversed = Maps.newHashMap();
+
+		//Dump distances		
+		for(IDPairing pair : subSectionDistances.keySet()) {
+			System.out.println("pair: "+pair+ ";  dist: "+subSectionDistances.get(pair));
+		}
+
+		// now add the reverse distance
+		for (IDPairing pair : subSectionDistances.keySet()) {
+			IDPairing reverse = pair.getReversed();
+			reversed.put(reverse, subSectionDistances.get(pair));
+		}		
+		subSectionDistances.putAll(reversed);
+		Map<IDPairing, Double> sectionAzimuths = DeformationModelFetcher.getSubSectionAzimuthMap(
+				subSectionDistances.keySet(), subSections);
+
+		// instantiate our laugh test filter
+		LaughTestFilter laughTest = LaughTestFilter.getDefault();
+
+		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
+		// laughTest.setMaxJumpDist(2d); 		//looks like this might only impact (parent) section jumps
+		laughTest.setMinNumSectInRup(9); 	// works!
+
+		//disable our coulomb filter as it uses a data file specific to SCEC subsections
+		CoulombRates coulombRates  = null;
+		laughTest.setCoulombFilter(null);
+
+		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
+		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
+		// zip file
+		FaultModels fm = null;
+		SectionClusterList clusters = new SectionClusterList(
+				fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, sectionAzimuths);
+
+		List<List<Integer>> ruptures = Lists.newArrayList();
+		for (SectionCluster cluster : clusters) {
+			System.out.println("cluster "+cluster);// + " : " + cluster.getNumRuptures());
+			ruptures.addAll(cluster.getSectionIndicesForRuptures());
+		}		
+		System.out.println("Created "+ruptures.size()+" ruptures");
+
+		// write rupture/subsection associations to file
+		// format: rupID	sectID1,sectID2,sectID3,...,sectIDN
+		File rupFile = new File(outputDir, "ruptures.txt");
+		FileWriter fw = new FileWriter(rupFile);
+		Joiner j = Joiner.on(",");
+		for (int i=0; i<ruptures.size(); i++) {
+			fw.write(i+"\t"+j.join(ruptures.get(i))+"\n");
+		}
+		fw.close();
+
+		assertEquals(1, ruptures.size()); // min size 4=21. min size 8 = 9"
+	
+		// build actual rupture set for magnitudes and such
+		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, DeformationModels.GEOLOGIC,
+				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
+		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 		
-		// // this list will store our subsections
-		// List<FaultSection> subSections = Lists.newArrayList();
-		
-		// // build the subsections
-		// int sectIndex = 0;
-		// for (FaultSection parentSect : fsd) {
-		// 	double ddw = parentSect.getOrigDownDipWidth();
-		// 	double maxSectLength = ddw*maxSubSectionLength;
-		// 	// the "2" here sets a minimum number of sub sections
-		// 	List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
-		// 	subSections.addAll(newSubSects);
-		// 	sectIndex += newSubSects.size();
-		// }
-		
-		// System.out.println(subSections.size()+" Sub Sections");	
+		File zipFile = new File(outputDir, "rupSet.zip");
+		FaultSystemIO.writeRupSet(rupSet, zipFile);
+
+
 	}
 }
