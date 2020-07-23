@@ -11,25 +11,24 @@ created a GI implementation in java (opensha-ucerf3) by extending their earlier 
 
 GI is comprised of two main parts, Rupture Set generation and 'Grand Inversion'. This note is about the **Rupture Set generation**.
 
-## What is a rupture set
+## What is a Rupture Set
 
 Given enough information about a fault-system, including geometry (location, shape, depth) and historic data (prior ruptures, dates, magnitudes, ground displacement, etc) we want to 
-produce a list of possible (plausible) earthquakes (or ruptures) for that fault system. This is a **RuptureSet**
+produce a list of possible (plausible) earthquakes (or ruptures) for that fault system. This is a **RuptureSet**.
 
-To provide enough data for hazard and risk analyis, we build ruptures from lists of fault sub-sections. Typically these sub-sections are less than 100km^2 in order to support a range of rupture magnitudes, but combining adjacent sub-sections into ruptures. (Smaller quakes come from smaller rupture areas).
+To provide enough data for hazard and risk analyis, we build ruptures from lists of fault sub-sections. Typically these sub-sections are less than 100km^2 in order to support a range of rupture magnitudes, by combining adjacent sub-sections into ruptures. (Smaller quakes come from smaller rupture areas).
 
-Part of the 'art' of this prediction lies in interpreting this information to produce a set of 'plausible ruptures'. What's plausible vs implausable? is a focus of this type of analsyis. 
+*Part of the 'art' of this prediction lies in interpreting this information to produce a set of 'plausible ruptures'. What's plausible vs implausable? is a focus of this type of analsyis.*
 
 ## Implausible ruptures
 
 Earthquakes involve one or more faults rupturing simultaneously. Evidence shows us that twhen multiple faults are involved, they're somehow connected. This may be a junction or intersection, or it may be through proximity e.g. two faults lying just a few km apart. 
 
-  * It's unlikely for faults at significant distances to rupture simultaneously. That's **implausable** => **MaxJumpDistance**
-  * It's less likely for a fault with a given 'slip direction' to trigger faults having a significantly differnet 'slip direction'. =>  **MaxAzimuthChange**
+  * It's unlikely for faults at significant distances to rupture simultaneously. => **MaxJumpDistance**
+  * It's less likely for a fault with a given 'slip direction' to trigger faults having a significantly differnet 'slip direction'. => **MaxAzimuthChange**
   * Other implausibles....
 
-For Grand Inversion we want a wide range of plausilbe ruptures in the set, so we create many permutations of combined sub-sections, and then we filter them to eliminate implausible ruptures.
-
+For GI we want a wide range of plausilbe ruptures in the set, so we create many permutations of combined sub-sections, and then we filter them to eliminate implausible ruptures.
 
 # UCERF3 Rupture Set logic
 
@@ -44,15 +43,13 @@ This is based on testing and code-analysis done in these repos:
 
 We've created a small subset of the Hikurangi fault surface in a set of (9 tiles)[https://github.com/GNS-Science/nshm-nz-opensha/blob/master/test/NSHM_NZ/inversion/fixtures/patch_4_10.csv].
 
-From this we've created a rupture generator test to explore the rupture generatio as it stands. 
+From this we've created a rupture generator test to explore the rupture generator as it stands. 
 
-AS the subduction zone fault is mauch larger than a typical surface fault it is divided into subsections in two axes, unlike surface faults which are only divided longitudinally. This 2 axes relationship isn't specifically supported in the codebase today, but thre's still some applicatability as it stands.
+The subduction zone fault is much larger than a typical surface fault, so it is divided into subsections in two axes, whereas surface faults are only divided longitudinally. This 2 axes relationship isn't supported in the codebase today, but there's still some testable functionality.
 
-So for the test we see this:
+In (the test)[https://github.com/GNS-Science/nshm-nz-opensha/blob/d691b6bf1c89126ce6f787ec9681b19d4ed21f07/test/NSHM_NZ/inversion/InterfaceFaultSectionTest.java#L108] we see this:
 
-### 1) load 9 tiles as list of subsections
-
-as FaultSection objects 
+### 1) Load the 9 tiles as list of subsections
 
 ```
 ...
@@ -71,9 +68,7 @@ as FaultSection objects
 ...
 ```
 
-Now we have 9 java FaultSection objects in an ArrayList container.
-
-Dumped to XML they look like :
+Now we have 9 java FaultSection objects in an ArrayList container. Dumped to XML they look like :
 
 ```
 ...
@@ -146,7 +141,7 @@ public class AzimuthChangeFilter extends AbstractLaughTest {
 		Map<IDPairing, Double> sectionAzimuths = DeformationModelFetcher.getSubSectionAzimuthMap(
 				subSectionDistances.keySet(), subSections);
 ```
-** TODO check which azimuths are/are not calculated 
+**TODO** check which azimuths are calculated 
 
 ### 2) Build a plausablity filter (LaughTest Filter)
 
@@ -188,4 +183,4 @@ public class AzimuthChangeFilter extends AbstractLaughTest {
 		System.out.println("Created "+ruptures.size()+" ruptures");
 ```
 
-TODO some notes on the 'standard' plausability tests in the **default laughTest** as relevant to a single fault section . i.e.  **minSectionsInRupture**
+**TODO** some notes on the 'standard' plausability tests in the **default laughTest** as relevant to a single fault section . i.e.  **minSectionsInRupture**
