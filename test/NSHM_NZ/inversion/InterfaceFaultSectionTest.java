@@ -122,7 +122,7 @@ public class InterfaceFaultSectionTest {
 		// maximum sub section length (in units of DDW)
 		double maxSubSectionLength = 0.5;
 		// max distance for linking multi fault ruptures, km
-		double maxDistance = 5d;
+		double maxDistance = 10d;
 
 		// write subduction section data to file
 		File subductionSectDataFile = new File(outputDir, "subduction_sections.xml");
@@ -145,15 +145,21 @@ public class InterfaceFaultSectionTest {
 			reversed.put(reverse, subSectionDistances.get(pair));
 		}		
 		subSectionDistances.putAll(reversed);
+		
+		/*
 		Map<IDPairing, Double> sectionAzimuths = DeformationModelFetcher.getSubSectionAzimuthMap(
 				subSectionDistances.keySet(), subSections);
+		*/
+		Map<IDPairing, Double> sectionAzimuths = Maps.newHashMap(); //just an empty list, since we're not using azimuths now
 
 		// instantiate our laugh test filter
 		LaughTestFilter laughTest = LaughTestFilter.getDefault();
 
 		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
-		// laughTest.setMaxJumpDist(2d); 		//looks like this might only impact (parent) section jumps
-		laughTest.setMinNumSectInRup(9); 	// works!
+		// laughTest.setMaxJumpDist(2d); 		// looks like this might only impact (parent) section jumps
+		laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
+		laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
+		laughTest.setMinNumSectInRup(6); 		// works!
 
 		//disable our coulomb filter as it uses a data file specific to SCEC subsections
 		CoulombRates coulombRates  = null;
@@ -172,7 +178,8 @@ public class InterfaceFaultSectionTest {
 			ruptures.addAll(cluster.getSectionIndicesForRuptures());
 		}		
 		System.out.println("Created "+ruptures.size()+" ruptures");
-
+		assertEquals(10, ruptures.size()); // sizes vs minsections in rupure: 9 => 1, 8 -> (1+2) , 7 => (1+2+3). 6 => (1+2+3+4)
+	
 		// write rupture/subsection associations to file
 		// format: rupID	sectID1,sectID2,sectID3,...,sectIDN
 		File rupFile = new File(outputDir, "ruptures.txt");
@@ -183,8 +190,7 @@ public class InterfaceFaultSectionTest {
 		}
 		fw.close();
 
-		assertEquals(1, ruptures.size()); // min sizes: 9 => 1, 4 => 21, size 8 => 9!!!"
-	
+
 		// build actual rupture set for magnitudes and such
 		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, 
 			DeformationModels.GEOLOGIC,

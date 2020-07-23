@@ -90,14 +90,32 @@ Now we have 9 java FaultSection objects in an ArrayList container. Dumped to XML
 ```
 We see that even in this very small dataset some distances are not calculated (sections 2 & 6). Is this our first 'implausible' rule in effect?...
 
-**TODO what is the distance between subsections 2 & 6, and why is it NaN ??**
-
 ```
 minDist Calc 2.861908287382075 :: 2 : 4
 minDist Calc 0.4610826076290517 :: 2 : 5
 minDist Calc NaN :: 2 : 6
 minDist Calc 12.640588496225329 :: 2 : 7
 minDist Calc 9.738284337026121 :: 2 : 8
+```
+
+**TODO what is the distance between subsections 2 & 6, and why is it NaN ??**
+
+Setting maxDist to 50d (instead of 5) we see:
+pair: IDPairing [id1=2, id2=6];  dist: 16.173154870936507
+
+In the code below we can see that setting maxDistance less than 5 won't affect the result. However increasing it does.
+
+```
+	public static Map<IDPairing, Double> calculateDistances(
+			double maxDistance, List<? extends FaultSection> subSections) {
+		Map<IDPairing, Double> distances = new HashMap<IDPairing, Double>();
+		
+		// this is the threshold for which if the corners/midpoints of the section aren't within this distance, we don't
+		// bother doing a full 3D distance calculation
+		double quickSurfDistThreshold = maxDistance*3;
+		if (quickSurfDistThreshold < 15)
+			quickSurfDistThreshold = 15;
+
 ```
 
 then some more distance stuff...
