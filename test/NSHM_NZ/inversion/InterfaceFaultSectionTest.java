@@ -38,13 +38,10 @@ import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
-// import scratch.UCERF3.inversion.InversionFaultSystemRupSetFactory;
 
-// import org.opensha.sha.faultSurface.RuptureSurface;
-// import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 /*
- * Build FaultSections from a CSV fixture containing 9 10km * 10km subsections of the ikurangi Interface geometry.
+ * Build FaultSections from a CSV fixture containing 9 10km * 10km subsections of the Hikurangi Interface geometry.
  * And neighbor connection data
  * @author chrisbc
 */
@@ -66,8 +63,7 @@ public class InterfaceFaultSectionTest {
 
 	private FaultSection buildFaultSectionFromCsvRow(int sectionId, List row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
-		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]
-		
+		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
 		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
 		trace.add(new Location(Float.parseFloat((String)row.get(3)), 
 			Float.parseFloat((String)row.get(2)), 
@@ -90,22 +86,20 @@ public class InterfaceFaultSectionTest {
 		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
-		List<FaultSection> subductionSections = Lists.newArrayList();
+		List<FaultSection> subSections = Lists.newArrayList();
 
 		for (int row=1; row<csv.getNumRows(); row++) {
 			fs = buildFaultSectionFromCsvRow(row-1, csv.getLine(row));
-			subductionSections.add(fs);
+			subSections.add(fs);
 		}
-		
-		// System.out.println(subductionSections.size() + " Subduction Fault Sections");
 
 		String last_trace_name = "SubductionTile_5_11";
 		assertEquals(last_trace_name, fs.getFaultTrace().getName());
-		assertEquals(9, subductionSections.size());
+		assertEquals(9, subSections.size());
 	}
 
 	@Test
-	public void testRuptures() throws IOException {
+	public void testRuptureGeneratorSetup() throws IOException {
 		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
@@ -135,7 +129,6 @@ public class InterfaceFaultSectionTest {
 		Document doc0 = XMLUtils.createDocumentWithRoot();
 		FaultSystemIO.fsDataToXML(doc0.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subductionSectDataFile, doc0);
-
 
 		// calculate distances between each subsection
 		Map<IDPairing, Double> subSectionDistances = DeformationModelFetcher.calculateDistances(maxDistance, subSections);
@@ -190,10 +183,11 @@ public class InterfaceFaultSectionTest {
 		}
 		fw.close();
 
-		assertEquals(1, ruptures.size()); // min size 4=21. min size 8 = 9"
+		assertEquals(1, ruptures.size()); // min sizes: 9 => 1, 4 => 21, size 8 => 9!!!"
 	
 		// build actual rupture set for magnitudes and such
-		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, DeformationModels.GEOLOGIC,
+		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, 
+			DeformationModels.GEOLOGIC,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
 		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 		
