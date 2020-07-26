@@ -32,7 +32,7 @@ public class SurfaceFaultSectionTest {
 
 
 	private static final double grid_disc = 5d;
-	//TODO mode to a utils class
+	//TODO move to a utils class
 	private static FaultSectionPrefData buildFSD(FaultTrace trace, double upper, double lower, double dip) {
 		FaultSectionPrefData fsd = new FaultSectionPrefData();
 		fsd.setFaultTrace(trace);
@@ -69,17 +69,17 @@ public class SurfaceFaultSectionTest {
 	/*
  		TODO: should FaultSection provide this method at all?
 	*/
-	@Test
-	public void testFsdAsStirlingGriddedSurface() {
+	// @Test
+	// public void testFsdAsStirlingGriddedSurface() {
 
-		// fs0	= (FaultSection)fsd0.clone();
-		RuptureSurface stirling_gridded = fs0.getStirlingGriddedSurface(grid_disc); //, false, false);
+	// 	// fs0	= (FaultSection)fsd0.clone();
+	// 	RuptureSurface stirling_gridded = fs0.getStirlingGriddedSurface(grid_disc); //, false, false);
 
-		System.out.println("stirling_gridded toString: "+stirling_gridded.toString());		
-		System.out.println("stirling_gridded getInfo: "+stirling_gridded.getInfo());		
+	// 	System.out.println("stirling_gridded toString: "+stirling_gridded.toString());		
+	// 	System.out.println("stirling_gridded getInfo: "+stirling_gridded.getInfo());		
 
-		assertTrue("stirling_gridded.aveDip == fsd.aveDip", stirling_gridded.getAveDip() == fs0.getAveDip());
-	}
+	// 	assertTrue("stirling_gridded.aveDip == fsd.aveDip", stirling_gridded.getAveDip() == fs0.getAveDip());
+	// }
 
 	// A FaultSection can create a QuadSurface object
 	// @Test
