@@ -32,13 +32,14 @@ import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.inversion.coulomb.CoulombRates;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
-import scratch.UCERF3.inversion.laughTest.LaughTestFilter;
+import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.inversion.SectionCluster;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
 
+import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 
 /*
  * Build FaultSections from a CSV fixture containing 9 10km * 10km subsections of the Hikurangi Interface geometry.
@@ -59,8 +60,53 @@ public class InterfaceFaultSectionTest {
 		fsd.setAveDip(dip);
 		fsd.setDipDirection((float) trace.getDipDirection());
 		return fsd.clone();
-	}		
+	}
 
+	private SectionClusterList getSectionClusterList(List<FaultSection> subSections, Map<IDPairing, Double> subSectionDistances, int minSectionsInRupture) {
+		/*
+		 * test help function  
+		*/
+		Map<IDPairing, Double> sectionAzimuths = Maps.newHashMap(); //just an empty list, since we're not using azimuths now
+
+		// instantiate our laugh test filter
+		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
+
+		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
+		// laughTest.setMaxJumpDist(2d); 		// looks like this might only impact (parent) section jumps
+		laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
+		laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
+		laughTest.setMinNumSectInRup(minSectionsInRupture); 		
+
+		//disable our coulomb filter as it uses a data file specific to SCEC subsections
+		CoulombRates coulombRates  = null;
+		laughTest.setCoulombFilter(null);
+
+		// A section connection strategy is now required, let's use the default UCERF3...
+		UCERF3SectionConnectionStrategy connectionStrategy = new UCERF3SectionConnectionStrategy(
+				laughTest.getMaxAzimuthChange(), coulombRates);
+
+		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
+		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
+		// zip file
+
+		// SectionClusterList clusters = new SectionClusterList(
+		// 		fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, sectionAzimuths);
+		SectionClusterList clusters = new SectionClusterList(
+				connectionStrategy, laughTest, subSections, subSectionDistances, sectionAzimuths);
+		return clusters;
+
+	}
+
+    private List<List<Integer>> getRuptures(SectionClusterList clusters ) {
+    	List<List<Integer>> ruptures = Lists.newArrayList();
+		for (SectionCluster cluster : clusters) {
+			System.out.println("cluster "+cluster);// + " : " + cluster.getNumRuptures());
+			ruptures.addAll(cluster.getSectionIndicesForRuptures());
+		}		
+		System.out.println("Created "+ruptures.size()+" ruptures");
+		return ruptures;
+    }
+    
 	private FaultSection buildFaultSectionFromCsvRow(int sectionId, List row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
 		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
@@ -97,6 +143,8 @@ public class InterfaceFaultSectionTest {
 		assertEquals(last_trace_name, fs.getFaultTrace().getName());
 		assertEquals(9, subSections.size());
 	}
+
+
 
 	@Test
 	public void testRuptureGeneratorSetup() throws IOException {
@@ -146,40 +194,16 @@ public class InterfaceFaultSectionTest {
 		}		
 		subSectionDistances.putAll(reversed);
 		
-		/*
-		Map<IDPairing, Double> sectionAzimuths = DeformationModelFetcher.getSubSectionAzimuthMap(
-				subSectionDistances.keySet(), subSections);
-		*/
-		Map<IDPairing, Double> sectionAzimuths = Maps.newHashMap(); //just an empty list, since we're not using azimuths now
+		// sizes vs minsections in rupure: 9 => 1, 8 -> (1+2) , 7 => (1+2+3). 6 => (1+2+3+4)
+		assertEquals(1, getRuptures(getSectionClusterList(subSections, subSectionDistances, 9)).size()); 
+		assertEquals(3, getRuptures(getSectionClusterList(subSections, subSectionDistances, 8)).size());
+		assertEquals(6, getRuptures(getSectionClusterList(subSections, subSectionDistances, 7)).size());
+		assertEquals(10, getRuptures(getSectionClusterList(subSections, subSectionDistances, 6)).size());
+		assertEquals(15, getRuptures(getSectionClusterList(subSections, subSectionDistances, 5)).size());
+		
+		SectionClusterList clusters = getSectionClusterList(subSections, subSectionDistances, 6);
+		List<List<Integer>> ruptures = getRuptures(getSectionClusterList(subSections, subSectionDistances, 6));
 
-		// instantiate our laugh test filter
-		LaughTestFilter laughTest = LaughTestFilter.getDefault();
-
-		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
-		// laughTest.setMaxJumpDist(2d); 		// looks like this might only impact (parent) section jumps
-		laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
-		laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
-		laughTest.setMinNumSectInRup(6); 		// works!
-
-		//disable our coulomb filter as it uses a data file specific to SCEC subsections
-		CoulombRates coulombRates  = null;
-		laughTest.setCoulombFilter(null);
-
-		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
-		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
-		// zip file
-		FaultModels fm = null;
-		SectionClusterList clusters = new SectionClusterList(
-				fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, sectionAzimuths);
-
-		List<List<Integer>> ruptures = Lists.newArrayList();
-		for (SectionCluster cluster : clusters) {
-			System.out.println("cluster "+cluster);// + " : " + cluster.getNumRuptures());
-			ruptures.addAll(cluster.getSectionIndicesForRuptures());
-		}		
-		System.out.println("Created "+ruptures.size()+" ruptures");
-		assertEquals(10, ruptures.size()); // sizes vs minsections in rupure: 9 => 1, 8 -> (1+2) , 7 => (1+2+3). 6 => (1+2+3+4)
-	
 		// write rupture/subsection associations to file
 		// format: rupID	sectID1,sectID2,sectID3,...,sectIDN
 		File rupFile = new File(outputDir, "ruptures.txt");
@@ -192,6 +216,7 @@ public class InterfaceFaultSectionTest {
 
 
 		// build actual rupture set for magnitudes and such
+		FaultModels fm = null;
 		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, 
 			DeformationModels.GEOLOGIC,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
