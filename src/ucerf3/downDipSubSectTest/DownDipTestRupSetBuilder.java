@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3.downDipSubSectTest;
+package ucerf3.downDipSubSectTest;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -214,7 +214,9 @@ public class DownDipTestRupSetBuilder {
 		for (int i=0; i<ruptures.size(); i++) {
 			fw.write(i+"\t"+j.join(ruptures.get(i))+"\n");
 		}
-		fw.close();		
+		fw.close();	
+		
+		System.out.println("Done everything!");
 	}
 
 }

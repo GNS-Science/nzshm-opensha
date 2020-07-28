@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3.downDipSubSectTest;
+package ucerf3.downDipSubSectTest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -168,7 +168,7 @@ public class DownDipSubSectBuilder {
 		double lowerDepth = 30d;
 		double dip = 35d;
 		int numDownDip = 4;
-		int numAlongStrike = 10;
+		int numAlongStrike = 4;
 		FaultTrace trace = new FaultTrace(sectName);
 		trace.add(new Location(34, -118, upperDepth));
 		trace.add(new Location(34.1, -118.25, upperDepth));
@@ -189,6 +189,7 @@ public class DownDipSubSectBuilder {
 						+" at row="+row+",col="+col+" has "+conns.size()+" neighbors");
 			}
 		}
+		System.out.println("DONE!");
 	}
 
 }

@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3.downDipSubSectTest;
+package ucerf3.downDipSubSectTest;
 
 import java.util.ArrayList;
 import java.util.List;

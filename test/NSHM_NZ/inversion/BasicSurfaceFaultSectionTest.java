@@ -2,11 +2,6 @@ package NSHM_NZ.inversion;
 
 import static org.junit.Assert.*;
 
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import org.dom4j.DocumentException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -14,7 +9,6 @@ import org.opensha.commons.geo.Location;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.RuptureSurface;
-import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 /*
  * Some exploratory tests, based on TestQuadSurface which is found in package org.opensha.sha
