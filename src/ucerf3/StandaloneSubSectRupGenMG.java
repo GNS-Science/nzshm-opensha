@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3;
+package ucerf3;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,14 +27,15 @@ import scratch.UCERF3.inversion.SectionCluster;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.inversion.coulomb.CoulombRates;
 import scratch.UCERF3.inversion.coulomb.CoulombRatesRecord;
-import scratch.UCERF3.inversion.laughTest.LaughTestFilter;
+import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.utils.UCERF3_DataUtils;
 
-public class StandaloneSubSectRupGenMG {
+import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 
+public class StandaloneSubSectRupGenMG {
 
 	/**
 	 * Create opensha rupture sets for NZ surface fault sections as simply as possible.
@@ -113,8 +114,9 @@ public class StandaloneSubSectRupGenMG {
 		FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subSectDataFile, doc);
 		
+		/*I
 		// instantiate our laugh test filter
-		LaughTestFilter laughTest = LaughTestFilter.getDefault();
+		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
 		System.out.println(maxDistance+" Max Jump Dist");
 		// you will have to disable our coulomb filter as it uses a data file specific to our subsections
 		CoulombRates coulombRates;
@@ -126,7 +128,7 @@ public class StandaloneSubSectRupGenMG {
 		//}
 		laughTest.setCoulombFilter(null);
 		coulombRates = null;
-		
+		*/
 		// calculate distances between each subsection
 		Map<IDPairing, Double> subSectionDistances = DeformationModelFetcher.calculateDistances(maxDistance, subSections);
 		Map<IDPairing, Double> reversed = Maps.newHashMap();
@@ -138,12 +140,43 @@ public class StandaloneSubSectRupGenMG {
 		subSectionDistances.putAll(reversed);
 		Map<IDPairing, Double> subSectionAzimuths = DeformationModelFetcher.getSubSectionAzimuthMap(
 				subSectionDistances.keySet(), subSections);
-		
+	
+
+		///
+		// instantiate our laugh test filter
+		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
+
+		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
+		// laughTest.setMaxJumpDist(2d); 		// looks like this might only impact (parent) section jumps
+		// laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
+		// laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
+		// laughTest.setMinNumSectInRup(minSectionsInRupture); 		
+
+		//disable our coulomb filter as it uses a data file specific to SCEC subsections
+		CoulombRates coulombRates  = null;
+		laughTest.setCoulombFilter(null);
+
+		// A section connection strategy is now required, let's use the default UCERF3...
+		UCERF3SectionConnectionStrategy connectionStrategy = new UCERF3SectionConnectionStrategy(
+				laughTest.getMaxAzimuthChange(), coulombRates);
+
 		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
 		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
 		// zip file
+
+		// SectionClusterList clusters = new SectionClusterList(
+		// 		fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, sectionAzimuths);
 		SectionClusterList clusters = new SectionClusterList(
-				fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, subSectionAzimuths);
+				connectionStrategy, laughTest, subSections, subSectionDistances, subSectionAzimuths);
+
+		///
+
+
+		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
+		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
+		// zip file
+		// SectionClusterList clusters = new SectionClusterList(
+		// 		fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, subSectionAzimuths);
 		
 		List<List<Integer>> ruptures = Lists.newArrayList();
 		for (SectionCluster cluster : clusters) {

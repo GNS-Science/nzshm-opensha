@@ -6,7 +6,7 @@ NSHM NZ Programme opensha applications (patterned on opensha-ucerf3 &amp; opensh
  - adapt the NZ Fault model from CFM NZ to suit the opensha tools
  - extend opensha to support subduction interface fault models. This is needed for the (in)famous 'Hikurangi'. 
 
- ## Getting started 
+## Getting started 
 
  This project depends on three opensha repos...
 
