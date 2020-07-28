@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3;
+package ucerf3;
 
 import java.io.File;
 import java.io.FileWriter;
