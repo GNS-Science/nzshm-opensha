@@ -1,14 +1,7 @@
 import unittest
-# from unittest.mock import MagicMock, patch, call
-# import pandas as pd
 from io import StringIO
-
 from faultless import *
-from io import StringIO
 
-#from eq_fault_geom.geomops.subduction_interface import find_adjacent_tiles as fat 
-
-#fixtures
 #fixtures
 tile_param_csv = """along_strike_index,down_dip_index,lon1(deg),lat1(deg),lon2(deg),lat2(deg),dip (deg),top_depth (km),bottom_depth (km)
 0,0,172.55049384268952,-43.66066194689264,172.44173203440846,-43.70398277095125,17.190332526361505,27.777180834317445,30.732649458700852
@@ -55,9 +48,33 @@ class TestSubductionZoneFault(unittest.TestCase):
         self.assertIsInstance( sf.sub_sections[0], FaultSubSection )
 
         print(sf.sub_sections[-1])
+        self.assertIs(sf, sf.sub_sections[0].parent)
         # assert False
 
     def test_load_sub_sections_from_invalid_csv_exception(self):
         with self.assertRaises((ValueError, IndexError)):
             sf = SheetFault("24 part Subduction Zone")\
                     .build_surface_from_csv(StringIO('Sorry this is not valid csv_data'))
+
+
+class TestFaultSubSection(unittest.TestCase):
+
+    def setUp(self):
+        reader = csv.DictReader(StringIO(tile_param_csv))
+        self.csvrows = [x for x in reader]
+    
+    def test_create_from_invalid_csvrow_exception(self):
+        with self.assertRaises((KeyError,)):
+            fss = FaultSubSection.from_csv_row(dict(x='Sorry this is not valid csv_data'))
+
+    def test_create_from_csv_row(self):
+        fss = FaultSubSection.from_csv_row(self.csvrows[0], parent=None)
+
+        self.assertAlmostEqual(-43.6606619468, fss.top_trace[0].x)
+        self.assertAlmostEqual(172.550493842, fss.top_trace[0].y)
+
+        self.assertEqual((0,0), fss.strike_dip_index)
+        self.assertAlmostEqual(17.190332526, fss.dip)
+
+        self.assertAlmostEqual(27.77718083, fss.top_depth)
+        self.assertAlmostEqual(30.73264945, fss.bottom_depth)
