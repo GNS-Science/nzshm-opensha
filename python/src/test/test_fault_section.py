@@ -3,11 +3,7 @@ import unittest
 # import pandas as pd
 from io import StringIO
 
-#from eq_fault_geom.geomops.subduction_interface import find_adjacent_tiles as fat 
-#fixturesimport unittest
-# from unittest.mock import MagicMock, patch, call
-#import pandas as pd
-
+from faultless import *
 from io import StringIO
 
 #from eq_fault_geom.geomops.subduction_interface import find_adjacent_tiles as fat 
@@ -41,46 +37,27 @@ tile_param_csv = """along_strike_index,down_dip_index,lon1(deg),lat1(deg),lon2(d
 2,3,172.50885961053964,-43.39625111045,172.4570818809257,-43.478006540612846,7.576237730260184,25.25189169403127,26.570344616308496
 """
 
-# import pandas as pd
-
-class SheetFault():
-    def __init__(self, name, csv_data=None):
-        self._name = name
-        self._sub_sections = []
-        self._ruptures = []
-
-    @property
-    
-    def name(self):
-        return self._name 
-
-    @property
-    def sub_sections(self):
-        return self._sub_sections 
-
-    def get_ruptures(self, min_size = 1):
-        return self._ruptures 
-
 class TestSubductionZoneFault(unittest.TestCase):
 
-	def setUp(self):
-		self.fault_csv_data = StringIO(tile_param_csv)
+    def setUp(self):
+        pass
+        # self.fault_csv_data = StringIO(tile_param_csv)
 
-	def test_create_new_fault(self):
+    def test_create_new_fault(self):
+        sf = SheetFault("My First Subduction Zone")
+        self.assertEqual( sf.name, "My First Subduction Zone" )
+        self.assertEqual( len(sf.sub_sections), 0 ) 
 
-		sf = SheetFault("My First Subduction Zone")
-		self.assertEqual( sf.name, "My First Subduction Zone" )
-		self.assertEqual( len(sf.sub_sections), 0 ) 
+    def test_load_sub_sections_from_csv(self):
+        sf = SheetFault("9 part Subduction Zone")\
+                .build_surface_from_csv( StringIO(tile_param_csv)) 
+        self.assertEqual( len(sf.sub_sections), 24 ) 
+        self.assertIsInstance( sf.sub_sections[0], FaultSubSection )
 
-	@unittest.skip("TODO")
-	def test_create_fault_from_csv(self):
+        print(sf.sub_sections[-1])
+        # assert False
 
-		sf = SheetFault("9 part Subduction Zone", csv_data = self.fault_csv_data ) 
-		self.assertEqual( len(sf.sub_sections), 9 ) 
-		self.assertIsInstance( sf.sub_sections[0], FaultSubSection )
-
-	@unittest.skip("TODO")
-	def test_create_fault_from_invalid_csv_exception(self):
-
-		with self.assertRaises(ValueError):
-			sf = SheetFault("9 part Subduction Zone", csv_data = StringIO('this is not csv data'))
+    def test_load_sub_sections_from_invalid_csv_exception(self):
+        with self.assertRaises((ValueError, IndexError)):
+            sf = SheetFault("24 part Subduction Zone")\
+                    .build_surface_from_csv(StringIO('Sorry this is not valid csv_data'))
