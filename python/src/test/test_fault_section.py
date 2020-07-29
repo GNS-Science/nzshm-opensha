@@ -1,8 +1,10 @@
 import unittest
 from io import StringIO
-from faultless import *
+from faultless import SheetFault, FaultSubSection
+import csv
 
-#fixtures
+# fixtures
+# noqa
 tile_param_csv = """along_strike_index,down_dip_index,lon1(deg),lat1(deg),lon2(deg),lat2(deg),dip (deg),top_depth (km),bottom_depth (km)
 0,0,172.55049384268952,-43.66066194689264,172.44173203440846,-43.70398277095125,17.190332526361505,27.777180834317445,30.732649458700852
 0,1,172.47296534458786,-43.6059065011278,172.35583940675505,-43.63534622846773,9.730595837337948,26.05032447851844,27.740481671477475
@@ -30,31 +32,30 @@ tile_param_csv = """along_strike_index,down_dip_index,lon1(deg),lat1(deg),lon2(d
 2,3,172.50885961053964,-43.39625111045,172.4570818809257,-43.478006540612846,7.576237730260184,25.25189169403127,26.570344616308496
 """
 
+
 class TestSubductionZoneFault(unittest.TestCase):
 
     def setUp(self):
         pass
-        # self.fault_csv_data = StringIO(tile_param_csv)
 
     def test_create_new_fault(self):
         sf = SheetFault("My First Subduction Zone")
-        self.assertEqual( sf.name, "My First Subduction Zone" )
-        self.assertEqual( len(sf.sub_sections), 0 ) 
+        self.assertEqual(sf.name, "My First Subduction Zone")
+        self.assertEqual(len(sf.sub_sections), 0)
 
     def test_load_sub_sections_from_csv(self):
         sf = SheetFault("9 part Subduction Zone")\
-                .build_surface_from_csv( StringIO(tile_param_csv)) 
-        self.assertEqual( len(sf.sub_sections), 24 ) 
-        self.assertIsInstance( sf.sub_sections[0], FaultSubSection )
+                .build_surface_from_csv(StringIO(tile_param_csv))
+        self.assertEqual(len(sf.sub_sections), 24)
+        self.assertIsInstance(sf.sub_sections[0], FaultSubSection)
 
         print(sf.sub_sections[-1])
         self.assertIs(sf, sf.sub_sections[0].parent)
-        # assert False
 
     def test_load_sub_sections_from_invalid_csv_exception(self):
         with self.assertRaises((ValueError, IndexError)):
-            sf = SheetFault("24 part Subduction Zone")\
-                    .build_surface_from_csv(StringIO('Sorry this is not valid csv_data'))
+            SheetFault("24 part Subduction Zone")\
+                .build_surface_from_csv(StringIO('Sorry this is not csv_data'))
 
 
 class TestFaultSubSection(unittest.TestCase):
@@ -62,10 +63,11 @@ class TestFaultSubSection(unittest.TestCase):
     def setUp(self):
         reader = csv.DictReader(StringIO(tile_param_csv))
         self.csvrows = [x for x in reader]
-    
+
     def test_create_from_invalid_csvrow_exception(self):
         with self.assertRaises((KeyError,)):
-            fss = FaultSubSection.from_csv_row(dict(x='Sorry this is not valid csv_data'))
+            FaultSubSection.from_csv_row(
+                    dict(x='Sorry this is not csv_data'))
 
     def test_create_from_csv_row(self):
         fss = FaultSubSection.from_csv_row(self.csvrows[0], parent=None)
@@ -73,7 +75,7 @@ class TestFaultSubSection(unittest.TestCase):
         self.assertAlmostEqual(-43.6606619468, fss.top_trace[0].x)
         self.assertAlmostEqual(172.550493842, fss.top_trace[0].y)
 
-        self.assertEqual((0,0), fss.strike_dip_index)
+        self.assertEqual((0, 0), fss.strike_dip_index)
         self.assertAlmostEqual(17.190332526, fss.dip)
 
         self.assertAlmostEqual(27.77718083, fss.top_depth)
