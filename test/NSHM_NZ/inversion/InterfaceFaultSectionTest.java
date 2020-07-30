@@ -107,7 +107,7 @@ public class InterfaceFaultSectionTest {
 		return ruptures;
     }
     
-	private FaultSection buildFaultSectionFromCsvRow(int sectionId, List row) {
+	private FaultSection buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
 		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
 		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
