@@ -1,6 +1,6 @@
 import unittest
 from io import StringIO
-from faultless import SheetFault, FaultSubSection, FaultSubSectionFactory
+from fault_section import SheetFault, FaultSubSection, FaultSubSectionFactory
 import csv
 
 # fixtures
@@ -134,7 +134,7 @@ class TestGenerateRectangularRuptures(unittest.TestCase):
                                        (1, 1), (2, 0), (2, 1)])  # col 0
 
     def test_rupture_four_by_four(self):
-        shape_spec = dict(name="4x4", scale=4, aspect=1, min_fill_factor=0.6)
+        shape_spec = dict(name="4x4", scale=4, aspect=1, min_fill_factor=0.9)
         ruptures = [r for r in self.sf.get_ruptures(shape_spec)]
 
         self.assertEqual(ruptures[0], [
