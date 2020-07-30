@@ -2,15 +2,17 @@ import csv
 from shapely.geometry import Point
 import numpy as np
 
+
 class FaultSubSectionFactory():
 
     def __init__(self):
         self.current_idx = 0
 
     def new_fault_sub_section(self, parent):
-        fss =  FaultSubSection(self.current_idx, parent)
+        fss = FaultSubSection(self.current_idx, parent)
         self.current_idx += 1
-        return fss 
+        return fss
+
 
 # TODO Docstrings
 class FaultSubSection():
@@ -33,7 +35,7 @@ class FaultSubSection():
         fs._dip = float(row['dip (deg)'])
         fs._top_depth = float(row['top_depth (km)'])
         fs._bottom_depth = float(row['bottom_depth (km)'])
-        
+
         return fs
 
     def __init__(self, id, parent=None):
@@ -44,7 +46,6 @@ class FaultSubSection():
 
     def __repr__(self):
         return "%s :: %s" % (self.__class__.__name__, self._top_trace)
-
 
     @property
     def id(self):
@@ -81,8 +82,8 @@ class SheetFault():
         self._sub_sections = {}
         self._column_max = 0
         self._row_max = 0
-        #re-arrange the subsections as per their strike-dip_indices
-        self._grid = np.empty((20,20)) 
+        # re-arrange the subsections as per their strike-dip_indices
+        self._grid = np.empty((20, 20))
         self._grid[:] = np.nan
         self._ruptures = []
 
@@ -97,9 +98,7 @@ class SheetFault():
         for row in rows:
             ss = FaultSubSection.from_csv_row(factory, row, parent=self)
             self._sub_sections[ss.id] = ss
-            
             idx = ss.strike_dip_index
-
             self._column_max = max(self._column_max, idx[0])
             self._row_max = max(self._row_max, idx[1])
             self._grid[idx[0]][idx[1]] = ss.id
@@ -115,28 +114,27 @@ class SheetFault():
 
     def get_ruptures(self, spec):
 
-        name = spec['name']
+        # name = spec['name']
         scale = spec['scale']
         aspect = spec['aspect']
 
-        min_fill_factor = spec.get('min_fill_factor', 0.75)       
-        min_sections = int(scale * scale * aspect) * min_fill_factor 
+        min_fill_factor = spec.get('min_fill_factor', 0.75)
+        min_sections = int(scale * scale * aspect) * min_fill_factor
 
         def tuples_for_rupture_ids(ids):
             res = []
             for id in ids:
-                res.append( self.sub_sections[id].strike_dip_index )
+                res.append(self.sub_sections[id].strike_dip_index)
             return res
 
-        for col in range(0, self._column_max +1):
-            for row in range(0, self._row_max +1):
-                #get ruptures by range
+        for col in range(0, self._column_max + 1):
+            for row in range(0, self._row_max + 1):
+                # get ruptures by range
                 rupt = self._grid[col:col+int(scale*aspect), row:row+scale]
-                #remove empty values
+                # remove empty values
                 rupt = rupt[np.logical_not(np.isnan(rupt))]
-                #convert to integerrs and get a flat list
+                # convert to integerrs and get a flat list
                 rupt = rupt.astype(int).flatten().tolist()
                 if len(rupt) and len(rupt) > min_sections:
-                    print(tuples_for_rupture_ids(rupt)) #.flatten().astype(int).tolist()))
-                    yield tuples_for_rupture_ids(rupt)  # 0.flatten().astype(int).tolist())
-
+                    print(tuples_for_rupture_ids(rupt))
+                    yield tuples_for_rupture_ids(rupt)
