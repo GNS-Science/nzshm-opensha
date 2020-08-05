@@ -1,4 +1,4 @@
-package ucerf3.downDipSubSectTest;
+package scratch.kevin.ucerf3.downDipSubSectTest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,7 +105,7 @@ public class DownDipSubSectBuilder {
 	}
 	
 	public FaultSectionPrefData getSubSect(int row, int col) {
-		return subSects[row][col];
+		return subSects[col][row];
 	}
 	
 	public int getRow(FaultSection sect) {
@@ -118,6 +118,14 @@ public class DownDipSubSectBuilder {
 		Preconditions.checkArgument(idToColMap.containsKey(sect.getSectionId()),
 				"Unexpected sub sect: %s. %s", sect.getSectionId(), sect.getSectionName());
 		return idToColMap.get(sect.getSectionId());
+	}
+	
+	public int getNumCols() {
+		return subSects.length;
+	}
+	
+	public int getNumRows() {
+		return subSects[0].length;
 	}
 	
 	public List<Integer> getNeighbors(FaultSection sect) {
@@ -168,7 +176,7 @@ public class DownDipSubSectBuilder {
 		double lowerDepth = 30d;
 		double dip = 35d;
 		int numDownDip = 4;
-		int numAlongStrike = 4;
+		int numAlongStrike = 10;
 		FaultTrace trace = new FaultTrace(sectName);
 		trace.add(new Location(34, -118, upperDepth));
 		trace.add(new Location(34.1, -118.25, upperDepth));
@@ -189,7 +197,6 @@ public class DownDipSubSectBuilder {
 						+" at row="+row+",col="+col+" has "+conns.size()+" neighbors");
 			}
 		}
-		System.out.println("DONE!");
 	}
 
 }
