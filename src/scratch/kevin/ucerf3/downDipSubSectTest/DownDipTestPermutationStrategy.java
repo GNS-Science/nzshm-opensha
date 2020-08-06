@@ -15,7 +15,7 @@ import com.google.common.primitives.Ints;
 public class DownDipTestPermutationStrategy extends CachedClusterPermutationStrategy {
 	
 	private DownDipSubSectBuilder downDipBuilder;
-	private static final boolean D = false;
+	private static final boolean D = true;
 
 	public DownDipTestPermutationStrategy(DownDipSubSectBuilder downDipBuilder) {
 		this.downDipBuilder = downDipBuilder;
@@ -108,18 +108,20 @@ public class DownDipTestPermutationStrategy extends CachedClusterPermutationStra
 		// starting point, though other strategies likely exist
 		List<FaultSection> exitPoints = new ArrayList<>();
 		
-		if (D) System.out.println("\t\trow span: "+startRow+" => "+endRow+": "+printIndexes(startRow, endRow));
-		if (D) System.out.println("\t\tcol span: "+startCol+" => "+endCol+": "+printIndexes(startCol, endCol));
-		
+//		if (D) System.out.println("\t\trow span: "+startRow+" => "+endRow+": "+printIndexes(startRow, endRow));
+//		if (D) System.out.println("\t\tcol span: "+startCol+" => "+endCol+": "+printIndexes(startCol, endCol));
+//		
 		// build with rows in the outer loop, as this should make azimuth calculations work
 		for (int row : indexes(startRow, endRow)) {
 			for (int col : indexes(startCol, endCol)) {
 //				if (D) System.out.println("row="+row+", col="+col);
 				FaultSection sect = downDipBuilder.getSubSect(row, col);
-				Preconditions.checkNotNull(sect);
-				subsetSects.add(sect);
-				if (row == endRow && col == endCol)
+//				Preconditions.checkNotNull(sect);
+//				if (row == endRow && col == endCol)
+				if (sect != null) {
+					subsetSects.add(sect);
 					exitPoints.add(sect);
+				}
 			}
 		}
 		Preconditions.checkState(subsetSects.get(0).equals(downDipBuilder.getSubSect(startRow, startCol)));

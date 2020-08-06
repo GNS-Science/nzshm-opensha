@@ -8,7 +8,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
 
-class RectangularityFilter implements PlausibilityFilter {
+public class RectangularityFilter implements PlausibilityFilter {
 
 	private DownDipSubSectBuilder builder;
 	private int minDimension;
