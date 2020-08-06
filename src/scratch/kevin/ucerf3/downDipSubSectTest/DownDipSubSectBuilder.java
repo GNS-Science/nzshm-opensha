@@ -1,20 +1,25 @@
-package ucerf3.downDipSubSectTest;
+package scratch.kevin.ucerf3.downDipSubSectTest;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationUtils;
 import org.opensha.commons.geo.LocationVector;
 import org.opensha.commons.util.FaultUtils;
+//import org.opensha.refFaultParamDb.vo.FaultSection;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.SimpleFaultData;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class DownDipSubSectBuilder {
 	
@@ -25,6 +30,68 @@ public class DownDipSubSectBuilder {
 	private Map<Integer, Integer> idToRowMap;
 	private Map<Integer, Integer> idToColMap;
 	
+	
+	private static FaultSectionPrefData buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
+		FaultSectionPrefData fsd = new FaultSectionPrefData();
+		fsd.setSectionId(sectionId);
+		fsd.setFaultTrace(trace);
+		fsd.setAveUpperDepth(upper);
+		fsd.setAveLowerDepth(lower);
+		fsd.setAveDip(dip);
+		fsd.setDipDirection((float) trace.getDipDirection());
+		return fsd.clone();
+	}
+	
+	private static FaultSectionPrefData buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
+		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
+		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
+		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
+		trace.add(new Location(Float.parseFloat((String)row.get(3)), 
+			Float.parseFloat((String)row.get(2)), 
+			Float.parseFloat((String)row.get(7)))
+		);
+		trace.add(new Location(Float.parseFloat((String)row.get(5)),    //lat
+			Float.parseFloat((String)row.get(4)), 						//lon
+			Float.parseFloat((String)row.get(7)))						//top_depth (km)
+		);
+	
+		return buildFSD(sectionId, trace, 
+			Float.parseFloat((String)row.get(7)), //top
+			Float.parseFloat((String)row.get(8)), //bottom
+			Float.parseFloat((String)row.get(6))); //dip	
+	}
+	/*
+	 * Build subsections from csv data (ex Hikurangi)
+	 * 
+	 */
+	public DownDipSubSectBuilder(String sectName, FaultSection parentSection, int startID, InputStream csvStream) throws IOException {
+		this.sectName = sectName;
+		this.parentID = parentSection.getSectionId();
+		Integer colIndex = 0;
+		Integer rowIndex = 0;
+		
+		CSVFile<String> csv = CSVFile.readStream(csvStream, false);
+		
+		subSects = new FaultSectionPrefData[30][30];
+		idToRowMap = new HashMap<>();
+		idToColMap = new HashMap<>();
+		
+		for (int row=1; row<csv.getNumRows(); row++) {
+			List<String> csvLine = csv.getLine(row);
+			FaultSectionPrefData fs = buildFaultSectionFromCsvRow(startID, csvLine);
+			fs.setParentSectionId(parentSection.getSectionId());
+			fs.setParentSectionName(parentSection.getSectionName());
+			colIndex = Integer.parseInt(csvLine.get(0));
+			rowIndex = Integer.parseInt(csvLine.get(1));
+			
+			subSects[colIndex][rowIndex] = fs;
+			idToRowMap.put(startID, rowIndex);
+			idToColMap.put(startID, colIndex);
+			startID++;
+		}		
+	}
+	
+		
 	public DownDipSubSectBuilder(String sectName, int parentID, int startID,
 			SimpleFaultData faultData, double aveRake, int numAlongStrike, int numDownDip) {
 		this.sectName = sectName;
@@ -100,12 +167,12 @@ public class DownDipSubSectBuilder {
 		}
 	}
 	
-	public FaultSectionPrefData[][] getSubSects() {
+	public FaultSection[][] getSubSects() {
 		return subSects;
 	}
 	
-	public FaultSectionPrefData getSubSect(int row, int col) {
-		return subSects[row][col];
+	public FaultSection getSubSect(int row, int col) {
+		return subSects[col][row];
 	}
 	
 	public int getRow(FaultSection sect) {
@@ -118,6 +185,14 @@ public class DownDipSubSectBuilder {
 		Preconditions.checkArgument(idToColMap.containsKey(sect.getSectionId()),
 				"Unexpected sub sect: %s. %s", sect.getSectionId(), sect.getSectionName());
 		return idToColMap.get(sect.getSectionId());
+	}
+	
+	public int getNumCols() {
+		return subSects.length;
+	}
+	
+	public int getNumRows() {
+		return subSects[0].length;
 	}
 	
 	public List<Integer> getNeighbors(FaultSection sect) {
@@ -152,11 +227,15 @@ public class DownDipSubSectBuilder {
 		return parentID;
 	}
 	
-	public List<FaultSectionPrefData> getSubSectsList() {
-		List<FaultSectionPrefData> sects = new ArrayList<>();
+	public List<FaultSection> getSubSectsList() {
+		List<FaultSection> sects = new ArrayList<>();
+		FaultSectionPrefData fs = new FaultSectionPrefData();
 		for (int col=0; col<subSects.length; col++)
-			for (int row=0; row<subSects[col].length; row++)
-				sects.add(subSects[col][row]);
+			for (int row=0; row<subSects[col].length; row++) {
+				fs = subSects[col][row];
+				if (fs != null)
+					sects.add(fs);
+			}
 		return sects;
 	}
 
@@ -168,7 +247,7 @@ public class DownDipSubSectBuilder {
 		double lowerDepth = 30d;
 		double dip = 35d;
 		int numDownDip = 4;
-		int numAlongStrike = 4;
+		int numAlongStrike = 10;
 		FaultTrace trace = new FaultTrace(sectName);
 		trace.add(new Location(34, -118, upperDepth));
 		trace.add(new Location(34.1, -118.25, upperDepth));
@@ -189,7 +268,6 @@ public class DownDipSubSectBuilder {
 						+" at row="+row+",col="+col+" has "+conns.size()+" neighbors");
 			}
 		}
-		System.out.println("DONE!");
 	}
 
 }

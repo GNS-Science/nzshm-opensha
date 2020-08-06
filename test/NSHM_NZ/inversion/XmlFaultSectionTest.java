@@ -1,19 +1,16 @@
 package NSHM_NZ.inversion;
 
-import static org.junit.Assert.*;
-
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.io.IOException;
+import java.io.BufferedInputStream;
 import java.util.List;
-import org.dom4j.DocumentException;
+
+import org.dom4j.Document;
+import org.dom4j.io.SAXReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.opensha.commons.geo.Location;
-
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.faultSurface.FaultTrace;
+
+import com.google.common.collect.Lists;
+
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 /*
@@ -23,13 +20,14 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
 public class XmlFaultSectionTest {
 
     static List<FaultSection> fsd;
-	
+    
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		// this is the input fault section data file
-		File fsdFile = new File("./data/FaultModels/alderman_sections.xml");
-		// load in the fault section data ("parent sections")
-		fsd = FaultModels.loadStoredFaultSections(fsdFile);
+		BufferedInputStream fsdFile = (BufferedInputStream) XmlFaultSectionTest.class.getResourceAsStream("fixtures/alderman_sections.xml");
+		SAXReader reader = new SAXReader();
+	    Document doc = reader.read(fsdFile);
+		fsd = FaultModels.loadStoredFaultSections(doc);
 	}
 	
     @Test 

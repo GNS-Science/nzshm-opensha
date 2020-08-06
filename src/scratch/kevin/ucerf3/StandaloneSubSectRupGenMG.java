@@ -1,4 +1,4 @@
-package ucerf3;
+package scratch.kevin.ucerf3;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -40,7 +40,7 @@ public class StandaloneSubSectRupGenMG {
 	/**
 	 * Create opensha rupture sets for NZ surface fault sections as simply as possible.
 	 * 
-	 * Based on https://github.com/opensha/opensha-dev/blob/a36d4f49d3fe1a70b86f3ab4b3e2280352a21ecb/src/scratch/kevin/ucerf3/StandaloneSubSectRupGen.java
+	 * Based on https://github.com/opensha/opensha-dev/blob/a36d4f49d3fe1a70b86f3ab4b3e2280352a21ecb/src/scratch/kevin/scratch.kevin.ucerf3/StandaloneSubSectRupGen.java
      * with simlifications by MattG
      *
 	 * 
