@@ -1,12 +1,17 @@
 package scratch.kevin.ucerf3.downDipSubSectTest.demo;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 //import java.util.HashMap;
 import java.util.List;
 //import java.util.Map;
+
+import javax.imageio.stream.FileImageInputStream;
 
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.util.FaultUtils;
@@ -23,18 +28,20 @@ import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.SimpleFaultData;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 import NSHM_NZ.inversion.InterfaceRuptureSetBuilderTest;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.inversion.SectionCluster;
-import scratch.UCERF3.inversion.SectionClusterList;
-import scratch.UCERF3.inversion.SectionConnectionStrategy;
-import scratch.UCERF3.utils.DeformationModelFetcher;
+//import scratch.UCERF3.inversion.SectionCluster;
+//import scratch.UCERF3.inversion.SectionClusterList;
+//import scratch.UCERF3.inversion.SectionConnectionStrategy;
+//import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.kevin.ucerf3.downDipSubSectTest.DownDipSubSectBuilder;
 import scratch.kevin.ucerf3.downDipSubSectTest.DownDipTestPermutationStrategy;
+import scratch.kevin.ucerf3.downDipSubSectTest.RectangularityFilter;
 
 public class HikurangiDemoOne {
 
@@ -51,16 +58,19 @@ public class HikurangiDemoOne {
 		parentSection.setSectionId(10000);
 		parentSection.setSectionName(sectName);
 		
-		try (InputStream inputStream = HikurangiDemoOne.class
-				.getClassLoader().getResourceAsStream("patch_4_10.csv")) {
-			downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }		
+//		try (InputStream inputStream = HikurangiDemoOne.class
+//				.getClassLoader().getResourceAsStream("patch_4_10.csv")) {
+//			downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }		
 //		InputStream csvdata = HikurangiDemoOne.class.class.getClassLoader().getResourceAsStream("patch_4_10.csv");		
-
-	
+		
+		File initialFile = new File("./data/FaultModels/subduction_tile_parameters.csv");
+	    InputStream inputStream = new FileInputStream(initialFile);
+		downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
+		
 		List<FaultSection> subSections = new ArrayList<>();
 		subSections.addAll(downDipBuilder.getSubSectsList());
 		System.out.println("Have "+subSections.size()+" sub-sections for "+sectName);
@@ -72,7 +82,9 @@ public class HikurangiDemoOne {
 		
 		// instantiate plausibility filters
 		List<PlausibilityFilter> filters = new ArrayList<>();
-//		filters.add(new RectangularityFilter(downDipBuilder, 1));
+		int minDimension = 1; // minimum numer of rows or columns
+		double maxAspectRatio = 5d; // max aspect ratio of rows/cols or cols/rows
+		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
 		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		
