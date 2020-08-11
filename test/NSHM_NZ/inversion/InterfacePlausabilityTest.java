@@ -30,14 +30,14 @@ import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.kevin.ucerf3.downDipSubSectTestOld.DownDipSubSectBuilder;
+import scratch.kevin.ucerf3.downDipSubSectTestOld.DownDipTestPlausibilityConfig;
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
-import ucerf3.downDipSubSectTest.DownDipSubSectBuilder;
-import ucerf3.downDipSubSectTest.DownDipTestPlausibilityConfig;
 
 /*
  * Build FaultSections from a CSV fixture containing 9 10km * 10km subsections of the Hikurangi Interface geometry.
  * 
- * Together with latest work by Kevin in opensha-ucerf3
+ * Together with latest work by Kevin in opensha-scratch.kevin.ucerf3
  * 
  * @author chrisbc
 */

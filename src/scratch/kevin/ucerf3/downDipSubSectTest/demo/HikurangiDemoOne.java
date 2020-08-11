@@ -31,7 +31,7 @@ import org.opensha.sha.faultSurface.SimpleFaultData;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
-import NSHM_NZ.inversion.InterfaceRuptureSetBuilderTest;
+//import NSHM_NZ.inversion.InterfaceRuptureSetBuilderTest;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 //import scratch.UCERF3.inversion.SectionCluster;
