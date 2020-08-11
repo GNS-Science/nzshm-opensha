@@ -84,10 +84,14 @@ public class DownDipSubSectBuilder {
 			colIndex = Integer.parseInt(csvLine.get(0));
 			rowIndex = Integer.parseInt(csvLine.get(1));
 			
-			subSects[colIndex][rowIndex] = fs;
-			idToRowMap.put(startID, rowIndex);
-			idToColMap.put(startID, colIndex);
-			startID++;
+			try  {
+				subSects[colIndex][rowIndex] = fs;
+				idToRowMap.put(startID, rowIndex);
+				idToColMap.put(startID, colIndex);
+				startID++;
+		    } catch (Exception e) {
+		        	e.printStackTrace();
+			}
 		}		
 	}
 	

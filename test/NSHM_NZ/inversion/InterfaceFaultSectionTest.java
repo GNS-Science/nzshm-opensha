@@ -229,7 +229,7 @@ public class InterfaceFaultSectionTest {
 	}
 	
 
-	@Test
+	//@Test
 	public void testKiranDemo() throws IOException {
 		assertEquals(1, 2);
 		
