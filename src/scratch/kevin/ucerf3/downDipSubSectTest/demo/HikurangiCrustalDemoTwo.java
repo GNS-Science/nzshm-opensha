@@ -7,12 +7,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 //import java.util.HashMap;
 import java.util.List;
 //import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.imageio.stream.FileImageInputStream;
 
+import org.dom4j.DocumentException;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.util.FaultUtils;
 import org.opensha.commons.util.IDPairing;
@@ -30,51 +34,83 @@ import org.opensha.sha.faultSurface.SimpleFaultData;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
-//import NSHM_NZ.inversion.InterfaceRuptureSetBuilderTest;
 import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-//import scratch.UCERF3.inversion.SectionCluster;
-//import scratch.UCERF3.inversion.SectionClusterList;
-//import scratch.UCERF3.inversion.SectionConnectionStrategy;
-//import scratch.UCERF3.utils.DeformationModelFetcher;
+
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.kevin.ucerf3.downDipSubSectTest.DownDipSubSectBuilder;
 import scratch.kevin.ucerf3.downDipSubSectTest.DownDipTestPermutationStrategy;
 import scratch.kevin.ucerf3.downDipSubSectTest.RectangularityFilter;
 
-public class HikurangiDemoOne {
+public class HikurangiCrustalDemoTwo {
 
 	static DownDipSubSectBuilder downDipBuilder;
 	
-	public static void main(String[] args) throws IOException {
-		File outputFile = new File("/tmp/rupSetInterface30km.zip");
+	public static void main(String[] args) throws DocumentException, IOException {
+		// maximum sub section length (in units of DDW)
+		double maxSubSectionLength = 0.5;
+		// max distance for linking multi fault ruptures, km
+		//double maxDistance = 0.5d;
 		
-		String sectName = "Demo TWO interfaceFault";
-		int sectID = 0;
-		int startID = 0;
+		File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
+	
+		File fsdFile = new File("./data/FaultModels/cfm_test.xml");
 		
-		FaultSection parentSection = new FaultSectionPrefData();
-		parentSection.setSectionId(10000);
-		parentSection.setSectionName(sectName);
+		// load in the fault section data ("parent sections")
+		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
 		
-//		try (InputStream inputStream = HikurangiDemoOne.class
-//				.getClassLoader().getResourceAsStream("patch_4_10.csv")) {
-//			downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }		
-//		InputStream csvdata = HikurangiDemoOne.class.class.getClassLoader().getResourceAsStream("patch_4_10.csv");		
+		Stream<Integer> myStream01 = Stream.of(83, 84, 85, 86, 87);
+		Collection<Integer> sectsWairarapa = myStream01.collect(Collectors.toCollection(ArrayList::new));
+
+		Stream<Integer> myStream02 = Stream.of(89, 90, 91, 92, 93);
+		Collection<Integer> sectsWellington = myStream02.collect(Collectors.toCollection(ArrayList::new));
 		
+		List<Integer> sectsToKeep = Lists.newArrayList(Iterables.concat(sectsWairarapa, sectsWellington));
+
+   	    if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
+		 	System.out.println("Only keeping these parent fault sections: "
+		 			+Joiner.on(",").join(sectsToKeep));
+		 	// iterate backwards as we will be removing from the list
+		 	for (int i=fsd.size(); --i>=0;)
+		 		if (!sectsToKeep.contains(fsd.get(i).getSectionId()))
+		 			fsd.remove(i);
+		 }
+			
+		
+		// build the subsections
+		List<FaultSection> subSections = new ArrayList<>();
+		int sectIndex = 0;
+		for (FaultSection parentSect : fsd) {
+			double ddw = parentSect.getOrigDownDipWidth();
+			double maxSectLength = ddw*maxSubSectionLength;
+			// the "2" here sets a minimum number of sub sections
+			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
+			subSections.addAll(newSubSects);
+			sectIndex += newSubSects.size();
+		}
+		
+		System.out.println(subSections.size()+" Sub Sections");
+		
+		String sectName = "Interface Fault 30km";
+//		int sectID = 0;
+		int startID = subSections.size();
+		
+		FaultSection interfaceParentSection = new FaultSectionPrefData();
+		interfaceParentSection.setSectionId(10000);
+		interfaceParentSection.setSectionName(sectName);
+				
 		File initialFile = new File("./data/FaultModels/subduction_tile_parameters_30.csv");
 	    InputStream inputStream = new FileInputStream(initialFile);
-		downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
+		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, startID, inputStream);
 		
-		List<FaultSection> subSections = new ArrayList<>();
+		// Add the interface subsections
 		subSections.addAll(downDipBuilder.getSubSectsList());
-		System.out.println("Have "+subSections.size()+" sub-sections for "+sectName);
-		System.out.println("Have "+subSections.size()+" sub-sections in total");
+		
+		System.out.println("Have "+subSections.size()+" sub-sections in total");		
 		
 		for (int s=0; s<subSections.size(); s++)
 			Preconditions.checkState(subSections.get(s).getSectionId() == s,
@@ -147,7 +183,6 @@ public class HikurangiDemoOne {
 		}
 		
 		String info = "Test down-dip subsectioning rup set";
-		
 		FaultSystemRupSet rupSet = new FaultSystemRupSet(subSections, sectSlipRates, null, sectAreasReduced,
 				rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths, info);
 		FaultSystemIO.writeRupSet(rupSet, outputFile);
