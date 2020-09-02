@@ -16,8 +16,9 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentException;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-
+import org.junit.rules.TemporaryFolder;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.util.IDPairing;
@@ -49,6 +50,9 @@ import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 public class InterfaceFaultSectionTest {
 
 	private static final double grid_disc = 5d;
+	
+	@Rule
+	public TemporaryFolder temp = new TemporaryFolder();
 
 	//TODO move this helper to a utils.* class
 	private static FaultSectionPrefData buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
@@ -165,15 +169,13 @@ public class InterfaceFaultSectionTest {
 		
 		System.out.println(subSections.size() + " Subduction Fault Sections");
 
-		// directory to write output files
-		File outputDir = new File("/tmp");
 		// maximum sub section length (in units of DDW)
 		double maxSubSectionLength = 0.5;
 		// max distance for linking multi fault ruptures, km
 		double maxDistance = 10d;
 
 		// write subduction section data to file
-		File subductionSectDataFile = new File(outputDir, "subduction_sections.xml");
+		File subductionSectDataFile = temp.newFile("subduction_sections.xml");
 		Document doc0 = XMLUtils.createDocumentWithRoot();
 		FaultSystemIO.fsDataToXML(doc0.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subductionSectDataFile, doc0);
@@ -206,7 +208,7 @@ public class InterfaceFaultSectionTest {
 
 		// write rupture/subsection associations to file
 		// format: rupID	sectID1,sectID2,sectID3,...,sectIDN
-		File rupFile = new File(outputDir, "ruptures.txt");
+		File rupFile = temp.newFile("ruptures.txt");
 		FileWriter fw = new FileWriter(rupFile);
 		Joiner j = Joiner.on(",");
 		for (int i=0; i<ruptures.size(); i++) {
@@ -222,7 +224,7 @@ public class InterfaceFaultSectionTest {
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
 		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 		
-		File zipFile = new File(outputDir, "rupSet.zip");
+		File zipFile = temp.newFile("rupSet.zip");
 		FaultSystemIO.writeRupSet(rupSet, zipFile);
 
 
