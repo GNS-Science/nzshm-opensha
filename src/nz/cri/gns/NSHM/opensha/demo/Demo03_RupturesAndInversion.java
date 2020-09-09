@@ -47,6 +47,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintW
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
@@ -74,11 +75,11 @@ public class Demo03_RupturesAndInversion {
 	
 		//File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
 
-		File rupSetFile = new File("/tmp/down_dip_sub_sect_rup_set.zip");
-		File solFile = new File("/tmp/down_dip_sub_sect_sol.zip");
-	
+		File rupSetFile = new File("/tmp/demo_03_rupture_set.zip");
+		File solFile = new File("/tmp/demo_03_solution.zip");
 		File fsdFile = new File("./data/FaultModels/cfm_test.xml");
-		
+		File progressReport = new File("/tmp/demo_03_progress");
+				
 		// load in the fault section data ("parent sections")
 		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
 		
@@ -113,8 +114,7 @@ public class Demo03_RupturesAndInversion {
 		
 		System.out.println(subSections.size()+" Sub Sections");
 		
-		String sectName = "Interface Fault 30km";
-//		int sectID = 0;
+		String sectName = "Hikurangi @ 30km2";
 		int startID = subSections.size();
 		
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
@@ -209,9 +209,7 @@ public class Demo03_RupturesAndInversion {
 					Lists.newArrayList(inequalityConstr)));
 			
 			// weight of entropy-maximization constraint (not used in UCERF3)
-			import org.opensha.sha.faultSurface.FaultTrace;
-			import org.opensha.sha.faultSurface.SimpleFaultData;
-		double smoothnessWt = 0;
+			double smoothnessWt = 0;
 			
 			/*
 			 * Build inversion inputs
@@ -226,13 +224,13 @@ public class Demo03_RupturesAndInversion {
 			CompletionCriteria criteria = TimeCompletionCriteria.getInMinutes(inversionMins);
 			
 			// Bring up window to track progress
-			// criteria = new ProgressTrackingCompletionCriteria(criteria, 0.1);
-
+			// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport, 0.1d);
+			
 			// this will use all available processors
 			int numThreads = Runtime.getRuntime().availableProcessors();
 
 			// this is the "sub completion criteria" - the amount of time (or iterations) between synchronization
-			CompletionCriteria subCompetionCriteria = TimeCompletionCriteria.getInSeconds(1); // 1 second;
+			CompletionCriteria subCompetionCriteria = TimeCompletionCriteria.getInSeconds(10); // 1 second;
 			
 			ThreadedSimulatedAnnealing tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
 					inputGen.getInitialSolution(), smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),
