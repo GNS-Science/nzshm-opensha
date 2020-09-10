@@ -66,19 +66,19 @@ public class Demo03_RupturesAndInversion {
 	public static void main(String[] args) throws DocumentException, IOException {
 		
 		boolean runInversion = true;
-		long inversionMins = 1; // run it for this many minutes
+		long inversionMins = 120; // run it for this many minutes
 		
 		// maximum sub section length (in units of DDW)
 		double maxSubSectionLength = 0.5;
 		// max distance for linking multi fault ruptures, km
 		//double maxDistance = 0.5d;
 	
-		//File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
+		//File outputFile = new File("./tmp/rupSetLowerNIAndInterface30km.zip");
 
-		File rupSetFile = new File("/tmp/demo_03_rupture_set.zip");
-		File solFile = new File("/tmp/demo_03_solution.zip");
+		File rupSetFile = new File("./tmp/demo_03_rupture_set.zip");
+		File solFile = new File("./tmp/demo_03_10km_120m_solution.zip");
 		File fsdFile = new File("./data/FaultModels/cfm_test.xml");
-		File progressReport = new File("/tmp/demo_03_progress");
+		File progressReport = new File("./tmp/demo_03_progress");
 				
 		// load in the fault section data ("parent sections")
 		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
@@ -114,14 +114,14 @@ public class Demo03_RupturesAndInversion {
 		
 		System.out.println(subSections.size()+" Sub Sections");
 		
-		String sectName = "Hikurangi @ 30km2";
+		String sectName = "Hikurangi @ 10km2";
 		int startID = subSections.size();
 		
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
 		interfaceParentSection.setSectionId(10000);
 		interfaceParentSection.setSectionName(sectName);
 				
-		File initialFile = new File("./data/FaultModels/subduction_tile_parameters_30.csv");
+		File initialFile = new File("./data/FaultModels/subduction_tile_parameters.csv");
 	    InputStream inputStream = new FileInputStream(initialFile);
 		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, startID, inputStream);
 		
@@ -137,7 +137,7 @@ public class Demo03_RupturesAndInversion {
 		// instantiate plausibility filters
 		List<PlausibilityFilter> filters = new ArrayList<>();
 		int minDimension = 1; // minimum numer of rows or columns
-		double maxAspectRatio = 5d; // max aspect ratio of rows/cols or cols/rows
+		double maxAspectRatio = 3d; // max aspect ratio of rows/cols or cols/rows
 		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
 		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
@@ -230,7 +230,7 @@ public class Demo03_RupturesAndInversion {
 			int numThreads = Runtime.getRuntime().availableProcessors();
 
 			// this is the "sub completion criteria" - the amount of time (or iterations) between synchronization
-			CompletionCriteria subCompetionCriteria = TimeCompletionCriteria.getInSeconds(10); // 1 second;
+			CompletionCriteria subCompetionCriteria = TimeCompletionCriteria.getInSeconds(30); // 1 second;
 			
 			ThreadedSimulatedAnnealing tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
 					inputGen.getInitialSolution(), smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),

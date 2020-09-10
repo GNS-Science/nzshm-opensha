@@ -79,7 +79,7 @@ public class DownDipSubSectBuilder {
 		
 		CSVFile<String> csv = CSVFile.readStream(csvStream, false);
 		
-		subSects = new FaultSectionPrefData[35][35];
+		subSects = new FaultSectionPrefData[100][25];
 		idToRowMap = new HashMap<>();
 		idToColMap = new HashMap<>();
 		
