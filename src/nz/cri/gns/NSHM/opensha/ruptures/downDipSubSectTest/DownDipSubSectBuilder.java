@@ -66,6 +66,15 @@ public class DownDipSubSectBuilder {
 			Float.parseFloat((String)row.get(8)), //bottom
 			Float.parseFloat((String)row.get(6))); //dip	
 	}
+
+	/*
+	 * a DownDip Builder is needed for the permutation strategy  
+	 * 
+	 */
+	public DownDipSubSectBuilder(FaultSection parentSection) {
+		this.parentID = parentSection.getSectionId();
+	}
+	
 	/*
 	 * Build subsections from csv data (ex Hikurangi)
 	 * 
