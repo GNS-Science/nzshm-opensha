@@ -54,15 +54,14 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
 /**
  * @author chrisbc
  *
+ * initial testing of crustal inversions using the NZ CFM 0.3 XML
+ * 
  */
 public class scriptCrustalInversionRunner {
 
 	static DownDipSubSectBuilder downDipBuilder;
 
 	public static CommandLine parseCommandLine(String[] args) throws ParseException {
-//		Option filterOption = new Option("i", "ids", true, "a list of IDs to filter");
-//		filterOption.setArgs(Option.UNLIMITED_VALUES);
-//		filterOption.setValueSeparator(',');
 		Options options = new Options()
 				.addRequiredOption("f", "fsdFile", true, "an opensha-xml Fault Source file")
 				.addRequiredOption("o", "outputDir", true, "an existing directory to receive output file(s)")
@@ -71,17 +70,13 @@ public class scriptCrustalInversionRunner {
 				.addOption("d", "maxFaultSections", true, "limit maximum fault ruptures to process, default 1000")
 				.addOption("i", "inversionMins", true, "run inversions for this many minutes")
 				.addOption("s", "syncInterval", true, "seconds between inversion synchronisations")
-				.addOption("r", "runInversion", true, "run inversion stage");
-				
-//		.addOption(filterOption);
-//		CommandLine cmd = new DefaultParser().parse(options, args);
-
+				.addOption("r", "runInversion", true, "run inversion stage");				
 		return new DefaultParser().parse(options, args);
 	}
 	
 	/**
 	 * @param args
-	 * @throws ParseException 
+	 * @throws DocumentException, IOException, ParseException 
 	 */
 	public static void main(String[] args) throws DocumentException, IOException, ParseException {
 		CommandLine cmd = parseCommandLine(args);
@@ -93,7 +88,7 @@ public class scriptCrustalInversionRunner {
 		double maxDistance = 0.25; // max distance for linking multi fault ruptures, km
 		long maxFaultSections = 1000; // maximum fault ruptures to process
 		
-		File outputDir = new File("/tmp"); 
+		File outputDir = new File(cmd.getOptionValue("outputDir")); 
 		File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
 		File solFile = new File(outputDir, "CFM_crustal_solution.zip");
 		File fsdFile = new File(cmd.getOptionValue("fsdFile")); 
