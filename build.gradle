@@ -18,14 +18,18 @@ dependencies {
 }
 
 test {
-    filter { includeTestsMatching('*NSHM_NZ.*')}
+    exclude 'org/opensha/**'
+    exclude '**/DataSuite'
+    filter {
+        includeTestsMatching('*NSHM_NZ.*')
+        getIncludePatterns().remove('*Suite*')
+    }
 }
 
 task localTests( type: Test, dependsOn: testClasses ){
     //filter { excludeTestsMatching('*.opensha.commons.*')} 
     filter { includeTestsMatching('*NSHM_NZ.*')}
     filter { includeTestsMatching('*UCERF3.inversion.*')}
-
     //filter { excludeTestsMatching 'generic.*' } 
     // excludes a whole package, "generic". NB this is not a regex:
     // '*' is simply "wildcard" and dot means dot ... other more 
