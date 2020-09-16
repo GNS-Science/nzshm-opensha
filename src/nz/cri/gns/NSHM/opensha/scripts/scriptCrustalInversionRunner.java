@@ -67,7 +67,8 @@ public class scriptCrustalInversionRunner {
 				.addRequiredOption("o", "outputDir", true, "an existing directory to receive output file(s)")
 				.addOption("l", "maxLength", true, "maximum sub section length (in units of DDW) default")
 				.addOption("d", "maxDistance", true, "max distance for linking multi fault ruptures, km")
-				.addOption("d", "maxFaultSections", true, "limit maximum fault ruptures to process, default 1000")
+				.addOption("d", "maxFaultSections", true, "(for testing) set number fault ruptures to process, default 1000")
+				.addOption("k", "skipFaultSections", true, "(for testing) skip n fault ruptures, default 0")
 				.addOption("i", "inversionMins", true, "run inversions for this many minutes")
 				.addOption("s", "syncInterval", true, "seconds between inversion synchronisations")
 				.addOption("r", "runInversion", true, "run inversion stage");				
@@ -87,6 +88,7 @@ public class scriptCrustalInversionRunner {
 		double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
 		double maxDistance = 0.25; // max distance for linking multi fault ruptures, km
 		long maxFaultSections = 1000; // maximum fault ruptures to process
+		long skipFaultSections = 0; // skip n fault ruptures, default 0"
 		
 		File outputDir = new File(cmd.getOptionValue("outputDir")); 
 		File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
@@ -105,10 +107,6 @@ public class scriptCrustalInversionRunner {
 			System.out.println("set maxDistance to " + cmd.getOptionValue("maxDistance"));
 			maxDistance = Double.parseDouble(cmd.getOptionValue("maxDistance"));
 		}
-		if (cmd.hasOption("maxFaultSections")) {
-			System.out.println("set maxFaultSections to " + cmd.getOptionValue("maxFaultSections"));
-			maxFaultSections = Long.parseLong(cmd.getOptionValue("maxFaultSections"));
-		}			
 		if (cmd.hasOption("runInversion")) {
 			System.out.println("set runInversion to " + cmd.getOptionValue("runInversion"));
 			runInversion = Boolean.parseBoolean(cmd.getOptionValue("runInversion"));
@@ -121,18 +119,30 @@ public class scriptCrustalInversionRunner {
 			System.out.println("set syncInterval to " + cmd.getOptionValue("syncInterval"));
 			syncInterval = Long.parseLong(cmd.getOptionValue("syncInterval"));
 		}
+		if (cmd.hasOption("maxFaultSections")) {
+			System.out.println("set maxFaultSections to " + cmd.getOptionValue("maxFaultSections"));
+			maxFaultSections = Long.parseLong(cmd.getOptionValue("maxFaultSections"));
+		}			
+		if (cmd.hasOption("skipFaultSections")) {
+			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
+			skipFaultSections = Long.parseLong(cmd.getOptionValue("skipFaultSections"));
+		}			
+
 		System.out.println("=========");
 
 		// load in the fault section data ("parent sections")
 		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
 		System.out.println("Fault model has "+fsd.size()+" fault sections");
 		
-		if (maxFaultSections < 1000) {
+		if (maxFaultSections < 1000 || skipFaultSections > 0) {
 		 	// iterate backwards as we will be removing from the list
-		 	for (int i=fsd.size(); --i>=0;)
-		 		if (fsd.get(i).getSectionId() > maxFaultSections)
-		 			fsd.remove(i);		
-			System.out.println("Fault model has "+fsd.size()+" fault sections");
+			long currSectionId; 
+		 	for (int i=fsd.size(); --i>=0;) {
+		 		currSectionId = fsd.get(i).getSectionId();
+		 		if ( currSectionId >= (maxFaultSections + skipFaultSections) || currSectionId < skipFaultSections)
+		 			fsd.remove(i);
+		 	}
+			System.out.println("Fault model now has "+fsd.size()+" fault sections");
 		}
 		
 		// build the subsections
