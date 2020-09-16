@@ -13,6 +13,7 @@ dependencies {
     compileAndResource project(path: ':opensha-ucerf3')
 
     compileAndResource 'com.google.code.gson:gson:2.8.5'
+    compileAndResource 'commons-cli:commons-cli:1.4'
 
     testCompile 'junit:junit:4.12'
 }
