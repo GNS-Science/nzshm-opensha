@@ -1,5 +1,10 @@
 language: java
 
+before_install:
+  - git clone https://github.com/opensha/opensha-commons.git GNS-Science/opensha-commons
+  - git clone https://github.com/opensha/opensha-core.git GNS-Science/opensha-core
+  - git clone https://github.com/opensha/opensha-ucerf3.git GNS-Science/opensha-ucerf3
+
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
