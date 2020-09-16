@@ -133,7 +133,7 @@ public class InterfaceFaultSectionTest {
 	@Test
 	public void testBuildSubSectionsFromCsvFixture() throws IOException {
 		FaultSection fs = null;
-		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
+		InputStream csvdata = this.getClass().getResourceAsStream("patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
 		List<FaultSection> subSections = Lists.newArrayList();
@@ -152,7 +152,7 @@ public class InterfaceFaultSectionTest {
 
 	@Test
 	public void testRuptureGeneratorSetup() throws IOException {
-		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
+		InputStream csvdata = this.getClass().getResourceAsStream("patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
 		FaultSectionPrefData parentSection = new FaultSectionPrefData();

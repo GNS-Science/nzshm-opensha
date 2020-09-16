@@ -24,7 +24,7 @@ public class XmlFaultSectionTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		// this is the input fault section data file
-		BufferedInputStream fsdFile = (BufferedInputStream) XmlFaultSectionTest.class.getResourceAsStream("fixtures/alderman_sections.xml");
+		BufferedInputStream fsdFile = (BufferedInputStream) XmlFaultSectionTest.class.getResourceAsStream("alderman_sections.xml");
 		SAXReader reader = new SAXReader();
 	    Document doc = reader.read(fsdFile);
 		fsd = FaultModels.loadStoredFaultSections(doc);

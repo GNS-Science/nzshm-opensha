@@ -113,7 +113,7 @@ public class InterfacePlausabilityTest {
 
 	@Test
 	public void testSubductionRuptureGeneratorSetup() throws IOException {
-		InputStream csvdata = this.getClass().getResourceAsStream("fixtures/patch_4_10.csv");
+		InputStream csvdata = this.getClass().getResourceAsStream("patch_4_10.csv");
 		CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 		
 		FaultSectionPrefData parentSection = new FaultSectionPrefData();
