@@ -38,6 +38,8 @@ import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder
 //import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.RectangularityFilter;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.SubSectionParentFilter;
+
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
@@ -175,6 +177,7 @@ public class scriptCrustalInversionRunner {
 //		int minDimension = 1; // minimum numer of rows or columns
 //		double maxAspectRatio = 3d; // max aspect ratio of rows/cols or cols/rows
 //		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
+		filters.add(new SubSectionParentFilter(2));
 		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		
@@ -216,7 +219,7 @@ public class scriptCrustalInversionRunner {
 			/*
 			 * MFD constraints
 			 */
-			double totalRateM5 = 5d; // expected number of M>=5's per year
+			double totalRateM5 = 10d; // expected number of M>=5's per year
 			double bValue = 1d; // G-R b-value
 			// magnitude to switch from MFD equality to MFD inequality
 			double mfdTransitionMag = 7.85;
@@ -291,7 +294,6 @@ public class scriptCrustalInversionRunner {
 			FaultSystemSolution sol = new FaultSystemSolution(rupSet, solution_adjusted);
 			FaultSystemIO.writeSol(sol, solFile);
 		}		
-		
 		
 		
 		
