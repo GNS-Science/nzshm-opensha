@@ -1,0 +1,74 @@
+@startuml
+package org.opensha.refFaultParamDb.vo {
+ class FaultSectionPrefData {
+  This class contains preferred fault section data 
+   (rather than the estimates) from  FaultSectionData.
+
+  search ucerf3 hits: 1030 matches across 93 files
+  ---
+  -sectionId
+  -sectionName
+  -shortName
+  -aveLongTermSlipRate
+  -slipRateStdDev
+  -aveDip
+  -aveRake
+  -aveUpperDepth
+  -aveLowerDepth
+  -connector
+  -zonePolygon
+  ...
+ }
+}
+
+package org.opensha.sha.faultSurface {
+ class FaultTrace {
+  A list of Location objects 
+  "representing the top trace of a fault 
+  (with non-zero depth if it buried)"
+  ---
+  -faultName
+ }
+
+ class StirlingGriddedSurface {
+ }
+
+ class QuadSurface {
+ }
+
+ interface FaultSection {
+ }
+
+ interface RuptureSurface {
+ }
+ 
+}
+
+package org.opensha.commons.geo {
+ class LocationList{
+ }
+
+ class Location {
+ ---
+ -lat
+ -lon
+ -depth
+ }
+ 
+ class Region {
+ }
+}
+
+FaultSectionPrefData --o "1" FaultTrace
+FaultSectionPrefData --o "1" Region
+FaultSectionPrefData --> FaultSectionPrefData : (parent)
+FaultSectionPrefData --> StirlingGriddedSurface 
+FaultSectionPrefData --> QuadSurface 
+FaultSectionPrefData ..|> FaultSection
+
+FaultSection --> RuptureSurface
+FaultTrace --|> LocationList
+LocationList --* "n" Location
+QuadSurface ..|> RuptureSurface 
+StirlingGriddedSurface ..|> RuptureSurface : through several abstract classes
+@enduml
