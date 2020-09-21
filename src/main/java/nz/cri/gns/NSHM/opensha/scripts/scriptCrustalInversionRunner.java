@@ -6,11 +6,17 @@ package nz.cri.gns.NSHM.opensha.scripts;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
@@ -23,6 +29,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MF
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
@@ -64,6 +71,11 @@ public class scriptCrustalInversionRunner {
 	static DownDipSubSectBuilder downDipBuilder;
 
 	public static CommandLine parseCommandLine(String[] args) throws ParseException {
+		
+		Option faultIdInOption = new Option("n", "faultIdIn", true, "a list of faultSectionIDs for plausability filter");
+		faultIdInOption.setArgs(Option.UNLIMITED_VALUES);
+		faultIdInOption.setValueSeparator(',');
+		
 		Options options = new Options()
 				.addRequiredOption("f", "fsdFile", true, "an opensha-xml Fault Source file")
 				.addRequiredOption("o", "outputDir", true, "an existing directory to receive output file(s)")
@@ -72,8 +84,9 @@ public class scriptCrustalInversionRunner {
 				.addOption("d", "maxFaultSections", true, "(for testing) set number fault ruptures to process, default 1000")
 				.addOption("k", "skipFaultSections", true, "(for testing) skip n fault ruptures, default 0")
 				.addOption("i", "inversionMins", true, "run inversions for this many minutes")
-				.addOption("s", "syncInterval", true, "seconds between inversion synchronisations")
-				.addOption("r", "runInversion", true, "run inversion stage");				
+				.addOption("y", "syncInterval", true, "seconds between inversion synchronisations")
+				.addOption("r", "runInversion", true, "run inversion stage")
+				.addOption(faultIdInOption);				
 		return new DefaultParser().parse(options, args);
 	}
 	
@@ -91,7 +104,8 @@ public class scriptCrustalInversionRunner {
 		double maxDistance = 0.25; // max distance for linking multi fault ruptures, km
 		long maxFaultSections = 1000; // maximum fault ruptures to process
 		long skipFaultSections = 0; // skip n fault ruptures, default 0"
-		
+		Set<Integer> faultIdIn = Collections.emptySet();
+				
 		File outputDir = new File(cmd.getOptionValue("outputDir")); 
 		File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
 		File solFile = new File(outputDir, "CFM_crustal_solution.zip");
@@ -128,8 +142,17 @@ public class scriptCrustalInversionRunner {
 		if (cmd.hasOption("skipFaultSections")) {
 			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
 			skipFaultSections = Long.parseLong(cmd.getOptionValue("skipFaultSections"));
+		}
+		if (cmd.hasOption("faultIdIn")) {
+//			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
+//			faultNameContains = Set();
+			faultIdIn = Stream.of(cmd.getOptionValues("faultIdIn")).map(id -> Integer.parseInt(id)).collect(Collectors.toSet());			
 		}			
-
+//		if (cmd.hasOption("faultNmedContains")) {
+////			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
+////			faultNameContains = Set();
+//			faultIdContains = Stream.of(cmd.getOptionValues("faultNameContains")).map(name -> name).collect(Collectors.toSet());			
+//		}
 		System.out.println("=========");
 
 		// load in the fault section data ("parent sections")
@@ -177,7 +200,10 @@ public class scriptCrustalInversionRunner {
 //		int minDimension = 1; // minimum numer of rows or columns
 //		double maxAspectRatio = 3d; // max aspect ratio of rows/cols or cols/rows
 //		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
-		filters.add(new SubSectionParentFilter(2));
+			
+		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
+		PlausibilityFilter idFilter = new SubSectionParentFilter(pFilter);
+		filters.add(idFilter);
 		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		
@@ -299,6 +325,11 @@ public class scriptCrustalInversionRunner {
 		
 	}
 	
+	private static Object SubSectionParentFilter(Predicate<FaultSubsectionCluster> pFilter) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private static class MySlipEnabledRupSet extends SlipAlongRuptureModelRupSet {
 	
 		/**

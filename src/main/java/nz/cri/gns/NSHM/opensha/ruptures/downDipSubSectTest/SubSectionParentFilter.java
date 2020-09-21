@@ -6,14 +6,21 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.faultSurface.FaultSection;
 
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
 
 public class SubSectionParentFilter implements PlausibilityFilter {
 
-	private int parentId;
+	private Predicate<FaultSubsectionCluster> filter;
 
-	public SubSectionParentFilter(int parentId) {
-		this.parentId = parentId;
+	public SubSectionParentFilter(Predicate<FaultSubsectionCluster> filter) {
+		this.filter = filter;
+	}
+
+	public SubSectionParentFilter() {
+		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -26,8 +33,23 @@ public class SubSectionParentFilter implements PlausibilityFilter {
 		return getShortName();
 	}
 	
+	/**
+	 * Returns a Predicate<FaultSubsectionCluster> that returns true if the FaultSubsectionCluster parentSectionID()
+	 * is required.
+	 * 
+	 * @param Set<Integer> filter list of integers to match
+	 * @return a Predicate
+	 */
+	public Predicate<FaultSubsectionCluster> makeParentIdFilter(Set<Integer> filter) {
+		if (filter.size() > 0) {
+			return cluster -> filter.contains(cluster.parentSectionID);
+		} else {
+			return cluster -> true;
+		}
+	}
+	
 	private PlausibilityResult apply(FaultSubsectionCluster cluster, boolean verbose) {
-		if (cluster.parentSectionID == parentId)
+		if (this.filter.test(cluster))
 			return PlausibilityResult.PASS;
 		return PlausibilityResult.FAIL_FUTURE_POSSIBLE;
 	}
