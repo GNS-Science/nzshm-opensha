@@ -34,6 +34,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.Plausib
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.TotalAzimuthChangeFilter;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
@@ -214,19 +215,25 @@ public class scriptCrustalInversionRunner {
 		filters.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true));
 		filters.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 580f));
 
+		
 		// this creates rectangular permutations only for our down-dip fault to speed up rupture building
 		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
 		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(maxDistance);
 		int maxNumSplays = 0; // don't allow any splays
 		
-		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(subSections, connectionStrategy,
-				distAzCalc, filters, maxNumSplays);
+		// Now we get the clusters first as they're needed for the next filter
+		List<FaultSubsectionCluster> clusters = ClusterRuptureBuilder.buildClusters(subSections,
+				connectionStrategy, distAzCalc);
+
+		// configure the filter
+		filters.add(new MinSectsPerParentFilter(2, true, clusters));
 		
+		// Builder can now proceed using the clusters and all the filters...
+		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(clusters, filters, maxNumSplays);
 		List<ClusterRupture> ruptures = builder.build(permutationStrategy);
-		
 		System.out.println("Built "+ruptures.size()+" total ruptures");
-			
+		
 		MySlipEnabledRupSet rupSet = new MySlipEnabledRupSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
 		
