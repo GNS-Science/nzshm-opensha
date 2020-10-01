@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
@@ -20,7 +19,6 @@ import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.SimpleFaultData;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class DownDipSubSectBuilder {
 	
@@ -67,6 +65,22 @@ public class DownDipSubSectBuilder {
 			Float.parseFloat((String)row.get(6))); //dip	
 	}
 
+    /**
+     * Sets up the subSects array with the size required by the CSV data.
+     *
+     * @param csv
+     */
+    private FaultSectionPrefData[][] setUpSubSectsArray(CSVFile<String> csv) {
+        int colCount = 0;
+        int rowCount = 0;
+        for (int row = 1; row < csv.getNumRows(); row++) {
+            List<String> csvLine = csv.getLine(row);
+            colCount = Math.max(Integer.parseInt(csvLine.get(0)), colCount);
+            rowCount = Math.max(Integer.parseInt(csvLine.get(1)), rowCount);
+        }
+        return new FaultSectionPrefData[colCount + 1][rowCount + 1];
+    }
+
 	/*
 	 * a DownDip Builder is needed for the permutation strategy  
 	 * 
@@ -83,12 +97,12 @@ public class DownDipSubSectBuilder {
 		this.sectName = sectName;
 		this.parentID = parentSection.getSectionId();
 
-		Integer colIndex = 0;
-		Integer rowIndex = 0;
+		int colIndex = 0;
+		int rowIndex = 0;
 		
 		CSVFile<String> csv = CSVFile.readStream(csvStream, false);
 		
-		subSects = new FaultSectionPrefData[100][25];
+		subSects = setUpSubSectsArray(csv);
 		idToRowMap = new HashMap<>();
 		idToColMap = new HashMap<>();
 		
