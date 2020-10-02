@@ -259,8 +259,10 @@ public class StandaloneSubSectRupGenNZCFM {
 				rates.put(new IDPairing(mapped1.getSectionId(), mapped2.getSectionId()), origRec);
 			}
 		}
-		
-		return new CoulombRates(rates);
+
+		// FIXME
+		// return new CoulombRates(rates);
+		return null;
 	}
 	
 	private static FaultSection getRemappedSubSect(FaultSection origSubSect,
