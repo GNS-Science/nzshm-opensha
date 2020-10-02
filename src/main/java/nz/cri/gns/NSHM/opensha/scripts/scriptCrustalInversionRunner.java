@@ -30,6 +30,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
@@ -199,39 +200,29 @@ public class scriptCrustalInversionRunner {
 		
 		downDipBuilder = new DownDipSubSectBuilder(interfaceParentSection);
 		
-		// instantiate plausibility filters
-		List<PlausibilityFilter> filters = new ArrayList<>();
-//		int minDimension = 1; // minimum numer of rows or columns
-//		double maxAspectRatio = 3d; // max aspect ratio of rows/cols or cols/rows
-//		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
-			
-		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
-		PlausibilityFilter idFilter = new SubSectionParentFilter(pFilter);
-		filters.add(idFilter);
-		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
-		filters.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f));
-		filters.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true));
-		filters.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 580f));
 
-		
 		// this creates rectangular permutations only for our down-dip fault to speed up rupture building
 		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
-		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(maxDistance);
+		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, maxDistance);
 		int maxNumSplays = 0; // don't allow any splays
-		
-		// Now we get the clusters first as they're needed for the next filter
-		List<FaultSubsectionCluster> clusters = ClusterRuptureBuilder.buildClusters(subSections,
-				connectionStrategy, distAzCalc);
 
-		// configure the filter
-		filters.add(new MinSectsPerParentFilter(2, true, clusters));
-		
+		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
+		PlausibilityConfiguration config =
+				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+						.maxSplays(maxNumSplays)
+						.add(new SubSectionParentFilter(pFilter))
+						.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f))
+						.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true))
+						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 580f))
+						.add(new MinSectsPerParentFilter(2, true, connectionStrategy))
+						.build();
+
 		// Builder can now proceed using the clusters and all the filters...
-		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(clusters, filters, maxNumSplays);
-		List<ClusterRupture> ruptures = builder.build(permutationStrategy);
+		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(config);
+		List<ClusterRupture> ruptures = builder.build(permutationStrategy, 2);
 		System.out.println("Built "+ruptures.size()+" total ruptures");
 		
 		MySlipEnabledRupSet rupSet = new MySlipEnabledRupSet(ruptures, subSections,

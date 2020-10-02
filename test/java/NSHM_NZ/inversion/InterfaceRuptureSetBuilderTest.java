@@ -28,6 +28,7 @@ import org.opensha.commons.util.XMLUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
@@ -151,9 +152,6 @@ public class InterfaceRuptureSetBuilderTest {
 			Preconditions.checkState(subSections.get(s).getSectionId() == s,
 				"section at index %s has ID %s", s, subSections.get(s).getSectionId());
 	
-		// no plausibility filters here
-		List<PlausibilityFilter> filters = new ArrayList<>();
-		
 		// Azimuths & Distances
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		
@@ -161,11 +159,15 @@ public class InterfaceRuptureSetBuilderTest {
 		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
 		
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
-		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(5d);
+		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);
 		int maxNumSplays = 0; // don't allow any splays
-		
-		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(subSections, connectionStrategy,
-																  distAzCalc, filters, maxNumSplays);
+
+		PlausibilityConfiguration config =
+				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+						.maxSplays(maxNumSplays)
+						.build();
+
+		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(config);
 		
 		List<ClusterRupture> ruptures = builder.build(permutationStrategy);
 		

@@ -15,6 +15,7 @@ import org.opensha.commons.util.FaultUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
@@ -47,7 +48,7 @@ public class Demo02_HikurangiCrustal {
 		
 		File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
 	
-		File fsdFile = new File("./data/FaultModels/cfm_test.xml");
+		File fsdFile = new File("./data/FaultModels/CFM_DEMO_crustal_opensha.xml");
 		
 		// load in the fault section data ("parent sections")
 		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
@@ -105,22 +106,23 @@ public class Demo02_HikurangiCrustal {
 			Preconditions.checkState(subSections.get(s).getSectionId() == s,
 				"section at index %s has ID %s", s, subSections.get(s).getSectionId());
 		
-		// instantiate plausibility filters
-		List<PlausibilityFilter> filters = new ArrayList<>();
-		int minDimension = 1; // minimum numer of rows or columns
-		double maxAspectRatio = 5d; // max aspect ratio of rows/cols or cols/rows
-		filters.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio));
-		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		
 		// this creates rectangular permutations only for our down-dip fault to speed up rupture building
 		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
-		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(5d);
+		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);
 		int maxNumSplays = 0; // don't allow any splays
-		
-		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(subSections, connectionStrategy,
-				distAzCalc, filters, maxNumSplays);
+
+		int minDimension = 1; // minimum numer of rows or columns
+		double maxAspectRatio = 5d; // max aspect ratio of rows/cols or cols/rows
+		PlausibilityConfiguration config =
+				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+						.maxSplays(maxNumSplays)
+						.add(new RectangularityFilter(downDipBuilder, minDimension, maxAspectRatio))
+						.build();
+
+		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(config);
 		
 		List<ClusterRupture> ruptures = builder.build(permutationStrategy);
 		

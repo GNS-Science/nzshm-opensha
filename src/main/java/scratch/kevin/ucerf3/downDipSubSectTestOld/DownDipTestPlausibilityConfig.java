@@ -9,10 +9,10 @@ import org.opensha.commons.util.IDPairing;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import scratch.UCERF3.inversion.laughTest.AbstractPlausibilityFilter;
-import scratch.UCERF3.inversion.laughTest.PlausibilityConfiguration;
+import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 
-public class DownDipTestPlausibilityConfig implements PlausibilityConfiguration {
+public class DownDipTestPlausibilityConfig implements OldPlausibilityConfiguration {
 	
 	private DownDipSubSectBuilder downDipBuilder;
 	private UCERF3PlausibilityConfig u3Config;
