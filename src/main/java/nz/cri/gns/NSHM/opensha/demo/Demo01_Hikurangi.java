@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.opensha.commons.util.FaultUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -56,7 +57,7 @@ public class Demo01_Hikurangi {
 	    InputStream inputStream = new FileInputStream(initialFile);
 		downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, inputStream);
 		
-		List<FaultSection> subSections = new ArrayList<>();
+		FaultSectionList subSections = new FaultSectionList();
 		subSections.addAll(downDipBuilder.getSubSectsList());
 		System.out.println("Have "+subSections.size()+" sub-sections for "+sectName);
 		System.out.println("Have "+subSections.size()+" sub-sections in total");

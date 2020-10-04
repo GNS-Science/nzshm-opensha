@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Sets;
+import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.FaultUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
@@ -39,75 +39,64 @@ import scratch.UCERF3.utils.FaultSystemIO;
 public class Demo02_HikurangiCrustal {
 
 	static DownDipSubSectBuilder downDipBuilder;
-	
+
 	public static void main(String[] args) throws DocumentException, IOException {
 		// maximum sub section length (in units of DDW)
 		double maxSubSectionLength = 0.5;
 		// max distance for linking multi fault ruptures, km
 		//double maxDistance = 0.5d;
-		
-		File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
-	
-		File fsdFile = new File("./data/FaultModels/CFM_DEMO_crustal_opensha.xml");
-		
-		// load in the fault section data ("parent sections")
-		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
-		
-		Stream<Integer> myStream01 = Stream.of(83, 84, 85, 86, 87);
-		Collection<Integer> sectsWairarapa = myStream01.collect(Collectors.toCollection(ArrayList::new));
 
-		Stream<Integer> myStream02 = Stream.of(89, 90, 91, 92, 93);
-		Collection<Integer> sectsWellington = myStream02.collect(Collectors.toCollection(ArrayList::new));
-		
-		List<Integer> sectsToKeep = Lists.newArrayList(Iterables.concat(sectsWairarapa, sectsWellington));
+		File outputFile = new File("/tmp/rupSetLowerNIAndInterface30km.zip");
+
+		File fsdFile = new File("./data/FaultModels/CFM_DEMO_crustal_opensha.xml");
+
+		// load in the fault section data ("parent sections")
+		FaultSectionList fsd = FaultSectionList.fromList(FaultModels.loadStoredFaultSections(fsdFile));
+
+		Set<Integer> sectsWairarapa = Sets.newHashSet(83, 84, 85, 86, 87);
+        Set<Integer> sectsWellington = Sets.newHashSet(89, 90, 91, 92, 93);
+		Set<Integer> sectsToKeep = Sets.union(sectsWairarapa, sectsWellington);
 
    	    if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
 		 	System.out.println("Only keeping these parent fault sections: "
 		 			+Joiner.on(",").join(sectsToKeep));
-		 	// iterate backwards as we will be removing from the list
-		 	for (int i=fsd.size(); --i>=0;)
-		 		if (!sectsToKeep.contains(fsd.get(i).getSectionId()))
-		 			fsd.remove(i);
+		 	fsd.removeIf(section -> !sectsToKeep.contains(section.getSectionId()));
 		 }
-			
-		
+
+
 		// build the subsections
-		List<FaultSection> subSections = new ArrayList<>();
-		int sectIndex = 0;
+		FaultSectionList subSections = new FaultSectionList(fsd);
 		for (FaultSection parentSect : fsd) {
 			double ddw = parentSect.getOrigDownDipWidth();
 			double maxSectLength = ddw*maxSubSectionLength;
 			// the "2" here sets a minimum number of sub sections
-			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
-			subSections.addAll(newSubSects);
-			sectIndex += newSubSects.size();
+			subSections.addAll(parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2));
 		}
-		
+
 		System.out.println(subSections.size()+" Sub Sections");
-		
+
 		String sectName = "Interface Fault 30km";
-//		int sectID = 0;
-		int startID = subSections.size();
-		
+
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
 		interfaceParentSection.setSectionId(10000);
 		interfaceParentSection.setSectionName(sectName);
-				
+		fsd.add(interfaceParentSection);
+
 		File initialFile = new File("./data/FaultModels/subduction_tile_parameters_30.csv");
 	    InputStream inputStream = new FileInputStream(initialFile);
-		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, startID, inputStream);
-		
+		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, subSections.getSafeId(), inputStream);
+
 		// Add the interface subsections
 		subSections.addAll(downDipBuilder.getSubSectsList());
-		
-		System.out.println("Have "+subSections.size()+" sub-sections in total");		
-		
+
+		System.out.println("Have "+subSections.size()+" sub-sections in total");
+
 		for (int s=0; s<subSections.size(); s++)
 			Preconditions.checkState(subSections.get(s).getSectionId() == s,
 				"section at index %s has ID %s", s, subSections.get(s).getSectionId());
-		
+
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
-		
+
 		// this creates rectangular permutations only for our down-dip fault to speed up rupture building
 		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
@@ -123,11 +112,11 @@ public class Demo02_HikurangiCrustal {
 						.build();
 
 		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(config);
-		
+
 		List<ClusterRupture> ruptures = builder.build(permutationStrategy);
-		
+
 		System.out.println("Built "+ruptures.size()+" total ruptures");
-		
+
 		// build a rupture set (doing this manually instead of creating an inversion fault system rup set,
 		// mostly as a demonstration)
 		double[] sectSlipRates = new double[subSections.size()];
@@ -139,7 +128,7 @@ public class Demo02_HikurangiCrustal {
 			sectAreasOrig[s] = sect.getArea(false);
 			sectSlipRates[s] = sect.getReducedAveSlipRate()*1e-3; // mm/yr => m/yr
 		}
-		
+
 		double[] rupMags = new double[ruptures.size()];
 		double[] rupRakes = new double[ruptures.size()];
 		double[] rupAreas = new double[ruptures.size()];
@@ -172,12 +161,12 @@ public class Demo02_HikurangiCrustal {
 			rupMags[r] = scale.getMag(totArea, origDDW);
 			rupsIDsList.add(sectIDs);
 		}
-		
+
 		String info = "Test down-dip subsectioning rup set";
 		FaultSystemRupSet rupSet = new FaultSystemRupSet(subSections, sectSlipRates, null, sectAreasReduced,
 				rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths, info);
 		FaultSystemIO.writeRupSet(rupSet, outputFile);
-		
-		System.out.println("All done!"); 
+
+		System.out.println("All done!");
 	}
 }

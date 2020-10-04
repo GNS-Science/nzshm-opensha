@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -169,31 +170,25 @@ public class scriptCrustalInversionRunner {
 		System.out.println("=========");
 
 		// load in the fault section data ("parent sections")
-		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
+		FaultSectionList fsd = FaultSectionList.fromList(FaultModels.loadStoredFaultSections(fsdFile));
 		System.out.println("Fault model has "+fsd.size()+" fault sections");
 		
 		if (maxFaultSections < 1000 || skipFaultSections > 0) {
-		 	// iterate backwards as we will be removing from the list
-			long currSectionId; 
-		 	for (int i=fsd.size(); --i>=0;) {
-		 		currSectionId = fsd.get(i).getSectionId();
-		 		if ( currSectionId >= (maxFaultSections + skipFaultSections) || currSectionId < skipFaultSections)
-		 			fsd.remove(i);
-		 	}
+			final long endSection = maxFaultSections + skipFaultSections;
+			final long skipSections = skipFaultSections;
+			fsd.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
 			System.out.println("Fault model now has "+fsd.size()+" fault sections");
 		}
 		
 		// build the subsections
-		List<FaultSection> subSections = new ArrayList<>();
-		int sectIndex = 0;
+		FaultSectionList subSections = new FaultSectionList(fsd);
 		for (FaultSection parentSect : fsd) {
 			double ddw = parentSect.getOrigDownDipWidth();
 			double maxSectLength = ddw*maxSubSectionLength;
 			System.out.println("Get subSections in "+parentSect.getName());
 			// the "2" here sets a minimum number of sub sections
-			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
+			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
 			subSections.addAll(newSubSects);
-			sectIndex += newSubSects.size();
 			System.out.println("Produced "+newSubSects.size()+" subSections in "+parentSect.getName());
 		}
 		

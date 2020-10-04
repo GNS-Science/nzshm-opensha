@@ -5,13 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
+import com.google.common.collect.Sets;
+import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.FaultUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
@@ -23,7 +20,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
@@ -33,7 +29,6 @@ import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
@@ -48,7 +43,6 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintW
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
@@ -82,49 +76,39 @@ public class Demo03_RupturesAndInversion {
 		File progressReport = new File("./tmp/demo_03_progress");
 				
 		// load in the fault section data ("parent sections")
-		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
+		FaultSectionList fsd  = FaultSectionList.fromList(FaultModels.loadStoredFaultSections(fsdFile));
 		
-		Stream<Integer> myStream01 = Stream.of(83, 84, 85, 86, 87);
-		Collection<Integer> sectsWairarapa = myStream01.collect(Collectors.toCollection(ArrayList::new));
+		Set<Integer> sectsWairarapa = Sets.newHashSet(83, 84, 85, 86, 87);
+		Set<Integer> sectsWellington = Sets.newHashSet(89, 90, 91, 92, 93);
+		Set<Integer> sectsToKeep = Sets.union(sectsWairarapa, sectsWellington);
 
-		Stream<Integer> myStream02 = Stream.of(89, 90, 91, 92, 93);
-		Collection<Integer> sectsWellington = myStream02.collect(Collectors.toCollection(ArrayList::new));
-		
-		List<Integer> sectsToKeep = Lists.newArrayList(Iterables.concat(sectsWairarapa, sectsWellington));
-
-   	    if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
-		 	System.out.println("Only keeping these parent fault sections: "
-		 			+Joiner.on(",").join(sectsToKeep));
-		 	// iterate backwards as we will be removing from the list
-		 	for (int i=fsd.size(); --i>=0;)
-		 		if (!sectsToKeep.contains(fsd.get(i).getSectionId()))
-		 			fsd.remove(i);
-		 }		
+		if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
+			System.out.println("Only keeping these parent fault sections: "
+					+Joiner.on(",").join(sectsToKeep));
+			fsd.removeIf(section -> !sectsToKeep.contains(section.getSectionId()));
+		}
 		
 		// build the subsections
-		List<FaultSection> subSections = new ArrayList<>();
-		int sectIndex = 0;
+		FaultSectionList subSections = new FaultSectionList(fsd);
 		for (FaultSection parentSect : fsd) {
 			double ddw = parentSect.getOrigDownDipWidth();
 			double maxSectLength = ddw*maxSubSectionLength;
 			// the "2" here sets a minimum number of sub sections
-			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, sectIndex, 2);
-			subSections.addAll(newSubSects);
-			sectIndex += newSubSects.size();
+			subSections.addAll(parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2));
 		}
 		
 		System.out.println(subSections.size()+" Sub Sections");
 		
 		String sectName = "Hikurangi @ 10km2";
-		int startID = subSections.size();
-		
+
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
 		interfaceParentSection.setSectionId(10000);
 		interfaceParentSection.setSectionName(sectName);
+		fsd.add(interfaceParentSection);
 				
 		File initialFile = new File("./data/FaultModels/subduction_tile_parameters.csv");
 	    InputStream inputStream = new FileInputStream(initialFile);
-		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, startID, inputStream);
+		downDipBuilder = new DownDipSubSectBuilder(sectName, interfaceParentSection, subSections.getSafeId(), inputStream);
 		
 		// Add the interface subsections
 		subSections.addAll(downDipBuilder.getSubSectsList());
