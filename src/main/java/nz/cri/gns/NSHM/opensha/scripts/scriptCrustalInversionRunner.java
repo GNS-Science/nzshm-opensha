@@ -217,7 +217,7 @@ public class scriptCrustalInversionRunner {
 						.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f))
 						.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true))
 						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 580f))
-						.add(new MinSectsPerParentFilter(2, true, connectionStrategy))
+						.add(new MinSectsPerParentFilter(2, true, true, connectionStrategy))
 						.build();
 
 		// Builder can now proceed using the clusters and all the filters...
