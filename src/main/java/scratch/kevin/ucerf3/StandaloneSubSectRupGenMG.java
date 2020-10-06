@@ -50,6 +50,8 @@ public class StandaloneSubSectRupGenMG {
 	 */
 	public static void main(String[] args) throws DocumentException, IOException {
 		// this is the input fault section data file
+//		File fsdFile = new File("./data/FaultModels/DEMO2_crustal_opensha.xml"); 
+//		File fsdFile = new File("./data/FaultModels/DEMO2_DIPFIX_crustal_opensha.xml");
 		File fsdFile = new File("./data/FaultModels/sectionsv5_full_testlabe7.xml");
 		// directory to write output files
 		File outputDir = new File("./data/output");
@@ -61,35 +63,8 @@ public class StandaloneSubSectRupGenMG {
 		//FaultModels fm = FaultModels.FM3_1;
 		FaultModels fm = null;
 
-		// // this is a list of parent fault sections to remove. can be empty or null
-		// // currently set to remove Garlock to test Coulomb remapping.
-		// //List<Integer> sectsToRemove = Lists.newArrayList(49, 341);
-		// List<Integer> sectsToRemove = Lists.newArrayList();
-		// // this is a list of sections to keep. if non null and non empty, only these
-		// // ids will be kept
-		// List<Integer> sectsToKeep = Lists.newArrayList();
-		// //Preconditions.checkState(!coulombFilter || fm == FaultModels.FM3_1 || fm == FaultModels.FM3_2);
-		
 		// load in the fault section data ("parent sections")
 		List<FaultSection> fsd = FaultModels.loadStoredFaultSections(fsdFile);
-		
-		// if (sectsToRemove != null && !sectsToRemove.isEmpty()) {
-		// 	System.out.println("Removing these parent fault sections: "
-		// 			+Joiner.on(",").join(sectsToRemove));
-		// 	// iterate backwards as we will be removing from the list
-		// 	for (int i=fsd.size(); --i>=0;)
-		// 		if (sectsToRemove.contains(fsd.get(i).getSectionId()))
-		// 			fsd.remove(i);
-		// }
-		
-		// if (sectsToKeep != null && !sectsToKeep.isEmpty()) {
-		// 	System.out.println("Only keeping these parent fault sections: "
-		// 			+Joiner.on(",").join(sectsToKeep));
-		// 	// iterate backwards as we will be removing from the list
-		// 	for (int i=fsd.size(); --i>=0;)
-		// 		if (!sectsToKeep.contains(fsd.get(i).getSectionId()))
-		// 			fsd.remove(i);
-		// }
 		
 		System.out.println(fsd.size()+" Parent Fault Sections");
 		// this list will store our subsections
@@ -114,21 +89,7 @@ public class StandaloneSubSectRupGenMG {
 		FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subSectDataFile, doc);
 		
-		/*I
-		// instantiate our laugh test filter
-		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
-		System.out.println(maxDistance+" Max Jump Dist");
-		// you will have to disable our coulomb filter as it uses a data file specific to our subsections
-		CoulombRates coulombRates;
-		//if (coulombFilter) {
-		//	coulombRates = remapCoulombRates(subSections, fm);
-		//} else {
-		//	laughTest.setCoulombFilter(null);
-		///	coulombRates = null;
-		//}
-		laughTest.setCoulombFilter(null);
-		coulombRates = null;
-		*/
+
 		// calculate distances between each subsection
 		Map<IDPairing, Double> subSectionDistances = DeformationModelFetcher.calculateDistances(maxDistance, subSections);
 		Map<IDPairing, Double> reversed = Maps.newHashMap();
@@ -142,15 +103,13 @@ public class StandaloneSubSectRupGenMG {
 				subSectionDistances.keySet(), subSections);
 	
 
-		///
 		// instantiate our laugh test filter
 		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
-
 		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
-		// laughTest.setMaxJumpDist(2d); 		// looks like this might only impact (parent) section jumps
+		laughTest.setMaxJumpDist(maxDistance); 		// looks like this might only impact (parent) section jumps
 		// laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
 		// laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
-		// laughTest.setMinNumSectInRup(minSectionsInRupture); 		
+		laughTest.setMinNumSectInRup(0); 		//disable min sections = 0, default=2
 
 		//disable our coulomb filter as it uses a data file specific to SCEC subsections
 		CoulombRates coulombRates  = null;
@@ -169,15 +128,6 @@ public class StandaloneSubSectRupGenMG {
 		SectionClusterList clusters = new SectionClusterList(
 				connectionStrategy, laughTest, subSections, subSectionDistances, subSectionAzimuths);
 
-		///
-
-
-		// this separates the sub sections into clusters which are all within maxDist of each other and builds ruptures
-		// fault model and deformation model here are needed by InversionFaultSystemRuptSet later, just to create a rup set
-		// zip file
-		// SectionClusterList clusters = new SectionClusterList(
-		// 		fm, DeformationModels.GEOLOGIC, laughTest, coulombRates, subSections, subSectionDistances, subSectionAzimuths);
-		
 		List<List<Integer>> ruptures = Lists.newArrayList();
 		for (SectionCluster cluster : clusters) {
 			ruptures.addAll(cluster.getSectionIndicesForRuptures());
