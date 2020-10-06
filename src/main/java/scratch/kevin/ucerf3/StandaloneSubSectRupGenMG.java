@@ -105,12 +105,14 @@ public class StandaloneSubSectRupGenMG {
 
 		// instantiate our laugh test filter
 		UCERF3PlausibilityConfig laughTest = UCERF3PlausibilityConfig.getDefault();
+		/*
 		// laughTest.setMaxCmlmJumpDist(5d); 	// has no effect here as it's a junction only test
 		laughTest.setMaxJumpDist(maxDistance); 		// looks like this might only impact (parent) section jumps
 		// laughTest.setMaxAzimuthChange(Double.MAX_VALUE); // azimuth change constraints makes no sense with 2 axes 
 		// laughTest.setMaxCmlAzimuthChange(Double.MAX_VALUE);
 		laughTest.setMinNumSectInRup(0); 		//disable min sections = 0, default=2
-
+		*/
+		
 		//disable our coulomb filter as it uses a data file specific to SCEC subsections
 		CoulombRates coulombRates  = null;
 		laughTest.setCoulombFilter(null);
