@@ -16,6 +16,27 @@ dependencies {
     compileAndResource 'commons-cli:commons-cli:1.4'
 
     testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:3.5.13'
+}
+
+sourceSets {
+
+    main {
+        java {
+            srcDirs = ['src/main/java']
+            exclude 'resources/'
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['test/java']
+        }
+        resources {
+            srcDirs = ['test/resources']
+            exclude '**/*.java'
+        }
+    }
 }
 
 test {
@@ -30,6 +51,7 @@ test {
 task localTests( type: Test, dependsOn: testClasses ){
     //filter { excludeTestsMatching('*.opensha.commons.*')} 
     filter { includeTestsMatching('*NSHM_NZ.*')}
+    filter { includeTestsMatching('*nz.cri.gns.*')}
     filter { includeTestsMatching('*UCERF3.inversion.*')}
     //filter { excludeTestsMatching 'generic.*' } 
     // excludes a whole package, "generic". NB this is not a regex:
