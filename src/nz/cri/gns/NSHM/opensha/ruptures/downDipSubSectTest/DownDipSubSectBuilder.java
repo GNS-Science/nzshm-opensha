@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
 
 import java.io.IOException;
 import java.io.InputStream;

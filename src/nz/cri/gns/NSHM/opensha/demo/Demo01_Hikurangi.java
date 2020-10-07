@@ -1,21 +1,13 @@
-package scratch.kevin.ucerf3.downDipSubSectTest.demo;
+package nz.cri.gns.NSHM.opensha.demo;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-//import java.util.HashMap;
 import java.util.List;
-//import java.util.Map;
 
-import javax.imageio.stream.FileImageInputStream;
-
-import org.opensha.commons.geo.Location;
 import org.opensha.commons.util.FaultUtils;
-import org.opensha.commons.util.IDPairing;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
@@ -25,25 +17,17 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPe
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.faultSurface.FaultTrace;
-import org.opensha.sha.faultSurface.SimpleFaultData;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
-//import NSHM_NZ.inversion.InterfaceRuptureSetBuilderTest;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.RectangularityFilter;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-//import scratch.UCERF3.inversion.SectionCluster;
-//import scratch.UCERF3.inversion.SectionClusterList;
-//import scratch.UCERF3.inversion.SectionConnectionStrategy;
-//import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.FaultSystemIO;
-import scratch.kevin.ucerf3.downDipSubSectTest.DownDipSubSectBuilder;
-import scratch.kevin.ucerf3.downDipSubSectTest.DownDipTestPermutationStrategy;
-import scratch.kevin.ucerf3.downDipSubSectTest.RectangularityFilter;
 
-public class HikurangiDemoOne {
+public class Demo01_Hikurangi {
 
 	static DownDipSubSectBuilder downDipBuilder;
 	

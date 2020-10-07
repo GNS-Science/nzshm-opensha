@@ -1,4 +1,4 @@
-package scratch.kevin.ucerf3.downDipSubSectTest.demo;
+package nz.cri.gns.NSHM.opensha.demo;
 
 
 import java.io.File;
@@ -35,6 +35,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.RectangularityFilter;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
@@ -47,9 +50,6 @@ import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
-import scratch.kevin.ucerf3.downDipSubSectTest.DownDipSubSectBuilder;
-import scratch.kevin.ucerf3.downDipSubSectTest.DownDipTestPermutationStrategy;
-import scratch.kevin.ucerf3.downDipSubSectTest.RectangularityFilter;
 
 /* 
 * Based on Kevins work 
@@ -57,7 +57,7 @@ import scratch.kevin.ucerf3.downDipSubSectTest.RectangularityFilter;
 * https://github.com/opensha/opensha-dev/blob/master/src/scratch/kevin/ucerf3/downDipSubSectTest/DownDipTestRupSetBuilder.java
 *
 */
-public class DemoThree_RupturesAndInversion {
+public class Demo03_RupturesAndInversion {
 	
 
 	static DownDipSubSectBuilder downDipBuilder;
@@ -209,7 +209,9 @@ public class DemoThree_RupturesAndInversion {
 					Lists.newArrayList(inequalityConstr)));
 			
 			// weight of entropy-maximization constraint (not used in UCERF3)
-			double smoothnessWt = 0;
+			import org.opensha.sha.faultSurface.FaultTrace;
+			import org.opensha.sha.faultSurface.SimpleFaultData;
+		double smoothnessWt = 0;
 			
 			/*
 			 * Build inversion inputs
