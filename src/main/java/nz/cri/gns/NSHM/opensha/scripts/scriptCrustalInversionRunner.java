@@ -32,14 +32,11 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.TotalAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.*;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
@@ -48,9 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
-//import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.RectangularityFilter;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.SubSectionParentFilter;
 
 import scratch.UCERF3.FaultSystemSolution;
@@ -76,6 +71,11 @@ public class scriptCrustalInversionRunner {
 
 	static DownDipSubSectBuilder downDipBuilder;
 
+	
+	public enum rupturePermutationStrategy {
+		DOWNDIP, UCERF3, POINTS,
+	}
+	
 	public static CommandLine parseCommandLine(String[] args) throws ParseException {
 		
 		Option faultIdInOption = new Option("n", "faultIdIn", true, "a list of faultSectionIDs for plausability filter");
@@ -93,6 +93,7 @@ public class scriptCrustalInversionRunner {
 				.addOption("y", "syncInterval", true, "seconds between inversion synchronisations")
 				.addOption("r", "runInversion", true, "run inversion stage")
 				.addOption("p", "minSubSectsPerParent", true, "min number of subsections per parent fault, when building ruptures")
+				.addOption("s", "ruptureStrategy", true, "rupture permutation strategy - one of `DOWNDIP`, `UCERF3`, `POINTS`")
 				.addOption(faultIdInOption);				
 		return new DefaultParser().parse(options, args);
 	}
@@ -113,6 +114,8 @@ public class scriptCrustalInversionRunner {
 		long skipFaultSections = 0; // skip n fault ruptures, default 0"
 		int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 		int minSubSectsPerParent = 2; //
+		rupturePermutationStrategy permutationStrategyClass = rupturePermutationStrategy.DOWNDIP; // rupture permutation strategy (class selector)
+		
 		Set<Integer> faultIdIn = Collections.emptySet();
 				
 		File outputDir = new File(cmd.getOptionValue("outputDir")); 
@@ -123,7 +126,11 @@ public class scriptCrustalInversionRunner {
 		System.out.println("=========");
 		System.out.println("fsdFile: " + cmd.getOptionValue("fsdFile"));
 		System.out.println("outputDir: " + outputDir);
-				
+
+		if (cmd.hasOption("ruptureStrategy")) {
+			System.out.println("set permutationStrategy to " + cmd.getOptionValue("ruptureStrategy"));
+			permutationStrategyClass = rupturePermutationStrategy.valueOf(cmd.getOptionValue("ruptureStrategy"));
+		}	
 		if (cmd.hasOption("maxSubSectionLength")) {
 			System.out.println("set maxSubSectionLength to " + cmd.getOptionValue("maxSubSectionLength"));
 			maxSubSectionLength = Double.parseDouble(cmd.getOptionValue("maxSubSectionLength"));
@@ -153,15 +160,9 @@ public class scriptCrustalInversionRunner {
 			skipFaultSections = Long.parseLong(cmd.getOptionValue("skipFaultSections"));
 		}
 		if (cmd.hasOption("faultIdIn")) {
-//			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
-//			faultNameContains = Set();
+			System.out.println("set faultIdIn to " + cmd.getOptionValue("faultIdIn"));
 			faultIdIn = Stream.of(cmd.getOptionValues("faultIdIn")).map(id -> Integer.parseInt(id)).collect(Collectors.toSet());			
 		}			
-//		if (cmd.hasOption("faultNmedContains")) {
-////			System.out.println("set skipFaultSections to " + cmd.getOptionValue("skipFaultSections"));
-////			faultNameContains = Set();
-//			faultIdContains = Stream.of(cmd.getOptionValues("faultNameContains")).map(name -> name).collect(Collectors.toSet());			
-//		}
 		if (cmd.hasOption("minSubSectsPerParent")) {
 			System.out.println("set minSubSectsPerParent to " + cmd.getOptionValue("minSubSectsPerParent"));
 			minSubSectsPerParent = Integer.parseInt(cmd.getOptionValue("minSubSectsPerParent"));
@@ -205,11 +206,27 @@ public class scriptCrustalInversionRunner {
 		
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
-
-		// this creates rectangular permutations only for our down-dip fault to speed up rupture building
-		ClusterPermutationStrategy permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
+		ClusterPermutationStrategy permutationStrategy = null;
+		switch (permutationStrategyClass) {
+			case DOWNDIP:
+				/* for down dip creates rectangular permutations to speed up rupture building
+				*  for crustal , it uses something like UCERF3
+				*/   
+				permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder);
+				break;
+			case POINTS:
+				// creates ruptures in blocks defined by the connection points between clusters
+				permutationStrategy = new ConnectionPointsPermutationStrategy();
+				break;
+			case UCERF3:
+				// creates ruptures covering the incremental permutations of sub-sections in each cluster 
+				permutationStrategy = new UCERF3ClusterPermuationStrategy();
+				break;
+		}
+		
 		// connection strategy: parent faults connect at closest point, and only when dist <=5 km
 		ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, maxDistance);
+		
 		int maxNumSplays = 0; // don't allow any splays
 
 		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
