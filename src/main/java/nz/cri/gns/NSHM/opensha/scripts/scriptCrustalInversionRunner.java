@@ -72,7 +72,7 @@ public class scriptCrustalInversionRunner {
 	static DownDipSubSectBuilder downDipBuilder;
 
 	
-	public enum rupturePermutationStrategy {
+	public enum RupturePermutationStrategy {
 		DOWNDIP, UCERF3, POINTS,
 	}
 	
@@ -114,7 +114,7 @@ public class scriptCrustalInversionRunner {
 		long skipFaultSections = 0; // skip n fault ruptures, default 0"
 		int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 		int minSubSectsPerParent = 2; //
-		rupturePermutationStrategy permutationStrategyClass = rupturePermutationStrategy.DOWNDIP; // rupture permutation strategy (class selector)
+		RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.DOWNDIP; // rupture permutation strategy (class selector)
 		
 		Set<Integer> faultIdIn = Collections.emptySet();
 				
@@ -129,7 +129,7 @@ public class scriptCrustalInversionRunner {
 
 		if (cmd.hasOption("ruptureStrategy")) {
 			System.out.println("set permutationStrategy to " + cmd.getOptionValue("ruptureStrategy"));
-			permutationStrategyClass = rupturePermutationStrategy.valueOf(cmd.getOptionValue("ruptureStrategy"));
+			permutationStrategyClass = RupturePermutationStrategy.valueOf(cmd.getOptionValue("ruptureStrategy"));
 		}	
 		if (cmd.hasOption("maxSubSectionLength")) {
 			System.out.println("set maxSubSectionLength to " + cmd.getOptionValue("maxSubSectionLength"));
