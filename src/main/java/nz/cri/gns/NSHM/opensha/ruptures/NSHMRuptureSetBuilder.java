@@ -36,6 +36,12 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
+/**
+ * Builds opensha SlipAlongRuptureModelRupSet rupture sets 
+ * using NZ NSHM configurations for:
+ *  - plausablity
+ *  - rupture permutation Strategy (with differnt strategies available for test purposes)
+ */
 public class NSHMRuptureSetBuilder {
 
 	static DownDipSubSectBuilder downDipBuilder;	
@@ -52,57 +58,110 @@ public class NSHMRuptureSetBuilder {
 	public enum RupturePermutationStrategy {
 		DOWNDIP, UCERF3, POINTS,
 	}
-		
+	
+	/**
+	 * 
+	 * @return NSHMRuptureSetBuilder the builder, with the default NSHM configuration.
+	 */
 	public NSHMRuptureSetBuilder () {
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
 		interfaceParentSection.setSectionId(10000);
 		downDipBuilder = new DownDipSubSectBuilder(interfaceParentSection);
 	}
-
-	/* 
-	 * Builder pattern setter methods
+	
+	/**
+	 * For testing of specific ruputures
+	 * 
+	 * @param faultIdIn A set ofault section integer ids. 
+	 * 					If the set is not empty any ruptures that do not include at least id will be discarded. 
+	 * 					An empty set (the default) defeats this feature, so all ruptures will pass. 
+	 * 
+	 * @return NSHMRuptureSetBuilder the builder
 	 */
-
 	public NSHMRuptureSetBuilder setFaultIdIn(Set<Integer> faultIdIn) {
 		this.faultIdIn = faultIdIn;
 		return this;
 	}
-
+	/**
+	 * Sets the maximum jump distance allowed between fault sections
+	 * 
+	 * @param maxDistance km
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setMaxJumpDistance(double maxDistance) {
 		this.maxDistance = maxDistance;
 		return this;
 	}
-
+	/**
+	 * Used for testing only!
+	 * 
+	 * @param maxFaultSections the maximum number of fault sections to be processed.
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
 		this.maxFaultSections = maxFaultSections;
 		return this;
 	}
-
+	
+	/**
+	 * Used for testing only!
+	 * 
+	 * @param skipFaultSections sets the number fault sections to be skipped.
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setSkipFaultSections(int skipFaultSections) {
 		this.skipFaultSections = skipFaultSections;
 		return this;
 	}
 	
+	/**
+	 * 
+	 * @param minSubSectsPerParent sets the minimum subsections per parent, 2 is standard as per UCERF3
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
 		this.minSubSectsPerParent = minSubSectsPerParent;
 		return this;
 	}
 
+	/**
+	 * Sets the ratio of relative to DownDipWidth (DDW) that is used to calculate subsection lengths.
+	 * 
+	 * However, if fault sections are very short, then the minSubSectsPerParent may still force shorter sections 
+	 * to be built.
+	 * 
+	 * @param maxSubSectionLength defaults to 0.5, meaning the desired minimum length is half of the DDW. 
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setMaxSubSectionLength(double maxSubSectionLength) {
 		this.maxSubSectionLength = maxSubSectionLength;
 		return this;
 	}
-
+	
+	/**
+	 * @param permutationStrategyClass sets the rupture permuation strategy implementation
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setPermutationStrategy(RupturePermutationStrategy permutationStrategyClass) {
 		this.permutationStrategyClass = permutationStrategyClass;
 		return this;
 	}
 	
+	/**
+	 * Some internal classes support parallelisation.
+	 *  
+	 * @param numThreads sets munber of threads to be used. 
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
 	public NSHMRuptureSetBuilder setNumThreads(int numThreads) {
 		this.numThreads = numThreads;
 		return this;
 	}
 	
+	/**
+	 * @param permutationStrategyClass which strategy to choose
+	 * @return a ClusterPermutationStrategy object
+	 */
 	private ClusterPermutationStrategy createPermutationStrategy(RupturePermutationStrategy permutationStrategyClass) {
 		ClusterPermutationStrategy permutationStrategy = null;
 		switch (permutationStrategyClass) {
@@ -124,6 +183,14 @@ public class NSHMRuptureSetBuilder {
 		return permutationStrategy;
 	}
 
+	/**
+	 * Builds an NSHM rupture set according to the configuration.
+	 * 
+	 * @param fsdFile the XML FalustSection data file containing source fault information
+	 * @return a SlipAlongRuptureModelRupSet built according to the configuration from the input fsdFile
+	 * @throws DocumentException
+	 * @throws IOException
+	 */
 	public SlipAlongRuptureModelRupSet buildRuptureSet(File fsdFile) throws DocumentException, IOException {
 		
 		// load in the fault section data ("parent sections")

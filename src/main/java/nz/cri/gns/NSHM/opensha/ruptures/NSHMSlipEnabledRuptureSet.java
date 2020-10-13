@@ -11,6 +11,12 @@ import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
+/**
+ * This is an example provided by Kevin for demo purposes. 
+ * 
+ *  TODO: examine why/how this is different to standard UCERF3 code.
+ *
+ */
 public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		
 	/**
