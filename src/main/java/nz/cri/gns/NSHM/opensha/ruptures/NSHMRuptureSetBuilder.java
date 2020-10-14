@@ -45,14 +45,19 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 public class NSHMRuptureSetBuilder {
 
 	static DownDipSubSectBuilder downDipBuilder;	
+	List<ClusterRupture> ruptures;
+	FaultSectionList subSections;
+	PlausibilityConfiguration plausabilityConfig;
+	ClusterRuptureBuilder builder;
+	
 	Set<Integer> faultIdIn = Collections.emptySet();
 	
-	double maxSubSectionLength = 0.5; 	// maximum sub section length (in units of DDW)
-	double maxDistance = 5; 			// max distance for linking multi fault ruptures, km
-	long maxFaultSections = 100000; 	// maximum fault ruptures to process
-	long skipFaultSections = 0; 		// skip n fault ruptures, default 0"
+	double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
+	double maxDistance = 5; // max distance for linking multi fault ruptures, km
+	long maxFaultSections = 100000; // maximum fault ruptures to process
+	long skipFaultSections = 0; // skip n fault ruptures, default 0"
 	int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
-	int minSubSectsPerParent = 2;		// 2 are required for UCERf3 azimuth calcs
+	int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
 	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.DOWNDIP;
 	
 	public enum RupturePermutationStrategy {
@@ -60,8 +65,7 @@ public class NSHMRuptureSetBuilder {
 	}
 	
 	/**
-	 * 
-	 * @return NSHMRuptureSetBuilder the builder, with the default NSHM configuration.
+	 * Constructs a new NSHMRuptureSetBuilder with the default NSHM configuration.
 	 */
 	public NSHMRuptureSetBuilder () {
 		FaultSection interfaceParentSection = new FaultSectionPrefData();
@@ -72,9 +76,9 @@ public class NSHMRuptureSetBuilder {
 	/**
 	 * For testing of specific ruptures
 	 * 
-	 * @param faultIdIn A set ofault section integer ids. 
-	 * 					If the set is not empty any ruptures that do not include at least id will be discarded. 
-	 * 					An empty set (the default) defeats this feature, so all ruptures will pass. 
+	 * @param faultIdIn A set of fault section integer ids. 
+	 *                  If the set is not empty any ruptures that do not include at least id will be discarded. 
+	 *                  An empty set (the default) defeats this feature, so all ruptures will pass. 
 	 * 
 	 * @return NSHMRuptureSetBuilder the builder
 	 */
@@ -210,23 +214,18 @@ public class NSHMRuptureSetBuilder {
 		}
 		
 		// build the subsections
-		FaultSectionList subSections = new FaultSectionList(fsd);
+		subSections = new FaultSectionList(fsd);
 		for (FaultSection parentSect : fsd) {
 			double ddw = parentSect.getOrigDownDipWidth();
 			double maxSectLength = ddw*maxSubSectionLength;
 			System.out.println("Get subSections in "+parentSect.getName());
 			// the "2" here sets a minimum number of sub sections
 			List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
-			subSections.addAll(newSubSects);
+			getSubSections().addAll(newSubSects);
 			System.out.println("Produced "+newSubSects.size()+" subSections in "+parentSect.getName());
 		}		
 		System.out.println(subSections.size()+" Sub Sections");
 	
-		// @voj is this redundant now we're using FaultSectionList??
-		for (int s=0; s<subSections.size(); s++)
-			Preconditions.checkState(subSections.get(s).getSectionId() == s,
-				"section at index %s has ID %s", s, subSections.get(s).getSectionId());
-			
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 		JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
 		
@@ -237,8 +236,7 @@ public class NSHMRuptureSetBuilder {
 		int maxNumSplays = 0; // don't allow any splays
 	
 		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
-		PlausibilityConfiguration config =
-				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+		plausabilityConfig = PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
 						.maxSplays(maxNumSplays)
 						.add(new SubSectionParentFilter(pFilter))
 						.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f))
@@ -249,17 +247,45 @@ public class NSHMRuptureSetBuilder {
 		System.out.println("Built PlausibilityConfiguration");
 		
 		// Builder can now proceed using the clusters and all the filters...
-		ClusterRuptureBuilder builder = new ClusterRuptureBuilder(config);
+		builder = new ClusterRuptureBuilder(getPlausabilityConfig());
 		System.out.println("initialised ClusterRuptureBuilder");
 		
 		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
 				
-		List<ClusterRupture> ruptures = builder.build(permutationStrategy, numThreads);
+		ruptures = getBuilder().build(permutationStrategy, numThreads);
 		System.out.println("Built "+ruptures.size()+" total ruptures");
 		
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-		rupSet.setPlausibilityConfiguration(config);
-		return (SlipAlongRuptureModelRupSet) rupSet;
+		rupSet.setPlausibilityConfiguration(getPlausabilityConfig());
+		return rupSet;
+	}
+
+	/**
+	 * @return the ruptures
+	 */
+	public List<ClusterRupture> getRuptures() {
+		return ruptures;
+	}
+
+	/**
+	 * @return the subSections
+	 */
+	public FaultSectionList getSubSections() {
+		return subSections;
+	}
+
+	/**
+	 * @return the plausabilityConfig
+	 */
+	public PlausibilityConfiguration getPlausabilityConfig() {
+		return plausabilityConfig;
+	}
+
+	/**
+	 * @return the builder
+	 */
+	public ClusterRuptureBuilder getBuilder() {
+		return builder;
 	}			
 }
