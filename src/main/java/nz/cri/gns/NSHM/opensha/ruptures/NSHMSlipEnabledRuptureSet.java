@@ -19,9 +19,6 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
  */
 public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		
-	/**
-	 * 
-	 */
 	private double[] rupAveSlips;
 	private static final long serialVersionUID = -4984738430816137976L;
 

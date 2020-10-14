@@ -39,8 +39,8 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 /**
  * Builds opensha SlipAlongRuptureModelRupSet rupture sets 
  * using NZ NSHM configurations for:
- *  - plausablity
- *  - rupture permutation Strategy (with differnt strategies available for test purposes)
+ *  - plausability
+ *  - rupture permutation Strategy (with different strategies available for test purposes)
  */
 public class NSHMRuptureSetBuilder {
 
@@ -70,7 +70,7 @@ public class NSHMRuptureSetBuilder {
 	}
 	
 	/**
-	 * For testing of specific ruputures
+	 * For testing of specific ruptures
 	 * 
 	 * @param faultIdIn A set ofault section integer ids. 
 	 * 					If the set is not empty any ruptures that do not include at least id will be discarded. 
@@ -183,6 +183,11 @@ public class NSHMRuptureSetBuilder {
 		return permutationStrategy;
 	}
 
+	public SlipAlongRuptureModelRupSet buildRuptureSet(String fsdFileName) throws DocumentException, IOException {
+		File fsdFile = new File(fsdFileName);
+		return buildRuptureSet(fsdFile);
+	}
+	
 	/**
 	 * Builds an NSHM rupture set according to the configuration.
 	 * 

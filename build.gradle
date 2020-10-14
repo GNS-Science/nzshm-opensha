@@ -15,6 +15,9 @@ dependencies {
     compileAndResource 'com.google.code.gson:gson:2.8.5'
     compileAndResource 'commons-cli:commons-cli:1.4'
 
+    /* no remote repo */
+    compileAndResource files('python/share/py4j/py4j0.10.9.1.jar') //Py4j jar installed locally  via `pip install py4j`
+
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:3.5.13'
 }
