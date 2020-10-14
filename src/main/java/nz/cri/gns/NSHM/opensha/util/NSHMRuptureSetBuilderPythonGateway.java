@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
+import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder.RupturePermutationStrategy;
 import py4j.GatewayServer;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.utils.FaultSystemIO;
@@ -29,6 +30,11 @@ public class NSHMRuptureSetBuilderPythonGateway {
 	static class CachedNSHMRuptureSetBuilder extends NSHMRuptureSetBuilder {
 		SlipAlongRuptureModelRupSet ruptureSet;
 
+		public NSHMRuptureSetBuilder setPermutationStrategy(String permutationStrategyClass) {
+			super.setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
+			return this;
+		}
+		
 		@Override
 		public SlipAlongRuptureModelRupSet buildRuptureSet(String fsdFileName) throws DocumentException, IOException {
 			ruptureSet = super.buildRuptureSet(fsdFileName);
