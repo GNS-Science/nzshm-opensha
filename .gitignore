@@ -31,3 +31,4 @@ bin/**
 # *.pytest
 
 .idea/
+data/ruptureSets/
