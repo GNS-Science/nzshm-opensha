@@ -240,6 +240,4 @@ public class scriptCrustalInversionRunner {
 	
 	}
 	
-
-
 }

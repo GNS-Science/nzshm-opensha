@@ -259,7 +259,7 @@ public class NSHMRuptureSetBuilder {
 		
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-		
+		rupSet.setPlausibilityConfiguration(config);
 		return (SlipAlongRuptureModelRupSet) rupSet;
 	}			
 }
