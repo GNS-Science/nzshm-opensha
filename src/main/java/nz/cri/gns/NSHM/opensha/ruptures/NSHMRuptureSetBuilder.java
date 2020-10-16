@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
 import org.dom4j.DocumentException;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -50,7 +51,8 @@ public class NSHMRuptureSetBuilder {
 	PlausibilityConfiguration plausabilityConfig;
 	ClusterRuptureBuilder builder;
 	
-	Set<Integer> faultIdIn = Collections.emptySet();
+	Set<Integer> faultIds;
+	FaultIdFilter.FilterType faultIdfilterType = null;
 	
 	double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
 	double maxDistance = 5; // max distance for linking multi fault ruptures, km
@@ -63,7 +65,7 @@ public class NSHMRuptureSetBuilder {
 	public enum RupturePermutationStrategy {
 		DOWNDIP, UCERF3, POINTS,
 	}
-	
+
 	/**
 	 * Constructs a new NSHMRuptureSetBuilder with the default NSHM configuration.
 	 */
@@ -75,15 +77,14 @@ public class NSHMRuptureSetBuilder {
 	
 	/**
 	 * For testing of specific ruptures
-	 * 
-	 * @param faultIdIn A set of fault section integer ids. 
-	 *                  If the set is not empty any ruptures that do not include at least id will be discarded. 
-	 *                  An empty set (the default) defeats this feature, so all ruptures will pass. 
-	 * 
+	 *
+	 * @param filterType The behaviour of the filter. See FaultIdFilter.
+	 * @param faultIds A set of fault section integer ids.
 	 * @return NSHMRuptureSetBuilder the builder
 	 */
-	public NSHMRuptureSetBuilder setFaultIdIn(Set<Integer> faultIdIn) {
-		this.faultIdIn = faultIdIn;
+	public NSHMRuptureSetBuilder setFaultIdFilter(FaultIdFilter.FilterType filterType, Set<Integer> faultIds) {
+		this.faultIds = faultIds;
+		this.faultIdfilterType = filterType;
 		return this;
 	}
 	/**
@@ -234,16 +235,18 @@ public class NSHMRuptureSetBuilder {
 		System.out.println("Built connectionStrategy");
 		
 		int maxNumSplays = 0; // don't allow any splays
-	
-		Predicate<FaultSubsectionCluster> pFilter = new SubSectionParentFilter().makeParentIdFilter(faultIdIn);
-		plausabilityConfig = PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+
+		PlausibilityConfiguration.Builder configBuilder =
+				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
 						.maxSplays(maxNumSplays)
-						.add(new SubSectionParentFilter(pFilter))
 						.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f))
 						.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true))
-						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 560f))
-						.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy))
-						.build();
+						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 560))
+						.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
+		if (faultIdfilterType != null){
+			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
+		}
+		plausabilityConfig = configBuilder.build();
 		System.out.println("Built PlausibilityConfiguration");
 		
 		// Builder can now proceed using the clusters and all the filters...

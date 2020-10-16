@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -47,7 +48,7 @@ public class scriptCrustalInversionRunner {
 
 		public static CommandLine parseCommandLine(String[] args) throws ParseException {
 		
-		Option faultIdInOption = new Option("n", "faultIdIn", true, "a list of faultSectionIDs for plausability filter");
+		Option faultIdInOption = new Option("n", "faultIdIn", true, "a list of faultSectionIDs to filter on");
 		faultIdInOption.setArgs(Option.UNLIMITED_VALUES);
 		faultIdInOption.setValueSeparator(',');
 		
@@ -63,6 +64,7 @@ public class scriptCrustalInversionRunner {
 				.addOption("r", "runInversion", true, "run inversion stage")
 				.addOption("p", "minSubSectsPerParent", true, "min number of subsections per parent fault, when building ruptures")
 				.addOption("s", "ruptureStrategy", true, "rupture permutation strategy - one of `DOWNDIP`, `UCERF3`, `POINTS`")
+				.addOption("t", "faultIdFilterType", true, "determines the behaviour of the filter set up by faultIdIn. One of ANY, ALL, EXACT. ANY is the default.")
 				.addOption(faultIdInOption);				
 		return new DefaultParser().parse(options, args);
 	}
@@ -116,9 +118,11 @@ public class scriptCrustalInversionRunner {
 			builder.setSkipFaultSections(Integer.parseInt(cmd.getOptionValue("skipFaultSections")));
 		}
 		if (cmd.hasOption("faultIdIn")) {
-			System.out.println("set faultIdIn to " + cmd.getOptionValue("faultIdIn"));
-			Set<Integer> faultIdIn = Stream.of(cmd.getOptionValues("faultIdIn")).map(id -> Integer.parseInt(id)).collect(Collectors.toSet());			
-			builder.setFaultIdIn(faultIdIn);
+			String filterTypeString = cmd.hasOption("faultIdFilterType") ? cmd.getOptionValue("faultIdFilterType") : "ANY";
+			System.out.println("set faultIds to " + filterTypeString + " : " + String.join(",", cmd.getOptionValues("faultIdIn")));
+			FaultIdFilter.FilterType filterType = FaultIdFilter.FilterType.valueOf(filterTypeString);
+			Set<Integer> faultIdIn = Stream.of(cmd.getOptionValues("faultIdIn")).map(Integer::parseInt).collect(Collectors.toSet());
+			builder.setFaultIdFilter(filterType, faultIdIn);
 		}			
 		if (cmd.hasOption("minSubSectsPerParent")) {
 			System.out.println("set minSubSectsPerParent to " + cmd.getOptionValue("minSubSectsPerParent"));
