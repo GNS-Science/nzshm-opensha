@@ -30,7 +30,6 @@ import com.google.common.base.Preconditions;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.SubSectionParentFilter;
 import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
