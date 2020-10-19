@@ -76,6 +76,7 @@ public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		
 		init(subSections, sectSlipRates, null, sectAreasReduced,
 				rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths, info);
+		setClusterRuptures(ruptures);
 	}
 
 	@Override

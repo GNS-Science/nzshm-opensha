@@ -2,17 +2,14 @@ package nz.cri.gns.NSHM.opensha.ruptures;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
 import org.dom4j.DocumentException;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
@@ -25,8 +22,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutof
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.UCERF3ClusterPermuationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
-
-import com.google.common.base.Preconditions;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipTestPermutationStrategy;
@@ -47,7 +42,7 @@ public class NSHMRuptureSetBuilder {
 	static DownDipSubSectBuilder downDipBuilder;	
 	List<ClusterRupture> ruptures;
 	FaultSectionList subSections;
-	PlausibilityConfiguration plausabilityConfig;
+	PlausibilityConfiguration plausibilityConfig;
 	ClusterRuptureBuilder builder;
 	
 	Set<Integer> faultIds;
@@ -59,6 +54,9 @@ public class NSHMRuptureSetBuilder {
 	long skipFaultSections = 0; // skip n fault ruptures, default 0"
 	int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 	int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
+	float maxAzimuthChange = 60;
+	float maxTotalAzimuthChange = 60;
+	float maxCumulativeAzimuthChange = 560;
 	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.DOWNDIP;
 	
 	public enum RupturePermutationStrategy {
@@ -161,6 +159,21 @@ public class NSHMRuptureSetBuilder {
 		this.numThreads = numThreads;
 		return this;
 	}
+
+	public NSHMRuptureSetBuilder setMaxAzimuthChange(float maxAzimuthChange){
+		this.maxAzimuthChange = maxAzimuthChange;
+		return this;
+	}
+	public NSHMRuptureSetBuilder setMaxTotalAzimuthChange(float maxTotalAzimuthChange){
+		this.maxTotalAzimuthChange = maxTotalAzimuthChange;
+		return this;
+	}
+	public NSHMRuptureSetBuilder setMaxCumulativeAzimuthChange(float maxCumulativeAzimuthChange){
+		this.maxCumulativeAzimuthChange = maxCumulativeAzimuthChange;
+		return this;
+	}
+
+
 	
 	/**
 	 * @param permutationStrategyClass which strategy to choose
@@ -238,18 +251,18 @@ public class NSHMRuptureSetBuilder {
 		PlausibilityConfiguration.Builder configBuilder =
 				PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
 						.maxSplays(maxNumSplays)
-						.add(new JumpAzimuthChangeFilter(azimuthCalc, 60f))
-						.add(new TotalAzimuthChangeFilter(azimuthCalc, 60f, true, true))
-						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, 560))
+						.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
+						.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
+						.add(new CumulativeAzimuthChangeFilter(azimuthCalc, maxCumulativeAzimuthChange))
 						.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
 		if (faultIdfilterType != null){
 			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
 		}
-		plausabilityConfig = configBuilder.build();
+		plausibilityConfig = configBuilder.build();
 		System.out.println("Built PlausibilityConfiguration");
 		
 		// Builder can now proceed using the clusters and all the filters...
-		builder = new ClusterRuptureBuilder(getPlausabilityConfig());
+		builder = new ClusterRuptureBuilder(getPlausibilityConfig());
 		System.out.println("initialised ClusterRuptureBuilder");
 		
 		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
@@ -259,7 +272,7 @@ public class NSHMRuptureSetBuilder {
 		
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-		rupSet.setPlausibilityConfiguration(getPlausabilityConfig());
+		rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
 		return rupSet;
 	}
 
@@ -280,8 +293,8 @@ public class NSHMRuptureSetBuilder {
 	/**
 	 * @return the plausabilityConfig
 	 */
-	public PlausibilityConfiguration getPlausabilityConfig() {
-		return plausabilityConfig;
+	public PlausibilityConfiguration getPlausibilityConfig() {
+		return plausibilityConfig;
 	}
 
 	/**

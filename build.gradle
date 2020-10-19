@@ -8,7 +8,7 @@ apply from: '../opensha-commons/build-common.gradle'
 apply plugin: 'jacoco'
 
 dependencies {
-    
+
     compileOnly project(path: ':opensha-ucerf3', configuration: 'compileOnly')
     compileAndResource project(path: ':opensha-ucerf3')
 
@@ -40,7 +40,42 @@ sourceSets {
             exclude '**/*.java'
         }
     }
+
+    intTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+        java {
+            srcDirs = ['src/integration/java']
+        }
+
+        resources.srcDir('src/integration/resources')
+        resources {
+            srcDirs = ['src/integration/resources']
+        }
+    }
 }
+
+configurations {
+    intTestImplementation.extendsFrom implementation
+    intTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+dependencies {
+    intTestImplementation 'junit:junit:4.12'
+    intTestImplementation 'com.google.jimfs:jimfs:1.1'
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
+
+    shouldRunAfter test
+}
+
+check.dependsOn integrationTest
 
 test {
     exclude 'org/opensha/**'
@@ -51,11 +86,11 @@ test {
     }
 }
 
-task localTests( type: Test, dependsOn: testClasses ){
+task localTests(type: Test, dependsOn: testClasses) {
     //filter { excludeTestsMatching('*.opensha.commons.*')} 
-    filter { includeTestsMatching('*NSHM_NZ.*')}
-    filter { includeTestsMatching('*nz.cri.gns.*')}
-    filter { includeTestsMatching('*UCERF3.inversion.*')}
+    filter { includeTestsMatching('*NSHM_NZ.*') }
+    filter { includeTestsMatching('*nz.cri.gns.*') }
+    filter { includeTestsMatching('*UCERF3.inversion.*') }
     //filter { excludeTestsMatching 'generic.*' } 
     // excludes a whole package, "generic". NB this is not a regex:
     // '*' is simply "wildcard" and dot means dot ... other more 
@@ -66,32 +101,34 @@ task localTests( type: Test, dependsOn: testClasses ){
 }
 
 
+
+
 jacocoTestReport {
-  reports {
-    xml.enabled true
-    html.enabled true
-  }
-  afterEvaluate {
-    classDirectories = files(classDirectories.files.collect {
-      fileTree(
-        dir: it,
-        exclude: ['**/util/**', ])
-      })
-  }
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(
+                    dir: it,
+                    exclude: ['**/util/**',])
+        })
+    }
 }
 check.dependsOn jacocoTestReport
 
 jacocoTestCoverageVerification {
-  violationRules {
-    rule  {
-      element = 'CLASS'
-      limit {
-        counter = 'LINE'
-        value = 'COVEREDRATIO'
-        minimum = 1.0
-      }
+    violationRules {
+        rule {
+            element = 'CLASS'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+        }
     }
-  }
 }
 
 
