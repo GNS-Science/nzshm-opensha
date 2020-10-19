@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<OpenSHA>
+  <FaultModel>    
+	<i0 sectionId="23" sectionName="Alpine Jacksons to Kaniere" aveLongTermSlipRate="27.0" slipRateStDev="5.0" aveDip="50.0" aveRake="167.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="144.4" parentSectionId="-1" connector="false">
+      <FaultTrace name="Alpine Jacksons to Kaniere">
+        <Location Latitude="-44.0627" Longitude="168.7086" Depth="0.0000"/>
+        <Location Latitude="-43.9019" Longitude="169.0844" Depth="0.0000"/>
+        <Location Latitude="-43.7761" Longitude="169.3571" Depth="0.0000"/>
+        <Location Latitude="-43.6370" Longitude="169.6656" Depth="0.0000"/>
+        <Location Latitude="-43.4537" Longitude="170.0500" Depth="0.0000"/>
+        <Location Latitude="-43.2257" Longitude="170.4862" Depth="0.0000"/>
+        <Location Latitude="-43.0958" Longitude="170.7561" Depth="0.0000"/>
+        <Location Latitude="-42.8914" Longitude="171.1464" Depth="0.0000"/>
+      </FaultTrace>
+    </i0>
+	<i1 sectionId="24" sectionName="Alpine Kaniere to Springs Junction" aveLongTermSlipRate="14.0" slipRateStDev="2.0" aveDip="60.0" aveRake="143.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="145.7" parentSectionId="-1" connector="false">
+      <FaultTrace name="Alpine Kaniere to Springs Junction">
+        <Location Latitude="-42.3554" Longitude="172.2143" Depth="0.0000"/>
+        <Location Latitude="-42.4741" Longitude="172.0134" Depth="0.0000"/>
+        <Location Latitude="-42.6583" Longitude="171.6120" Depth="0.0000"/>
+        <Location Latitude="-42.7343" Longitude="171.4479" Depth="0.0000"/>
+        <Location Latitude="-42.8112" Longitude="171.2779" Depth="0.0000"/>
+        <Location Latitude="-42.8914" Longitude="171.1464" Depth="0.0000"/>
+      </FaultTrace>
+    </i1>
+    <i2 sectionId="130" sectionName="Fowlers" aveLongTermSlipRate="0.5" slipRateStDev="0.3" aveDip="90.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="163.1" parentSectionId="-1" connector="false">
+      <FaultTrace name="Fowlers">
+        <Location Latitude="-42.1869" Longitude="173.0723" Depth="0.0000"/>
+        <Location Latitude="-42.2270" Longitude="173.0207" Depth="0.0000"/>
+        <Location Latitude="-42.2747" Longitude="172.8393" Depth="0.0000"/>
+        <Location Latitude="-42.3100" Longitude="172.7636" Depth="0.0000"/>
+        <Location Latitude="-42.3166" Longitude="172.6605" Depth="0.0000"/>
+        <Location Latitude="-42.3780" Longitude="172.3294" Depth="0.0000"/>
+        <Location Latitude="-42.4048" Longitude="172.2430" Depth="0.0000"/>
+        <Location Latitude="-42.4115" Longitude="172.1164" Depth="0.0000"/>
+      </FaultTrace>
+    </i2>
+    <i3 sectionId="50" sectionName="Barefell" aveLongTermSlipRate="0.5" slipRateStDev="0.4" aveDip="60.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="293.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="Barefell">
+        <Location Latitude="-42.2432" Longitude="173.1176" Depth="0.0000"/>
+        <Location Latitude="-42.1933" Longitude="173.1280" Depth="0.0000"/>
+        <Location Latitude="-42.1150" Longitude="173.1780" Depth="0.0000"/>
+        <Location Latitude="-42.0989" Longitude="173.1947" Depth="0.0000"/>
+      </FaultTrace>
+    </i3>
+    <i4 sectionId="48" sectionName="AwatereNortheast 1" aveLongTermSlipRate="6.0" slipRateStDev="2.0" aveDip="75.0" aveRake="160.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="323.3" parentSectionId="-1" connector="false">
+      <FaultTrace name="AwatereNortheast 1">
+        <Location Latitude="-42.0989" Longitude="173.1947" Depth="0.0000"/>
+        <Location Latitude="-42.0842" Longitude="173.2427" Depth="0.0000"/>
+        <Location Latitude="-42.0254" Longitude="173.3438" Depth="0.0000"/>
+        <Location Latitude="-41.8167" Longitude="173.7217" Depth="0.0000"/>
+        <Location Latitude="-41.6333" Longitude="174.0250" Depth="0.0000"/>
+      </FaultTrace>
+    </i4>
+    <i5 sectionId="46" sectionName="Awatere Northeast 2" aveLongTermSlipRate="1.5" slipRateStDev="1.0" aveDip="80.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="330.9" parentSectionId="-1" connector="false">
+      <FaultTrace name="Awatere Northeast 2">
+        <Location Latitude="-41.6333" Longitude="174.0250" Depth="0.0000"/>
+        <Location Latitude="-41.5349" Longitude="174.2535" Depth="0.0000"/>
+      </FaultTrace>
+	</i5>  
+    <i6 sectionId="585" sectionName="Vernon 4" aveLongTermSlipRate="4.5" slipRateStDev="1.2" aveDip="60.0" aveRake="-113.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="182.8" parentSectionId="-1" connector="false">
+      <FaultTrace name="Vernon 4">
+        <Location Latitude="-41.5399" Longitude="174.4507" Depth="0.0000"/>
+        <Location Latitude="-41.5349" Longitude="174.2535" Depth="0.0000"/>
+      </FaultTrace>
+    </i6>	  
+  </FaultModel>	
+</OpenSHA>
+  
