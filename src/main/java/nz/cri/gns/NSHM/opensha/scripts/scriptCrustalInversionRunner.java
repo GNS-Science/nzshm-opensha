@@ -1,22 +1,29 @@
 package nz.cri.gns.NSHM.opensha.scripts;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Set;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
+import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.math3.ml.clustering.Cluster;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder.RupturePermutationStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.utils.FaultSystemIO;
@@ -53,9 +60,11 @@ public class scriptCrustalInversionRunner {
 
     protected static void generateRuptures(CommandLine cmd) throws IOException, DocumentException {
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
+        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set" + (new Date()).getTime() + ".zip");
         File fsdFile = new File(cmd.getOptionValue("fsdFile"));
         NSHMRuptureSetBuilder builder = new NSHMRuptureSetBuilder();
+        //builder.setFaultModelFile(fsdFile);
+
         //		.setFaultIdIn(Sets.newHashSet(89, 90, 91, 92, 93));
         //		.setMaxFaultSections(2000) 	// overide defauls like so
         //		.setPermutationStrategy(RupturePermutationStrategy.POINTS);
@@ -100,8 +109,36 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet(fsdFile);
+        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+        SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
+
+        plotRuptureFrequency(rupSet, new File("data/output/histogram" + (new Date()).getTime() + ".csv"));
+    }
+
+    protected static int sectionCount(ClusterRupture rupture) {
+        int count = 0;
+        for (FaultSubsectionCluster cluster : rupture.getClustersIterable()) {
+            count += cluster.subSects.size();
+        }
+        return count;
+    }
+
+    protected static HashMap<Integer, Integer> makeHistogram(List<ClusterRupture> ruptures) {
+        HashMap<Integer, Integer> result = new HashMap<>();
+        for (ClusterRupture rupture : ruptures) {
+            result.compute(sectionCount(rupture), (k, v) -> v == null ? 1 : v + 1);
+        }
+        return result;
+    }
+
+    protected static void plotRuptureFrequency(SlipAlongRuptureModelRupSet rupSet, File output) throws IOException {
+        PrintWriter writer = new PrintWriter(new FileWriter(output));
+        HashMap<Integer, Integer> histogram = makeHistogram(rupSet.getClusterRuptures());
+        histogram.keySet().stream().sorted().forEach(key -> {
+            writer.println("" + key + "," + histogram.get(key));
+        });
+        writer.close();
     }
 
     protected static void runInversion(CommandLine cmd) throws IOException, DocumentException {

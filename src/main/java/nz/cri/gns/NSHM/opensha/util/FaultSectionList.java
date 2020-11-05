@@ -15,7 +15,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     private int maxId = -1;
     private final Set<Integer> ids;
-    private final FaultSectionList parents;
+    private  FaultSectionList parents;
 
     /**
      * Creates a new FaultSectionList.
@@ -43,6 +43,17 @@ public class FaultSectionList extends ArrayList<FaultSection> {
         FaultSectionList result = new FaultSectionList();
         result.addAll(elements);
         return result;
+    }
+
+    /**
+     * Adds a new parent section.
+     * @param parent the parent section
+     */
+    public void addParent(FaultSection parent){
+        if(parents == null){
+            parents = new FaultSectionList();
+        }
+        parents.add(parent);
     }
 
     protected boolean containsId(int id) {

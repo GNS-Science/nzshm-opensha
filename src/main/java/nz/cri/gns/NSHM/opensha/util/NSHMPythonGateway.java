@@ -6,6 +6,7 @@ import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.CachedClusterPermutationStrategy;
 import py4j.GatewayServer;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
@@ -51,15 +52,37 @@ public class NSHMPythonGateway {
 			super.setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
 			return this;
 		}
+
+		/**
+		 * Sets the FaultModel file for all crustal faults
+		 * @param fsdFileName the XML FaultSection data file containing source fault information
+		 * @return this builder
+		 */
+		public CachedNSHMRuptureSetBuilder setFaultModelFile(String fsdFileName){
+			setFaultModelFile(new File(fsdFileName));
+			return this;
+		}
+
+		/**
+		 * Sets the subduction fault. At the moment, only one fault can be set.
+		 * @param faultName The name fo the fault.
+		 * @param fileName the CSV file containing all sections.
+		 * @return this builder
+		 */
+		public CachedNSHMRuptureSetBuilder setSubductionFault(String faultName, String fileName){
+			setSubductionFault(faultName, new File(fileName));
+			return this;
+		}
 		
 		/**
 		 * Caches the results of the build
 		 */
 		@Override
-		public SlipAlongRuptureModelRupSet buildRuptureSet(String fsdFileName) throws DocumentException, IOException {
-			ruptureSet = super.buildRuptureSet(fsdFileName);
+		public SlipAlongRuptureModelRupSet buildRuptureSet() throws DocumentException, IOException {
+			ruptureSet = super.buildRuptureSet();
 			return ruptureSet;
 		}
+
 		/**
 		 * Write the cached rupture set to disk.
 		 *  

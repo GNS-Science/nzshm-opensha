@@ -38,7 +38,8 @@ public class NSHMRuptureSetBuilderIntegration {
 
         SlipAlongRuptureModelRupSet ruptureSet =
                 new NSHMRuptureSetBuilder()
-                        .buildRuptureSet(new File("src/integration/resources/KAIK2016.xml"));
+                        .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
+                        .buildRuptureSet();
 
         //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/inttestrupset.zip"));
 
@@ -52,7 +53,8 @@ public class NSHMRuptureSetBuilderIntegration {
 
         SlipAlongRuptureModelRupSet ruptureSet =
                 new NSHMRuptureSetBuilder()
-                        .buildRuptureSet(new File("src/integration/resources/alpine-vernon.xml"));
+                        .setFaultModelFile(new File("src/integration/resources/alpine-vernon.xml"))
+                        .buildRuptureSet();
 
         //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/inttestrupset.zip"));
 
