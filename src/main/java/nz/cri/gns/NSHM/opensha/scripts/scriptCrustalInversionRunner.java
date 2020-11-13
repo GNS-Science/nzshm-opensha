@@ -63,7 +63,7 @@ public class scriptCrustalInversionRunner {
         File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set" + (new Date()).getTime() + ".zip");
         File fsdFile = new File(cmd.getOptionValue("fsdFile"));
         NSHMRuptureSetBuilder builder = new NSHMRuptureSetBuilder();
-        //builder.setFaultModelFile(fsdFile);
+        builder.setFaultModelFile(fsdFile);
 
         //		.setFaultIdIn(Sets.newHashSet(89, 90, 91, 92, 93));
         //		.setMaxFaultSections(2000) 	// overide defauls like so
@@ -109,7 +109,7 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+        //builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
