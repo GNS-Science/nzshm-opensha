@@ -372,10 +372,10 @@ public class NSHMRuptureSetBuilder {
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
 		System.out.println("Built "+ruptures.size()+" total ruptures");
 
-        ruptures = RuptureThinning.filterRuptures(ruptures,
-                RuptureThinning.coarsenessPredicate(0.1)
-                        .or(RuptureThinning.endToEndPredicate(
-                                getPlausibilityConfig().getConnectionStrategy())));
+//        ruptures = RuptureThinning.filterRuptures(ruptures,
+//                RuptureThinning.coarsenessPredicate(0.1)
+//                        .or(RuptureThinning.endToEndPredicate(
+//                                getPlausibilityConfig().getConnectionStrategy())));
         System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
 
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
