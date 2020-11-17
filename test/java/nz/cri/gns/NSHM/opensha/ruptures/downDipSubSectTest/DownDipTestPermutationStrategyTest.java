@@ -182,6 +182,34 @@ public class DownDipTestPermutationStrategyTest {
     }
 
     @Test
+    public void testStretchyAspectRatioConstraint() {
+        // single section
+        DownDipSubSectBuilder builder = mockDownDipBuilder(0, 2, 3);
+        FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+
+        // depth threshold too large, no stretching
+        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        strategy.addAspectRatioConstraint(1, 1, 3);
+
+        List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
+        List<List<Integer>> expected = new ArrayList<>();
+        expected.add(Lists.newArrayList(0));
+        expected.add(Lists.newArrayList(0, 1, 3, 4));
+        assertEquals(expected, simplifyPermutations(actual));
+
+        // when depth threshold is hit, the aspect ratio can stretch larger, but not smaller
+        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy.addAspectRatioConstraint(1, 1, 2);
+
+        actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
+        expected = new ArrayList<>();
+        expected.add(Lists.newArrayList(0));
+        expected.add(Lists.newArrayList(0, 1, 3, 4));
+        expected.add(Lists.newArrayList(0, 1, 2, 3, 4, 5));
+        assertEquals(expected, simplifyPermutations(actual));
+    }
+
+    @Test
     public void testSizeCoarsenessConstraint() {
         // single section, too large coarseness
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);

@@ -40,9 +40,25 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
     }
 
     public DownDipTestPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio) {
+        return addAspectRatioConstraint(minRatio, maxRatio, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Adds an aspect ratio constraint that ensures that ruptures are within the specified minRatio and maxRatio (incl).
+     * If a rupture starts at row 0 and has at least depthThreshold rows, then maxRatio can be exceeded.
+     * @param minRatio the minimum required ratio (incl)
+     * @param maxRatio the max required ratio (incl)
+     * @param depthThreshold from this depth on, maxRatio can be exceeded
+     * @return this strategy
+     */
+    public DownDipTestPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio, int depthThreshold) {
         return addConstraint((startRow, startCol, rowCount, colCount) -> {
             double ratio = (double) colCount / (double) rowCount;
-            return minRatio <= ratio && ratio <= maxRatio;
+            if ((startRow == 0) && (rowCount >= depthThreshold)) {
+                return minRatio <= ratio;
+            } else {
+                return minRatio <= ratio && ratio <= maxRatio;
+            }
         });
     }
 
@@ -50,7 +66,7 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         return ((dividend % potentialDivisor) == 0);
     }
 
-    public DownDipTestPermutationStrategy addPositionCorsenessConstraint(double epsilon) {
+    public DownDipTestPermutationStrategy addPositionCoarsenessConstraint(double epsilon) {
         if (epsilon > 0) {
             return addConstraint((startRow, startCol, rowCount, colCount) -> {
                 int coarseness = Math.max(1, (int) Math.round(epsilon * rowCount * colCount));
