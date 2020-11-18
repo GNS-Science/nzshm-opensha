@@ -260,7 +260,7 @@ public class NSHMRuptureSetBuilder {
 				*/
 				permutationStrategy = new DownDipTestPermutationStrategy(downDipBuilder)
 						.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect)
-						.addPositionCorsenessConstraint(downDipPositionCoarseness)
+						.addPositionCoarsenessConstraint(downDipPositionCoarseness)
 						.addMinFillConstraint(downDipMinFill)
 						.addSizeCoarsenessConstraint(downDipSizeCoarseness);
 				break;
