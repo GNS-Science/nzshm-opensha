@@ -60,7 +60,7 @@ public class NSHMRuptureSetBuilder {
 	float maxAzimuthChange = 60;
 	float maxTotalAzimuthChange = 60;
 	float maxCumulativeAzimuthChange = 560;
-	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.DOWNDIP;
+	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.UCERF3;
 	double downDipMinAspect = 1;
 	double downDipMaxAspect = 3;
 	double downDipMinFill = 1; // 1 means only allow complete rectangles
@@ -371,6 +371,12 @@ public class NSHMRuptureSetBuilder {
 
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
 		System.out.println("Built "+ruptures.size()+" total ruptures");
+
+//        ruptures = RuptureThinning.filterRuptures(ruptures,
+//                RuptureThinning.coarsenessPredicate(0.1)
+//                        .or(RuptureThinning.endToEndPredicate(
+//                                getPlausibilityConfig().getConnectionStrategy())));
+        System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
 
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
