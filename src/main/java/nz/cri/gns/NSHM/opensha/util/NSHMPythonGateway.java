@@ -2,11 +2,11 @@ package nz.cri.gns.NSHM.opensha.util;
 import java.io.File;
 import java.io.IOException;
 
+import nz.cri.gns.NSHM.opensha.hazard.NSHMHazardCalculatorBuilder;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.CachedClusterPermutationStrategy;
 import py4j.GatewayServer;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
@@ -20,12 +20,15 @@ public class NSHMPythonGateway {
 
 	static CachedNSHMRuptureSetBuilder builder = new CachedNSHMRuptureSetBuilder();
 	static CachedNSHMInversionRunner runner = new CachedNSHMInversionRunner();
+	static NSHMHazardCalculatorBuilder calculator = new NSHMHazardCalculatorBuilder();
 	
 	public static CachedNSHMRuptureSetBuilder getBuilder() {
 		return builder;
 	}
 
 	public static NSHMInversionRunner getRunner() {return runner;}
+
+	public static NSHMHazardCalculatorBuilder getCalculator() {return calculator;}
 
 	public static void main(String[] args) {
 		NSHMPythonGateway app = new NSHMPythonGateway();
