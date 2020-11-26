@@ -97,10 +97,4 @@ public class FaultIdFilter implements PlausibilityFilter {
         return predicate.test(clusterRuptureIds(rupture));
     }
 
-    @Override
-    public PlausibilityResult testJump(ClusterRupture rupture, Jump newJump, boolean verbose) {
-        Set<Integer> ids = clusterRuptureIds(rupture);
-        ids.add(newJump.toCluster.parentSectionID);
-        return predicate.test(ids);
-    }
 }

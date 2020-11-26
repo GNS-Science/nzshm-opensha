@@ -42,14 +42,6 @@ public class FaultIdFilterTest {
         assertEquals(PlausibilityResult.PASS,
                 filter.apply(rupture_bothMatch, false));
 
-        assertEquals(PlausibilityResult.FAIL_FUTURE_POSSIBLE,
-                filter.testJump(rupture_noMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.PASS,
-                filter.testJump(rupture_noMatch, jumpToMatch, false));
-        assertEquals(PlausibilityResult.PASS,
-                filter.testJump(rupture_oneMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.PASS,
-                filter.testJump(rupture_oneMatch, jumpToMatch, false));
     }
 
     @Test
@@ -70,14 +62,6 @@ public class FaultIdFilterTest {
         assertEquals(PlausibilityResult.PASS,
                 filter.apply(rupture_fullMatch, false));
 
-        assertEquals(PlausibilityResult.FAIL_FUTURE_POSSIBLE,
-                filter.testJump(rupture_noMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.FAIL_FUTURE_POSSIBLE,
-                filter.testJump(rupture_noMatch, jumpToMatch, false));
-        assertEquals(PlausibilityResult.FAIL_FUTURE_POSSIBLE,
-                filter.testJump(rupture_partialMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.PASS,
-                filter.testJump(rupture_partialMatch, jumpToMatch, false));
     }
 
     @Test
@@ -104,16 +88,6 @@ public class FaultIdFilterTest {
         assertEquals(PlausibilityResult.PASS,
                 filter.apply(rupture_fullMatch, false));
 
-        assertEquals(PlausibilityResult.FAIL_HARD_STOP,
-                filter.testJump(rupture_noMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.FAIL_HARD_STOP,
-                filter.testJump(rupture_noMatch, jumpToMatch, false));
-        assertEquals(PlausibilityResult.FAIL_HARD_STOP,
-                filter.testJump(rupture_partialMatch, jumpToNoMatch, false));
-        assertEquals(PlausibilityResult.FAIL_HARD_STOP,
-                filter.testJump(rupture_partialMatch, jumpToMatch, false));
-        assertEquals(PlausibilityResult.PASS,
-                filter.testJump(rupture_possibleMatch, jumpToMatch, false));
     }
 
     public FaultSubsectionCluster mockFaultSubsectionCluster(int parentId) {
