@@ -176,7 +176,6 @@ public class scriptCrustalInversionRunner {
     public static void main(String[] args) throws DocumentException, IOException, ParseException {
         CommandLine cmd = parseCommandLine(args);
 
-
         if (cmd.hasOption("generateRuptureSet")) {
             generateRuptures(cmd);
         }
