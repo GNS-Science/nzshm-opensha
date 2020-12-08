@@ -21,6 +21,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Connectio
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.UCERF3ClusterPermuationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
+
 import org.opensha.sha.faultSurface.FaultSection;
 
 import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
@@ -61,6 +62,7 @@ public class NSHMRuptureSetBuilder {
 	float maxTotalAzimuthChange = 60;
 	float maxCumulativeAzimuthChange = 560;
 	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.UCERF3;
+	double thinningFactor = Double.NaN;
 	double downDipMinAspect = 1;
 	double downDipMaxAspect = 3;
 	double downDipMinFill = 1; // 1 means only allow complete rectangles
@@ -92,6 +94,7 @@ public class NSHMRuptureSetBuilder {
 		this.faultIdfilterType = filterType;
 		return this;
 	}
+	
 	/**
 	 * Sets the maximum jump distance allowed between fault sections
 	 *
@@ -102,6 +105,23 @@ public class NSHMRuptureSetBuilder {
 		this.maxDistance = maxDistance;
 		return this;
 	}
+	
+	/**
+	 * Sets the thinning factor e.g. 0.1 means that the number of sections to rupture must be at least 10%
+	 * more than the previous count.
+	 *
+	 * @param thinningFactor
+	 * @return NSHMRuptureSetBuilder the builder
+	 */
+	public NSHMRuptureSetBuilder setThinningFactor(double thinningFactor) {
+		if (thinningFactor > 0.0) {
+			this.thinningFactor = thinningFactor;
+		} else {
+			this.thinningFactor = Double.NaN;
+		}
+		return this;
+	}	
+	
 	/**
 	 * Used for testing only!
 	 *
@@ -370,14 +390,19 @@ public class NSHMRuptureSetBuilder {
 		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
 
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
-		System.out.println("Built "+ruptures.size()+" total ruptures");
+		
 
-//        ruptures = RuptureThinning.filterRuptures(ruptures,
-//                RuptureThinning.coarsenessPredicate(0.1)
-//                        .or(RuptureThinning.endToEndPredicate(
-//                                getPlausibilityConfig().getConnectionStrategy())));
-        System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
+		if (this.thinningFactor == Double.NaN) {
+			System.out.println("Built "+ruptures.size()+" total ruptures");
+		} else {
+	        ruptures = RuptureThinning.filterRuptures(ruptures,
+	                RuptureThinning.coarsenessPredicate(thinningFactor)
+	                        .or(RuptureThinning.endToEndPredicate(
+	                                getPlausibilityConfig().getConnectionStrategy())));
+	        System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
+		}
 
+        // TODO: consider overloading this for Hikurangi to provide Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
 		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
 		rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
