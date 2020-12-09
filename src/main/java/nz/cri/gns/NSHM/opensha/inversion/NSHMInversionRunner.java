@@ -117,10 +117,10 @@ public class NSHMInversionRunner {
         /*
          * MFD constraints
          */
-        double totalRateM5 = 10d; // expected number of M>=5's per year
+        double totalRateM5 = 5d; // expected number of M>=5's per year TODO: OK? ref David Rhodes/Chris Roland? [KKS, CBC]
         double bValue = 1d; // G-R b-value
         // magnitude to switch from MFD equality to MFD inequality
-        double mfdTransitionMag = 7.85;
+        double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
         double mfdEqualityConstraintWt = 10;
         double mfdInequalityConstraintWt = 1000;
         int mfdNum = 40;
