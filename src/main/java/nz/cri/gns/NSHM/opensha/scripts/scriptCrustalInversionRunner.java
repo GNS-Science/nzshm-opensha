@@ -9,21 +9,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
+import nz.cri.gns.NSHM.opensha.ruptures.FaultIdFilter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.math3.ml.clustering.Cluster;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder.RupturePermutationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.utils.FaultSystemIO;

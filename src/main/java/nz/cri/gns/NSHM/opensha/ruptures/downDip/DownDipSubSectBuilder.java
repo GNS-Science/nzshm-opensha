@@ -1,4 +1,4 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures.downDip;
 
 import java.io.IOException;
 import java.io.InputStream;

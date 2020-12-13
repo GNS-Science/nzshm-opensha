@@ -56,6 +56,13 @@ public class FaultSectionList extends ArrayList<FaultSection> {
         parents.add(parent);
     }
 
+    public void addParents(FaultSectionList parents){
+        if(this.parents == null){
+            this.parents = new FaultSectionList();
+        }
+        this.parents.addAll(parents);
+    }
+
     protected boolean containsId(int id) {
         return ids.contains(id);
     }
@@ -101,7 +108,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Adds all sections from the sections collection.
-     * Sections are validated as if added byt he add method.
+     * Sections are validated as if added by the add method.
      * @param sections a collection of sections.
      * @return true
      */

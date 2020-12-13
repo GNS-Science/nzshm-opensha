@@ -1,5 +1,6 @@
 package nz.cri.gns.NSHM.opensha.ruptures;
 
+import nz.cri.gns.NSHM.opensha.ruptures.downDip.DownDipRegistry;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
@@ -25,6 +26,15 @@ public class RuptureThinning {
      */
     public static List<ClusterRupture> filterRuptures(List<ClusterRupture> ruptures, Predicate<ClusterRupture> predicate) {
         return ruptures.stream().filter(predicate).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a predicate that takes a ClusterRupture and returns true iff the rupture is on a downdip fault.
+     * @param registry
+     * @return
+     */
+    public static Predicate<ClusterRupture> downDipPredicate(DownDipRegistry registry){
+        return rupture -> registry.isDownDip(rupture.clusters[0]);
     }
 
     /**
