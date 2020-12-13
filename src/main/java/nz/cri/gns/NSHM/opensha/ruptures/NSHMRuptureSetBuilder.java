@@ -332,7 +332,7 @@ public class NSHMRuptureSetBuilder {
         JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
 
         // connection strategy: parent faults connect at closest point, and only when dist <=5 km
-        ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, maxDistance);
+        ClusterConnectionStrategy connectionStrategy = new FaultTypeSeparationConnectionStrategy(downDipRegistry, subSections, distAzCalc, maxDistance);
         System.out.println("Built connectionStrategy");
 
         int maxNumSplays = 0; // don't allow any splays

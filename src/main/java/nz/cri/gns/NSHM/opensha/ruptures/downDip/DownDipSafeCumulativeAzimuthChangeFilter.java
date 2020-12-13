@@ -1,9 +1,15 @@
 package nz.cri.gns.NSHM.opensha.ruptures.downDip;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
+
+import java.io.IOException;
 
 public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthChangeFilter {
 
@@ -23,4 +29,20 @@ public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthC
             return super.apply(rupture, verbose);
         }
     }
+
+    @Override
+    public TypeAdapter<PlausibilityFilter> getTypeAdapter() {
+        return new TypeAdapter<PlausibilityFilter>() {
+            @Override
+            public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
+                out.nullValue();
+            }
+
+            @Override
+            public PlausibilityFilter read(JsonReader in) throws IOException {
+                return null;
+            }
+        };
+    }
+
 }

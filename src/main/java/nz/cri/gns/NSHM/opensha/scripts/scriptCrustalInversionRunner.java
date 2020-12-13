@@ -51,6 +51,7 @@ public class scriptCrustalInversionRunner {
                 .addOption("p", "minSubSectsPerParent", true, "min number of subsections per parent fault, when building ruptures")
                 .addOption("s", "ruptureStrategy", true, "rupture permutation strategy - one of `DOWNDIP`, `UCERF3`, `POINTS`")
                 .addOption("t", "faultIdFilterType", true, "determines the behaviour of the filter set up by faultIdIn. One of ANY, ALL, EXACT. ANY is the default.")
+                .addOption("h", "thinning", true, "crustal fault thinning factor")
                 .addOption(faultIdInOption);
         return new DefaultParser().parse(options, args);
     }
@@ -103,10 +104,13 @@ public class scriptCrustalInversionRunner {
             System.out.println("set minSubSectsPerParent to " + cmd.getOptionValue("minSubSectsPerParent"));
             builder.setMinSubSectsPerParent(Integer.parseInt(cmd.getOptionValue("minSubSectsPerParent")));
         }
+        if(cmd.hasOption("thinning")){
+            builder.setThinningFactor(Double.parseDouble(cmd.getOptionValue("thinning")));
+        }
 
         System.out.println("=========");
 
-        //builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
