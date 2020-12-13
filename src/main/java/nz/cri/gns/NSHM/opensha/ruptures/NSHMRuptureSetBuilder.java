@@ -378,8 +378,7 @@ public class NSHMRuptureSetBuilder {
 
         ruptures = getBuilder().build(permutationStrategy, numThreads);
 
-
-        if (this.thinningFactor == Double.NaN) {
+        if (Double.isNaN(thinningFactor)) {
             System.out.println("Built " + ruptures.size() + " total ruptures");
         } else {
             ruptures = RuptureThinning.filterRuptures(ruptures,
