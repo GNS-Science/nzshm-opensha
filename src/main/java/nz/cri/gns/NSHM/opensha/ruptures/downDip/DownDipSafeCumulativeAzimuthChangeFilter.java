@@ -35,7 +35,7 @@ public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthC
         return new TypeAdapter<PlausibilityFilter>() {
             @Override
             public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
-                out.nullValue();
+                out.beginObject().endObject();
             }
 
             @Override

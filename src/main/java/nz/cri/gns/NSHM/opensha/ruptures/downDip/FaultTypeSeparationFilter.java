@@ -57,11 +57,11 @@ public class FaultTypeSeparationFilter implements PlausibilityFilter {
     }
 
     @Override
-    public  TypeAdapter<PlausibilityFilter> getTypeAdapter() {
+    public TypeAdapter<PlausibilityFilter> getTypeAdapter() {
         return new TypeAdapter<PlausibilityFilter>() {
             @Override
             public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
-                out.nullValue();
+                out.beginObject().endObject();
             }
 
             @Override
