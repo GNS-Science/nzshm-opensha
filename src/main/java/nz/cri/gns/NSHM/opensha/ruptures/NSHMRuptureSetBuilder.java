@@ -61,6 +61,7 @@ public class NSHMRuptureSetBuilder {
     double thinningFactor = Double.NaN;
     double downDipMinAspect = 1;
     double downDipMaxAspect = 3;
+    int downDipAspectDepthThreshold = Integer.MAX_VALUE; //from this 'depth' (in tile rows) the max aspect constraint is ignored  
     double downDipMinFill = 1; // 1 means only allow complete rectangles
     double downDipPositionCoarseness = 0; // 0 means no coarseness
     double downDipSizeCoarseness = 0; // 0 means no coarseness
@@ -235,6 +236,22 @@ public class NSHMRuptureSetBuilder {
     }
 
     /**
+     * Sets the aspect ratio boundaries for subduction zone ruptures with elastic aspect ratinos set with depthThreshold.
+     *
+     * @param minAspect the minimum aspect ratio
+     * @param maxAspect the maximum aspect ratio
+     * @param depthThreshold the threshold (count of rows) from which the maxAspect constraint will be ignored  
+     * 
+     * @return this builder
+     */
+    public NSHMRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect, int depthThreshold) {
+        this.downDipMinAspect = minAspect;
+        this.downDipMaxAspect = maxAspect;
+        this.downDipAspectDepthThreshold = depthThreshold;
+        return this;
+    }
+    
+    /**
      * Sets the required rectangularity for subduction zone ruptures.
      * A value of 1 means all ruptures need to be rectangular. A value smaller of 1
      * indicates the minimum percentage of actual section within the rupture rectangle.
@@ -288,7 +305,7 @@ public class NSHMRuptureSetBuilder {
 
         if (null != downDipFile) {
             permutationStrategy = new DownDipPermutationStrategy(downDipRegistry, permutationStrategy)
-                    .addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect)
+                    .addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
                     .addPositionCoarsenessConstraint(downDipPositionCoarseness)
                     .addMinFillConstraint(downDipMinFill)
                     .addSizeCoarsenessConstraint(downDipSizeCoarseness);
