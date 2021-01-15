@@ -18,11 +18,12 @@ import scratch.UCERF3.utils.FaultSystemIO;
  */
 public class NSHMPythonGateway {
 
-	static CachedNSHMRuptureSetBuilder builder = new CachedNSHMRuptureSetBuilder();
+	static CachedNSHMRuptureSetBuilder builder;
 	static CachedNSHMInversionRunner runner = new CachedNSHMInversionRunner();
 	static NSHMHazardCalculatorBuilder calculator = new NSHMHazardCalculatorBuilder();
 	
 	public static CachedNSHMRuptureSetBuilder getBuilder() {
+		builder = new CachedNSHMRuptureSetBuilder();
 		return builder;
 	}
 
