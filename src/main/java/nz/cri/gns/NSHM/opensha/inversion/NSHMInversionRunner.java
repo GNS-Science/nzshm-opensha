@@ -52,8 +52,20 @@ public class NSHMInversionRunner {
     protected double mfdMin = 5.05d;
     protected double mfdMax = 8.95;
     
-	double mfdEqualityConstraintWt = 10;
-    double mfdInequalityConstraintWt = 1000;    
+    protected double mfdEqualityConstraintWt = 10;
+    protected double mfdInequalityConstraintWt = 1000;
+    
+    // If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).
+    // If unnormalized, misfit is absolute difference.
+    // BOTH includes both normalized and unnormalized constraints.
+    UCERF3InversionConfiguration.SlipRateConstraintWeightingType slipRateWeighting = UCERF3InversionConfiguration.SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)    
+    // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
+    protected double slipRateConstraintWt_normalized = 1;
+    // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
+    protected double slipRateConstraintWt_unnormalized = 100;
+    
+    
+    
     /**
      * Creates a new NSHMInversionRunner with defaults.
      */
@@ -140,7 +152,27 @@ public class NSHMInversionRunner {
         this.mfdMax = mfdMax;
         return this;
     } 
-     
+    
+
+
+    /**
+     * If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).
+     * If unnormalized, misfit is absolute difference.
+     * BOTH includes both normalized and unnormalized constraints.
+     * 
+     * @param weightingType a value fromUCERF3InversionConfiguration.SlipRateConstraintWeightingType 
+     * @param normalizedWt
+     * @param unnormalizedWt
+     * @return
+     */
+    public NSHMInversionRunner setSlipRateConstraint(UCERF3InversionConfiguration.SlipRateConstraintWeightingType weightingType, 
+    		double normalizedWt, double unnormalizedWt) {
+    	this.slipRateWeighting = weightingType;
+    	this.slipRateConstraintWt_normalized = normalizedWt;
+    	this.slipRateConstraintWt_unnormalized = unnormalizedWt;
+    	return this;
+    }
+    
     /*
      * 
      * 
@@ -167,20 +199,13 @@ public class NSHMInversionRunner {
     	/*
          * Slip rate constraints
          */
-        // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
-        double slipRateConstraintWt_normalized = 1;
-        // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
-        double slipRateConstraintWt_unnormalized = 100;
-        // If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).
-        // If unnormalized, misfit is absolute difference.
-        // BOTH includes both normalized and unnormalized constraints.
-        UCERF3InversionConfiguration.SlipRateConstraintWeightingType slipRateWeighting = UCERF3InversionConfiguration.SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
+
         constraints.add(new SlipRateInversionConstraint(slipRateConstraintWt_normalized, slipRateConstraintWt_unnormalized,
-                slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
+                this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
 
 
-        GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(
-                bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
+        //configure GR, this will use defaults unless user calls setGutenbergRichterMFD() to override 	
+        GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
         int transitionIndex = mfd.getClosestXIndex(mfdTransitionMag);
         // snap it to the discretization if it wasn't already
         mfdTransitionMag = mfd.getX(transitionIndex);
@@ -188,7 +213,6 @@ public class NSHMInversionRunner {
         
         
         /* constraints */
-        
         GutenbergRichterMagFreqDist equalityMFD = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);
         
