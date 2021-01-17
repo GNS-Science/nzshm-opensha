@@ -2,6 +2,8 @@ package nz.cri.gns.NSHM.opensha.inversion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
+import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -37,7 +39,21 @@ public class NSHMInversionRunner {
     protected long inversionMins = 1;
     protected long syncInterval = 10;
     protected int numThreads = Runtime.getRuntime().availableProcessors();
-
+    protected NSHMSlipEnabledRuptureSet rupSet = null;
+    protected List<InversionConstraint> constraints = new ArrayList<>();
+    
+    /*
+     * MFD settings
+     */
+    protected double totalRateM5 = 5d;
+    protected double bValue = 1d;
+    protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+    protected int mfdNum = 40;
+    protected double mfdMin = 5.05d;
+    protected double mfdMax = 8.95;
+    
+	double mfdEqualityConstraintWt = 10;
+    double mfdInequalityConstraintWt = 1000;    
     /**
      * Creates a new NSHMInversionRunner with defaults.
      */
@@ -76,7 +92,60 @@ public class NSHMInversionRunner {
         this.numThreads = numThreads;
         return this;
     }
+  
+    /**
+     * Sets the FaultModel file f
+     *
+     * @param ruptureSetFileName the rupture file name
+     * @return this builder
+     * @throws DocumentException 
+     * @throws IOException 
+     */
+    public NSHMInversionRunner setRuptureSetFile(String ruptureSetFileName) throws IOException, DocumentException {
+    	File rupSetFile = new File(ruptureSetFileName);
+    	this.setRuptureSetFile(rupSetFile);
+        return this;
+    }
 
+    /**
+     * Sets the FaultModel file
+     *
+     * @param ruptureSetFile the rupture file
+     * @return this builder
+     * @throws DocumentException 
+     * @throws IOException 
+     */
+    public NSHMInversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
+        this.rupSet = loadRupSet(ruptureSetFile);
+        return this;
+    }    
+    
+    /**
+     * Sets GutenbergRichterMFD arguments
+     * @param totalRateM5 the number of  M>=5's per year. TODO: ref David Rhodes/Chris Roland? [KKS, CBC]
+     * @param bValue
+     * @param mfdTransitionMag magnitude to switch from MFD equality to MFD inequality TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+     * @param mfdNum
+     * @param mfdMin
+     * @param mfdMax
+     * @return
+     */
+    public NSHMInversionRunner setGutenbergRichterMFD(double totalRateM5, double bValue, 
+    		double mfdTransitionMag, int mfdNum, double mfdMin, double mfdMax ) {
+        this.totalRateM5 = totalRateM5; 
+        this.bValue = bValue;
+        this.mfdTransitionMag = mfdTransitionMag;      
+        this.mfdNum = mfdNum;
+        this.mfdMin = mfdMin;
+        this.mfdMax = mfdMax;
+        return this;
+    } 
+     
+    /*
+     * 
+     * 
+     *
+     */
     @SuppressWarnings("unchecked")
     protected NSHMSlipEnabledRuptureSet loadRupSet(File file) throws IOException, DocumentException {
         FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
@@ -89,18 +158,13 @@ public class NSHMInversionRunner {
 
     /**
      * Runs the inversion on the specified rupture set.
-     * @param ruptureSetFile a rupture set file.
      * @return the FaultSystemSolution.
      * @throws IOException
      * @throws DocumentException
      */
-    public FaultSystemSolution run(File ruptureSetFile) throws IOException, DocumentException {
+    public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
-        NSHMSlipEnabledRuptureSet rupSet = loadRupSet(ruptureSetFile);
-
-        List<InversionConstraint> constraints = new ArrayList<>();
-
-        /*
+    	/*
          * Slip rate constraints
          */
         // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
@@ -114,26 +178,20 @@ public class NSHMInversionRunner {
         constraints.add(new SlipRateInversionConstraint(slipRateConstraintWt_normalized, slipRateConstraintWt_unnormalized,
                 slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
 
-        /*
-         * MFD constraints
-         */
-        double totalRateM5 = 5d; // expected number of M>=5's per year TODO: OK? ref David Rhodes/Chris Roland? [KKS, CBC]
-        double bValue = 1d; // G-R b-value
-        // magnitude to switch from MFD equality to MFD inequality
-        double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-        double mfdEqualityConstraintWt = 10;
-        double mfdInequalityConstraintWt = 1000;
-        int mfdNum = 40;
-        double mfdMin = 5.05d;
-        double mfdMax = 8.95;
+
         GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
         int transitionIndex = mfd.getClosestXIndex(mfdTransitionMag);
         // snap it to the discretization if it wasn't already
         mfdTransitionMag = mfd.getX(transitionIndex);
         Preconditions.checkState(transitionIndex >= 0);
+        
+        
+        /* constraints */
+        
         GutenbergRichterMagFreqDist equalityMFD = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);
+        
         MFD_InversionConstraint equalityConstr = new MFD_InversionConstraint(equalityMFD, null);
         GutenbergRichterMagFreqDist inequalityMFD = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD.size());

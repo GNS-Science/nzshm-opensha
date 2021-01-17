@@ -169,8 +169,9 @@ public class scriptCrustalInversionRunner {
 
         NSHMInversionRunner runner = new NSHMInversionRunner()
                 .setInversionMinutes(inversionMins)
-                .setSyncInterval(syncInterval);
-        FaultSystemSolution solution = runner.run(rupSetFile);
+                .setSyncInterval(syncInterval)
+        		.setRuptureSetFile(rupSetFile);
+        FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);
     }
 

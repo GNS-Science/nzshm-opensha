@@ -112,9 +112,8 @@ public class NSHMPythonGateway {
 		 * @throws IOException
 		 * @throws DocumentException
 		 */
-		public FaultSystemSolution run(String ruptureSetFileName) throws IOException, DocumentException {
-			File rupSetFile = new File(ruptureSetFileName);
-			solution = run(rupSetFile);
+		public FaultSystemSolution runInversion() throws IOException, DocumentException {
+			solution = super.runInversion();
 			return solution;
 		}
 
