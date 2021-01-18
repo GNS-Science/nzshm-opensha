@@ -43,7 +43,7 @@ public class NSHMInversionRunner {
     protected List<InversionConstraint> constraints = new ArrayList<>();
     
     /*
-     * MFD settings
+     * MFD constraint default settings
      */
     protected double totalRateM5 = 5d;
     protected double bValue = 1d;
@@ -55,15 +55,17 @@ public class NSHMInversionRunner {
     protected double mfdEqualityConstraintWt = 10;
     protected double mfdInequalityConstraintWt = 1000;
     
+    /* 
+     * Sliprate constraint default settings
+     */  
     // If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).
     // If unnormalized, misfit is absolute difference.
     // BOTH includes both normalized and unnormalized constraints.
-    UCERF3InversionConfiguration.SlipRateConstraintWeightingType slipRateWeighting = UCERF3InversionConfiguration.SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)    
+    protected UCERF3InversionConfiguration.SlipRateConstraintWeightingType slipRateWeighting = UCERF3InversionConfiguration.SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)    
     // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
     protected double slipRateConstraintWt_normalized = 1;
     // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
     protected double slipRateConstraintWt_unnormalized = 100;
-    
     
     
     /**
@@ -151,10 +153,20 @@ public class NSHMInversionRunner {
         this.mfdMin = mfdMin;
         this.mfdMax = mfdMax;
         return this;
-    } 
+    }
     
-
-
+    /**
+     * @param mfdEqualityConstraintWt
+     * @param mfdInequalityConstraintWt
+     * @return
+     */
+    public NSHMInversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt, 
+    		double mfdInequalityConstraintWt) {
+    	this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
+    	this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
+    	return this;
+    }
+    
     /**
      * If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).
      * If unnormalized, misfit is absolute difference.
@@ -173,11 +185,7 @@ public class NSHMInversionRunner {
     	return this;
     }
     
-    /*
-     * 
-     * 
-     *
-     */
+
     @SuppressWarnings("unchecked")
     protected NSHMSlipEnabledRuptureSet loadRupSet(File file) throws IOException, DocumentException {
         FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
@@ -199,8 +207,8 @@ public class NSHMInversionRunner {
     	/*
          * Slip rate constraints
          */
-
-        constraints.add(new SlipRateInversionConstraint(slipRateConstraintWt_normalized, slipRateConstraintWt_unnormalized,
+        constraints.add(new SlipRateInversionConstraint(this.slipRateConstraintWt_normalized, 
+        		this.slipRateConstraintWt_unnormalized,
                 this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
 
 
@@ -209,14 +217,11 @@ public class NSHMInversionRunner {
         int transitionIndex = mfd.getClosestXIndex(mfdTransitionMag);
         // snap it to the discretization if it wasn't already
         mfdTransitionMag = mfd.getX(transitionIndex);
-        Preconditions.checkState(transitionIndex >= 0);
-        
-        
-        /* constraints */
+        Preconditions.checkState(transitionIndex >= 0);       
         GutenbergRichterMagFreqDist equalityMFD = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);
-        
         MFD_InversionConstraint equalityConstr = new MFD_InversionConstraint(equalityMFD, null);
+        
         GutenbergRichterMagFreqDist inequalityMFD = new GutenbergRichterMagFreqDist(
                 bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD.size());
         MFD_InversionConstraint inequalityConstr = new MFD_InversionConstraint(inequalityMFD, null);
