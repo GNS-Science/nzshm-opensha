@@ -19,7 +19,7 @@ import scratch.UCERF3.utils.FaultSystemIO;
 public class NSHMPythonGateway {
 
 	static CachedNSHMRuptureSetBuilder builder;
-	static CachedNSHMInversionRunner runner = new CachedNSHMInversionRunner();
+	static CachedNSHMInversionRunner runner; 
 	static NSHMHazardCalculatorBuilder calculator = new NSHMHazardCalculatorBuilder();
 	
 	public static CachedNSHMRuptureSetBuilder getBuilder() {
@@ -27,7 +27,10 @@ public class NSHMPythonGateway {
 		return builder;
 	}
 
-	public static NSHMInversionRunner getRunner() {return runner;}
+	public static NSHMInversionRunner getRunner() {
+		runner = new CachedNSHMInversionRunner();
+		return runner;
+	}
 
 	public static NSHMHazardCalculatorBuilder getCalculator() {return calculator;}
 
