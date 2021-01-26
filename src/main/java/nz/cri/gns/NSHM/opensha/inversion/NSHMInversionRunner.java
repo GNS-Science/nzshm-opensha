@@ -27,6 +27,7 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +49,10 @@ public class NSHMInversionRunner {
     protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
     private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
 
+    private CompletionCriteria completionCriteria;
+    private ThreadedSimulatedAnnealing tsa;
+    private double[] initialState;
+    
     /*
      * MFD constraint default settings
      */
@@ -230,7 +235,33 @@ public class NSHMInversionRunner {
     	return this;
     }
     
-
+    public String completionCriteriaMetrics() {
+    	String info = "";
+		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria)completionCriteria;
+		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size()-1);
+		int numRups = initialState.length;
+		info += "\nAvg Perturbs Per Rup: "+numPerturbs+"/"+numRups+" = "
+		+((double)numPerturbs/(double)numRups);
+		int rupsPerturbed = 0;
+		double[] solution_no_min_rates = tsa.getBestSolution();
+		int numAboveWaterlevel =  0;
+		for (int i=0; i<numRups; i++) {
+			if ((float)solution_no_min_rates[i] != (float)initialState[i])
+				rupsPerturbed++;
+			if (solution_no_min_rates[i] > 0)
+				numAboveWaterlevel++;
+		}
+		info += "\nNum rups actually perturbed: "+rupsPerturbed+"/"+numRups+" ("
+		+(float)(100d*((double)rupsPerturbed/(double)numRups))+" %)";
+		info += "\nAvg Perturbs Per Perturbed Rup: "+numPerturbs+"/"+rupsPerturbed+" = "
+		+((double)numPerturbs/(double)rupsPerturbed);
+		info += "\nNum rups above waterlevel: "+numAboveWaterlevel+"/"+numRups+" ("
+		+(float)(100d*((double)numAboveWaterlevel/(double)numRups))+" %)";
+		info += "\n";
+		return info;
+    }
+    
+    
     @SuppressWarnings("unchecked")
     protected NSHMSlipEnabledRuptureSet loadRupSet(File file) throws IOException, DocumentException {
         FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
@@ -258,8 +289,8 @@ public class NSHMInversionRunner {
 
         //Experiment - define some regions 
         Region regionSansTVZ = getRegionNZ();  // the same rectangle we have for the scecVDO NZ graticule
-        Region regionTVZ = getRegionTVZ();     // from matts geometry as used for the sansTVS crustal ruptures
-        regionSansTVZ.addInterior(regionTVZ)); // remove a TVZ-shaped interior from NZ
+        Region regionTVZ = getRegionTVZ();     // from Matts geometry as used for the sansTVZ crustal ruptures
+        regionSansTVZ.addInterior(regionTVZ); // remove a TVZ-shaped interior from NZ
         
         //configure GR, this will use defaults unless user calls setGutenbergRichterMFD() to override 	
         GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
@@ -284,11 +315,11 @@ public class NSHMInversionRunner {
 
         //GR Inequality
         GutenbergRichterMagFreqDist inequalityMFDA = new GutenbergRichterMagFreqDist(
-                bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD.size());
+                bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFDA.size());
 
         //and a different bvalue for TVZ Inequality
         GutenbergRichterMagFreqDist inequalityMFDB = new GutenbergRichterMagFreqDist(
-        		0.75, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD.size());
+        		0.75, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFDB.size());
         
         MFD_InversionConstraint inequalityConstrA = new MFD_InversionConstraint(inequalityMFDA, regionSansTVZ);
         MFD_InversionConstraint inequalityConstrB = new MFD_InversionConstraint(inequalityMFDB, regionTVZ);
@@ -314,19 +345,26 @@ public class NSHMInversionRunner {
         if (!(this.energyChangeCompletionCriteria == null))
         	this.completionCriterias.add(this.energyChangeCompletionCriteria);
 
-        CompletionCriteria completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+        completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
         
         // Bring up window to track progress
-        // criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport, 0.1d);
-
+        // criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport, 0.1d);        
+		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
+		
         // this is the "sub completion criteria" - the amount of time (or iterations) between synchronization
         CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
 
-        ThreadedSimulatedAnnealing tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
-                inputGen.getInitialSolution(), smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),
+		initialState = inputGen.getInitialSolution();
+		
+        tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
+        		initialState, smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),
                 inputGen.getWaterLevelRates(), numThreads, subCompletionCriteria);
         tsa.setConstraintRanges(inputGen.getConstraintRowRanges());
 
+        
+        //From CLI metadata Analysis
+        initialState = Arrays.copyOf(initialState, initialState.length);
+        
         tsa.iterate(completionCriteria);
 
         // now assemble the solution
