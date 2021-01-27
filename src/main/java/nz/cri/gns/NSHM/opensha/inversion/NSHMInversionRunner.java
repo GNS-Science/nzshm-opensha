@@ -15,9 +15,14 @@ import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
+import scratch.UCERF3.SlipEnabledSolution;
+import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
+//import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.inversion.CommandLineInversionRunner;
+//import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.*;
@@ -52,7 +57,7 @@ public class NSHMInversionRunner {
     private CompletionCriteria completionCriteria;
     private ThreadedSimulatedAnnealing tsa;
     private double[] initialState;
-    
+    private InversionFaultSystemSolution solution; 
     /*
      * MFD constraint default settings
      */
@@ -261,6 +266,95 @@ public class NSHMInversionRunner {
 		return info;
     }
     
+  
+    public String momentAndRateMetrics() {
+    	String info = "";
+		// add moments to info string
+		info += "\n\n****** Moment and Rupture Rate Metatdata ******";
+		info +="\nNum Ruptures: "+rupSet.getNumRuptures();
+		int numNonZeros = 0;
+		for (double rate : solution.getRateForAllRups())
+			if (rate != 0)
+				numNonZeros++;
+		
+		float percent = (float)numNonZeros / rupSet.getNumRuptures() * 100f;
+		info += "\nNum Non-Zero Rups: "+numNonZeros+"/"+rupSet.getNumRuptures()+" ("+percent+" %)";
+		info += "\nOrig (creep reduced) Fault Moment Rate: "+rupSet.getTotalOrigMomentRate();
+		
+		double momRed = rupSet.getTotalMomentRateReduction();
+		info += "\nMoment Reduction (for subseismogenic ruptures only): "+momRed;
+		info += "\nSubseismo Moment Reduction Fraction (relative to creep reduced): "+rupSet.getTotalMomentRateReductionFraction();
+		info += "\nFault Target Supra Seis Moment Rate (subseismo and creep reduced): "
+			+rupSet.getTotalReducedMomentRate();
+		
+		double totalSolutionMoment = solution.getTotalFaultSolutionMomentRate();
+		info += "\nFault Solution Supra Seis Moment Rate: "+totalSolutionMoment;
+		
+		/*
+		 * TODO : Matt, are these useful in NSHM ?? Priority ??
+		 */
+//		info += "\nFault Target Sub Seis Moment Rate: "
+//				+rupSet.getInversionTargetMFDs().getTotalSubSeismoOnFaultMFD().getTotalMomentRate();
+//		info += "\nFault Solution Sub Seis Moment Rate: "
+//				+solution.getFinalTotalSubSeismoOnFaultMFD().getTotalMomentRate();
+//		info += "\nTruly Off Fault Target Moment Rate: "
+//				+rupSet.getInversionTargetMFDs().getTrulyOffFaultMFD().getTotalMomentRate();
+//		info += "\nTruly Off Fault Solution Moment Rate: "
+//				+solution.getFinalTrulyOffFaultMFD().getTotalMomentRate();
+//		
+//		try {
+//			//					double totalOffFaultMomentRate = invSol.getTotalOffFaultSeisMomentRate(); // TODO replace - what is off fault moment rate now?
+//			//					info += "\nTotal Off Fault Seis Moment Rate (excluding subseismogenic): "
+//			//							+(totalOffFaultMomentRate-momRed);
+//			//					info += "\nTotal Off Fault Seis Moment Rate (inluding subseismogenic): "
+//			//							+totalOffFaultMomentRate;
+//			info += "\nTotal Moment Rate From Off Fault MFD: "+solution.getFinalTotalGriddedSeisMFD().getTotalMomentRate();
+//			//					info += "\nTotal Model Seis Moment Rate: "
+//			//							+(totalOffFaultMomentRate+totalSolutionMoment);
+//		} catch (Exception e1) {
+//			e1.printStackTrace();
+//			System.out.println("WARNING: InversionFaultSystemSolution could not be instantiated!");
+//		}		
+			
+		info += "\n";
+		return info;		
+    } 
+
+    public String byFaultNameMetrics() {
+    	String info = "";
+    	info += "\n\n****** byFaultNameMetrics Metadata ******";
+//		double totalMultiplyNamedM7Rate = FaultSystemRupSetCalc.calcTotRateMultiplyNamedFaults((InversionFaultSystemSolution) solution, 7d, null);
+//		double totalMultiplyNamedPaleoVisibleRate = FaultSystemRupSetCalc.calcTotRateMultiplyNamedFaults((InversionFaultSystemSolution) solution, 0d, paleoProbabilityModel);
+
+		double totalM7Rate = FaultSystemRupSetCalc.calcTotRateAboveMag(solution, 7d, null);
+//		double totalPaleoVisibleRate = FaultSystemRupSetCalc.calcTotRateAboveMag(sol, 0d, paleoProbabilityModel);
+
+		info += "\n\nTotal rupture rate (M7+): "+totalM7Rate;
+//		info += "\nTotal multiply named rupture rate (M7+): "+totalMultiplyNamedM7Rate;
+//		info += "\n% of M7+ rate that are multiply named: "
+//			+(100d * totalMultiplyNamedM7Rate / totalM7Rate)+" %";
+//		info += "\nTotal paleo visible rupture rate: "+totalPaleoVisibleRate;
+//		info += "\nTotal multiply named paleo visible rupture rate: "+totalMultiplyNamedPaleoVisibleRate;
+//		info += "\n% of paleo visible rate that are multiply named: "
+//			+(100d * totalMultiplyNamedPaleoVisibleRate / totalPaleoVisibleRate)+" %";
+		info += "\n";
+		return info;  	
+    }
+
+    public String parentFaultMomentRates() {
+    	// parent fault moment rates
+    	String info = "";
+		ArrayList<CommandLineInversionRunner.ParentMomentRecord> parentMoRates = CommandLineInversionRunner.getSectionMoments((SlipEnabledSolution) solution);
+		info += "\n\n****** Larges Moment Rate Discrepancies ******";
+		for (int i=0; i<10 && i<parentMoRates.size(); i++) {
+			CommandLineInversionRunner.ParentMomentRecord p = parentMoRates.get(i);
+			info += "\n"+p.parentID+". "+p.name+"\ttarget: "+p.targetMoment
+			+"\tsolution: "+p.solutionMoment+"\tdiff: "+p.getDiff();
+		}
+		info += "\n";
+		return info; 
+    }
+ 
     
     @SuppressWarnings("unchecked")
     protected NSHMSlipEnabledRuptureSet loadRupSet(File file) throws IOException, DocumentException {
@@ -380,6 +474,7 @@ public class NSHMInversionRunner {
                 System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
         }
 
-        return new FaultSystemSolution(rupSet, solution_adjusted);
+        solution = new InversionFaultSystemSolution(rupSet, solution_adjusted);
+        return solution;
     }
 }
