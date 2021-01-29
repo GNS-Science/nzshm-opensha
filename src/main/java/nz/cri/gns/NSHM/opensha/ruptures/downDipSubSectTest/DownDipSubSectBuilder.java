@@ -13,25 +13,27 @@ import org.opensha.commons.geo.LocationUtils;
 import org.opensha.commons.geo.LocationVector;
 import org.opensha.commons.util.FaultUtils;
 //import org.opensha.refFaultParamDb.vo.FaultSection;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+//import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.SimpleFaultData;
 
 import com.google.common.base.Preconditions;
 
+import nz.cri.gns.NSHM.opensha.ruptures.DownDipFaultSection;
+
 public class DownDipSubSectBuilder {
 	
 	// [column, row]
-	private FaultSectionPrefData[][] subSects;
+	private DownDipFaultSection[][] subSects;
 	private String sectName;
 	private int parentID;
 	private Map<Integer, Integer> idToRowMap;
 	private Map<Integer, Integer> idToColMap;
 	//	private static Random slipRateGenerator = new Random();
 	
-	private static FaultSectionPrefData buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
-		FaultSectionPrefData fsd = new FaultSectionPrefData();
+	private static DownDipFaultSection buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
+		DownDipFaultSection fsd = new DownDipFaultSection();
 
 		//hack for testing
 		//float divisor = if (sectionId < 100) ? 
@@ -46,7 +48,7 @@ public class DownDipSubSectBuilder {
 		return fsd.clone();
 	}
 	
-	private static FaultSectionPrefData buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
+	private static DownDipFaultSection buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
 		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
 		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
@@ -70,7 +72,7 @@ public class DownDipSubSectBuilder {
      *
      * @param csv
      */
-    private FaultSectionPrefData[][] setUpSubSectsArray(CSVFile<String> csv) {
+    private DownDipFaultSection[][] setUpSubSectsArray(CSVFile<String> csv) {
         int colCount = 0;
         int rowCount = 0;
         for (int row = 1; row < csv.getNumRows(); row++) {
@@ -78,7 +80,7 @@ public class DownDipSubSectBuilder {
             colCount = Math.max(Integer.parseInt(csvLine.get(0)), colCount);
             rowCount = Math.max(Integer.parseInt(csvLine.get(1)), rowCount);
         }
-        return new FaultSectionPrefData[colCount + 1][rowCount + 1];
+        return new DownDipFaultSection[colCount + 1][rowCount + 1];
     }
 
 	/*
@@ -108,7 +110,7 @@ public class DownDipSubSectBuilder {
 		
 		for (int row=1; row<csv.getNumRows(); row++) {
 			List<String> csvLine = csv.getLine(row);
-			FaultSectionPrefData fs = buildFaultSectionFromCsvRow(startID, csvLine);
+			DownDipFaultSection fs = buildFaultSectionFromCsvRow(startID, csvLine);
 			fs.setParentSectionId(parentSection.getSectionId());
 			fs.setParentSectionName(parentSection.getSectionName());
 			fs.setSectionName(parentSection.getSectionName() + "; col: " + csvLine.get(0) + ", row: " + csvLine.get(1));
@@ -116,7 +118,7 @@ public class DownDipSubSectBuilder {
 			rowIndex = Integer.parseInt(csvLine.get(1));
 			
 			try  {
-				subSects[colIndex][rowIndex] = fs;
+				subSects[colIndex][rowIndex] = fs.setRowIndex(rowIndex).setColIndex(colIndex);
 				idToRowMap.put(startID, rowIndex);
 				idToColMap.put(startID, colIndex);
 				startID++;
@@ -161,7 +163,7 @@ public class DownDipSubSectBuilder {
 		if (Double.isNaN(dipDir))
 			dipDir = trace.getDipDirection(); // degrees
 		
-		subSects = new FaultSectionPrefData[numAlongStrike][numDownDip];
+		subSects = new DownDipFaultSection[numAlongStrike][numDownDip];
 		idToRowMap = new HashMap<>();
 		idToColMap = new HashMap<>();
 		for (int col=0; col<numAlongStrike; col++) {
@@ -184,7 +186,7 @@ public class DownDipSubSectBuilder {
 //				}
 				double subUpperDepth = upperDepth + vertEach*row;
 				double subLowerDepth = subUpperDepth + vertEach;
-				subSects[col][row] = new FaultSectionPrefData();
+				subSects[col][row] = new DownDipFaultSection();
 				idToRowMap.put(startID, row);
 				idToColMap.put(startID, col);
 				subSects[col][row].setSectionId(startID++);
@@ -198,6 +200,7 @@ public class DownDipSubSectBuilder {
 				subSects[col][row].setDipDirection((float)dipDir);
 				subSects[col][row].setAveDip(dip);
 				subSects[col][row].setAveRake(aveRake);
+				subSects[col][row].setRowIndex(row).setColIndex(col);
 			}
 		}
 	}
@@ -264,7 +267,7 @@ public class DownDipSubSectBuilder {
 	
 	public List<FaultSection> getSubSectsList() {
 		List<FaultSection> sects = new ArrayList<>();
-		FaultSectionPrefData fs = new FaultSectionPrefData();
+		DownDipFaultSection fs = new DownDipFaultSection();
 		for (int col=0; col<subSects.length; col++)
 			for (int row=0; row<subSects[col].length; row++) {
 				fs = subSects[col][row];
@@ -300,7 +303,8 @@ public class DownDipSubSectBuilder {
 			for (int row=0; row<numDownDip; row++) {
 				List<Integer> conns = builder.getNeighbors(row, col);
 				System.out.println("Sect "+builder.subSects[col][row].getSectionId()
-						+" at row="+row+",col="+col+" has "+conns.size()+" neighbors");
+						+" at row="+row+",col="+col+" has "+conns.size()+" neighbors\n");
+				System.out.println(builder.subSects[col][row].toString());
 			}
 		}
 	}

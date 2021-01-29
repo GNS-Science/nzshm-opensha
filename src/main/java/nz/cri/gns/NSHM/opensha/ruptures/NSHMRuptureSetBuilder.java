@@ -10,6 +10,7 @@ import org.dom4j.DocumentException;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder.ParentSectsRupDebugCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
@@ -77,7 +78,7 @@ public class NSHMRuptureSetBuilder {
 	 * Constructs a new NSHMRuptureSetBuilder with the default NSHM configuration.
 	 */
 	public NSHMRuptureSetBuilder () {
-		FaultSection interfaceParentSection = new FaultSectionPrefData();
+		FaultSection interfaceParentSection = new DownDipFaultSection();
 		interfaceParentSection.setSectionId(10000);
 		downDipBuilder = new DownDipSubSectBuilder(interfaceParentSection);
 	}
@@ -386,11 +387,15 @@ public class NSHMRuptureSetBuilder {
 		// Builder can now proceed using the clusters and all the filters...
 		builder = new ClusterRuptureBuilder(getPlausibilityConfig());
 		System.out.println("initialised ClusterRuptureBuilder");
+		
+		//CBC debugging...
+//		ParentSectsRupDebugCriteria debugCriteria = new ParentSectsRupDebugCriteria(false, true, 2);
+//		builder.setDebugCriteria(debugCriteria, true);
 
 		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
-
+		//debugging
+//		numThreads = 1;
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
-		
 
 		if (this.thinningFactor == Double.NaN) {
 			System.out.println("Built "+ruptures.size()+" total ruptures");
