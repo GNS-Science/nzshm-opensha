@@ -109,7 +109,12 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        //builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+        builder.setDownDipMinFill(0.75d)
+        	.setThinningFactor(0.2)
+        	.setDownDipAspectRatio(2, 5)
+        	.setDownDipSizeCoarseness(0.02);
+        	
+        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
