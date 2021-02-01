@@ -1,8 +1,7 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures;
 
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
 

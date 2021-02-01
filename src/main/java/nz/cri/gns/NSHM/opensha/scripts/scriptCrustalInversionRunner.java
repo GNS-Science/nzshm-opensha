@@ -9,21 +9,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.DownDipSubSectBuilder;
-import nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest.FaultIdFilter;
+import nz.cri.gns.NSHM.opensha.ruptures.FaultIdFilter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.math3.ml.clustering.Cluster;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder.RupturePermutationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.utils.FaultSystemIO;
@@ -54,6 +51,7 @@ public class scriptCrustalInversionRunner {
                 .addOption("p", "minSubSectsPerParent", true, "min number of subsections per parent fault, when building ruptures")
                 .addOption("s", "ruptureStrategy", true, "rupture permutation strategy - one of `DOWNDIP`, `UCERF3`, `POINTS`")
                 .addOption("t", "faultIdFilterType", true, "determines the behaviour of the filter set up by faultIdIn. One of ANY, ALL, EXACT. ANY is the default.")
+                .addOption("h", "thinning", true, "crustal fault thinning factor")
                 .addOption(faultIdInOption);
         return new DefaultParser().parse(options, args);
     }
@@ -106,14 +104,18 @@ public class scriptCrustalInversionRunner {
             System.out.println("set minSubSectsPerParent to " + cmd.getOptionValue("minSubSectsPerParent"));
             builder.setMinSubSectsPerParent(Integer.parseInt(cmd.getOptionValue("minSubSectsPerParent")));
         }
+        if(cmd.hasOption("thinning")){
+            builder.setThinningFactor(Double.parseDouble(cmd.getOptionValue("thinning")));
+        }
 
         System.out.println("=========");
 
-        builder.setDownDipMinFill(0.75d)
-        	.setThinningFactor(0.2)
-        	.setDownDipAspectRatio(2, 5)
-        	.setDownDipSizeCoarseness(0.02);
-        	
+        builder.setDownDipMinFill(0.8d)
+        	.setThinningFactor(0.1)
+        	.setDownDipAspectRatio(2, 5, 7)
+        	.setDownDipSizeCoarseness(0.01)
+        	.setDownDipPositionCoarseness(0.01);
+
         builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
@@ -173,8 +175,9 @@ public class scriptCrustalInversionRunner {
 
         NSHMInversionRunner runner = new NSHMInversionRunner()
                 .setInversionMinutes(inversionMins)
-                .setSyncInterval(syncInterval);
-        FaultSystemSolution solution = runner.run(rupSetFile);
+                .setSyncInterval(syncInterval)
+        		.setRuptureSetFile(rupSetFile);
+        FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);
     }
 

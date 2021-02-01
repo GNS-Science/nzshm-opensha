@@ -1,4 +1,4 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import nz.cri.gns.NSHM.opensha.ruptures.FaultIdFilter;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;

@@ -1,4 +1,4 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures.downDip;
 
 import static org.junit.Assert.*;
 
@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.UCERF3ClusterPermuationStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.util.ArrayList;
@@ -19,10 +20,13 @@ public class DownDipTestPermutationStrategyTest {
     @Test
     public void testUnconstrainedPermutations() {
 
+        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        DownDipRegistry registry = mockDownDipRegistry(builder);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         List<List<Integer>> expected = new ArrayList<>();
@@ -31,8 +35,9 @@ public class DownDipTestPermutationStrategyTest {
 
         // two columns
         builder = mockDownDipBuilder(0, 1, 2);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         expected = new ArrayList<>();
@@ -42,8 +47,9 @@ public class DownDipTestPermutationStrategyTest {
 
         // three columns: go up and down columns
         builder = mockDownDipBuilder(0, 1, 3);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -54,8 +60,9 @@ public class DownDipTestPermutationStrategyTest {
 
         // two rows
         builder = mockDownDipBuilder(0, 2, 1);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         expected = new ArrayList<>();
@@ -65,8 +72,9 @@ public class DownDipTestPermutationStrategyTest {
 
         // three rows: go up and down rows
         builder = mockDownDipBuilder(0, 3, 1);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(1, 0));
         expected = new ArrayList<>();
@@ -77,8 +85,9 @@ public class DownDipTestPermutationStrategyTest {
 
         // three rows and columns: go up and down rows and columns
         builder = mockDownDipBuilder(0, 3, 3);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(1, 1));
         expected = new ArrayList<>();
@@ -110,17 +119,21 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testAspectRatioConstraint() {
+        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        DownDipRegistry registry = mockDownDipRegistry(builder);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(2, 3);
 
         List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         assertEquals(0, actual.size());
 
         // still single section, but with better aspect ratio
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
+
         strategy.addAspectRatioConstraint(1, 1);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
@@ -130,10 +143,11 @@ public class DownDipTestPermutationStrategyTest {
 
         // 3x3 downDip
         builder = mockDownDipBuilder(0, 3, 3);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
 
         // aspect ratio so permissive that we take everything
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(0, 100);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -149,7 +163,7 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
 
         // aspect ratio 1 to 2
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(1, 2);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -165,7 +179,7 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
 
         // aspect ratio 2 to 2
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(2, 2);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -183,12 +197,16 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testStretchyAspectRatioConstraint() {
+
+        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 2, 3);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+        DownDipRegistry registry = mockDownDipRegistry(builder);
 
         // depth threshold too large, no stretching
-        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(1, 1, 3);
 
         List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
@@ -198,7 +216,7 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
 
         // when depth threshold is hit, the aspect ratio can stretch larger, but not smaller
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addAspectRatioConstraint(1, 1, 2);
 
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
@@ -211,16 +229,20 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testSizeCoarsenessConstraint() {
+
+        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+
         // single section, too large coarseness
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        DownDipRegistry registry = mockDownDipRegistry(builder);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addSizeCoarsenessConstraint(4);
         List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         assertEquals(0, actual.size());
 
         // single section, small coarseness
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addSizeCoarsenessConstraint(1);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         List<List<Integer>> expected = new ArrayList<>();
@@ -229,10 +251,11 @@ public class DownDipTestPermutationStrategyTest {
 
         // 3x3 downDip
         builder = mockDownDipBuilder(0, 3, 3);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
 
         // size coarseness so permissive that we take everything
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addSizeCoarsenessConstraint(0.1);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -248,7 +271,7 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
 
         // size coarseness weeds out ruptures that don't fit
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addSizeCoarsenessConstraint(0.5);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -266,10 +289,14 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testMinFillConstraint() {
+
+        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        DownDipTestPermutationStrategy strategy = new DownDipTestPermutationStrategy(builder);
+        DownDipRegistry registry = mockDownDipRegistry(builder);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addMinFillConstraint(1);
         List<FaultSubsectionCluster> actual = strategy.getPermutations(cluster, builder.getSubSect(0, 0));
         List<List<Integer>> expected = new ArrayList<>();
@@ -278,10 +305,11 @@ public class DownDipTestPermutationStrategyTest {
 
         // 3x3 downDip with hole
         builder = mockDownDipBuilder(0, 3, 3, 0, 2);
+        registry = mockDownDipRegistry(builder);
         cluster = new FaultSubsectionCluster(builder.getSubSectsList());
 
         // minFill is so permissive that we take everything
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addMinFillConstraint(0.1);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -297,7 +325,7 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
 
         // minFill is very strict and weeds out all holes
-        strategy = new DownDipTestPermutationStrategy(builder);
+        strategy = new DownDipPermutationStrategy(registry, ucerf3Strategy);
         strategy.addMinFillConstraint(1);
         actual = strategy.getPermutations(cluster, builder.getSubSect(0, 1));
         expected = new ArrayList<>();
@@ -358,5 +386,11 @@ public class DownDipTestPermutationStrategyTest {
         when(section.getSectionId()).thenReturn(id);
         when(section.getAveDip()).thenReturn(10.0);
         return section;
+    }
+
+    public DownDipRegistry mockDownDipRegistry(DownDipSubSectBuilder builder) {
+        DownDipRegistry registry = mock(DownDipRegistry.class);
+        when(registry.getBuilder(builder.getParentID())).thenReturn(builder);
+        return registry;
     }
 }

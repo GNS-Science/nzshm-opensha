@@ -18,15 +18,19 @@ import scratch.UCERF3.utils.FaultSystemIO;
  */
 public class NSHMPythonGateway {
 
-	static CachedNSHMRuptureSetBuilder builder = new CachedNSHMRuptureSetBuilder();
-	static CachedNSHMInversionRunner runner = new CachedNSHMInversionRunner();
+	static CachedNSHMRuptureSetBuilder builder;
+	static CachedNSHMInversionRunner runner; 
 	static NSHMHazardCalculatorBuilder calculator = new NSHMHazardCalculatorBuilder();
 	
 	public static CachedNSHMRuptureSetBuilder getBuilder() {
+		builder = new CachedNSHMRuptureSetBuilder();
 		return builder;
 	}
 
-	public static NSHMInversionRunner getRunner() {return runner;}
+	public static NSHMInversionRunner getRunner() {
+		runner = new CachedNSHMInversionRunner();
+		return runner;
+	}
 
 	public static NSHMHazardCalculatorBuilder getCalculator() {return calculator;}
 
@@ -111,9 +115,8 @@ public class NSHMPythonGateway {
 		 * @throws IOException
 		 * @throws DocumentException
 		 */
-		public FaultSystemSolution run(String ruptureSetFileName) throws IOException, DocumentException {
-			File rupSetFile = new File(ruptureSetFileName);
-			solution = run(rupSetFile);
+		public FaultSystemSolution runInversion() throws IOException, DocumentException {
+			solution = super.runInversion();
 			return solution;
 		}
 
