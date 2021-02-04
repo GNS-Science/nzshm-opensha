@@ -9,6 +9,7 @@ import nz.cri.gns.NSHM.opensha.ruptures.downDip.*;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder.ParentSectsRupDebugCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
@@ -387,13 +388,18 @@ public class NSHMRuptureSetBuilder {
         buildConfig();
         System.out.println("Built PlausibilityConfiguration");
 
-        // Builder can now proceed using the clusters and all the filters...
-        builder = new ClusterRuptureBuilder(getPlausibilityConfig());
-        System.out.println("initialised ClusterRuptureBuilder");
+		// Builder can now proceed using the clusters and all the filters...
+		builder = new ClusterRuptureBuilder(getPlausibilityConfig());
+		System.out.println("initialised ClusterRuptureBuilder");
+		
+		// CBC debugging...
+		// ParentSectsRupDebugCriteria debugCriteria = new ParentSectsRupDebugCriteria(false, true, 2);
+		//builder.setDebugCriteria(debugCriteria, true);
 
-        ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
-
-        ruptures = getBuilder().build(permutationStrategy, numThreads);
+		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
+		//debugging
+		//numThreads = 1;
+		ruptures = getBuilder().build(permutationStrategy, numThreads);
 
         if (Double.isNaN(thinningFactor)) {
             System.out.println("Built " + ruptures.size() + " total ruptures");
