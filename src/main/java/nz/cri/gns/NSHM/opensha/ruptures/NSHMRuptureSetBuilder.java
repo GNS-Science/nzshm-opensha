@@ -358,7 +358,6 @@ public class NSHMRuptureSetBuilder {
         PlausibilityConfiguration.Builder configBuilder =
                 PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
                         .maxSplays(maxNumSplays)
-                        .add(new FaultTypeSeparationFilter(downDipRegistry))
                         .add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
                         .add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
                         .add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc, maxCumulativeAzimuthChange))
