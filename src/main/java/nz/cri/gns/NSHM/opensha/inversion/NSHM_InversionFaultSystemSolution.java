@@ -72,7 +72,7 @@ import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
  *
  */
 @SuppressWarnings("serial")
-public class InversionFaultSystemSolution extends SlipEnabledSolution {
+public class NSHM_InversionFaultSystemSolution extends SlipEnabledSolution {
 	
 	//private InversionFaultSystemRupSet rupSet;
 	private NSHMSlipEnabledRuptureSet rupSet;
@@ -94,7 +94,7 @@ public class InversionFaultSystemSolution extends SlipEnabledSolution {
 	 * @param rupSet
 	 * @param rates
 	 */
-	public InversionFaultSystemSolution(NSHMSlipEnabledRuptureSet rupSet, double[] rates) {
+	public NSHM_InversionFaultSystemSolution(NSHMSlipEnabledRuptureSet rupSet, double[] rates) {
 		this(rupSet, rates, null, null);
 	}
 	
@@ -106,7 +106,7 @@ public class InversionFaultSystemSolution extends SlipEnabledSolution {
 	 * @param config can be null
 	 * @param energies can be null
 	 */
-	public InversionFaultSystemSolution(NSHMSlipEnabledRuptureSet rupSet, double[] rates,
+	public NSHM_InversionFaultSystemSolution(NSHMSlipEnabledRuptureSet rupSet, double[] rates,
 			UCERF3InversionConfiguration config, Map<String, Double> energies) {
 		super();	
 		init(rupSet, rates, config, energies);

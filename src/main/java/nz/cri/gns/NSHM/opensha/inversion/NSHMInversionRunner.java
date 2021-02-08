@@ -3,8 +3,10 @@ package nz.cri.gns.NSHM.opensha.inversion;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import nz.cri.gns.NSHM.opensha.ruptures.NSHMRuptureSetBuilder;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
+import nz.cri.gns.NSHM.opensha.inversion.NSHM_InversionFaultSystemSolution;
+import nz.cri.gns.NSHM.opensha.griddedSeismicity.NSHM_GridSourceGenerator;
+
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
@@ -19,7 +21,8 @@ import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-//import scratch.UCERF3.inversion.InversionFaultSystemSolution;
+import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
 //import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
@@ -57,7 +60,7 @@ public class NSHMInversionRunner {
     private CompletionCriteria completionCriteria;
     private ThreadedSimulatedAnnealing tsa;
     private double[] initialState;
-    private InversionFaultSystemSolution solution; 
+    private NSHM_InversionFaultSystemSolution solution; 
     /*
      * MFD constraint default settings
      */
@@ -474,7 +477,9 @@ public class NSHMInversionRunner {
                 System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
         }
 
-        solution = new InversionFaultSystemSolution(rupSet, solution_adjusted);
+        solution = new NSHM_InversionFaultSystemSolution(rupSet, solution_adjusted);
+//        GridSourceProvider gridSourceProvider = new NSHM_GridSourceGenerator(solution);
+//		solution.setGridSourceProvider(gridSourceProvider);
         return solution;
     }
 }

@@ -58,7 +58,7 @@ public class scriptCrustalInversionRunner {
 
     protected static void generateRuptures(CommandLine cmd) throws IOException, DocumentException {
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set" + (new Date()).getTime() + ".zip");
+        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
         File fsdFile = new File(cmd.getOptionValue("fsdFile"));
         NSHMRuptureSetBuilder builder = new NSHMRuptureSetBuilder();
         builder.setFaultModelFile(fsdFile);
