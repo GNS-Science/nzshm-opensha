@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
 import nz.cri.gns.NSHM.opensha.inversion.NSHM_InversionFaultSystemSolution;
+import nz.cri.gns.NSHM.opensha.logicTree.NSHM_LogicTreeBranch;
 import nz.cri.gns.NSHM.opensha.griddedSeismicity.NSHM_GridSourceGenerator;
 
 import org.dom4j.DocumentException;
@@ -17,6 +18,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
+import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
@@ -24,6 +26,8 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
+import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
 //import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
@@ -52,7 +56,7 @@ public class NSHMInversionRunner {
     protected long inversionMins = 1;
     protected long syncInterval = 10;
     protected int numThreads = Runtime.getRuntime().availableProcessors();
-    protected NSHMSlipEnabledRuptureSet rupSet = null;
+    protected NSHM_InversionFaultSystemRuptSet rupSet = null;
     protected List<InversionConstraint> constraints = new ArrayList<>();
     protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
     private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
@@ -86,6 +90,7 @@ public class NSHMInversionRunner {
     protected double slipRateConstraintWt_normalized = 1;
     // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
     protected double slipRateConstraintWt_unnormalized = 100;
+	private NSHM_InversionTargetMFDs inversionMFDs;
     
     
     /**
@@ -188,7 +193,12 @@ public class NSHMInversionRunner {
      * @throws IOException 
      */
     public NSHMInversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
-        this.rupSet = loadRupSet(ruptureSetFile);
+    	FaultSystemRupSet rupSet = loadRupSet(ruptureSetFile);
+        
+        //convert rupture set to NSHM_InversionFaultSystemRuptSet for logicTree etc
+    	LogicTreeBranch branch = (LogicTreeBranch) NSHM_LogicTreeBranch.DEFAULT;
+    		
+        this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSet, branch);
         return this;
     }    
     
@@ -360,13 +370,9 @@ public class NSHMInversionRunner {
  
     
     @SuppressWarnings("unchecked")
-    protected NSHMSlipEnabledRuptureSet loadRupSet(File file) throws IOException, DocumentException {
+    protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
         FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
-        return new NSHMSlipEnabledRuptureSet(
-                fsRupSet.getClusterRuptures(),
-                (List<FaultSection>) fsRupSet.getFaultSectionDataList(),
-                ScalingRelationships.SHAW_2009_MOD,
-                SlipAlongRuptureModels.UNIFORM);
+		return fsRupSet;
     }
 
     /**
@@ -377,6 +383,9 @@ public class NSHMInversionRunner {
      */
     public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
+    	
+//		inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
+		
     	/*
          * Slip rate constraints
          */
