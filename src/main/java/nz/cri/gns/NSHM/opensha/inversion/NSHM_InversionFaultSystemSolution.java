@@ -18,8 +18,8 @@ import scratch.UCERF3.logicTree.LogicTreeBranch;
 public class NSHM_InversionFaultSystemSolution extends SlipEnabledSolution {
 	
 	private NSHM_InversionFaultSystemRuptSet rupSet;
-//	private InversionModels invModel;
-//	private LogicTreeBranch branch;
+	private InversionModels invModel;
+	private LogicTreeBranch branch;
 	
 	/**
 	 * Inversion constraint weights and such. Note that this won't include the initial rup model or
