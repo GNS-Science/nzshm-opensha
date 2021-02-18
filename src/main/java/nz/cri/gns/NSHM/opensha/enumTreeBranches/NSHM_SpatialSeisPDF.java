@@ -1,7 +1,9 @@
 package nz.cri.gns.NSHM.opensha.enumTreeBranches;
 
-import org.opensha.commons.data.region.CaliforniaRegions;
+
 import org.opensha.commons.geo.GriddedRegion;
+
+import nz.cri.gns.NSHM.opensha.data.region.NewZealandRegions;
 
 //import org.opensha.commons.data.region.CaliforniaRegions;
 //import org.opensha.commons.geo.GriddedRegion;
@@ -38,9 +40,7 @@ public enum NSHM_SpatialSeisPDF implements LogicTreeBranchNode<SpatialSeisPDF> {
 			return NSHM_SmoothSeismicitySpatialPDF_Fetcher.get1456R();
 		}
 	};	
-	
-	
-	
+		
 	private String name, shortName;
 	private double charWeight, grWeight;
 	
@@ -90,9 +90,11 @@ public enum NSHM_SpatialSeisPDF implements LogicTreeBranchNode<SpatialSeisPDF> {
 		double[] vals = this.getPDF();
 		double sum=0;
 		// TODO : this needs to be the NZ region!!
-		CaliforniaRegions.RELM_TESTING_GRIDDED relmRegion = RELM_RegionUtils.getGriddedRegionInstance();
+		// CaliforniaRegions.RELM_TESTING_GRIDDED relmRegion = RELM_RegionUtils.getGriddedRegionInstance();
+		//		GriddedRegion nzRegion = new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE(), 0.1d, null);
+		GriddedRegion nzRegion = new NewZealandRegions.NZ_TEST_GRIDDED();
 		for(int i=0; i<region.getNumLocations(); i++) {
-			int iLoc = relmRegion.indexForLocation(region.getLocation(i));
+			int iLoc = nzRegion.indexForLocation(region.getLocation(i));
 			if(iLoc != -1)
 				sum += vals[iLoc];
 		}

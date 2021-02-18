@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.geo.Location;
+import org.opensha.commons.geo.Region;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
+import nz.cri.gns.NSHM.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NSHM.opensha.enumTreeBranches.NSHM_SpatialSeisPDF;
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
 import scratch.UCERF3.SlipEnabledRupSet;
 import scratch.UCERF3.analysis.DeformationModelsCalc;
@@ -33,68 +37,81 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  */
 public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 	
-	// debugging flag
-	final static boolean D = false;
-	final static boolean GR_OFF_FAULT_IS_TAPERED = true;
-	String debugString;
-	
-	SlipEnabledRupSet invRupSet;
-	double totalRegionRateMgt5, onFaultRegionRateMgt5, offFaultRegionRateMgt5;
-	double mMaxOffFault;
-	boolean applyImpliedCouplingCoeff;
-	SpatialSeisPDF spatialSeisPDF;
-	SpatialSeisPDF spatialSeisPDFforOnFaultRates;
-	InversionModels inversionModel;
-	GriddedSeisUtils gridSeisUtils;
-	
-	double origOnFltDefModMoRate, offFltDefModMoRate, aveMinSeismoMag, roundedMmaxOnFault;
-	double fractSeisInSoCal;
-	double fractionSeisOnFault;
-	double impliedOnFaultCouplingCoeff;
-	double impliedTotalCouplingCoeff;
-	double finalOffFaultCouplingCoeff;
-	GutenbergRichterMagFreqDist totalTargetGR, totalTargetGR_NoCal, totalTargetGR_SoCal;
-	SummedMagFreqDist targetOnFaultSupraSeisMFD;
-	IncrementalMagFreqDist trulyOffFaultMFD;
-	ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
-	SummedMagFreqDist totalSubSeismoOnFaultMFD;		// this is a sum of the MFDs in subSeismoOnFaultMFD_List
-	IncrementalMagFreqDist noCalTargetSupraMFD, soCalTargetSupraMFD;
+//	// debugging flag
+//	final static boolean D = false;
+//	final static boolean GR_OFF_FAULT_IS_TAPERED = true;
+//	String debugString;
+//	
+//	SlipEnabledRupSet invRupSet;
+//	double totalRegionRateMgt5, onFaultRegionRateMgt5, offFaultRegionRateMgt5;
+//	double mMaxOffFault;
+//	boolean applyImpliedCouplingCoeff;
+	NSHM_SpatialSeisPDF spatialSeisPDF;
+	NSHM_SpatialSeisPDF spatialSeisPDFforOnFaultRates;
+//	InversionModels inversionModel;
+//	GriddedSeisUtils gridSeisUtils;
+//	
+//	double origOnFltDefModMoRate, offFltDefModMoRate, aveMinSeismoMag, roundedMmaxOnFault;
+//	double fractSeisInSoCal;
+//	double fractionSeisOnFault;
+//	double impliedOnFaultCouplingCoeff;
+//	double impliedTotalCouplingCoeff;
+//	double finalOffFaultCouplingCoeff;
+//	GutenbergRichterMagFreqDist totalTargetGR, totalTargetGR_NoCal, totalTargetGR_SoCal;
+//	SummedMagFreqDist targetOnFaultSupraSeisMFD;
+//	IncrementalMagFreqDist trulyOffFaultMFD;
+//	ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
+//	SummedMagFreqDist totalSubSeismoOnFaultMFD;		// this is a sum of the MFDs in subSeismoOnFaultMFD_List
+//	IncrementalMagFreqDist noCalTargetSupraMFD, soCalTargetSupraMFD;
 
-	
-	List<MFD_InversionConstraint> mfdConstraintsForNoAndSoCal;
+//	
+//	List<MFD_InversionConstraint> mfdConstraintsForNoAndSoCal;
+//
+//	// discretization parameters for MFDs
+//	public final static double MIN_MAG = 0.05;
+//	public final static double MAX_MAG = 8.95;
+//	public final static int NUM_MAG = 90;
+//	public final static double DELTA_MAG = 0.1;
+//	
+//	public final static double FAULT_BUFFER = 12d;	// buffer for fault polygons
 
-	// discretization parameters for MFDs
-	public final static double MIN_MAG = 0.05;
-	public final static double MAX_MAG = 8.95;
-	public final static int NUM_MAG = 90;
-	public final static double DELTA_MAG = 0.1;
+    private Region getRegionNZ() {
+    	// NZ as used for scecVDO graticule
+		//    			upper-latitude = -30
+		//    			lower-latitude = -50
+		//    			right-longitude = 185
+		//    			left-longitude = 165
+		Location nw = new Location(-30.0, 165.0);
+		Location se = new Location(-50.0, 185.0);
+		return new Region(nw, se);
+    }
 	
-	public final static double FAULT_BUFFER = 12d;	// buffer for fault polygons
-
 	public NSHM_InversionTargetMFDs(NSHM_InversionFaultSystemRuptSet invRupSet) {
 		this.invRupSet=invRupSet;
-		
+		  		
+		//TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM equivalent
 		LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
 		this.inversionModel = logicTreeBranch.getValue(InversionModels.class);
 		this.totalRegionRateMgt5 = logicTreeBranch.getValue(TotalMag5Rate.class).getRateMag5();
 		this.mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault();
 		this.applyImpliedCouplingCoeff = logicTreeBranch.getValue(MomentRateFixes.class).isApplyCC();	// true if MomentRateFixes = APPLY_IMPLIED_CC or APPLY_CC_AND_RELAX_MFD
-		this.spatialSeisPDF = logicTreeBranch.getValue(SpatialSeisPDF.class);
+//		this.spatialSeisPDF = logicTreeBranch.getValue(SpatialSeisPDF.class);
+		this.spatialSeisPDF = NSHM_SpatialSeisPDF.NZSHM22_1246;
 		
 		// convert mMaxOffFault to bin center
 		mMaxOffFault -= DELTA_MAG/2;
 		
 		boolean noMoRateFix = (logicTreeBranch.getValue(MomentRateFixes.class) == MomentRateFixes.NONE);
 		
-		// this prevents using any non smoothed seismicity PDF for computing rates on fault (def mod PDF doesn't make sense)
-//		if (!(spatialSeisPDF == SpatialSeisPDF.UCERF2 || spatialSeisPDF == SpatialSeisPDF.UCERF3))
+//		// this prevents using any non smoothed seismicity PDF for computing rates on fault (def mod PDF doesn't make sense)
+//		if (!(spatialSeisPDF is SpatialSeisPDF.UCERF2 || spatialSeisPDF == SpatialSeisPDF.UCERF3)) {
 //			System.out.println("WARNING: Was previously hardcoded (for unknown reasons) to force U3 or U2 spatial seismicity on faults. "
 //					+ "This has been disabled.");
-			
-//		spatialSeisPDFforOnFaultRates = spatialSeisPDF;
-//		else
+//			
+			spatialSeisPDFforOnFaultRates = spatialSeisPDF;
+//		} else {
 //			spatialSeisPDFforOnFaultRates = SpatialSeisPDF.UCERF3;
-
+//		}
 		
 		// test to make sure it's a statewide deformation model
 //		DeformationModels dm = invRupSet.getDeformationModel();
@@ -103,12 +120,18 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		
 		List<? extends FaultSection> faultSectionData =  invRupSet.getFaultSectionDataList();
 		
-		gridSeisUtils = new GriddedSeisUtils(faultSectionData, spatialSeisPDFforOnFaultRates, FAULT_BUFFER);
+		/*
+		 * NEW !! Gridded Seismicity
+		 */
+		NewZealandRegions.NZ_TEST_GRIDDED regionNzGridded = new NewZealandRegions.NZ_TEST_GRIDDED();
+//		GriddedRegion regionNzGridded = new GriddedRegion(getRegionNZ(), 0.1d, null);
+		gridSeisUtils = new GriddedSeisUtils(faultSectionData, 
+				spatialSeisPDFforOnFaultRates.getPDF(), FAULT_BUFFER, regionNzGridded);
 		
-		GriddedRegion noCalGrid = RELM_RegionUtils.getNoCalGriddedRegionInstance();
-		GriddedRegion soCalGrid = RELM_RegionUtils.getSoCalGriddedRegionInstance();
+//		GriddedRegion noCalGrid = RELM_RegionUtils.getNoCalGriddedRegionInstance();
+//		GriddedRegion soCalGrid = RELM_RegionUtils.getSoCalGriddedRegionInstance();
 		
-		fractSeisInSoCal = spatialSeisPDFforOnFaultRates.getFractionInRegion(soCalGrid);
+//		fractSeisInSoCal = spatialSeisPDFforOnFaultRates.getFractionInRegion(soCalGrid);
 //		fractionSeisOnFault = DeformationModelsCalc.getFractSpatialPDF_InsideSectionPolygons(faultSectionData, spatialSeisPDFforOnFaultRates);
 		fractionSeisOnFault = gridSeisUtils.pdfInPolys();
 
@@ -122,11 +145,11 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
 		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*1e5, 1.0);
 		
-		totalTargetGR_NoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
-		totalTargetGR_NoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*(1-fractSeisInSoCal)*1e5, 1.0);
-			
-		totalTargetGR_SoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
-		totalTargetGR_SoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*fractSeisInSoCal*1e5, 1.0);
+//		totalTargetGR_NoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
+//		totalTargetGR_NoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*(1-fractSeisInSoCal)*1e5, 1.0);
+//			
+//		totalTargetGR_SoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
+//		totalTargetGR_SoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*fractSeisInSoCal*1e5, 1.0);
 		
 		// get ave min seismo mag for region
 		double tempMag = FaultSystemRupSetCalc.getMeanMinMag(invRupSet, true);
@@ -151,7 +174,7 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 					"\tspatialSeisPDF =\t"+spatialSeisPDF+"\n"+
 					"\tspatialSeisPDFforOnFaultRates =\t"+spatialSeisPDFforOnFaultRates+"\n"+
 					"\tinversionModel =\t"+inversionModel+"\n"+
-					"\tfractSeisInSoCal =\t"+(float)fractSeisInSoCal+"\n"+
+//					"\tfractSeisInSoCal =\t"+(float)fractSeisInSoCal+"\n"+
 					"\tfractionSeisOnFault =\t"+(float)fractionSeisOnFault+"\n"+
 					"\tonFaultRegionRateMgt5 =\t"+(float)onFaultRegionRateMgt5+"\n"+
 					"\toffFaultRegionRateMgt5 =\t"+(float)offFaultRegionRateMgt5+"\n"+

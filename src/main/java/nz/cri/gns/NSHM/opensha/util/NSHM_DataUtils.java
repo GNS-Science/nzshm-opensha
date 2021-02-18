@@ -14,17 +14,17 @@ public class NSHM_DataUtils  {
 
 	static final String s = File.separator;
 	
-	/**
-	 * The local scratch data directory that is ignored by repository commits.
-	 */
-	public static File DEFAULT_SCRATCH_DATA_DIR =
-		new File("src"+s+"main"+s+"java"+s+"nz"+s+"cri"+s+"NSHM"+s+"opensha"+"data");
-	
+	//	/**
+	//	 * The local scratch data directory that is ignored by repository commits.
+	//	 */
+	//	public static File DEFAULT_SCRATCH_DATA_DIR =
+	//		new File("src"+s+"main"+s+"java"+s+"nz"+s+"cri"+s+"NSHM"+s+"opensha"+"data");
+	//	
 	/**
 	 * The URL prefix for loading file from the persistent data directory. This MUST have forward slashes
 	 * as it is for jar file loading. It cannot use File.separator.
 	 */
-	public static String DATA_URL_PREFIX = "/nz/cri/gns/NSHM/opensha/data";
+	public static String DATA_URL_PREFIX = "/resources/data";
 	
 	/**
 	 * This gives the URL of a file in the specified sub directory of our UCERF3 data directory.

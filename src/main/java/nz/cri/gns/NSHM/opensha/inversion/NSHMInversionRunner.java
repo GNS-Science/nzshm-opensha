@@ -5,8 +5,6 @@ import com.google.common.collect.Lists;
 
 import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
 import nz.cri.gns.NSHM.opensha.inversion.NSHM_InversionFaultSystemSolution;
-import nz.cri.gns.NSHM.opensha.logicTree.NSHM_LogicTreeBranch;
-import nz.cri.gns.NSHM.opensha.griddedSeismicity.NSHM_GridSourceGenerator;
 
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -196,7 +194,7 @@ public class NSHMInversionRunner {
     	FaultSystemRupSet rupSet = loadRupSet(ruptureSetFile);
         
         //convert rupture set to NSHM_InversionFaultSystemRuptSet for logicTree etc
-    	LogicTreeBranch branch = (LogicTreeBranch) NSHM_LogicTreeBranch.DEFAULT;
+    	LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
     		
         this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSet, branch);
         return this;
@@ -384,7 +382,7 @@ public class NSHMInversionRunner {
     public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
     	
-//		inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
+		inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
 		
     	/*
          * Slip rate constraints
@@ -487,8 +485,6 @@ public class NSHMInversionRunner {
         }
 
         solution = new NSHM_InversionFaultSystemSolution(rupSet, solution_adjusted);
-//        GridSourceProvider gridSourceProvider = new NSHM_GridSourceGenerator(solution);
-//		solution.setGridSourceProvider(gridSourceProvider);
         return solution;
     }
 }
