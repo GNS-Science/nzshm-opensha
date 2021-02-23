@@ -63,19 +63,6 @@ public class NSHMInversionRunner {
     private ThreadedSimulatedAnnealing tsa;
     private double[] initialState;
     private NSHM_InversionFaultSystemSolution solution; 
-    /*
-     * MFD constraint default settings
-     */
-    protected double totalRateM5 = 5d;
-    protected double bValue = 1d;
-    protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-    protected int mfdNum = 40;
-    protected double mfdMin = 5.05d;
-    protected double mfdMax = 8.95;
-    
-    protected double mfdEqualityConstraintWt = 10;
-    protected double mfdInequalityConstraintWt = 1000;
-
     
     /* 
      * Sliprate constraint default settings
@@ -91,35 +78,23 @@ public class NSHMInversionRunner {
 	private NSHM_InversionTargetMFDs inversionMFDs;
     
     
+    /*
+     * MFD constraint default settings
+     */
+    protected double totalRateM5 = 5d;
+    protected double bValue = 1d;
+    protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+    protected int mfdNum = 40;
+    protected double mfdMin = 5.05d;
+    protected double mfdMax = 8.95;
+    
+    protected double mfdEqualityConstraintWt = 10;
+    protected double mfdInequalityConstraintWt = 1000;
+    	
     /**
      * Creates a new NSHMInversionRunner with defaults.
      */
     public NSHMInversionRunner() {
-    }
-
-    public Region getRegionNZ() {
-    	// NZ as used for scecVDO graticule
-		//    			upper-latitude = -30
-		//    			lower-latitude = -50
-		//    			right-longitude = 185
-		//    			left-longitude = 165
-		Location nw = new Location(-30.0, 165.0);
-		Location se = new Location(-50.0, 185.0);
-		return new Region(nw, se);
-    }
-    
-    
-    public Region getRegionTVZ() {
-    	//Taupo Volcanic Zone points from MattG
-    	LocationList locs = new LocationList();
-		locs.add(new Location(-36.17, 177.25));
-		locs.add(new Location(-36.17, 178.14));
-		locs.add(new Location(-37.53, 177.31));
-		locs.add(new Location(-39.78, 175.38));
-		locs.add(new Location(-39.78, 174.97));
-		locs.add(new Location(-39.22, 175.29));
-		locs.add(new Location(-36.17, 177.25));
-		return new Region(locs, null);
     }
     
     /**
@@ -382,8 +357,6 @@ public class NSHMInversionRunner {
     public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
     	
-		inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
-		
     	/*
          * Slip rate constraints
          */
@@ -391,46 +364,14 @@ public class NSHMInversionRunner {
         		this.slipRateConstraintWt_unnormalized,
                 this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
 
-        //Experiment - define some regions 
-        Region regionSansTVZ = getRegionNZ();  // the same rectangle we have for the scecVDO NZ graticule
-        Region regionTVZ = getRegionTVZ();     // from Matts geometry as used for the sansTVZ crustal ruptures
-        regionSansTVZ.addInterior(regionTVZ); // remove a TVZ-shaped interior from NZ
-        
-        //configure GR, this will use defaults unless user calls setGutenbergRichterMFD() to override 	
-        GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
-        int transitionIndex = mfd.getClosestXIndex(mfdTransitionMag);
-        // snap it to the discretization if it wasn't already
-        mfdTransitionMag = mfd.getX(transitionIndex);
-        Preconditions.checkState(transitionIndex >= 0);       
-        
-        //GR Equality
-        GutenbergRichterMagFreqDist equalityMFDA = new GutenbergRichterMagFreqDist(
-                bValue, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);
-        
-        //and a different bvalue for TVZ equality
-        GutenbergRichterMagFreqDist equalityMFDB = new GutenbergRichterMagFreqDist(
-                0.75, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);   
-        
-        MFD_InversionConstraint equalityConstrA = new MFD_InversionConstraint(equalityMFDA, regionSansTVZ);
-        MFD_InversionConstraint equalityConstrB = new MFD_InversionConstraint(equalityMFDB, regionTVZ);
-        
-        constraints.add(new MFDEqualityInversionConstraint(rupSet, mfdEqualityConstraintWt,
-                Lists.newArrayList(equalityConstrA, equalityConstrB), null));
-
-        //GR Inequality
-        GutenbergRichterMagFreqDist inequalityMFDA = new GutenbergRichterMagFreqDist(
-                bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFDA.size());
-
-        //and a different bvalue for TVZ Inequality
-        GutenbergRichterMagFreqDist inequalityMFDB = new GutenbergRichterMagFreqDist(
-        		0.75, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFDB.size());
-        
-        MFD_InversionConstraint inequalityConstrA = new MFD_InversionConstraint(inequalityMFDA, regionSansTVZ);
-        MFD_InversionConstraint inequalityConstrB = new MFD_InversionConstraint(inequalityMFDB, regionTVZ);
-        
-        constraints.add(new MFDInequalityInversionConstraint(rupSet, mfdInequalityConstraintWt,
-                Lists.newArrayList(inequalityConstrA, inequalityConstrB)));
-
+        /* MFD constraints are now built here
+         * 
+         */
+        inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
+        for (InversionConstraint constraint : inversionMFDs.getMFDConstraints()) {
+        	constraints.add(constraint);
+        }
+           
         // weight of entropy-maximization constraint (not used in UCERF3)
         double smoothnessWt = 0;
 

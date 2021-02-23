@@ -6,10 +6,16 @@ import java.util.List;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import nz.cri.gns.NSHM.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NSHM.opensha.enumTreeBranches.NSHM_SpatialSeisPDF;
@@ -75,17 +81,58 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 //	
 //	public final static double FAULT_BUFFER = 12d;	// buffer for fault polygons
 
-    private Region getRegionNZ() {
-    	// NZ as used for scecVDO graticule
-		//    			upper-latitude = -30
-		//    			lower-latitude = -50
-		//    			right-longitude = 185
-		//    			left-longitude = 165
-		Location nw = new Location(-30.0, 165.0);
-		Location se = new Location(-50.0, 185.0);
-		return new Region(nw, se);
-    }
+    /*
+     * MFD constraint default settings
+     */
+    protected double totalRateM5 = 5d;
+    protected double bValue = 1d;
+    protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+    protected int mfdNum = 40;
+    protected double mfdMin = 5.05d;
+    protected double mfdMax = 8.95;
+    
+    protected double mfdEqualityConstraintWt = 10;
+    protected double mfdInequalityConstraintWt = 1000;
+    
+    protected List<InversionConstraint> constraints = new ArrayList<>();
 	
+    public List<InversionConstraint> getMFDConstraints() {
+    	return constraints;
+    }
+    
+    /**
+     * Sets GutenbergRichterMFD arguments
+     * @param totalRateM5 the number of  M>=5's per year. TODO: ref David Rhodes/Chris Roland? [KKS, CBC]
+     * @param bValue
+     * @param mfdTransitionMag magnitude to switch from MFD equality to MFD inequality TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+     * @param mfdNum
+     * @param mfdMin
+     * @param mfdMax
+     * @return
+     */
+    public NSHM_InversionTargetMFDs setGutenbergRichterMFD(double totalRateM5, double bValue, 
+    		double mfdTransitionMag, int mfdNum, double mfdMin, double mfdMax ) {
+        this.totalRateM5 = totalRateM5; 
+        this.bValue = bValue;
+        this.mfdTransitionMag = mfdTransitionMag;      
+        this.mfdNum = mfdNum;
+        this.mfdMin = mfdMin;
+        this.mfdMax = mfdMax;
+        return this;
+    }    
+
+    /**
+     * @param mfdEqualityConstraintWt
+     * @param mfdInequalityConstraintWt
+     * @return
+     */
+    public NSHM_InversionTargetMFDs setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt, 
+    		double mfdInequalityConstraintWt) {
+    	this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
+    	this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
+    	return this;
+    }       
+    
 	public NSHM_InversionTargetMFDs(NSHM_InversionFaultSystemRuptSet invRupSet) {
 		this.invRupSet=invRupSet;
 		  		
@@ -103,36 +150,16 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		
 		boolean noMoRateFix = (logicTreeBranch.getValue(MomentRateFixes.class) == MomentRateFixes.NONE);
 		
-//		// this prevents using any non smoothed seismicity PDF for computing rates on fault (def mod PDF doesn't make sense)
-//		if (!(spatialSeisPDF is SpatialSeisPDF.UCERF2 || spatialSeisPDF == SpatialSeisPDF.UCERF3)) {
-//			System.out.println("WARNING: Was previously hardcoded (for unknown reasons) to force U3 or U2 spatial seismicity on faults. "
-//					+ "This has been disabled.");
-//			
-			spatialSeisPDFforOnFaultRates = spatialSeisPDF;
-//		} else {
-//			spatialSeisPDFforOnFaultRates = SpatialSeisPDF.UCERF3;
-//		}
-		
-		// test to make sure it's a statewide deformation model
-//		DeformationModels dm = invRupSet.getDeformationModel();
-//		if(dm == DeformationModels.UCERF2_BAYAREA || dm == DeformationModels.UCERF2_NCAL)
-//			throw new RuntimeException("Error - "+dm+" not yet supported by InversionMFD");
-		
 		List<? extends FaultSection> faultSectionData =  invRupSet.getFaultSectionDataList();
 		
 		/*
 		 * NEW !! Gridded Seismicity
 		 */
 		NewZealandRegions.NZ_TEST_GRIDDED regionNzGridded = new NewZealandRegions.NZ_TEST_GRIDDED();
-//		GriddedRegion regionNzGridded = new GriddedRegion(getRegionNZ(), 0.1d, null);
+
 		gridSeisUtils = new GriddedSeisUtils(faultSectionData, 
-				spatialSeisPDFforOnFaultRates.getPDF(), FAULT_BUFFER, regionNzGridded);
+				spatialSeisPDF.getPDF(), FAULT_BUFFER, regionNzGridded);
 		
-//		GriddedRegion noCalGrid = RELM_RegionUtils.getNoCalGriddedRegionInstance();
-//		GriddedRegion soCalGrid = RELM_RegionUtils.getSoCalGriddedRegionInstance();
-		
-//		fractSeisInSoCal = spatialSeisPDFforOnFaultRates.getFractionInRegion(soCalGrid);
-//		fractionSeisOnFault = DeformationModelsCalc.getFractSpatialPDF_InsideSectionPolygons(faultSectionData, spatialSeisPDFforOnFaultRates);
 		fractionSeisOnFault = gridSeisUtils.pdfInPolys();
 
 		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault;
@@ -140,10 +167,61 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
 		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
 
-		// make the total target GR for region
-		totalTargetGR = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
-		roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
-		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*1e5, 1.0);
+		
+		// make the total target GR for region TODO: - UCERF3 for what??
+		//		totalTargetGR = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+		//		roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
+		//		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*1e5, 1.0);
+		//		
+		//		
+
+		/*
+		 * 
+		 */
+        
+		Region regionSansTVZ = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ(); // now the tighter geometry from our gridded seis
+        Region regionTVZ = new NewZealandRegions.NZ_TVZ();
+        
+        //configure GR, this will use defaults unless user calls setGutenbergRichterMFD() to override 	
+        GutenbergRichterMagFreqDist mfd = new GutenbergRichterMagFreqDist(bValue, totalRateM5, mfdMin, mfdMax, mfdNum);
+        int transitionIndex = mfd.getClosestXIndex(mfdTransitionMag);
+
+        // snap it to the discretization if it wasn't already
+        mfdTransitionMag = mfd.getX(transitionIndex);
+        Preconditions.checkState(transitionIndex >= 0);       
+        
+        //GR Equality
+        GutenbergRichterMagFreqDist equalityMFD_SansTVZ = new GutenbergRichterMagFreqDist(
+                bValue, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);
+        
+        //and a different bvalue for TVZ equality
+        GutenbergRichterMagFreqDist equalityMFD_TVZ = new GutenbergRichterMagFreqDist(
+                0.75, totalRateM5, mfdMin, mfdTransitionMag, transitionIndex);   
+        
+        MFD_InversionConstraint equalityConstr_SansTVZ = new MFD_InversionConstraint(equalityMFD_SansTVZ, regionSansTVZ);
+        MFD_InversionConstraint equalityConstr_TVZ = new MFD_InversionConstraint(equalityMFD_TVZ, regionTVZ);
+        
+        //GR Inequality
+        GutenbergRichterMagFreqDist inequalityMFD_SansTVZ = new GutenbergRichterMagFreqDist(
+                bValue, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD_SansTVZ.size());
+
+        //and a different bvalue for TVZ Inequality
+        GutenbergRichterMagFreqDist inequalityMFD_TVZ = new GutenbergRichterMagFreqDist(
+        		0.75, totalRateM5, mfdTransitionMag, mfdMax, mfd.size() - equalityMFD_TVZ.size());
+        
+        MFD_InversionConstraint inequalityConstr_SansTVZ = new MFD_InversionConstraint(inequalityMFD_SansTVZ, regionSansTVZ);
+        MFD_InversionConstraint inequalityConstr_TVZ = new MFD_InversionConstraint(inequalityMFD_TVZ, regionTVZ);
+
+        //create the constraints
+        constraints.add(new MFDEqualityInversionConstraint(invRupSet, mfdEqualityConstraintWt,
+                Lists.newArrayList(equalityConstr_SansTVZ, equalityConstr_TVZ), null));
+        constraints.add(new MFDInequalityInversionConstraint(invRupSet, mfdInequalityConstraintWt,
+                Lists.newArrayList(inequalityConstr_SansTVZ, inequalityConstr_TVZ)));		
+		
+		/**
+		 * END of port
+		 * 
+		 */
 		
 //		totalTargetGR_NoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
 //		totalTargetGR_NoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*(1-fractSeisInSoCal)*1e5, 1.0);
@@ -151,23 +229,25 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 //		totalTargetGR_SoCal = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);	
 //		totalTargetGR_SoCal.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*fractSeisInSoCal*1e5, 1.0);
 		
-		// get ave min seismo mag for region
-		double tempMag = FaultSystemRupSetCalc.getMeanMinMag(invRupSet, true);
-		
-		// This is a test of applying the minimum rather than average among section min mags in the tri-linear target
-		// (increases on fault target by up to 11% (at mean mag) by doing this for case tested; not a big diff, and will make implied off-fault CC worse)
-//		double tempMag = 100;
-//		for(int s=0;s<invRupSet.getNumSections();s++) {
-//			double minMag = invRupSet.getFinalMinMagForSection(s);
-//			if(minMag<tempMag) tempMag = minMag;
-//			if(minMag<6.301)
-//				System.out.println("\t"+(float)minMag+"\t"+invRupSet.getFaultSectionData(s).getParentSectionName());
-//		}
-//		System.out.println("\ntempMag="+tempMag+"\n");
-		
-		aveMinSeismoMag = totalTargetGR.getX(totalTargetGR.getClosestXIndex(tempMag));	// round to nearest MFD value
 
 		if(D) {
+			// get ave min seismo mag for region
+			double tempMag = FaultSystemRupSetCalc.getMeanMinMag(invRupSet, true);
+			
+			// This is a test of applying the minimum rather than average among section min mags in the tri-linear target
+			// (increases on fault target by up to 11% (at mean mag) by doing this for case tested; not a big diff, and will make implied off-fault CC worse)
+//			double tempMag = 100;
+//			for(int s=0;s<invRupSet.getNumSections();s++) {
+//				double minMag = invRupSet.getFinalMinMagForSection(s);
+//				if(minMag<tempMag) tempMag = minMag;
+//				if(minMag<6.301)
+//					System.out.println("\t"+(float)minMag+"\t"+invRupSet.getFaultSectionData(s).getParentSectionName());
+//			}
+//			System.out.println("\ntempMag="+tempMag+"\n");
+			
+			aveMinSeismoMag = totalTargetGR.getX(totalTargetGR.getClosestXIndex(tempMag));	// round to nearest MFD value
+
+			
 			debugString = "\ttotalRegionRateMgt5 =\t"+totalRegionRateMgt5+"\n"+
 					"\tmMaxOffFault =\t"+mMaxOffFault+"\n"+
 					"\tapplyImpliedCouplingCoeff =\t"+applyImpliedCouplingCoeff+"\n"+
@@ -184,7 +264,6 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 					"\ttotalTargetGR(5.05) =\t"+(float)totalTargetGR.getCumRate(5.05)+"\n"+
 					"\taveMinSeismoMag =\t"+(float)aveMinSeismoMag+"\n";
 		}
-
 		
 //		if (inversionModel.isCharacteristic()) {
 		
