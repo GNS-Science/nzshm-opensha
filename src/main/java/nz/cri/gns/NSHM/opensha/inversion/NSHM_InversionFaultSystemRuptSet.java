@@ -1,6 +1,8 @@
 package nz.cri.gns.NSHM.opensha.inversion;
 
+import nz.cri.gns.NSHM.opensha.analysis.NSHM_FaultSystemRupSetCalc;
 import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 
@@ -36,4 +38,19 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 		super(rupSet, branch, null, null, null, null, null);
 	}
 	
+
+	/**
+	 * This returns the final minimum mag for a given fault section.
+	 * This uses a generic version of computeMinSeismoMagForSections() instead 
+	 * of the UCERF3 implementation. 
+	 * @param sectIndex
+	 * @return
+	 */
+	@Override
+	public synchronized double getFinalMinMagForSection(int sectIndex) {
+		if(minMagForSectArray == null) {
+			minMagForSectArray = NSHM_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this, MIN_MAG_FOR_SEISMOGENIC_RUPS);
+		}
+		return minMagForSectArray[sectIndex];
+	}	
 }
