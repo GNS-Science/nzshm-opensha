@@ -19,6 +19,7 @@ import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
@@ -74,9 +75,7 @@ public class NSHMInversionRunner {
     // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
     protected double slipRateConstraintWt_normalized = 1;
     // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
-    protected double slipRateConstraintWt_unnormalized = 100;
-	private NSHM_InversionTargetMFDs inversionMFDs;
-    
+    protected double slipRateConstraintWt_unnormalized = 100;    
     
     /*
      * MFD constraint default settings
@@ -90,6 +89,8 @@ public class NSHMInversionRunner {
     
     protected double mfdEqualityConstraintWt = 10;
     protected double mfdInequalityConstraintWt = 1000;
+    
+	private NSHM_InversionConfiguration inversionConfiguration;
     	
     /**
      * Creates a new NSHMInversionRunner with defaults.
@@ -225,6 +226,116 @@ public class NSHMInversionRunner {
     	this.slipRateConstraintWt_unnormalized = unnormalizedWt;
     	return this;
     }
+   
+    public NSHMInversionRunner setInversionConfiguration(NSHM_InversionConfiguration config) {
+		System.out.println("Building Inversion Configuration");
+		inversionConfiguration = config;
+		return this;
+    }
+    
+    public NSHMInversionRunner configure() {
+		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
+		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
+		
+		// this contains all inversion weights
+		inversionConfiguration = NSHM_InversionConfiguration.forModel(
+				inversionModel, 
+				rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
+	    return this;	    
+    }
+
+    @SuppressWarnings("unchecked")
+    protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
+        FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
+		return fsRupSet;
+    }
+
+    /**
+     * Runs the inversion on the specified rupture set. make sure to call .configure() first.
+     * 
+     * @return the FaultSystemSolution.
+     * @throws IOException
+     * @throws DocumentException
+     */
+    public FaultSystemSolution runInversion() throws IOException, DocumentException {
+
+    	///////
+    	//     This is now in NSHM_InversionGenerator with parameters defined in NSHM_InversionConfiguration...
+		//    	/*
+		//         * Slip rate constraints
+		//         */
+		//        constraints.add(new SlipRateInversionConstraint(this.slipRateConstraintWt_normalized, 
+		//        		this.slipRateConstraintWt_unnormalized,
+		//                this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
+		//
+		//        /* MFD constraints are now built here
+		//         * 
+		//         */
+		//        inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
+		//        for (InversionConstraint constraint : inversionMFDs.getMFDConstraints()) {
+		//        	constraints.add(constraint);
+		//        }
+    	//
+    	/////////////////////////////
+    	
+           
+        // weight of entropy-maximization constraint (not used in UCERF3)
+        double smoothnessWt = 0;
+    
+        /*
+         * Build inversion inputs
+         */
+		NSHM_InversionInputGenerator inputGen = new NSHM_InversionInputGenerator(rupSet, inversionConfiguration, null, null, null, null);
+
+        inputGen.generateInputs(true);
+        // column compress it for fast annealing
+        inputGen.columnCompress();
+
+        // inversion completion criteria (how long it will run)
+        this.completionCriterias.add(TimeCompletionCriteria.getInMinutes(inversionMins));
+        if (!(this.energyChangeCompletionCriteria == null))
+        	this.completionCriterias.add(this.energyChangeCompletionCriteria);
+
+        completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+        
+        // Bring up window to track progress
+        // criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport, 0.1d);        
+		// ....
+        completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
+		
+        // this is the "sub completion criteria" - the amount of time (or iterations) between synchronization
+        CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
+
+		initialState = inputGen.getInitialSolution();
+		
+        tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
+        		initialState, smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),
+                inputGen.getWaterLevelRates(), numThreads, subCompletionCriteria);
+        tsa.setConstraintRanges(inputGen.getConstraintRowRanges());
+
+        //From CLI metadata Analysis
+        initialState = Arrays.copyOf(initialState, initialState.length);
+        
+        tsa.iterate(completionCriteria);
+
+        // now assemble the solution
+        double[] solution_raw = tsa.getBestSolution();
+
+        // adjust for minimum rates if applicable
+        double[] solution_adjusted = inputGen.adjustSolutionForWaterLevel(solution_raw);
+
+        Map<ConstraintRange, Double> energies = tsa.getEnergies();
+        if (energies != null) {
+            System.out.println("Final energies:");
+            for (ConstraintRange range : energies.keySet())
+                System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
+        }
+
+        solution = new NSHM_InversionFaultSystemSolution(rupSet, solution_adjusted);
+        return solution;
+    }    
+    
+    
     
     public String completionCriteriaMetrics() {
     	String info = "";
@@ -341,91 +452,4 @@ public class NSHMInversionRunner {
 		return info; 
     }
  
-    
-    @SuppressWarnings("unchecked")
-    protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
-        FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
-		return fsRupSet;
-    }
-
-    /**
-     * Runs the inversion on the specified rupture set.
-     * @return the FaultSystemSolution.
-     * @throws IOException
-     * @throws DocumentException
-     */
-    public FaultSystemSolution runInversion() throws IOException, DocumentException {
-
-    	
-    	/*
-         * Slip rate constraints
-         */
-        constraints.add(new SlipRateInversionConstraint(this.slipRateConstraintWt_normalized, 
-        		this.slipRateConstraintWt_unnormalized,
-                this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
-
-        /* MFD constraints are now built here
-         * 
-         */
-        inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
-        for (InversionConstraint constraint : inversionMFDs.getMFDConstraints()) {
-        	constraints.add(constraint);
-        }
-           
-        // weight of entropy-maximization constraint (not used in UCERF3)
-        double smoothnessWt = 0;
-
-        /*
-         * Build inversion inputs
-         */
-        InversionInputGenerator inputGen = new InversionInputGenerator(rupSet, constraints);
-
-        inputGen.generateInputs(true);
-        // column compress it for fast annealing
-        inputGen.columnCompress();
-
-        // inversion completion criteria (how long it will run)
-        // = TimeCompletionCriteria.getInMinutes(inversionMins);
-        this.completionCriterias.add(TimeCompletionCriteria.getInMinutes(inversionMins));
-        if (!(this.energyChangeCompletionCriteria == null))
-        	this.completionCriterias.add(this.energyChangeCompletionCriteria);
-
-        completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
-        
-        // Bring up window to track progress
-        // criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport, 0.1d);        
-		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
-		
-        // this is the "sub completion criteria" - the amount of time (or iterations) between synchronization
-        CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
-
-		initialState = inputGen.getInitialSolution();
-		
-        tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(),
-        		initialState, smoothnessWt, inputGen.getA_ineq(), inputGen.getD_ineq(),
-                inputGen.getWaterLevelRates(), numThreads, subCompletionCriteria);
-        tsa.setConstraintRanges(inputGen.getConstraintRowRanges());
-
-        
-        //From CLI metadata Analysis
-        initialState = Arrays.copyOf(initialState, initialState.length);
-        
-        tsa.iterate(completionCriteria);
-
-        // now assemble the solution
-        double[] solution_raw = tsa.getBestSolution();
-
-        // adjust for minimum rates if applicable
-        double[] solution_adjusted = inputGen.adjustSolutionForWaterLevel(solution_raw);
-
-        Map<ConstraintRange, Double> energies = tsa.getEnergies();
-        if (energies != null) {
-            System.out.println("Final energies:");
-            for (ConstraintRange range : energies.keySet())
-                System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
-        }
-
-        solution = new NSHM_InversionFaultSystemSolution(rupSet, solution_adjusted);
-        return solution;
-    }
 }

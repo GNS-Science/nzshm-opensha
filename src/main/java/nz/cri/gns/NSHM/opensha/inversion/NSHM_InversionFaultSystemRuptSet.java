@@ -4,6 +4,7 @@ import nz.cri.gns.NSHM.opensha.analysis.NSHM_FaultSystemRupSetCalc;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 
 /**
@@ -52,5 +53,13 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 			minMagForSectArray = NSHM_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this, MIN_MAG_FOR_SEISMOGENIC_RUPS);
 		}
 		return minMagForSectArray[sectIndex];
+	}
+	
+	@Override
+	public NSHM_InversionTargetMFDs getInversionTargetMFDs() {
+		if (inversionMFDs == null)
+			inversionMFDs = new NSHM_InversionTargetMFDs(this);
+		return inversionMFDs;
 	}	
+	
 }
