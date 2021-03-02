@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
+import nz.cri.gns.NSHM.opensha.inversion.NSHM_InversionConfiguration;
 import nz.cri.gns.NSHM.opensha.ruptures.FaultIdFilter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -23,6 +24,8 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
+import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.FaultSystemIO;
 
 /**
@@ -152,7 +155,7 @@ public class scriptCrustalInversionRunner {
         long inversionMins = 1; // run it for this many minutes
         long syncInterval = 10; // seconds between inversion synchronisations
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        File solFile = new File(outputDir, "CFM_crustal_solution.zip");
+        File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
         File rupSetFile = null;
 
         if (cmd.hasOption("generateRuptureSet")) {
@@ -176,7 +179,8 @@ public class scriptCrustalInversionRunner {
         NSHMInversionRunner runner = new NSHMInversionRunner()
                 .setInversionMinutes(inversionMins)
                 .setSyncInterval(syncInterval)
-        		.setRuptureSetFile(rupSetFile);
+        		.setRuptureSetFile(rupSetFile)
+        		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);
     }
