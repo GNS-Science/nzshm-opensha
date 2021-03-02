@@ -68,6 +68,13 @@ public class NewZealandRegions {
 		}
 	}	
 
+	public static final class NZ_TVZ_GRIDDED extends GriddedRegion {
+		public NZ_TVZ_GRIDDED() {
+			super((Region) new NZ_TVZ(), 0.1, ANCHOR_0_0);
+			this.setName("NZ TVZ Gridded Region");
+		}
+	}
+	
 	/** 
 	 * NZ rectangle with the TVZ area removed
 	 */
@@ -80,6 +87,15 @@ public class NewZealandRegions {
 		}
 	}	
 		
+
+	public static final class NZ_RECTANGLE_SANS_TVZ_GRIDDED extends GriddedRegion {
+		public NZ_RECTANGLE_SANS_TVZ_GRIDDED() {
+			super((Region) new NZ_RECTANGLE_SANS_TVZ(), 0.1, ANCHOR_0_0);
+			this.setName("NZ RECTANEL SANS TVZ Gridded Region");
+		}
+	}		
+	
+	
 	/** 
 	 * The Rectangle used in scecVDO visualistions for the NZ graticule.
 	 */
