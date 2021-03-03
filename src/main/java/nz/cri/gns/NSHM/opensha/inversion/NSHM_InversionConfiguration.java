@@ -1,7 +1,6 @@
 package nz.cri.gns.NSHM.opensha.inversion;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -9,26 +8,21 @@ import org.dom4j.Element;
 import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
-import org.opensha.sha.magdist.SummedMagFreqDist;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.inversion.CommandLineInversionRunner.InversionOptions;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
-import scratch.UCERF3.utils.UCERF3_DataUtils;
-import scratch.UCERF3.utils.FindEquivUCERF2_Ruptures.FindEquivUCERF2_FM2pt1_Ruptures;
-import scratch.UCERF3.utils.FindEquivUCERF2_Ruptures.FindEquivUCERF2_FM3_Ruptures;
-import scratch.UCERF3.utils.FindEquivUCERF2_Ruptures.FindEquivUCERF2_Ruptures;
+
 
 /**
  * This represents all of the inversion configuration parameters specific to an individual model
  * on the NZSHM22 logic tree. Parameters can be fetched for a given logic tree branch with the 
  * <code>forModel(...)</code> method.
+ * 
+ * based on scratch.UCERF3.inversion.UCERF3InversionConfiguration
  * 
  * @author chrisbc
  *
@@ -83,87 +77,87 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	public NSHM_InversionConfiguration() {	
 	}
 	
-	NSHM_InversionConfiguration(
-			double slipRateConstraintWt_normalized,
-			double slipRateConstraintWt_unnormalized,
-			SlipRateConstraintWeightingType slipRateWeighting,
-//			double paleoRateConstraintWt,
-//			double paleoSlipConstraintWt,
-			double magnitudeEqualityConstraintWt,
-			double magnitudeInequalityConstraintWt,
-			double rupRateConstraintWt, 
-//			double participationSmoothnessConstraintWt,
-//			double participationConstraintMagBinSize,
-//			double nucleationMFDConstraintWt,
-			double mfdSmoothnessConstraintWt,
-			double mfdSmoothnessConstraintWtForPaleoParents,
-//			double rupRateSmoothingConstraintWt,
-//			double minimizationConstraintWt,
-//			double momentConstraintWt,
-//			double parkfieldConstraintWt,
-//			double[] aPrioriRupConstraint,
-//			double[] initialRupModel,
-//			double[] minimumRuptureRateBasis, 
-//			double smoothnessWt,
-//			double eventRateSmoothnessWt,
-			double MFDTransitionMag,
-			List<MFD_InversionConstraint> mfdEqualityConstraints,
-			List<MFD_InversionConstraint> mfdInequalityConstraints,
-//			double minimumRuptureRateFraction,
-			String metadata) {
-		if (metadata == null || metadata.isEmpty())
-			metadata = "";
-		else
-			metadata += "\n";
-		this.slipRateConstraintWt_normalized = slipRateConstraintWt_normalized;
-		metadata += "slipRateConstraintWt_normalized: "+slipRateConstraintWt_normalized;
-		this.slipRateConstraintWt_unnormalized = slipRateConstraintWt_unnormalized;
-		metadata += "\nslipRateConstraintWt_unnormalized: "+slipRateConstraintWt_unnormalized;
-		this.slipRateWeighting = slipRateWeighting;
-		metadata += "\nslipRateWeighting: "+slipRateWeighting.name();
-//		this.paleoRateConstraintWt = paleoRateConstraintWt;
-//		metadata += "\npaleoRateConstraintWt: "+paleoRateConstraintWt;
-//		this.paleoSlipConstraintWt = paleoSlipConstraintWt;
-//		metadata += "\npaleoSlipConstraintWt: "+paleoSlipConstraintWt;
-		this.magnitudeEqualityConstraintWt = magnitudeEqualityConstraintWt;
-		metadata += "\nmagnitudeEqualityConstraintWt: "+magnitudeEqualityConstraintWt;
-		this.magnitudeInequalityConstraintWt = magnitudeInequalityConstraintWt;
-		metadata += "\nmagnitudeInequalityConstraintWt: "+magnitudeInequalityConstraintWt;
-//		this.rupRateConstraintWt = rupRateConstraintWt;
-		metadata += "\nrupRateConstraintWt: "+rupRateConstraintWt;
-//		this.participationSmoothnessConstraintWt = participationSmoothnessConstraintWt;
-//		metadata += "\nparticipationSmoothnessConstraintWt: "+participationSmoothnessConstraintWt;
-//		this.participationConstraintMagBinSize = participationConstraintMagBinSize;
-//		metadata += "\nparticipationConstraintMagBinSize: "+participationConstraintMagBinSize;
-//		this.nucleationMFDConstraintWt = nucleationMFDConstraintWt;
-//		metadata += "\nnucleationMFDConstraintWt: "+nucleationMFDConstraintWt;
-//		this.mfdSmoothnessConstraintWt = mfdSmoothnessConstraintWt;
-		metadata += "\nmfdSmoothnessConstraintWt: "+mfdSmoothnessConstraintWt;
-//		this.mfdSmoothnessConstraintWtForPaleoParents = mfdSmoothnessConstraintWtForPaleoParents;
-		metadata += "\nmfdSmoothnessConstraintWtForPaleoParents: "+mfdSmoothnessConstraintWtForPaleoParents;
-//		this.rupRateSmoothingConstraintWt = rupRateSmoothingConstraintWt;
-//		metadata += "\nrupRateSmoothingConstraintWt: "+rupRateSmoothingConstraintWt;
-//		this.minimizationConstraintWt = minimizationConstraintWt;
-//		metadata += "\nminimizationConstraintWt: "+minimizationConstraintWt;
-//		this.momentConstraintWt = momentConstraintWt;
-//		metadata += "\nmomentConstraintWt: "+momentConstraintWt;
-//		this.parkfieldConstraintWt = parkfieldConstraintWt;
-//		metadata += "\nparkfieldConstraintWt: "+parkfieldConstraintWt;
-//		this.aPrioriRupConstraint = aPrioriRupConstraint;
-//		this.initialRupModel = initialRupModel;
-//		this.minimumRuptureRateBasis = minimumRuptureRateBasis;
-//		this.smoothnessWt = smoothnessWt;
-//		metadata += "\nsmoothnessWt: "+smoothnessWt;
-//		this.eventRateSmoothnessWt = eventRateSmoothnessWt;
-//		metadata += "\neventRateSmoothnessWt: "+eventRateSmoothnessWt;
-		this.mfdEqualityConstraints = mfdEqualityConstraints;
-		this.mfdInequalityConstraints = mfdInequalityConstraints;
-		this.MFDTransitionMag = MFDTransitionMag;
-//		this.minimumRuptureRateFraction = minimumRuptureRateFraction;
-//		metadata += "\nminimumRuptureRateFraction: "+minimumRuptureRateFraction;
-//		
-		this.metadata = metadata;
-	}
+//	NSHM_InversionConfiguration(
+//			double slipRateConstraintWt_normalized,
+//			double slipRateConstraintWt_unnormalized,
+//			SlipRateConstraintWeightingType slipRateWeighting,
+////			double paleoRateConstraintWt,
+////			double paleoSlipConstraintWt,
+//			double magnitudeEqualityConstraintWt,
+//			double magnitudeInequalityConstraintWt,
+//			double rupRateConstraintWt, 
+////			double participationSmoothnessConstraintWt,
+////			double participationConstraintMagBinSize,
+////			double nucleationMFDConstraintWt,
+//			double mfdSmoothnessConstraintWt,
+//			double mfdSmoothnessConstraintWtForPaleoParents,
+////			double rupRateSmoothingConstraintWt,
+////			double minimizationConstraintWt,
+////			double momentConstraintWt,
+////			double parkfieldConstraintWt,
+////			double[] aPrioriRupConstraint,
+////			double[] initialRupModel,
+////			double[] minimumRuptureRateBasis, 
+////			double smoothnessWt,
+////			double eventRateSmoothnessWt,
+//			double MFDTransitionMag,
+//			List<MFD_InversionConstraint> mfdEqualityConstraints,
+//			List<MFD_InversionConstraint> mfdInequalityConstraints,
+////			double minimumRuptureRateFraction,
+//			String metadata) {
+//		if (metadata == null || metadata.isEmpty())
+//			metadata = "";
+//		else
+//			metadata += "\n";
+//		this.slipRateConstraintWt_normalized = slipRateConstraintWt_normalized;
+//		metadata += "slipRateConstraintWt_normalized: "+slipRateConstraintWt_normalized;
+//		this.slipRateConstraintWt_unnormalized = slipRateConstraintWt_unnormalized;
+//		metadata += "\nslipRateConstraintWt_unnormalized: "+slipRateConstraintWt_unnormalized;
+//		this.slipRateWeighting = slipRateWeighting;
+//		metadata += "\nslipRateWeighting: "+slipRateWeighting.name();
+////		this.paleoRateConstraintWt = paleoRateConstraintWt;
+////		metadata += "\npaleoRateConstraintWt: "+paleoRateConstraintWt;
+////		this.paleoSlipConstraintWt = paleoSlipConstraintWt;
+////		metadata += "\npaleoSlipConstraintWt: "+paleoSlipConstraintWt;
+//		this.magnitudeEqualityConstraintWt = magnitudeEqualityConstraintWt;
+//		metadata += "\nmagnitudeEqualityConstraintWt: "+magnitudeEqualityConstraintWt;
+//		this.magnitudeInequalityConstraintWt = magnitudeInequalityConstraintWt;
+//		metadata += "\nmagnitudeInequalityConstraintWt: "+magnitudeInequalityConstraintWt;
+////		this.rupRateConstraintWt = rupRateConstraintWt;
+//		metadata += "\nrupRateConstraintWt: "+rupRateConstraintWt;
+////		this.participationSmoothnessConstraintWt = participationSmoothnessConstraintWt;
+////		metadata += "\nparticipationSmoothnessConstraintWt: "+participationSmoothnessConstraintWt;
+////		this.participationConstraintMagBinSize = participationConstraintMagBinSize;
+////		metadata += "\nparticipationConstraintMagBinSize: "+participationConstraintMagBinSize;
+////		this.nucleationMFDConstraintWt = nucleationMFDConstraintWt;
+////		metadata += "\nnucleationMFDConstraintWt: "+nucleationMFDConstraintWt;
+////		this.mfdSmoothnessConstraintWt = mfdSmoothnessConstraintWt;
+//		metadata += "\nmfdSmoothnessConstraintWt: "+mfdSmoothnessConstraintWt;
+////		this.mfdSmoothnessConstraintWtForPaleoParents = mfdSmoothnessConstraintWtForPaleoParents;
+//		metadata += "\nmfdSmoothnessConstraintWtForPaleoParents: "+mfdSmoothnessConstraintWtForPaleoParents;
+////		this.rupRateSmoothingConstraintWt = rupRateSmoothingConstraintWt;
+////		metadata += "\nrupRateSmoothingConstraintWt: "+rupRateSmoothingConstraintWt;
+////		this.minimizationConstraintWt = minimizationConstraintWt;
+////		metadata += "\nminimizationConstraintWt: "+minimizationConstraintWt;
+////		this.momentConstraintWt = momentConstraintWt;
+////		metadata += "\nmomentConstraintWt: "+momentConstraintWt;
+////		this.parkfieldConstraintWt = parkfieldConstraintWt;
+////		metadata += "\nparkfieldConstraintWt: "+parkfieldConstraintWt;
+////		this.aPrioriRupConstraint = aPrioriRupConstraint;
+////		this.initialRupModel = initialRupModel;
+////		this.minimumRuptureRateBasis = minimumRuptureRateBasis;
+////		this.smoothnessWt = smoothnessWt;
+////		metadata += "\nsmoothnessWt: "+smoothnessWt;
+////		this.eventRateSmoothnessWt = eventRateSmoothnessWt;
+////		metadata += "\neventRateSmoothnessWt: "+eventRateSmoothnessWt;
+//		this.mfdEqualityConstraints = mfdEqualityConstraints;
+//		this.mfdInequalityConstraints = mfdInequalityConstraints;
+//		this.MFDTransitionMag = MFDTransitionMag;
+////		this.minimumRuptureRateFraction = minimumRuptureRateFraction;
+////		metadata += "\nminimumRuptureRateFraction: "+minimumRuptureRateFraction;
+////		
+//		this.metadata = metadata;
+//	}
 	
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
@@ -258,7 +252,6 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		List<MFD_InversionConstraint> mfdConstraints = rupSet.getInversionTargetMFDs().getMFDConstraints();
 		
 		double MFDTransitionMag = 7.85; // magnitude to switch from MFD equality to MFD inequality
-		
 		
 		String metadata = "";
 		
@@ -375,46 +368,9 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 			.setSlipRateWeightingType(slipRateWeighting);
 			
 		return newConfig;
-		
-		/*
-		return new NSHM_InversionConfiguration(
-				slipRateConstraintWt_normalized,
-				slipRateConstraintWt_unnormalized,
-				slipRateWeighting,
-				paleoRateConstraintWt,
-				paleoSlipConstraintWt,
-				mfdEqualityConstraintWt,
-				mfdInequalityConstraintWt,
-				rupRateConstraintWt,
-				participationSmoothnessConstraintWt,
-				participationConstraintMagBinSize,
-				nucleationMFDConstraintWt,
-				mfdSmoothnessConstraintWt,
-				mfdSmoothnessConstraintWtForPaleoParents,
-				rupRateSmoothingConstraintWt,
-				minimizationConstraintWt,
-				momentConstraintWt,
-				parkfieldConstraintWt,
-				aPrioriRupConstraint,
-				initialRupModel,
-				minimumRuptureRateBasis,
-				smoothnessWt, eventRateSmoothnessWt,
-				MFDTransitionMag,
-				mfdEqualityConstraints,
-				mfdInequalityConstraints,
-				minimumRuptureRateFraction,
-				metadata);
-		*/
+
 	}
 	
-//	// Set rates of rups with minimum magnitude below fault section minimum magnitude to 0 initial solution
-//	private static double[] removeRupsBelowMinMag(InversionFaultSystemRupSet rupSet, double[] initialRupModel) {
-//		for (int rup=0; rup<rupSet.getNumRuptures(); rup++) 
-//			if (rupSet.isRuptureBelowSectMinMag(rup)) initialRupModel[rup] = 0;		
-//		return initialRupModel;
-//	}
-//	
-//	
 	/**
 	 * This method returns the input MFD constraint array with each constraint now restricted between minMag and maxMag.
 	 * WARNING!  This doesn't interpolate.  For best results, set minMag & maxMag to points along original MFD constraint (i.e. 7.05, 7.15, etc)
@@ -443,236 +399,6 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	}
 	
 	
-	
-//	/**
-//	 * This method adjusts the starting solution for "wall-to-wall" (section-long) ruptures on any isolated sections (sections
-//	 * that only have ruptures on that section).  The starting solution is ONLY adjusted if that rupture currently has a 0 rate.
-//	 * The new rupture rate is the average slip rate for that section divided by the average slip of that rupture.
-//	 * @param rupSet
-//	 * @param initialRupModel
-//	 * @return initialRupModel
-//	 */
-//	public static double[] adjustIsolatedSections(InversionFaultSystemRupSet rupSet, double[] initialRupModel) {
-//		
-//		List<Integer> isolatedParents = new ArrayList<Integer>();
-//		List<String> isolatedParentNames = new ArrayList<String>();
-//		List<Integer> nonIsolatedParents = new ArrayList<Integer>();
-//		
-//		// Find "isolated" parent sections that only have ruptures on that section
-//		for (int sect=0; sect<rupSet.getNumSections(); sect++) {
-//			int parentId = rupSet.getFaultSectionData(sect).getParentSectionId();
-//			List<Integer> rupsOnSect = rupSet.getRupturesForSection(sect);
-//			
-//			checkForRupsOnDifferentParents:
-//			for (int i=0; i<rupsOnSect.size(); i++) {
-//				int rup = rupsOnSect.get(i);
-//				List<Integer> sects = rupSet.getSectionsIndicesForRup(rup);
-//				for (int j=0; j<sects.size(); j++) {
-//					int newSect = sects.get(j);
-//					if (parentId != rupSet.getFaultSectionData(newSect).getParentSectionId()) {
-//						if (!nonIsolatedParents.contains(parentId))
-//							nonIsolatedParents.add(parentId);
-//						if (isolatedParents.contains(parentId)) {
-//							isolatedParents.remove(isolatedParents.indexOf(parentId));
-//							isolatedParentNames.remove(rupSet.getFaultSectionDataList().get(newSect).getParentSectionName());
-//						}
-//						break checkForRupsOnDifferentParents;
-//					}
-//				}
-//			}
-//			if (!isolatedParents.contains(parentId) && !nonIsolatedParents.contains(parentId)) {
-//				isolatedParents.add(parentId);
-//				isolatedParentNames.add(rupSet.getFaultSectionDataList().get(sect).getParentSectionName());
-//			}		
-//		}
-//
-//		// Find wall-to-wall rup for each isolated parent section
-//		for (int p=0; p<isolatedParents.size(); p++)  {
-//			int parentId = isolatedParents.get(p);
-//			List<Integer> sectsForParent = new ArrayList<Integer>();			
-//			for (int sect=0; sect<rupSet.getNumSections(); sect++) 
-//				if (rupSet.getFaultSectionData(sect).getParentSectionId()==parentId)sectsForParent.add(sect);
-//					
-//			RuptureLoop:
-//			for (int rup=0; rup<rupSet.getNumRuptures(); rup++) {
-//				List<Integer> sects = rupSet.getSectionsIndicesForRup(rup);
-//				if (sects.size()!=sectsForParent.size()) continue;
-//				for (int sect:sects) {
-//					if (!sectsForParent.contains(sect))
-//						continue RuptureLoop;
-//				}
-//				// We have found the "wall-to-wall" rupture for this isolated parent section.
-//				// If initial rup rate is 0, we will adjust the rate.
-//				if (initialRupModel[rup]==0) {
-//					double avgSlipRate = 0;
-//					for(int sect:sects) {
-//						if (!Double.isNaN(rupSet.getSlipRateForSection(sect)))
-//							avgSlipRate+=rupSet.getSlipRateForSection(sect);
-//					}
-//					avgSlipRate/=sects.size();  // average slip rate of sections in rup
-//					double[] rupSlip = rupSet.getSlipOnSectionsForRup(rup);
-//					double avgSlip = 0;
-//					for(int i=0; i<rupSlip.length; i++) avgSlip+=rupSlip[i];
-//					avgSlip/=rupSlip.length; // average rupture slip
-//					double charRupRate = avgSlipRate/avgSlip; // rate of rup that will, on average, match slip rate
-//					System.out.println("Adjusting starting rupture rate for isolated fault "+isolatedParentNames.get(p));
-//					initialRupModel[rup] = charRupRate;
-//				}	
-//				break;	
-//			}
-//		}
-//		
-//		return initialRupModel;
-//	}
-	
-	
-	
-//	/**
-//	 * This method adjusts the starting model to ensure that for each MFD inequality constraint magnitude-bin, the starting model is below the MFD.
-//	 * If adjustOnlyIfOverMFD = false, it will adjust the starting model so that it's MFD equals the MFD constraint.
-//	 * It will uniformly reduce the rates of ruptures in any magnitude bins that need adjusting.
-//	 */
-//	private static double[] adjustStartingModel(double[] initialRupModel,
-//			List<MFD_InversionConstraint> mfdInequalityConstraints, FaultSystemRupSet rupSet, boolean adjustOnlyIfOverMFD) {
-//		
-//		double[] rupMeanMag = rupSet.getMagForAllRups();
-//		
-//		
-//		for (int i=0; i<mfdInequalityConstraints.size(); i++) {
-//			double[] fractRupsInside = rupSet.getFractRupsInsideRegion(mfdInequalityConstraints.get(i).getRegion(), false);
-//			IncrementalMagFreqDist targetMagFreqDist = mfdInequalityConstraints.get(i).getMagFreqDist();
-//			IncrementalMagFreqDist startingModelMagFreqDist = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.size(), targetMagFreqDist.getDelta());
-//			startingModelMagFreqDist.setTolerance(0.1);
-//			
-//			// Find the starting model MFD
-//			for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
-//				double mag = rupMeanMag[rup];
-//				double fractRupInside = fractRupsInside[rup];
-//				if (fractRupInside > 0) 
-//					if (mag<8.5)  // b/c the mfdInequalityConstraints only go to M8.5!
-//						startingModelMagFreqDist.add(mag, fractRupInside * initialRupModel[rup]);
-//			}
-//			
-//			// Find the amount to adjust starting model MFD to be below or equal to Target MFD
-//			IncrementalMagFreqDist adjustmentRatio = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.size(), targetMagFreqDist.getDelta());
-//			for (double m=targetMagFreqDist.getMinX(); m<=targetMagFreqDist.getMaxX(); m+= targetMagFreqDist.getDelta()) {
-//				if (adjustOnlyIfOverMFD == false)
-//					adjustmentRatio.set(m, targetMagFreqDist.getClosestYtoX(m) / startingModelMagFreqDist.getClosestYtoX(m));
-//				else {
-//					if (startingModelMagFreqDist.getClosestYtoX(m) > targetMagFreqDist.getClosestYtoX(m))
-//						adjustmentRatio.set(m, targetMagFreqDist.getClosestYtoX(m) / startingModelMagFreqDist.getClosestYtoX(m));
-//					else
-//						adjustmentRatio.set(m, 1.0);
-//				}
-//			}
-//			
-//			// Adjust initial model rates
-//			for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
-//				double mag = rupMeanMag[rup];
-//				if (!Double.isNaN(adjustmentRatio.getClosestYtoX(mag)) && !Double.isInfinite(adjustmentRatio.getClosestYtoX(mag)))
-//					initialRupModel[rup] = initialRupModel[rup] * adjustmentRatio.getClosestYtoX(mag);
-//			}
-//			
-//		}
-//		
-//		return initialRupModel;
-//	}
-//
-//	
-//
-//
-//
-//	
-//
-//	
-//	/**
-//	 * This creates a smooth starting solution, which partitions the available rates from the target MagFreqDist
-//	 * to each rupture in the rupture set.  So the total rate of all ruptures in a given magnitude bin as defined by the MagFreqDist 
-//	 * is partitioned among all the ruptures with a magnitude in that bin, in proportion to the minimum slip rate section for each rupture.
-//	 * NaN slip rates are treated as zero (so any ruptures with a NaN or 0 slip rate section will have a zero rate in the returned starting solution).
-//	 * 
-//	 * Making rates proportional to the minimum slip rate section of a rupture was found to work better than making the rates proportional to the mean slip rate
-//	 * for each rupture.  Also, the current code does not account for overlap of ruptures.  This was tested and did not lead to better starting solutions, 
-//	 * and in addition had a great computational cost.
-//	 * 
-//	 * @param faultSystemRupSet, targetMagFreqDist
-//	 * @return initial_state
-//	 */
-//	public static double[] getSmoothStartingSolution(
-//			FaultSystemRupSet faultSystemRupSet, IncrementalMagFreqDist targetMagFreqDist) {
-//		List<List<Integer>> rupList = faultSystemRupSet.getSectionIndicesForAllRups();
-//		
-//		double[] rupMeanMag = faultSystemRupSet.getMagForAllRups();
-//		double[] sectSlipRateReduced = faultSystemRupSet.getSlipRateForAllSections(); 
-//		int numRup = rupMeanMag.length;
-//		double[] initial_state = new double[numRup];  // starting model to be returned
-//		double[] minimumSlipRate = new double[numRup];  // mean slip rate per section for each rupture
-//		
-//		// Calculate minimum slip rates for ruptures
-//		// If there are NaN slip rates, treat them as 0
-//		for (int rup=0; rup<numRup; rup++) {
-//			List<Integer> sects = faultSystemRupSet.getSectionsIndicesForRup(rup);
-//			minimumSlipRate[rup] = Double.POSITIVE_INFINITY;
-//			for (int i=0; i<sects.size(); i++) {
-//				int sect = sects.get(i);
-//				if (Double.isNaN(sectSlipRateReduced[sect])  || sectSlipRateReduced[sect] == 0)  { 
-//					minimumSlipRate[rup] = 0;
-//				} else 	if (sectSlipRateReduced[sect] < minimumSlipRate[rup]) {
-//					minimumSlipRate[rup] = sectSlipRateReduced[sect];
-//				}
-//			}
-//		}
-//		
-//
-//		// Find magnitude distribution of ruptures (as discretized)
-//		double minMag = Math.floor(faultSystemRupSet.getMinMag()*10.0)/10.0;
-//		double maxMag = Math.ceil(faultSystemRupSet.getMaxMag()*10.0)/10.0;
-//		IncrementalMagFreqDist magHist = new IncrementalMagFreqDist(minMag,(int) Math.round((maxMag-minMag)*10+1),0.1);
-//		magHist.setTolerance(0.05);
-//		for(int rup=0; rup<numRup;rup++) {
-//			// Each bin in the magnitude histogram should be weighted by the mean slip rates of those ruptures 
-//			// (since later we weight the ruptures by the mean slip rate, which would otherwise result in 
-//			// starting solution that did not match target MFD if the mean slip rates per rupture 
-//			// differed between magnitude bins)
-//			if (minimumSlipRate[rup]!=0) 
-//				magHist.add(rupMeanMag[rup], minimumSlipRate[rup]);  // each bin
-//			else magHist.add(rupMeanMag[rup], 1E-4);
-//		}
-//		
-//		
-//		// Set up initial (non-normalized) target MFD rates for each rupture, normalized by meanSlipRate
-//		for (int rup=0; rup<numRup; rup++) {
-//			initial_state[rup] = targetMagFreqDist.getClosestYtoX(rupMeanMag[rup]) * minimumSlipRate[rup] / magHist.getClosestYtoX(rupMeanMag[rup]);
-//			if (Double.isNaN(initial_state[rup]) || Double.isInfinite(initial_state[rup]))
-//				throw new IllegalStateException("Pre-normalization initial_state["+rup+"] = "+initial_state[rup]);
-//		}
-//		
-//		
-//		// Find normalization for all ruptures (so that MFD matches target MFD normalization)
-//		// Can't just add up all the mag bins to normalize because some bins don't have ruptures.
-//		// Instead let's choose one mag bin (that we know has rups) that has rups and normalize
-//		// all bins by the amount it's off:
-//		double totalEventRate=0;
-//		for (int rup=0; rup<numRup; rup++) {
-//			if (rupMeanMag[rup]>7.0 && rupMeanMag[rup]<=7.1)
-//				totalEventRate += initial_state[rup];
-//		}
-//		double normalization = targetMagFreqDist.getClosestYtoX(7.0)/totalEventRate;	
-//		if (targetMagFreqDist.getClosestYtoX(7.0)==0)
-//			throw new IllegalStateException("targetMagFreqDist.getClosestY(7.0) = 0.  Check rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD()");
-//		// Adjust rates by normalization to match target MFD total event rates
-//		for (int rup=0; rup<numRup; rup++) {
-//			initial_state[rup]=initial_state[rup]*normalization;
-//			if (Double.isNaN(initial_state[rup]) || Double.isInfinite(initial_state[rup]))
-//				throw new IllegalStateException("initial_state["+rup+"] = "+initial_state[rup]
-//						+" (norm="+normalization+", totalEventRate="+totalEventRate+")");
-//		}
-//		
-//		
-//		return initial_state;
-//		
-//	}
-
 	public double getSlipRateConstraintWt_normalized() {
 		return slipRateConstraintWt_normalized;
 	}
