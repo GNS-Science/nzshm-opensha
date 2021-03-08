@@ -20,7 +20,7 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.griddedSeismicity.GridReader;
 
 /**
- * This reads and provides the smoothed seismicity spatial PDFs 
+ * This reads and provides the smoothed seismicity spatial PDFs
  * 
  * based on scratch.UCERF3.utils.SmoothSeismicitySpatialPDF_Fetcher
  * 
@@ -35,8 +35,7 @@ public class NSHM_SmoothSeismicitySpatialPDF_Fetcher {
 	public static final String FILENAME_1246_R = "BEST2FLTOLDNC1246r.txt";
 	public static final String FILENAME_1456 = "BESTFLTOLDNC1456.txt";
 	public static final String FILENAME_1456_R = "BESTFLTOLDNC1456r.txt";
-	
-	
+
 	public static double[] get1246() {
 		return new NSHM_GridReader(FILENAME_1246).getValues();
 	}
@@ -44,20 +43,19 @@ public class NSHM_SmoothSeismicitySpatialPDF_Fetcher {
 	public static double[] get1456() {
 		return new NSHM_GridReader(FILENAME_1456).getValues();
 	}
-	
+
 	public static double[] get1246R() {
 		return new NSHM_GridReader(FILENAME_1246_R).getValues();
 	}
-	
+
 	public static double[] get1456R() {
 		return new NSHM_GridReader(FILENAME_1456_R).getValues();
 	}
-	
-	
+
 //	public static GriddedGeoDataSet getUCERF2pdfAsGeoData() {
 //		return readPDF_Data(FILENAME);
 //	}
-	
+
 //	private static GriddedGeoDataSet readPDF_Data(String filename) {
 //		GriddedGeoDataSet pdfData = new GriddedGeoDataSet(griddedRegion, true);	// true makes X latitude
 //		GridReader reader = new GridReader(filename);
@@ -88,9 +86,7 @@ public class NSHM_SmoothSeismicitySpatialPDF_Fetcher {
 ////		System.out.println("sum="+getSumOfData(pdfData));
 //		return pdfData;
 //	}
-	
-	
-	
+
 //	/**
 //	 * this normalizes the data so they sum to 1.0
 //	 * @param data
@@ -127,4 +123,3 @@ public class NSHM_SmoothSeismicitySpatialPDF_Fetcher {
 //	}
 
 }
-

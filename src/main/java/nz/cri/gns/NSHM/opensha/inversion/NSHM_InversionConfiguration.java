@@ -16,11 +16,10 @@ import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 
-
 /**
- * This represents all of the inversion configuration parameters specific to an individual model
- * on the NZSHM22 logic tree. Parameters can be fetched for a given logic tree branch with the 
- * <code>forModel(...)</code> method.
+ * This represents all of the inversion configuration parameters specific to an
+ * individual model on the NZSHM22 logic tree. Parameters can be fetched for a
+ * given logic tree branch with the <code>forModel(...)</code> method.
  * 
  * based on scratch.UCERF3.inversion.UCERF3InversionConfiguration
  * 
@@ -28,9 +27,9 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  *
  */
 public class NSHM_InversionConfiguration implements XMLSaveable {
-	
+
 	public static final String XML_METADATA_NAME = "InversionConfiguration";
-	
+
 	private double slipRateConstraintWt_normalized;
 	private double slipRateConstraintWt_unnormalized;
 	private SlipRateConstraintWeightingType slipRateWeighting;
@@ -50,7 +49,8 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //	private double parkfieldConstraintWt;
 //	private double[] aPrioriRupConstraint;
 	private double[] initialRupModel;
-	// these are the rates that should be used for water level computation. this will
+	// these are the rates that should be used for water level computation. this
+	// will
 	// often be set equal to initial rup model or a priori rup constraint
 	private double[] minimumRuptureRateBasis;
 	private double MFDTransitionMag;
@@ -60,23 +60,23 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 
 //	private double smoothnessWt; // rupture rate smoothness (entropy)
 //	private double eventRateSmoothnessWt; // parent section event-rate smoothing
-	protected final static boolean D = true;  // for debugging
-	
+	protected final static boolean D = true; // for debugging
+
 //	// If true, a Priori rup-rate constraint is applied to zero rates (eg, rups not in UCERF2)
 //	private boolean aPrioriConstraintForZeroRates = true;
 //	// Amount to multiply standard a-priori rup rate weight by when applying to zero rates (minimization constraint for rups not in UCERF2)
 //	private double aPrioriConstraintForZeroRatesWtFactor = 0.1;
 //	// If true, rates of Parkfield M~6 ruptures do not count toward MFD Equality Constraint misfit
 //	private boolean excludeParkfieldRupsFromMfdEqualityConstraints = true;
-	
+
 	private String metadata;
-	
+
 	/**
 	 * 
 	 */
-	public NSHM_InversionConfiguration() {	
+	public NSHM_InversionConfiguration() {
 	}
-	
+
 //	NSHM_InversionConfiguration(
 //			double slipRateConstraintWt_normalized,
 //			double slipRateConstraintWt_unnormalized,
@@ -158,12 +158,13 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 ////		
 //		this.metadata = metadata;
 //	}
-	
+
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
-	
+
 	/**
-	 * This generates an inversion configuration for the given inversion model and rupture set
+	 * This generates an inversion configuration for the given inversion model and
+	 * rupture set
 	 * 
 	 * @param model
 	 * @param rupSet
@@ -172,89 +173,107 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	public static NSHM_InversionConfiguration forModel(InversionModels model, NSHM_InversionFaultSystemRuptSet rupSet) {
 		double mfdEqualityConstraintWt = DEFAULT_MFD_EQUALITY_WT;
 		double mfdInequalityConstraintWt = DEFAULT_MFD_INEQUALITY_WT;
-		
+
 		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 	}
-	
+
 	/**
-	 * This generates an inversion configuration for the given inversion model and rupture set
+	 * This generates an inversion configuration for the given inversion model and
+	 * rupture set
 	 * 
 	 * @param model
 	 * @param rupSet
-	 * @param mfdEqualityConstraintWt weight of magnitude-distribution EQUALITY constraint relative to
-	 * slip-rate constraint (recommended: 10)
-	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY constraint relative
-	 * to slip-rate constraint (recommended:  1000)
+	 * @param mfdEqualityConstraintWt   weight of magnitude-distribution EQUALITY
+	 *                                  constraint relative to slip-rate constraint
+	 *                                  (recommended: 10)
+	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY
+	 *                                  constraint relative to slip-rate constraint
+	 *                                  (recommended: 1000)
 	 * @return
 	 */
 	public static NSHM_InversionConfiguration forModel(InversionModels model, NSHM_InversionFaultSystemRuptSet rupSet,
 			double mfdEqualityConstraintWt, double mfdInequalityConstraintWt) {
 		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, null);
 	}
-	
 
-	
 	/**
-	 * This generates an inversion configuration for the given inversion model and rupture set
+	 * This generates an inversion configuration for the given inversion model and
+	 * rupture set
 	 * 
 	 * @param model
 	 * @param rupSet
-	 * @param mfdEqualityConstraintWt weight of magnitude-distribution EQUALITY constraint relative to
-	 * slip-rate constraint (recommended: 10)
-	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY constraint relative
-	 * to slip-rate constraint (recommended:  1000)
-	 * @param modifiers command line modifier arguments (can be null)
+	 * @param mfdEqualityConstraintWt   weight of magnitude-distribution EQUALITY
+	 *                                  constraint relative to slip-rate constraint
+	 *                                  (recommended: 10)
+	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY
+	 *                                  constraint relative to slip-rate constraint
+	 *                                  (recommended: 1000)
+	 * @param modifiers                 command line modifier arguments (can be
+	 *                                  null)
 	 * @return
 	 */
 	public static NSHM_InversionConfiguration forModel(InversionModels model, NSHM_InversionFaultSystemRuptSet rupSet,
 			double mfdEqualityConstraintWt, double mfdInequalityConstraintWt, CommandLine modifiers) {
-		
-		
-		/* *******************************************
-		 * COMMON TO ALL MODELS
-		 * ******************************************* */
-		// Setting slip-rate constraint weights to 0 does not disable them! To disable one or the other (both cannot be), use slipConstraintRateWeightingType Below
-		double slipRateConstraintWt_normalized = 1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
-		double slipRateConstraintWt_unnormalized = 100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used for SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
-		// If normalized, slip rate misfit is % difference for each section (recommended since it helps fit slow-moving faults).  If unnormalized, misfit is absolute difference.
+
+		/*
+		 * ******************************************* COMMON TO ALL MODELS
+		 * *******************************************
+		 */
+		// Setting slip-rate constraint weights to 0 does not disable them! To disable
+		// one or the other (both cannot be), use slipConstraintRateWeightingType Below
+		double slipRateConstraintWt_normalized = 1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for
+													// SlipRateConstraintWeightingType.BOTH) -- NOT USED if
+													// UNNORMALIZED!
+		double slipRateConstraintWt_unnormalized = 100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used
+														// for SlipRateConstraintWeightingType.BOTH) -- NOT USED if
+														// NORMALIZED!
+		// If normalized, slip rate misfit is % difference for each section (recommended
+		// since it helps fit slow-moving faults). If unnormalized, misfit is absolute
+		// difference.
 		// BOTH includes both normalized and unnormalized constraints.
 		SlipRateConstraintWeightingType slipRateWeighting = SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
-		
-		// weight of paleo-rate constraint relative to slip-rate constraint (recommended: 1.2)
+
+		// weight of paleo-rate constraint relative to slip-rate constraint
+		// (recommended: 1.2)
 //		double paleoRateConstraintWt = 1.2;
-		
-		// weight of mean paleo slip constraint relative to slip-rate constraint 
+
+		// weight of mean paleo slip constraint relative to slip-rate constraint
 //		double paleoSlipConstraintWt = paleoRateConstraintWt*0.1;
-		
-		// weight of magnitude-distribution EQUALITY constraint relative to slip-rate constraint (recommended: 10)
+
+		// weight of magnitude-distribution EQUALITY constraint relative to slip-rate
+		// constraint (recommended: 10)
 //		double mfdEqualityConstraintWt = 10;
-		
-		// weight of magnitude-distribution INEQUALITY constraint relative to slip-rate constraint (recommended:  1000)
+
+		// weight of magnitude-distribution INEQUALITY constraint relative to slip-rate
+		// constraint (recommended: 1000)
 //		double mfdInequalityConstraintWt = 1000;
-		
+
 		// magnitude-bin size for MFD participation smoothness constraint
 		double participationConstraintMagBinSize = 0.1;
-		
-		// weight of rupture-rate smoothing constraint 
+
+		// weight of rupture-rate smoothing constraint
 		double rupRateSmoothingConstraintWt = 0;
-		
-		// weight of rupture-rate minimization constraint weights relative to slip-rate constraint (recommended: 10,000)
+
+		// weight of rupture-rate minimization constraint weights relative to slip-rate
+		// constraint (recommended: 10,000)
 		// (currently used to minimization rates of rups below sectMinMag)
 		double minimizationConstraintWt = 10000;
-		
-		// weight of entropy-maximization constraint (should smooth rupture rates) (recommended: 10000)
+
+		// weight of entropy-maximization constraint (should smooth rupture rates)
+		// (recommended: 10000)
 		double smoothnessWt = 0;
-		
-		// weight of Moment Constraint (set solution moment to equal deformation model moment) (recommended: 1e-17)
+
+		// weight of Moment Constraint (set solution moment to equal deformation model
+		// moment) (recommended: 1e-17)
 		double momentConstraintWt = 0;
-		
+
 		// get MFD constraints
 		List<MFD_InversionConstraint> mfdConstraints = rupSet.getInversionTargetMFDs().getMFDConstraints();
-		
+
 		double MFDTransitionMag = 7.85; // magnitude to switch from MFD equality to MFD inequality
-		
+
 		String metadata = "";
-		
+
 //		/* *******************************************
 //		 * MODEL SPECIFIC
 //		 * ******************************************* */
@@ -289,7 +308,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 ////		System.out.println("SUPRA SEIS MFD = ");
 ////		System.out.println(rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD());
 //		
-	
+
 		if (model.isConstrained()) {
 			// CONSTRAINED BRANCHES
 			if (model == InversionModels.CHAR_CONSTRAINED) {
@@ -303,7 +322,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //				initialRupModel = Arrays.copyOf(aPrioriRupConstraint, aPrioriRupConstraint.length); 
 //				minimumRuptureRateFraction = 0.01;
 //				minimumRuptureRateBasis = adjustStartingModel(getSmoothStartingSolution(rupSet,targetOnFaultMFD), mfdConstraints, rupSet, true);
-				
+
 //				initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
 //				if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0) initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet, true);
 //				initialRupModel = adjustParkfield(rupSet, initialRupModel);
@@ -324,7 +343,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //				initialRupModel = adjustParkfield(rupSet, initialRupModel);
 //				initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
 			} else
-				throw new IllegalStateException("Unknown inversion model: "+model);
+				throw new IllegalStateException("Unknown inversion model: " + model);
 		} else {
 			// UNCONSTRAINED BRANCHES
 //			participationSmoothnessConstraintWt = 0;
@@ -338,85 +357,92 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //			minimumRuptureRateBasis = null;
 //			minimumRuptureRateFraction = 0;
 		}
-		
-    	/* end MODIFIERS */
-		
+
+		/* end MODIFIERS */
+
 		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
 		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
-		
-		if (mfdEqualityConstraintWt>0.0 && mfdInequalityConstraintWt>0.0) {
-			// we have both MFD constraints, apply a transition mag from equality to inequality	
-			metadata += "\nMFDTransitionMag: "+MFDTransitionMag;
-			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints, mfdConstraints.get(0).getMagFreqDist().getMinX(), MFDTransitionMag);
-			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag, mfdConstraints.get(0).getMagFreqDist().getMaxX());
-		} else if (mfdEqualityConstraintWt>0.0) {
+
+		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
+			// we have both MFD constraints, apply a transition mag from equality to
+			// inequality
+			metadata += "\nMFDTransitionMag: " + MFDTransitionMag;
+			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints,
+					mfdConstraints.get(0).getMagFreqDist().getMinX(), MFDTransitionMag);
+			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
+					mfdConstraints.get(0).getMagFreqDist().getMaxX());
+		} else if (mfdEqualityConstraintWt > 0.0) {
 			mfdEqualityConstraints = mfdConstraints;
-		} else if (mfdInequalityConstraintWt>0.0) {
+		} else if (mfdInequalityConstraintWt > 0.0) {
 			mfdInequalityConstraints = mfdConstraints;
 		} else {
 			// no MFD constraints, do nothing
 		}
-		
+
 		// NSHM-style config using setter methods...
 		NSHM_InversionConfiguration newConfig = new NSHM_InversionConfiguration()
-			.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
-			.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-			.setMfdEqualityConstraints(mfdEqualityConstraints)
-			.setMfdInequalityConstraints(mfdInequalityConstraints)
-			.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
-			.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
-			.setSlipRateWeightingType(slipRateWeighting);
-			
+				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+				.setMfdEqualityConstraints(mfdEqualityConstraints).setMfdInequalityConstraints(mfdInequalityConstraints)
+				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
+				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
+				.setSlipRateWeightingType(slipRateWeighting);
+
 		return newConfig;
 
 	}
-	
+
 	/**
-	 * This method returns the input MFD constraint array with each constraint now restricted between minMag and maxMag.
-	 * WARNING!  This doesn't interpolate.  For best results, set minMag & maxMag to points along original MFD constraint (i.e. 7.05, 7.15, etc)
+	 * This method returns the input MFD constraint array with each constraint now
+	 * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
+	 * best results, set minMag & maxMag to points along original MFD constraint
+	 * (i.e. 7.05, 7.15, etc)
+	 * 
 	 * @param mfConstraints
 	 * @param minMag
 	 * @param maxMag
 	 * @return newMFDConstraints
 	 */
-	private static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(List<MFD_InversionConstraint> mfdConstraints, double minMag, double maxMag) {
-		
+	private static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(
+			List<MFD_InversionConstraint> mfdConstraints, double minMag, double maxMag) {
+
 		List<MFD_InversionConstraint> newMFDConstraints = new ArrayList<MFD_InversionConstraint>();
-		
-		for (int i=0; i<mfdConstraints.size(); i++) {
+
+		for (int i = 0; i < mfdConstraints.size(); i++) {
 			IncrementalMagFreqDist originalMFD = mfdConstraints.get(i).getMagFreqDist();
 			double delta = originalMFD.getDelta();
-			IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag, (int) Math.round((maxMag-minMag)/delta + 1.0)); 
-			newMFD.setTolerance(delta/2.0);
-			for (double m=minMag; m<=maxMag; m+=delta) {
-				// WARNING!  This doesn't interpolate.  For best results, set minMag & maxMag to points along original MFD constraint (i.e. 7.05, 7.15, etc)
+			IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag,
+					(int) Math.round((maxMag - minMag) / delta + 1.0));
+			newMFD.setTolerance(delta / 2.0);
+			for (double m = minMag; m <= maxMag; m += delta) {
+				// WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
+				// points along original MFD constraint (i.e. 7.05, 7.15, etc)
 				newMFD.set(m, originalMFD.getClosestYtoX(m));
 			}
-			newMFDConstraints.add(i,new MFD_InversionConstraint(newMFD, mfdConstraints.get(i).getRegion()));	
+			newMFDConstraints.add(i, new MFD_InversionConstraint(newMFD, mfdConstraints.get(i).getRegion()));
 		}
-		
+
 		return newMFDConstraints;
 	}
-	
-	
+
 	public double getSlipRateConstraintWt_normalized() {
 		return slipRateConstraintWt_normalized;
 	}
-	
+
 	public NSHM_InversionConfiguration setSlipRateConstraintWt_normalized(double slipRateConstraintWt_normalized) {
 		this.slipRateConstraintWt_normalized = slipRateConstraintWt_normalized;
 		return this;
 	}
-	
+
 	public double getSlipRateConstraintWt_unnormalized() {
 		return slipRateConstraintWt_unnormalized;
 	}
-	
+
 	public NSHM_InversionConfiguration setSlipRateConstraintWt_unnormalized(double slipRateConstraintWt_unnormalized) {
 		this.slipRateConstraintWt_unnormalized = slipRateConstraintWt_unnormalized;
 		return this;
 	}
-	
+
 	public SlipRateConstraintWeightingType getSlipRateWeightingType() {
 		return slipRateWeighting;
 	}
@@ -441,13 +467,12 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //	public void setPaleoSlipWt(double paleoSlipConstraintWt) {
 //		this.paleoSlipConstraintWt = paleoSlipConstraintWt;
 //	}
-	
+
 	public double getMagnitudeEqualityConstraintWt() {
 		return magnitudeEqualityConstraintWt;
 	}
 
-	public NSHM_InversionConfiguration setMagnitudeEqualityConstraintWt(
-			double relativeMagnitudeEqualityConstraintWt) {
+	public NSHM_InversionConfiguration setMagnitudeEqualityConstraintWt(double relativeMagnitudeEqualityConstraintWt) {
 		this.magnitudeEqualityConstraintWt = relativeMagnitudeEqualityConstraintWt;
 		return this;
 	}
@@ -497,8 +522,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //			double relativeMinimizationConstraintWt) {
 //		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
 //	}
-	
-	
+
 //	public double getMomentConstraintWt() {
 //		return momentConstraintWt;
 //	}
@@ -565,13 +589,12 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //	public void setMFDSmoothnessConstraintWtForPaleoParents(double relativeMFDSmoothnessConstraintWtForPaleoParents) {
 //		this.mfdSmoothnessConstraintWtForPaleoParents = relativeMFDSmoothnessConstraintWtForPaleoParents;
 //	}
-	
+
 	public List<MFD_InversionConstraint> getMfdEqualityConstraints() {
 		return mfdEqualityConstraints;
 	}
 
-	public NSHM_InversionConfiguration setMfdEqualityConstraints(
-			List<MFD_InversionConstraint> mfdEqualityConstraints) {
+	public NSHM_InversionConfiguration setMfdEqualityConstraints(List<MFD_InversionConstraint> mfdEqualityConstraints) {
 		this.mfdEqualityConstraints = mfdEqualityConstraints;
 		return this;
 	}
@@ -594,15 +617,15 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		this.minimumRuptureRateFraction = minimumRuptureRateFraction;
 		return this;
 	}
-	
+
 	public String getMetadata() {
 		return metadata;
 	}
-	
+
 	public void updateRupSetInfoString(FaultSystemRupSet rupSet) {
 		String info = rupSet.getInfoString();
 		info += "\n\n****** Inversion Configuration Metadata ******";
-		info += "\n"+getMetadata();
+		info += "\n" + getMetadata();
 		info += "\n**********************************************";
 		rupSet.setInfoString(info);
 	}
@@ -622,7 +645,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //	public void setRupRateSmoothingConstraintWt(double rupRateSmoothingConstraintWt) {
 //		this.rupRateSmoothingConstraintWt = rupRateSmoothingConstraintWt;
 //	}
-	
+
 //	public enum SlipRateConstraintWeightingType {
 //		NORMALIZED_BY_SLIP_RATE,  // Normalize each slip-rate constraint by the slip-rate target (So the inversion tries to minimize ratio of model to target)
 //		UNNORMALIZED, // Do not normalize slip-rate constraint (inversion will minimize difference of model to target, effectively fitting fast faults better than slow faults on a ratio basis)
@@ -637,7 +660,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		MFDTransitionMag = mFDTransitionMag;
 		return this;
 	}
-	
+
 //	public boolean isAPrioriConstraintForZeroRates() {
 //		return aPrioriConstraintForZeroRates;
 //	}
@@ -655,18 +678,17 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //	}
 //
 
-
 	@Override
 	public Element toXMLMetadata(Element root) {
 		Element el = root.addElement(XML_METADATA_NAME);
-		
-		el.addAttribute("slipRateConstraintWt_normalized", slipRateConstraintWt_normalized+"");
-		el.addAttribute("slipRateConstraintWt_unnormalized", slipRateConstraintWt_unnormalized+"");
-		el.addAttribute("slipRateWeighting", slipRateWeighting.name()+"");
+
+		el.addAttribute("slipRateConstraintWt_normalized", slipRateConstraintWt_normalized + "");
+		el.addAttribute("slipRateConstraintWt_unnormalized", slipRateConstraintWt_unnormalized + "");
+		el.addAttribute("slipRateWeighting", slipRateWeighting.name() + "");
 //		el.addAttribute("paleoRateConstraintWt", paleoRateConstraintWt+"");
 //		el.addAttribute("paleoSlipConstraintWt", paleoSlipConstraintWt+"");
-		el.addAttribute("magnitudeEqualityConstraintWt", magnitudeEqualityConstraintWt+"");
-		el.addAttribute("magnitudeInequalityConstraintWt", magnitudeInequalityConstraintWt+"");
+		el.addAttribute("magnitudeEqualityConstraintWt", magnitudeEqualityConstraintWt + "");
+		el.addAttribute("magnitudeInequalityConstraintWt", magnitudeInequalityConstraintWt + "");
 //		el.addAttribute("rupRateConstraintWt", rupRateConstraintWt+"");
 //		el.addAttribute("participationSmoothnessConstraintWt", participationSmoothnessConstraintWt+"");
 //		el.addAttribute("participationConstraintMagBinSize", participationConstraintMagBinSize+"");
@@ -678,30 +700,30 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		el.addAttribute("momentConstraintWt", momentConstraintWt+"");
 //		el.addAttribute("parkfieldConstraintWt", parkfieldConstraintWt+"");
 //		el.addAttribute("MFDTransitionMag", MFDTransitionMag+"");
-		el.addAttribute("minimumRuptureRateFraction", minimumRuptureRateFraction+"");
+		el.addAttribute("minimumRuptureRateFraction", minimumRuptureRateFraction + "");
 //		el.addAttribute("smoothnessWt", smoothnessWt+"");
 //		el.addAttribute("eventRateSmoothnessWt", eventRateSmoothnessWt+"");
-		
+
 		// write MFDs
 		Element equalMFDsEl = el.addElement("MFD_EqualityConstraints");
 		mfdsToXML(equalMFDsEl, mfdEqualityConstraints);
 		Element inequalMFDsEl = el.addElement("MFD_InequalityConstraints");
 		mfdsToXML(inequalMFDsEl, mfdInequalityConstraints);
-		
+
 		return null;
 	}
-	
+
 	private static void mfdsToXML(Element el, List<MFD_InversionConstraint> constraints) {
-		for (int i=0; i<constraints.size(); i++) {
-			MFD_InversionConstraint constr = constraints.get(i);		
+		for (int i = 0; i < constraints.size(); i++) {
+			MFD_InversionConstraint constr = constraints.get(i);
 			constr.toXMLMetadata(el);
 		}
 		// now set indexes
 		List<Element> subEls = XMLUtils.getSubElementsList(el);
-		for (int i=0; i<subEls.size(); i++)
-			subEls.get(i).addAttribute("index", i+"");
+		for (int i = 0; i < subEls.size(); i++)
+			subEls.get(i).addAttribute("index", i + "");
 	}
-	
+
 //	public static NSHM_InversionConfiguration fromXMLMetadata(Element confEl) {
 //		double slipRateConstraintWt_normalized = Double.parseDouble(confEl.attributeValue("slipRateConstraintWt_normalized"));
 //		double slipRateConstraintWt_unnormalized = Double.parseDouble(confEl.attributeValue("slipRateConstraintWt_unnormalized"));
@@ -735,9 +757,9 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //				minimizationConstraintWt, momentConstraintWt, parkfieldConstraintWt, null, null, null, smoothnessWt,
 //				eventRateSmoothnessWt, MFDTransitionMag, mfdEqualityConstraints, mfdInequalityConstraints, minimumRuptureRateFraction, null);
 //	}
-	
+
 	private static List<MFD_InversionConstraint> mfdsFromXML(Element mfdsEl) {
-		List<Element> mfdElList = XMLUtils.getSortedChildElements(mfdsEl, null, "index");		
+		List<Element> mfdElList = XMLUtils.getSortedChildElements(mfdsEl, null, "index");
 		List<MFD_InversionConstraint> mfds = Lists.newArrayList();
 		for (Element mfdEl : mfdElList) {
 			MFD_InversionConstraint constr = MFD_InversionConstraint.fromXMLMetadata(mfdEl);
