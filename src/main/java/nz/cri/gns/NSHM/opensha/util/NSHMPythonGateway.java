@@ -23,11 +23,21 @@ public class NSHMPythonGateway {
 	static CachedNSHMInversionRunner runner;
 	static NSHMHazardCalculatorBuilder calculator = new NSHMHazardCalculatorBuilder();
 
+	/**
+	 * Get a new cached rupture set builder. Note that we want a new builder for
+	 * each new rupture set to ensure the setup is clean. The produced rupture set
+	 * is cached to allow inspection etc.
+	 */
 	public static CachedNSHMRuptureSetBuilder getBuilder() {
 		builder = new CachedNSHMRuptureSetBuilder();
 		return builder;
 	}
 
+	/**
+	 * Get a new cached inversion runner. For now we want a new one to ensure the
+	 * setup is clean, but this can maybe be optimised. The produced solution is
+	 * cached to allow inspection etc.
+	 */
 	public static NSHMInversionRunner getRunner() {
 		runner = new CachedNSHMInversionRunner();
 		return runner;
