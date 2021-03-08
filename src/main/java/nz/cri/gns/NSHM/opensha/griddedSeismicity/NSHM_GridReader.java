@@ -2,17 +2,12 @@ package nz.cri.gns.NSHM.opensha.griddedSeismicity;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Iterator;
 
-import org.opensha.commons.data.region.CaliforniaRegions;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
-import org.opensha.commons.geo.Region;
 import org.opensha.commons.util.DataUtils;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
@@ -20,7 +15,6 @@ import nz.cri.gns.NSHM.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NSHM.opensha.enumTreeBranches.NSHM_SpatialSeisPDF;
 import nz.cri.gns.NSHM.opensha.util.NSHM_DataUtils;
 import scratch.UCERF3.griddedSeismicity.GridReader;
-import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 public class NSHM_GridReader extends GridReader {
 	
@@ -51,8 +45,6 @@ public class NSHM_GridReader extends GridReader {
 		Double totalValue = 0.0;
 		
 		try {
-//			InputStream is = NSHM_GridReader.class.getResourceAsStream("/resources/data/seismicityGrids/" + filename);
-//			BufferedReader br = new BufferedReader(new InputStreamReader(is));	
 			String DATA_DIR = "seismicityGrids";
 			BufferedReader br = new BufferedReader(NSHM_DataUtils.getReader(DATA_DIR, filename));
 			Iterator<String> dat;
@@ -75,7 +67,7 @@ public class NSHM_GridReader extends GridReader {
 				line = br.readLine();
 			}
 		} catch (IOException ioe) {
-			throw Throwables.propagate(ioe);
+			throw  new RuntimeException(ioe);
 		}
 		System.out.println("total in " + filename + " = " + totalValue);
 		return table;
@@ -129,6 +121,10 @@ public class NSHM_GridReader extends GridReader {
 	}
 	
 	public static void main(String[] args) {
+		//TODO: some defensive testing around this is recommended to snsure that regional
+		// PDF functions do work as expected.
+		// see also missingTableEntries() method
+		// so for now, just leavintg these examples in main()
 		
 		GriddedRegion reg = NSHM_GridReader.region.clone();
 		NSHM_GridReader gr = new NSHM_GridReader("BEST2FLTOLDNC1246.txt");
