@@ -1,4 +1,4 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import nz.cri.gns.NSHM.opensha.ruptures.FaultIdFilter;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
@@ -112,10 +113,11 @@ public class FaultIdFilterTest {
         UniqueRupture u2 = mock(UniqueRupture.class);
         when(u2.size()).thenReturn(parentIds.length - 1);
 
-        Constructor<ClusterRupture> con = ClusterRupture.class.getDeclaredConstructor(
-                FaultSubsectionCluster[].class, ImmutableSet.class, ImmutableMap.class, UniqueRupture.class, UniqueRupture.class);
+
+         Constructor<ClusterRupture> con = ClusterRupture.class.getDeclaredConstructor(
+                FaultSubsectionCluster[].class, ImmutableSet.class, ImmutableMap.class, UniqueRupture.class, UniqueRupture.class, Boolean.TYPE);
         con.setAccessible(true);
-        return con.newInstance(clusters, ImmutableSet.copyOf(jumps), ImmutableMap.of(), u1, u2);
+        return con.newInstance(clusters, ImmutableSet.copyOf(jumps), ImmutableMap.of(), u1, u2, true);
     }
 
     public Jump mockJump(int toParentId) {

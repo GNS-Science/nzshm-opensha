@@ -1,4 +1,4 @@
-package nz.cri.gns.NSHM.opensha.ruptures.downDipSubSectTest;
+package nz.cri.gns.NSHM.opensha.ruptures.downDip;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,47 +12,50 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
-public class DownDipTestPermutationStrategy implements ClusterPermutationStrategy {
+public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
 
     public interface Constraint {
-        boolean apply(int startRow, int startCol, int rowCount, int colCount);
+        boolean apply(DownDipSubSectBuilder builder, int startRow, int startCol, int rowCount, int colCount);
     }
 
     private Constraint constraint;
 
-    private DownDipSubSectBuilder downDipBuilder;
+    private final DownDipRegistry registry;
+    private final ClusterPermutationStrategy crustalStrategy;
     private static final boolean D = false;
 
-    public DownDipTestPermutationStrategy(DownDipSubSectBuilder downDipBuilder) {
-        this.downDipBuilder = downDipBuilder;
+    public DownDipPermutationStrategy(DownDipRegistry registry, ClusterPermutationStrategy crustalStrategy) {
+        this.registry = registry;
+        this.crustalStrategy = crustalStrategy;
     }
 
-    public DownDipTestPermutationStrategy addConstraint(Constraint constraint) {
+    public DownDipPermutationStrategy addConstraint(Constraint constraint) {
         if (null == this.constraint) {
             this.constraint = constraint;
         } else {
             Constraint oldConstraint = this.constraint;
-            this.constraint = (startRow, startCol, rowCount, colCount) ->
-                    oldConstraint.apply(startRow, startCol, rowCount, colCount) &&
-                            constraint.apply(startRow, startCol, rowCount, colCount);
+            this.constraint = (builder, startRow, startCol, rowCount, colCount) ->
+                    oldConstraint.apply(builder, startRow, startCol, rowCount, colCount) &&
+                            constraint.apply(builder, startRow, startCol, rowCount, colCount);
         }
         return this;
     }
 
-    public DownDipTestPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio) {
+    public DownDipPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio) {
         return addAspectRatioConstraint(minRatio, maxRatio, Integer.MAX_VALUE);
     }
 
     /**
      * Adds an aspect ratio constraint that ensures that ruptures are within the specified minRatio and maxRatio (incl).
      * If a rupture starts at row 0 and has at least depthThreshold rows, then maxRatio can be exceeded.
-     * @param minRatio the minimum required ratio (incl)
-     * @param maxRatio the max required ratio (incl)
+     *
+     * @param minRatio       the minimum required ratio (incl)
+     * @param maxRatio       the max required ratio (incl)
      * @param depthThreshold from this depth on, maxRatio can be exceeded
      * @return this strategy
      */
-    public DownDipTestPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio, int depthThreshold) {
-        return addConstraint((startRow, startCol, rowCount, colCount) -> {
+    public DownDipPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio, int depthThreshold) {
+        return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
             double ratio = (double) colCount / (double) rowCount;
             if ((startRow == 0) && (rowCount >= depthThreshold)) {
                 return minRatio <= ratio;
@@ -66,9 +69,9 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         return ((dividend % potentialDivisor) == 0);
     }
 
-    public DownDipTestPermutationStrategy addPositionCoarsenessConstraint(double epsilon) {
+    public DownDipPermutationStrategy addPositionCoarsenessConstraint(double epsilon) {
         if (epsilon > 0) {
-            return addConstraint((startRow, startCol, rowCount, colCount) -> {
+            return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
                 int coarseness = Math.max(1, (int) Math.round(epsilon * rowCount * colCount));
                 return isDivisibleBy(startCol, coarseness) && isDivisibleBy(startRow, coarseness);
             });
@@ -77,9 +80,9 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         }
     }
 
-    public DownDipTestPermutationStrategy addSizeCoarsenessConstraint(double epsilon) {
+    public DownDipPermutationStrategy addSizeCoarsenessConstraint(double epsilon) {
         if (epsilon > 0) {
-            return addConstraint((startRow, startCol, rowCount, colCount) -> {
+            return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
                 int coarseness = Math.max(1, (int) Math.round(epsilon * rowCount * colCount));
                 return isDivisibleBy(rowCount, coarseness) && isDivisibleBy(colCount, coarseness);
             });
@@ -88,13 +91,13 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         }
     }
 
-    public DownDipTestPermutationStrategy addMinFillConstraint(double minFill) {
+    public DownDipPermutationStrategy addMinFillConstraint(double minFill) {
         Preconditions.checkArgument(0 < minFill && minFill <= 1);
-        return addConstraint((startRow, startCol, rowCount, colCount) -> {
+        return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
             int count = 0;
             for (int r = startRow; r < (startRow + rowCount); r++) {
                 for (int c = startCol; c < (startCol + colCount); c++) {
-                    if (null != downDipBuilder.getSubSect(r, c)) {
+                    if (null != builder.getSubSect(r, c)) {
                         count++;
                     }
                 }
@@ -103,7 +106,7 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         });
     }
 
-    private boolean applyConstraint(int startRow, int startCol, int endRow, int endCol) {
+    private boolean applyConstraint(DownDipSubSectBuilder builder, int startRow, int startCol, int endRow, int endCol) {
         if (constraint == null) {
             return true;
         } else {
@@ -112,7 +115,7 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
             int rowCount = 1 + Math.abs(endRow - startRow);
             startRow = Math.min(startRow, endRow);
             startCol = Math.min(startCol, endCol);
-            return constraint.apply(startRow, startCol, rowCount, colCount);
+            return constraint.apply(builder, startRow, startCol, rowCount, colCount);
         }
     }
 
@@ -120,17 +123,18 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
     public List<FaultSubsectionCluster> getPermutations(
             FaultSubsectionCluster fullCluster, FaultSection firstSection) {
         if (constraint == null) {
-            constraint = (a, b, c, d) -> true;
+            constraint = (builder, a, b, c, d) -> true;
         }
         List<FaultSection> clusterSects = fullCluster.subSects;
         int myInd = fullCluster.subSects.indexOf(firstSection);
         Preconditions.checkState(myInd >= 0, "first section not found in cluster");
-        List<FaultSection> newSects = new ArrayList<>();
-        newSects.add(firstSection);
 
         List<FaultSubsectionCluster> permutations = new ArrayList<>();
 
-        if (fullCluster.parentSectionID == downDipBuilder.getParentID()) {
+        DownDipSubSectBuilder downDipBuilder = registry.getBuilder(fullCluster.parentSectionID);
+        if (downDipBuilder == null) {
+            permutations = crustalStrategy.getPermutations(fullCluster, firstSection);
+        } else {
             // this is a down-dip fault section, only build rectangular permutations
             int startCol = downDipBuilder.getColumn(firstSection);
             int startRow = downDipBuilder.getRow(firstSection);
@@ -145,15 +149,15 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
             for (int endRow = startRow; endRow < rows; endRow++) {
                 // build to the right first (including single column)
                 for (int endCol = startCol; endCol < cols; endCol++)
-                    if (applyConstraint(startRow, startCol, endRow, endCol)) {
+                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
                         permutations.add(buildRectangularPermutation(
-                                fullCluster, startRow, startCol, endRow, endCol));
+                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
                     }
                 // build to the left
                 for (int endCol = startCol; --endCol >= 0; )
-                    if (applyConstraint(startRow, startCol, endRow, endCol)) {
+                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
                         permutations.add(buildRectangularPermutation(
-                                fullCluster, startRow, startCol, endRow, endCol));
+                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
                     }
             }
 
@@ -162,34 +166,16 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
             for (int endRow = startRow; --endRow >= 0; ) {
                 // build to the right first (including single column)
                 for (int endCol = startCol; endCol < cols; endCol++)
-                    if (applyConstraint(startRow, startCol, endRow, endCol)) {
+                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
                         permutations.add(buildRectangularPermutation(
-                                fullCluster, startRow, startCol, endRow, endCol));
+                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
                     }
                 // build to the left
                 for (int endCol = startCol; --endCol >= 0; )
-                    if (applyConstraint(startRow, startCol, endRow, endCol)) {
+                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
                         permutations.add(buildRectangularPermutation(
-                                fullCluster, startRow, startCol, endRow, endCol));
+                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
                     }
-            }
-        } else {
-            // just this section
-            permutations.add(buildCopyJumps(fullCluster, newSects));
-
-            // build toward the smallest ID
-            for (int i = myInd; --i >= 0; ) {
-                FaultSection nextSection = clusterSects.get(i);
-                newSects.add(nextSection);
-                permutations.add(buildCopyJumps(fullCluster, newSects));
-            }
-            newSects = new ArrayList<>();
-            newSects.add(firstSection);
-            // build toward the largest ID
-            for (int i = myInd + 1; i < clusterSects.size(); i++) {
-                FaultSection nextSection = clusterSects.get(i);
-                newSects.add(nextSection);
-                permutations.add(buildCopyJumps(fullCluster, newSects));
             }
         }
         return permutations;
@@ -205,7 +191,7 @@ public class DownDipTestPermutationStrategy implements ClusterPermutationStrateg
         return permutation;
     }
 
-    private FaultSubsectionCluster buildRectangularPermutation(FaultSubsectionCluster fullCluster,
+    private FaultSubsectionCluster buildRectangularPermutation(DownDipSubSectBuilder downDipBuilder, FaultSubsectionCluster fullCluster,
                                                                int startRow, int startCol, int endRow, int endCol) {
         List<FaultSection> subsetSects = new ArrayList<>();
 

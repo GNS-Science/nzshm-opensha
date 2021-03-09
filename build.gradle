@@ -22,13 +22,21 @@ dependencies {
     testCompile 'org.mockito:mockito-core:3.5.13'
 }
 
+jar {
+    into 'resources', {
+        from 'src/main/java/resources'
+    }
+}
+
 sourceSets {
 
     main {
         java {
             srcDirs = ['src/main/java']
-            exclude 'resources/'
         }
+	resources {
+	    exclude '**/resources/**'
+	}
     }
 
     test {
@@ -130,5 +138,4 @@ jacocoTestCoverageVerification {
         }
     }
 }
-
 
