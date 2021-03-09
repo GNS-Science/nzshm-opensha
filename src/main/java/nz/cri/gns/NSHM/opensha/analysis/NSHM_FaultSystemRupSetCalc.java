@@ -1,10 +1,14 @@
 package nz.cri.gns.NSHM.opensha.analysis;
 
+import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.List;
+
+import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
 public class NSHM_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 
@@ -49,11 +53,12 @@ public class NSHM_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 		// do the last one:
 		magForParSectMap.put(prevParSectName, maxMinSeismoMag);
 
-//		for(String parName:magForParSectMap.keySet())
-//			System.out.println(parName+"\t"+magForParSectMap.get(parName));
+		// for(String parName:magForParSectMap.keySet())
+		// System.out.println(parName+"\t"+magForParSectMap.get(parName));
 
 		// now set the value for each section in the array, giving a value of
-		// systemWideMinMinSeismoMag if the parent section value falls below this
+		// systemWideMinMinSeismoMag
+		// if the parent section value falls below this
 		for (int s = 0; s < sectDataList.size(); s++) {
 			double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionName());
 			if (minMag > systemWideMinSeismoMag)

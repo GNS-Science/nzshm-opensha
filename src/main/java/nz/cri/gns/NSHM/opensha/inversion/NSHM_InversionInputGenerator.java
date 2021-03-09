@@ -14,6 +14,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Inversi
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.APrioriInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDSubSectNuclInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDLaplacianSmoothingInversionConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDParticipationSmoothnessInversionConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDSubSectNuclInversionConstraint;
@@ -33,12 +35,14 @@ import com.google.common.base.Preconditions;
 //import com.google.common.collect.Lists;
 //import com.google.common.collect.Maps;
 
+import nz.cri.gns.NSHM.opensha.analysis.NSHM_FaultSystemRupSetCalc;
 //import cern.colt.function.tdouble.IntIntDoubleFunction;
 //import cern.colt.list.tdouble.DoubleArrayList;
 //import cern.colt.list.tint.IntArrayList;
 //import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.SlipEnabledRupSet;
+import scratch.UCERF3.utils.SectionMFD_constraint;
 //import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 //import scratch.UCERF3.enumTreeBranches.InversionModels;
 //
@@ -106,7 +110,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 		return defaultProbModel;
 	}
 
-	private static List<InversionConstraint> buildConstraints(SlipEnabledRupSet rupSet,
+	private static List<InversionConstraint> buildConstraints(NSHM_InversionFaultSystemRuptSet rupSet,
 			NSHM_InversionConfiguration config, List<PaleoRateConstraint> paleoRateConstraints,
 			List<AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
 
@@ -140,17 +144,18 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //		// This constrains rates of ruptures that differ by only 1 subsection
 //		if (config.getRupRateSmoothingConstraintWt() > 0)
 //			constraints.add(new RupRateSmoothingInversionConstraint(config.getRupRateSmoothingConstraintWt(), rupSet));
-//
-		
-//		// Rupture rate minimization constraint
-//		// Minimize the rates of ruptures below SectMinMag (strongly so that they have zero rates)
-//		if (config.getMinimizationConstraintWt() > 0.0) {
-//			List<Integer> belowMinIndexes = new ArrayList<>();
-//			for (int r=0; r<rupSet.getNumRuptures(); r++)
-//				if (rupSet.isRuptureBelowSectMinMag(r))
-//					belowMinIndexes.add(r);
-//			constraints.add(new RupRateMinimizationConstraint(config.getMinimizationConstraintWt(), belowMinIndexes));
-//		}
+//		
+
+		// Rupture rate minimization constraint
+		// Minimize the rates of ruptures below SectMinMag (strongly so that they have
+		// zero rates)
+		if (config.getMinimizationConstraintWt() > 0.0) {
+			List<Integer> belowMinIndexes = new ArrayList<>();
+			for (int r = 0; r < rupSet.getNumRuptures(); r++)
+				if (rupSet.isRuptureBelowSectMinMag(r))
+					belowMinIndexes.add(r);
+			constraints.add(new RupRateMinimizationConstraint(config.getMinimizationConstraintWt(), belowMinIndexes));
+		}
 
 		// Constrain Solution MFD to equal the Target MFD
 		// This is for equality constraints only -- inequality constraints must be
@@ -172,12 +177,13 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //			constraints.add(new MFDParticipationSmoothnessInversionConstraint(rupSet,
 //					config.getParticipationSmoothnessConstraintWt(), config.getParticipationConstraintMagBinSize()));
 
-//		// MFD Subsection nucleation MFD constraint
-//		ArrayList<SectionMFD_constraint> MFDConstraints = null;
-//		if (config.getNucleationMFDConstraintWt() > 0.0) {
-//			MFDConstraints = FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
-//			constraints.add(new MFDSubSectNuclInversionConstraint(rupSet, config.getNucleationMFDConstraintWt(), MFDConstraints));
-//		}
+		// MFD Subsection nucleation MFD constraint
+		ArrayList<SectionMFD_constraint> MFDConstraints = null;
+		if (config.getNucleationMFDConstraintWt() > 0.0) {
+			MFDConstraints = NSHM_FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
+			constraints.add(new MFDSubSectNuclInversionConstraint(rupSet, config.getNucleationMFDConstraintWt(),
+					MFDConstraints));
+		}
 
 //		// MFD Smoothing constraint - MFDs spatially smooth along adjacent subsections on a parent section (Laplacian smoothing)
 //		if (config.getMFDSmoothnessConstraintWt() > 0.0 || config.getMFDSmoothnessConstraintWtForPaleoParents() > 0.0) {  

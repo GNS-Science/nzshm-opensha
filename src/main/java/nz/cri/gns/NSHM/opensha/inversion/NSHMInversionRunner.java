@@ -34,6 +34,7 @@ import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.*;
 import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
+import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
 import java.io.File;
 import java.io.IOException;
@@ -258,6 +259,7 @@ public class NSHMInversionRunner {
 	protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
 		FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
 		return fsRupSet;
+
 	}
 
 	/**
@@ -270,35 +272,23 @@ public class NSHMInversionRunner {
 	 */
 	public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
-		///////
-		// This is now in NSHM_InversionGenerator with parameters defined in
-		/////// NSHM_InversionConfiguration...
-		// /*
-		// * Slip rate constraints
-		// */
-		// constraints.add(new
-		/////// SlipRateInversionConstraint(this.slipRateConstraintWt_normalized,
-		// this.slipRateConstraintWt_unnormalized,
-		// this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
-		//
-		// /* MFD constraints are now built here
-		// *
-		// */
-		// inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
-		// for (InversionConstraint constraint : inversionMFDs.getMFDConstraints()) {
-		// constraints.add(constraint);
-		// }
-		//
-		/////////////////////////////
-
 		// weight of entropy-maximization constraint (not used in UCERF3)
 		double smoothnessWt = 0;
 
 		/*
 		 * Build inversion inputs
 		 */
+		List<AveSlipConstraint> aveSlipConstraints = null;
+		// try {
+		// aveSlipConstraints =
+		// AveSlipConstraint.load(rupSet.getFaultSectionDataList());
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// System.exit(1);
+		// }
+
 		NSHM_InversionInputGenerator inputGen = new NSHM_InversionInputGenerator(rupSet, inversionConfiguration, null,
-				null, null, null);
+				aveSlipConstraints, null, null);
 
 		inputGen.generateInputs(true);
 		// column compress it for fast annealing
@@ -310,6 +300,11 @@ public class NSHMInversionRunner {
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
 
 		completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+
+		// Bring up window to track progress
+		// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
+		// 0.1d);
+		// ....
 		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
 
 		// this is the "sub completion criteria" - the amount of time (or iterations)
