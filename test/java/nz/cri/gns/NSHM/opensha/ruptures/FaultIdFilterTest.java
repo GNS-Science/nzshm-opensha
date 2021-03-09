@@ -113,8 +113,7 @@ public class FaultIdFilterTest {
         UniqueRupture u2 = mock(UniqueRupture.class);
         when(u2.size()).thenReturn(parentIds.length - 1);
 
-
-         Constructor<ClusterRupture> con = ClusterRupture.class.getDeclaredConstructor(
+        Constructor<ClusterRupture> con = ClusterRupture.class.getDeclaredConstructor(
                 FaultSubsectionCluster[].class, ImmutableSet.class, ImmutableMap.class, UniqueRupture.class, UniqueRupture.class, Boolean.TYPE);
         con.setAccessible(true);
         return con.newInstance(clusters, ImmutableSet.copyOf(jumps), ImmutableMap.of(), u1, u2, true);
