@@ -153,16 +153,16 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 
 		List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 
-		GriddedRegion regionNzGridded = new NewZealandRegions.NZ_TEST_GRIDDED();
+		GriddedRegion regionNzGridded = new NewZealandRegions.NZ_TEST_GRIDDED(); //CSEP_TEST
 		///GriddedRegion regionSansTVZGridded = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 		///GriddedRegion regionTVZGridded = new NewZealandRegions.NZ_TVZ_GRIDDED();
 		
 		gridSeisUtils = new GriddedSeisUtils(faultSectionData, 
 				spatialSeisPDF.getPDF(), FAULT_BUFFER, regionNzGridded);	
-		fractionSeisOnFault = gridSeisUtils.pdfInPolys(); //TODO: check this uses grid weights
+		fractionSeisOnFault = gridSeisUtils.pdfInPolys(); //TODO: check this uses grid weights. are we losing any spatial variability inside the polygons??
 		/// double fractSeisInSansTVZ = this.spatialSeisPDF.getFractionInRegion(regionSansTVZGridded);
 		
-		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault;
+		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault; //WE want this as MFD
 		offFaultRegionRateMgt5 = totalRegionRateMgt5-onFaultRegionRateMgt5;
 		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
 		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
@@ -217,7 +217,7 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		if (MFD_STATS && false) {		
 			//	HistogramFunction hist = NSHM_FaultSystemRupSetCalc.getMagHistogram(invRupSet, MIN_MAG, NUM_MAG+10, DELTA_MAG);
 			//
-			// Build our own historgram
+			// Build our own histogram
 			// using systemWideMinMag of 0.0 here, to get actual values
 			double [] sect_mins =  NSHM_FaultSystemRupSetCalc.computeMinSeismoMagForSections(invRupSet, 0.0d);
 			HistogramFunction hist = new HistogramFunction(0.0d, 90, 0.1d);
