@@ -164,6 +164,7 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		
 		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault; //WE want this as MFD
 		offFaultRegionRateMgt5 = totalRegionRateMgt5-onFaultRegionRateMgt5;
+		
 		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
 		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
 		
@@ -196,6 +197,8 @@ public class NSHM_InversionTargetMFDs extends InversionTargetMFDs {
 		
 		// get ave min seismo mag for region
 		// TODO: this is weighted by moment, so exponentially biased to larger ruptures (WHY?)
+		// Kevin weighted by moment (which comes from slip rate) so higher momentrate faults WILL predominate 
+		// NZ many tiny faults will not really contribute much
 		double tempMag = NSHM_FaultSystemRupSetCalc.getMeanMinMag(invRupSet, true);
 		
 		//TODO: why derive this from the rupt set and not use mMaxOffFault??
