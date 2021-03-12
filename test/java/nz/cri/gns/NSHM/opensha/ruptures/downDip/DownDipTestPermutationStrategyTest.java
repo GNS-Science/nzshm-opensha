@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.UCERF3ClusterPermuationStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveClusterPermuationStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class DownDipTestPermutationStrategyTest {
     @Test
     public void testUnconstrainedPermutations() {
 
-        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+        ExhaustiveClusterPermuationStrategy ucerf3Strategy = new ExhaustiveClusterPermuationStrategy();
 
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
@@ -119,7 +119,7 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testAspectRatioConstraint() {
-        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+        ExhaustiveClusterPermuationStrategy ucerf3Strategy = new ExhaustiveClusterPermuationStrategy();
 
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
@@ -198,7 +198,7 @@ public class DownDipTestPermutationStrategyTest {
     @Test
     public void testStretchyAspectRatioConstraint() {
 
-        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+        ExhaustiveClusterPermuationStrategy ucerf3Strategy = new ExhaustiveClusterPermuationStrategy();
 
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 2, 3);
@@ -230,7 +230,7 @@ public class DownDipTestPermutationStrategyTest {
     @Test
     public void testSizeCoarsenessConstraint() {
 
-        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+        ExhaustiveClusterPermuationStrategy ucerf3Strategy = new ExhaustiveClusterPermuationStrategy();
 
         // single section, too large coarseness
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
@@ -290,7 +290,7 @@ public class DownDipTestPermutationStrategyTest {
     @Test
     public void testMinFillConstraint() {
 
-        UCERF3ClusterPermuationStrategy ucerf3Strategy = new UCERF3ClusterPermuationStrategy();
+        ExhaustiveClusterPermuationStrategy ucerf3Strategy = new ExhaustiveClusterPermuationStrategy();
 
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
