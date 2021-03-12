@@ -306,7 +306,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 //		
-		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
+		// >> SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
 ////		System.out.println("SUPRA SEIS MFD = ");
 ////		System.out.println(rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD());
 
@@ -323,10 +323,12 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //				initialRupModel = Arrays.copyOf(aPrioriRupConstraint, aPrioriRupConstraint.length); 
 
 				// For water level
-				minimumRuptureRateFraction = 0.01;
-				minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
-						UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD),
-						mfdConstraints, rupSet, true);
+// >>			minimumRuptureRateFraction = 0.01;
+				minimumRuptureRateFraction = 0.0;
+				
+// >>				minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
+// >>						UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD),
+// >>						mfdConstraints, rupSet, true);
 
 //				initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
 //				if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0) initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet, true);
@@ -365,9 +367,10 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 
 		/* end MODIFIERS */
 
-		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
-		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
+// >>		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
+//>>		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
 
+/*		
 		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
 			// we have both MFD constraints, apply a transition mag from equality to
 			// inequality
@@ -383,13 +386,15 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		} else {
 			// no MFD constraints, do nothing
 		}
-
+*/ 
+		
 		// NSHM-style config using setter methods...
 		NSHM_InversionConfiguration newConfig = new NSHM_InversionConfiguration()
 				// MFD config
-				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
-				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-				.setMfdEqualityConstraints(mfdEqualityConstraints).setMfdInequalityConstraints(mfdInequalityConstraints)
+//				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+//				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+//				.setMfdEqualityConstraints(mfdEqualityConstraints)
+//				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)

@@ -28,6 +28,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
+import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 //import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
@@ -173,12 +174,22 @@ public class NSHMInversionRunner {
 	 * @throws IOException
 	 */
 	public NSHMInversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
-		FaultSystemRupSet rupSet = loadRupSet(ruptureSetFile);
-
+		FaultSystemRupSet rupSetA = loadRupSet(ruptureSetFile);
+		
 		// convert rupture set to NSHM_InversionFaultSystemRuptSet for logicTree etc
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-
-		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSet, branch);
+		//		OldPlausibilityConfiguration filter = null;
+		
+		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSetA, branch); 
+		//, filter,
+//				null, //rupSetA.getSlipRateForAllSections(),
+//				null. rupSetA.getSectionIndicesForAllRups(),
+//				null,
+//				null);
+//		NSHM_InversionFaultSystemRuptSet rupSet2 = new NSHM_InversionFaultSystemRuptSet(
+//				rupSet1, branch, null,
+//				rupSet1.getAveSlipForAllRups(),rupSet1.getCloseSectionsListList(),
+//				rupSet1.getRupturesForClusters(), rupSet1.getSectionsForClusters());
 		return this;
 	}
 

@@ -41,6 +41,13 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 		// set filter, rupAveSlips, sectionConnectionsListList, clusterRups,
 		// clusterSects all to null
 		super(rupSet, branch, null, null, null, null, null);
+//		
+//
+//		init(rupSet.getFaultSectionDataList(), rupSet.getSlipRateForAllSections(),
+//				rupSet.getSlipRateStdDevForAllSections(), rupSet.getAreaForAllSections(),
+//				rupSet.getSectionIndicesForAllRups(), rupSet.getMagForAllRups(), rupSet.getAveRakeForAllRups(),
+//				rupSet.getAreaForAllRups(), rupSet.getLengthForAllRups(), rupSet.getInfoString());
+//		
 	}
 
 	/**
