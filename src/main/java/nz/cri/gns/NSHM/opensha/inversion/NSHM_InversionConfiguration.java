@@ -37,8 +37,8 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	private SlipRateConstraintWeightingType slipRateWeighting;
 //	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
-	private double magnitudeEqualityConstraintWt;
-	private double magnitudeInequalityConstraintWt;
+	protected double magnitudeEqualityConstraintWt;
+	protected double magnitudeInequalityConstraintWt;
 //	private double rupRateConstraintWt;
 //	private double participationSmoothnessConstraintWt;
 //	private double participationConstraintMagBinSize;
