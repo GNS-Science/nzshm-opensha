@@ -40,11 +40,16 @@ public class DownDipSubSectBuilder {
 		//		double aveLongTermSlipRate = slipRateGenerator.nextDouble() * 0.2;
 		
 		/* a default of -1000 for no slip rate data */
-		if (slipRate == -1000d) { //if it's -1000, then what ??
-			fsd.setAveSlipRate(0); //if it's -1000, then what ??
-		} else {
+		// South: -1000, centre:-2000, north:-3000
+		if (slipRate == -1000.0)
+			fsd.setAveSlipRate(0.0);
+		if (slipRate == -2000.0)
+			fsd.setAveSlipRate(0.0);
+		if (slipRate == -3000.0)
+			fsd.setAveSlipRate(50.0); 
+		if (slipRate >= 0.0)
 			fsd.setAveSlipRate(slipRate);
-		}
+
 		fsd.setSectionId(sectionId);
 		fsd.setFaultTrace(trace);
 		fsd.setAveUpperDepth(upper);
