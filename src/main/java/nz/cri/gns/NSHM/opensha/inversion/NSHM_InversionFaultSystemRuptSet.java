@@ -26,7 +26,7 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 	// this holds the various MFDs implied by the inversion fault system rupture set
 	// (e.g., we need to know the sub-seismo on-fault moment rates to reduce slip
 	// rates accordingly)
-	private NSHM_InversionTargetMFDs inversionMFDs;
+	private InversionTargetMFDs inversionMFDs;
 
 	private static final long serialVersionUID = 1091962054533163866L;
 
@@ -68,10 +68,15 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 	}
 
 	@Override
-	public NSHM_InversionTargetMFDs getInversionTargetMFDs() {
+	public InversionTargetMFDs getInversionTargetMFDs() {
 		if (inversionMFDs == null)
-			inversionMFDs = new NSHM_InversionTargetMFDs(this);
+			inversionMFDs = new InversionTargetMFDs(this);
 		return inversionMFDs;
+	}
+	
+	public NSHM_InversionFaultSystemRuptSet setInversionTargetMFDs(InversionTargetMFDs inversionMFDs) {
+		this.inversionMFDs = inversionMFDs;
+		return this;
 	}
 
 }

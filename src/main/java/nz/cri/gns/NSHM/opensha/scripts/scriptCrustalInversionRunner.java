@@ -62,7 +62,7 @@ public class scriptCrustalInversionRunner {
     protected static void generateRuptures(CommandLine cmd) throws IOException, DocumentException {
         File outputDir = new File(cmd.getOptionValue("outputDir"));
 //        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
-        File rupSetFile = new File(outputDir, "CFM_hk_slipdef0_scalingTMG2_rupture_set.zip");
+        File rupSetFile = new File(outputDir, "CFM_hk_slipdef50_TMG2_rupture_set.zip");
 
         NSHMRuptureSetBuilder builder = new NSHMRuptureSetBuilder();
 
@@ -118,11 +118,12 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        builder.setDownDipMinFill(0.8d)
+        builder
+        	.setDownDipMinFill(0.1d) //d,e null ; f 0.1 ;
 //        	.setThinningFactor(0.1)
-        	.setDownDipAspectRatio(2, 5, 7)
-        	.setDownDipSizeCoarseness(0.01)
-        	.setDownDipPositionCoarseness(0.01);
+        	.setDownDipAspectRatio(2, 5, 7) //d 2,5,5  ; e2,5,7 +f ;
+//        	.setDownDipSizeCoarseness(0.01)
+        	.setDownDipPositionCoarseness(0.05); //d 0.01 ; e 0.05 +f ;
 
 //        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
         builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
@@ -162,7 +163,7 @@ public class scriptCrustalInversionRunner {
         long syncInterval = 10; // seconds between inversion synchronisations
         File outputDir = new File(cmd.getOptionValue("outputDir"));
         //  File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
-        File solFile = new File(outputDir, "CFM_hk_slipdef0_scalingSHAW_solution.zip");
+        File solFile = new File(outputDir, "CFM_hk_slipdef0_scaling_TMG_solution_TEST_Non0_m5-3_eq10_ineq1000_minRRF0_bval0.94_2m_sf.zip");
         
         File rupSetFile = null;
 
@@ -188,6 +189,7 @@ public class scriptCrustalInversionRunner {
                 .setInversionMinutes(inversionMins)
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
+        		.setGutenbergRichterMFDWeights(10d, 1000d)
         		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);

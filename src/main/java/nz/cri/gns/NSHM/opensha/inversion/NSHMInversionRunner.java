@@ -261,8 +261,11 @@ public class NSHMInversionRunner {
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
-		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
-				mfdInequalityConstraintWt);
+//		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
+//				mfdInequalityConstraintWt);
+//		
+		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet, 
+				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 		return this;
 	}
 
