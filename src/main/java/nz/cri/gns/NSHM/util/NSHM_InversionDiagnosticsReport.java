@@ -49,6 +49,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		CommandLine cmd = null;
 		try {
 			cmd = parser.parse(options, args);
+			System.out.println("args " + args );
 		} catch (ParseException e) {
 			e.printStackTrace();
 			HelpFormatter formatter = new HelpFormatter();
@@ -83,7 +84,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 //			lines.add(topLink); lines.add("");
 //			lines.addAll(getPlausibilityLines(inputConfig, inputJumps));
 //			lines.add("");
-//		}	
+//		}
 
 		// length and magnitude distributions
 
@@ -101,6 +102,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		}
 
 		System.out.println("DONE building, writing markdown and HTML");
+		System.out.println(" to " + outputDir.getAbsolutePath());
 		writeMarkdown(outputDir, summary, lines, tocIndex);
 
 		if (indexDir != null) {
