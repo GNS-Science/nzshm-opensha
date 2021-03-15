@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import nz.cri.gns.NSHM.opensha.hazard.NSHMHazardCalculatorBuilder;
+import nz.cri.gns.NSHM.util.NSHMInversionDiagnosticsReportBuilder;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NSHM.opensha.inversion.NSHMInversionRunner;
@@ -148,4 +149,9 @@ public class NSHMPythonGateway {
 			FaultSystemIO.writeSol(solution, solutionFile);
 		}
 	}
+
+    public static NSHMInversionDiagnosticsReportBuilder createReportBuilder() {
+        return new NSHMInversionDiagnosticsReportBuilder();
+    }
+
 }

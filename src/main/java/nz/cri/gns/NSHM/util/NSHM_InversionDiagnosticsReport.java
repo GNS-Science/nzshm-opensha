@@ -37,14 +37,16 @@ import com.google.common.base.Preconditions;
 public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 
 	public static void main(String[] args) throws IOException, DocumentException {
-
 		System.setProperty("java.awt.headless", "true");
+		create(args).generatePage();
+	}
 
+	public static NSHM_InversionDiagnosticsReport create(String [] args) throws IOException, DocumentException {
 		Options options = createOptions();
 
 		CommandLineParser parser = new DefaultParser();
 
-		CommandLine cmd;
+		CommandLine cmd = null;
 		try {
 			cmd = parser.parse(options, args);
 		} catch (ParseException e) {
@@ -52,10 +54,8 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp(ClassUtils.getClassNameWithoutPackage(RupSetDiagnosticsPageGen.class), options, true);
 			System.exit(2);
-			return;
 		}
-
-		new NSHM_InversionDiagnosticsReport(cmd).generatePage();
+		return new NSHM_InversionDiagnosticsReport(cmd);
 	}
 
 	public NSHM_InversionDiagnosticsReport(CommandLine cmd) throws IOException, DocumentException {
@@ -137,13 +137,14 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		HistScalarValues compScalars = null;
 
 		try {
-			Range xRange = null;
-			plotRuptureHistogram(outputDir, "MAG_rates_log_cbc", inputScalars, compScalars, inputUniques, MAIN_COLOR,
-					true, true, xRange);
-			xRange = new Range(Math.pow(10, -6), Math.pow(10, -1));
+			Range yRange = null;
+			plotRuptureHistogram(outputDir, "MAG_rates_log", inputScalars, compScalars, inputUniques, MAIN_COLOR,
+					true, true, yRange);
+			yRange = new Range(Math.pow(10, -6), Math.pow(10, -1));
+			//yRange = new Range(Math.pow(10, Math.floor(Math.log10(minY))), Math.pow(10, Math.ceil(Math.log10(maxY))));
 
-			plotRuptureHistogram(outputDir, "MAG_rates_log_cbc_fixie", inputScalars, compScalars, inputUniques,
-					MAIN_COLOR, true, true, xRange);
+			plotRuptureHistogram(outputDir, "MAG_rates_log_fixed_yscale", inputScalars, compScalars, inputUniques,
+					MAIN_COLOR, true, true, yRange);
 
 //			plotRuptureHistograms(
 //					resourcesDir, "hist_"+ scalar.name(), table, inputScalars,
@@ -158,17 +159,17 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 
 	public static File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
 			HistScalarValues compScalarVals, HashSet<UniqueRupture> compUniques, Color color, boolean logY,
-			boolean rateWeighted, Range xRange) throws IOException {
+			boolean rateWeighted, Range yRange) throws IOException {
 		List<Integer> includeIndexes = new ArrayList<>();
 		for (int r = 0; r < scalarVals.rupSet.getNumRuptures(); r++)
 			includeIndexes.add(r);
 		return plotRuptureHistogram(outputDir, prefix, scalarVals, includeIndexes, compScalarVals, compUniques, color,
-				logY, rateWeighted, xRange);
+				logY, rateWeighted, yRange);
 	}
 
 	public static File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
 			Collection<Integer> includeIndexes, HistScalarValues compScalarVals, HashSet<UniqueRupture> compUniques,
-			Color color, boolean logY, boolean rateWeighted, Range xRange) throws IOException {
+			Color color, boolean logY, boolean rateWeighted, Range yRange) throws IOException {
 
 		List<Integer> indexesList = includeIndexes instanceof List<?> ? (List<Integer>) includeIndexes
 				: new ArrayList<>(includeIndexes);
@@ -185,15 +186,13 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		HistogramFunction hist = histScalar.getHistogram(track);
 		boolean logX = histScalar.isLogX();
 
-		// Range setup
-		if (xRange == null) {
+		Range xRange = null;
 			if (logX)
 				xRange = new Range(Math.pow(10, hist.getMinX() - 0.5 * hist.getDelta()),
 						Math.pow(10, hist.getMaxX() + 0.5 * hist.getDelta()));
 			else
 				xRange = new Range(hist.getMinX() - 0.5 * hist.getDelta(), hist.getMaxX() + 0.5 * hist.getDelta());
-		}
-		;
+
 
 		HistogramFunction commonHist = null;
 		if (compUniques != null)
@@ -273,7 +272,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		gp.setPlotLabelFontSize(21);
 		gp.setLegendFontSize(22);
 
-		Range yRange;
+		if (yRange == null) {
 		if (logY) {
 			double minY = Double.POSITIVE_INFINITY;
 			double maxY = 0d;
@@ -296,11 +295,13 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 				}
 			}
 			yRange = new Range(Math.pow(10, Math.floor(Math.log10(minY))), Math.pow(10, Math.ceil(Math.log10(maxY))));
+
 		} else {
 			double maxY = hist.getMaxY();
 			if (compHist != null)
 				maxY = Math.max(maxY, compHist.getMaxY());
 			yRange = new Range(0, 1.05 * maxY);
+		}
 		}
 
 		gp.drawGraphPanel(spec, logX, logY, xRange, yRange);
