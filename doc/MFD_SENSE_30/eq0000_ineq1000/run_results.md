@@ -1,0 +1,28 @@
+## Inversion run metrics
+
+### MFD_weight_sensitivity_solution_eq(0000)_ineq(1000)_dur(030).zip
+
+
+Avg Perturbs Per Rup: 4627/119322 = 0.03877742578904142
+Num rups actually perturbed: 2574/119322 (2.1571882 %)
+Avg Perturbs Per Perturbed Rup: 4627/2574 = 1.7975912975912975
+Num rups above waterlevel: 2574/119322 (2.1571882 %)
+
+
+****** Moment and Rupture Rate Metatdata ******
+Num Ruptures: 119322
+Num Non-Zero Rups: 2574/119322 (2.157188 %)
+Orig (creep reduced) Fault Moment Rate: 4.980130196089947E19
+Moment Reduction (for subseismogenic ruptures only): 0.0
+Subseismo Moment Reduction Fraction (relative to creep reduced): 0.0
+Fault Target Supra Seis Moment Rate (subseismo and creep reduced): 4.980130196089947E19
+Fault Solution Supra Seis Moment Rate: 9.662762700034025E18
+
+
+****** byFaultNameMetrics Metadata ******
+
+Total rupture rate (M7+): 0.036645637863216556
+
+
+****** Larges Moment Rate Discrepancies ******
+10000. Hikurangi; col: 0, row: 0	target: 4.980130196089947E19	solution: 4.732648044160263E19	diff: 2.4748215192968397E18
