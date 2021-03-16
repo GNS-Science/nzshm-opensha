@@ -1,6 +1,6 @@
 # Summary of MFD weighting sensitivity test
 
-## 25 30 mins inversions performed Mar 15. 2021
+## 25 Inversions of 30 minutes, performed Mar 15. 2021
 
 Test permutations of mfd_equality and inequality weighting are used to define the Target MFD inversion
 constraints. Inversions of 30 minutes were performed and MagRate curves generated.
