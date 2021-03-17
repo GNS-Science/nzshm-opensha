@@ -22,9 +22,9 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  * This represents all of the inversion configuration parameters specific to an
  * individual model on the NZSHM22 logic tree. Parameters can be fetched for a
  * given logic tree branch with the <code>forModel(...)</code> method.
- * 
+ *
  * based on scratch.UCERF3.inversion.UCERF3InversionConfiguration
- * 
+ *
  * @author chrisbc
  *
  */
@@ -57,7 +57,7 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 	private String metadata;
 
 	/**
-	 * 
+	 *
 	 */
 	public NSHM_SubductionInversionConfiguration() {
 	}
@@ -68,7 +68,7 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 	/**
 	 * This generates an inversion configuration for the given inversion model and
 	 * rupture set
-	 * 
+	 *
 	 * @param model
 	 * @param rupSet
 	 * @return
@@ -84,7 +84,7 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 	/**
 	 * This generates an inversion configuration for the given inversion model and
 	 * rupture set
-	 * 
+	 *
 	 * @param model
 	 * @param rupSet
 	 * @param mfdEqualityConstraintWt   weight of magnitude-distribution EQUALITY
@@ -103,7 +103,7 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 	/**
 	 * This generates an inversion configuration for the given inversion model and
 	 * rupture set
-	 * 
+	 *
 	 * @param model
 	 * @param rupSet
 	 * @param mfdEqualityConstraintWt   weight of magnitude-distribution EQUALITY
@@ -179,7 +179,7 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 //		 * ******************************************* */
 //		// define model specific value here (leave them as null or unassigned, then set values
 //		// in the below switch statement
-//		
+//
 //		// weight of nucleation MFD constraint - applied on subsection basis
 		double nucleationMFDConstraintWt;
 		// fraction of the minimum rupture rate basis to be used as initial rates
@@ -214,9 +214,9 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 					mfdConstraints.get(0).getMagFreqDist().getMinX(), MFDTransitionMag);
 			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
 					mfdConstraints.get(0).getMagFreqDist().getMaxX());
-		} else if (mfdEqualityConstraintWt > 0.0) {
+		} else if (mfdEqualityConstraintWt > 0.0) { // no ineq wt
 			mfdEqualityConstraints = mfdConstraints;
-		} else if (mfdInequalityConstraintWt > 0.0) {
+		} else if (mfdInequalityConstraintWt > 0.0) { // no eq wt
 			mfdInequalityConstraints = mfdConstraints;
 		} else {
 			// no MFD constraints, do nothing
@@ -227,7 +227,8 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 				// MFD config
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
 				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-				.setMfdEqualityConstraints(mfdEqualityConstraints).setMfdInequalityConstraints(mfdInequalityConstraints)
+				.setMfdEqualityConstraints(mfdEqualityConstraints)
+				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)

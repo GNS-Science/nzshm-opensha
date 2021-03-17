@@ -60,7 +60,7 @@ import scratch.UCERF3.utils.paleoRateConstraints.UCERF3_PaleoProbabilityModel;
  * vectors) for a given rupture set, inversion configuration, paleo rate
  * constraints, improbability constraint, and paleo probability model. It can
  * also save these inputs to a zip file to be run on high performance computing.
- * 
+ *
  *
  */
 public class NSHM_InversionInputGenerator extends InversionInputGenerator {
@@ -100,7 +100,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 	/**
 	 * Loads the default paleo probability model for UCERF3 (Glenn's file). Can be
 	 * turned into an enum if we get alternatives
-	 * 
+	 *
 	 * @return
 	 * @throws IOException
 	 */
@@ -113,6 +113,14 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 	private static List<InversionConstraint> buildConstraints(NSHM_InversionFaultSystemRuptSet rupSet,
 			NSHM_InversionConfiguration config, List<PaleoRateConstraint> paleoRateConstraints,
 			List<AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
+
+		System.out.println("buildConstraints");
+		System.out.println("config.getSlipRateConstraintWt_normalized(): " + config.getSlipRateConstraintWt_normalized());
+		System.out.println("config.getSlipRateConstraintWt_unnormalized(): " +  config.getSlipRateConstraintWt_unnormalized());
+		System.out.println("config.getMinimizationConstraintWt(): " +  config.getMinimizationConstraintWt());
+		System.out.println("config.getMagnitudeEqualityConstraintWt(): " +  config.getMagnitudeEqualityConstraintWt());
+		System.out.println("config.getMagnitudeInequalityConstraintWt(): " +   config.getMagnitudeInequalityConstraintWt());
+		System.out.println("config.getNucleationMFDConstraintWt():" + config.getNucleationMFDConstraintWt());
 
 		// builds constraint instances
 		List<InversionConstraint> constraints = new ArrayList<>();
@@ -128,11 +136,11 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //		if (config.getPaleoRateConstraintWt() > 0d)
 //			constraints.add(new PaleoRateInversionConstraint(rupSet, config.getPaleoRateConstraintWt(),
 //					paleoRateConstraints, paleoProbabilityModel));
-//		
+//
 //		if (config.getPaleoSlipConstraintWt() > 0d)
 //			constraints.add(new PaleoSlipInversionConstraint(rupSet, config.getPaleoSlipConstraintWt(),
 //					aveSlipConstraints, sectSlipRateReduced));
-//		
+//
 //		if (config.getRupRateConstraintWt() > 0d) {
 //			// This is the RupRateConstraintWt for ruptures not in UCERF2
 //			double zeroRupRateConstraintWt = 0;
@@ -144,7 +152,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //		// This constrains rates of ruptures that differ by only 1 subsection
 //		if (config.getRupRateSmoothingConstraintWt() > 0)
 //			constraints.add(new RupRateSmoothingInversionConstraint(config.getRupRateSmoothingConstraintWt(), rupSet));
-//		
+//
 
 		// Rupture rate minimization constraint
 		// Minimize the rates of ruptures below SectMinMag (strongly so that they have
@@ -186,10 +194,10 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 		}
 
 //		// MFD Smoothing constraint - MFDs spatially smooth along adjacent subsections on a parent section (Laplacian smoothing)
-//		if (config.getMFDSmoothnessConstraintWt() > 0.0 || config.getMFDSmoothnessConstraintWtForPaleoParents() > 0.0) {  
+//		if (config.getMFDSmoothnessConstraintWt() > 0.0 || config.getMFDSmoothnessConstraintWtForPaleoParents() > 0.0) {
 //			if (MFDConstraints == null)
 //				MFDConstraints = FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
-//			
+//
 //			HashSet<Integer> paleoParentIDs = new HashSet<>();
 //			// Get list of parent IDs that have a paleo data point (paleo event rate or paleo mean slip)
 //			if (config.getPaleoRateConstraintWt() > 0.0) {
@@ -205,7 +213,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //					paleoParentIDs.add(paleoParentID);
 //				}
 //			}
-//			
+//
 //			constraints.add(new MFDLaplacianSmoothingInversionConstraint(rupSet, config.getMFDSmoothnessConstraintWt(),
 //					config.getMFDSmoothnessConstraintWtForPaleoParents(), paleoParentIDs, MFDConstraints));
 //		}
@@ -213,7 +221,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 //		// Constraint solution moment to equal deformation-model moment
 //		if (config.getMomentConstraintWt() > 0.0)
 //			constraints.add(new TotalMomentInversionConstraint(rupSet, config.getMomentConstraintWt(), rupSet.getTotalReducedMomentRate()));
-//		
+//
 
 //		// Constrain paleoseismically-visible event rates along parent sections to be smooth
 //		if (config.getEventRateSmoothnessWt() > 0.0)
@@ -258,7 +266,7 @@ public class NSHM_InversionInputGenerator extends InversionInputGenerator {
 	 * trench is located (Glenn's x/L). It is between 0 and 0.5. This currently puts
 	 * the trench in the middle of the subsection. We need this for the UCERF3
 	 * probability of detecting a rupture in a trench.
-	 * 
+	 *
 	 * @return
 	 */
 	public static double getDistanceAlongRupture(List<FaultSection> sectsInRup, int targetSectIndex) {
