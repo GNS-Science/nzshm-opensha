@@ -42,7 +42,7 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 		System.out.println("Done!");
 	}
 
-	public static NSHM_InversionRateDiagnosticsPlot create(String [] args) throws IOException, DocumentException {
+	public static NSHM_InversionRateDiagnosticsPlot create(String[] args) throws IOException, DocumentException {
 		Options options = createOptions();
 
 		CommandLineParser parser = new DefaultParser();
@@ -50,7 +50,7 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 		CommandLine cmd = null;
 		try {
 			cmd = parser.parse(options, args);
-			System.out.println("args " + args );
+			System.out.println("args " + args);
 		} catch (ParseException e) {
 			e.printStackTrace();
 			HelpFormatter formatter = new HelpFormatter();
@@ -67,7 +67,7 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 	@Override
 	public void generatePage() throws IOException { // throws IOException
 
-		//just plot the mag-rate curves for now
+		// just plot the mag-rate curves for now
 		for (HistScalar scalar : HistScalar.values()) {
 			if (scalar != HistScalar.MAG)
 				continue;
@@ -93,16 +93,15 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 
 		try {
 			Range yRange = null;
-			plotRuptureHistogram(outputDir, "MAG_rates_log", inputScalars, compScalars, inputUniques, MAIN_COLOR,
-					true, true, yRange);
+			plotRuptureHistogram(outputDir, "MAG_rates_log", inputScalars, compScalars, inputUniques, MAIN_COLOR, true,
+					true, yRange);
 			yRange = new Range(Math.pow(10, -6), Math.pow(10, -1));
 
 			plotRuptureHistogram(outputDir, "MAG_rates_log_fixed_yscale", inputScalars, compScalars, inputUniques,
 					MAIN_COLOR, true, true, yRange);
 
-		} catch (IllegalStateException wee) {
-			// ah well
-			System.out.println("Exception caught in Catch block");
+		} catch (IllegalStateException err) {
+			System.out.println("Exception caught in Catch block: " + err.getLocalizedMessage());
 		}
 		return;
 	}
@@ -137,12 +136,11 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 		boolean logX = histScalar.isLogX();
 
 		Range xRange = null;
-			if (logX)
-				xRange = new Range(Math.pow(10, hist.getMinX() - 0.5 * hist.getDelta()),
-						Math.pow(10, hist.getMaxX() + 0.5 * hist.getDelta()));
-			else
-				xRange = new Range(hist.getMinX() - 0.5 * hist.getDelta(), hist.getMaxX() + 0.5 * hist.getDelta());
-
+		if (logX)
+			xRange = new Range(Math.pow(10, hist.getMinX() - 0.5 * hist.getDelta()),
+					Math.pow(10, hist.getMaxX() + 0.5 * hist.getDelta()));
+		else
+			xRange = new Range(hist.getMinX() - 0.5 * hist.getDelta(), hist.getMaxX() + 0.5 * hist.getDelta());
 
 		HistogramFunction commonHist = null;
 		if (compUniques != null)
@@ -223,35 +221,36 @@ public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen 
 		gp.setLegendFontSize(22);
 
 		if (yRange == null) {
-		if (logY) {
-			double minY = Double.POSITIVE_INFINITY;
-			double maxY = 0d;
-			for (DiscretizedFunc func : funcs) {
-				for (Point2D pt : func) {
-					double y = pt.getY();
-					if (y > 0) {
-						minY = Math.min(minY, y);
-						maxY = Math.max(maxY, y);
+			if (logY) {
+				double minY = Double.POSITIVE_INFINITY;
+				double maxY = 0d;
+				for (DiscretizedFunc func : funcs) {
+					for (Point2D pt : func) {
+						double y = pt.getY();
+						if (y > 0) {
+							minY = Math.min(minY, y);
+							maxY = Math.max(maxY, y);
+						}
 					}
 				}
-			}
-			if (compHist != null) {
-				for (Point2D pt : compHist) {
-					double y = pt.getY();
-					if (y > 0) {
-						minY = Math.min(minY, y);
-						maxY = Math.max(maxY, y);
+				if (compHist != null) {
+					for (Point2D pt : compHist) {
+						double y = pt.getY();
+						if (y > 0) {
+							minY = Math.min(minY, y);
+							maxY = Math.max(maxY, y);
+						}
 					}
 				}
-			}
-			yRange = new Range(Math.pow(10, Math.floor(Math.log10(minY))), Math.pow(10, Math.ceil(Math.log10(maxY))));
+				yRange = new Range(Math.pow(10, Math.floor(Math.log10(minY))),
+						Math.pow(10, Math.ceil(Math.log10(maxY))));
 
-		} else {
-			double maxY = hist.getMaxY();
-			if (compHist != null)
-				maxY = Math.max(maxY, compHist.getMaxY());
-			yRange = new Range(0, 1.05 * maxY);
-		}
+			} else {
+				double maxY = hist.getMaxY();
+				if (compHist != null)
+					maxY = Math.max(maxY, compHist.getMaxY());
+				yRange = new Range(0, 1.05 * maxY);
+			}
 		}
 
 		gp.drawGraphPanel(spec, logX, logY, xRange, yRange);
