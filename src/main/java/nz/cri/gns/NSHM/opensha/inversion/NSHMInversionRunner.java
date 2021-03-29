@@ -160,55 +160,61 @@ public class NSHMInversionRunner {
 	 * @throws IOException
 	 */
 	public NSHMInversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);	
+		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-		
+
 		InversionFaultSystemRupSet rupSetB = InversionFaultSystemRupSet.fromRuptureSet(rupSetA, branch);
 		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSetB);
 		return this;
-		
-		/* 
+
+		/*
 		 * BEGIN Attempt one
 		 * 
 		 * an attempt to build ClusterRups outside the init - probably a bad idea.
 		 * 
-		// here we're trying to initialise Clusters properly
-		SectionDistanceAzimuthCalculator distCalc = rupSetA.getPlausibilityConfiguration().getDistAzCalc();
-		double maxDist = rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist();
-		boolean cumulativeJumps = true; //rupSet.getPlausibilityConfiguration().getDistAzCalc().
-		RuptureConnectionSearch search = new RuptureConnectionSearch(rupSetA, distCalc, maxDist, cumulativeJumps);
-		rupSetA.buildClusterRups(search); 
-		*
-		* END Attempt one
-		* 
-		*/		
-		
-		/* 
+		 * // here we're trying to initialise Clusters properly
+		 * SectionDistanceAzimuthCalculator distCalc =
+		 * rupSetA.getPlausibilityConfiguration().getDistAzCalc(); double maxDist =
+		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
+		 * (); boolean cumulativeJumps = true;
+		 * //rupSet.getPlausibilityConfiguration().getDistAzCalc().
+		 * RuptureConnectionSearch search = new RuptureConnectionSearch(rupSetA,
+		 * distCalc, maxDist, cumulativeJumps); rupSetA.buildClusterRups(search);
+		 *
+		 * END Attempt one
+		 * 
+		 */
+
+		/*
 		 * BEGIN Attempt two
 		 * 
-		 * Code block here is an attempt to build new InversionFaultSystemRupSet using the method outlined
-		 * in scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests 
+		 * Code block here is an attempt to build new InversionFaultSystemRupSet using
+		 * the method outlined in
+		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests
 		 * 
 		 * this left me confused about OldPlausibilityConfiguration.
 		 * 
-		 * It also required a new constructor on SectionConnectionStrategy whivh seemd off.
-		
-		double maxDist = rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist();
-		SectionConnectionStrategy connectionStrategy = new UCERF3SectionConnectionStrategy(maxDist, null);
-		OldPlausibilityConfiguration op = null;
-		
-		//using a new SectionConnectionStrategy constructor
-		SectionClusterList clusters = new SectionClusterList(rupSetA, connectionStrategy, op);
-		
-		//Old constructors (as per package scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests )
-		InversionFaultSystemRupSet rupSetB = new InversionFaultSystemRupSet(branch,
-				clusters,
-				rupSetA.getFaultSectionDataList());
-		*
-		* END Attempt 2
-		* 
-		*/
-		
+		 * It also required a new constructor on SectionConnectionStrategy whivh seemd
+		 * off.
+		 * 
+		 * double maxDist =
+		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
+		 * (); SectionConnectionStrategy connectionStrategy = new
+		 * UCERF3SectionConnectionStrategy(maxDist, null); OldPlausibilityConfiguration
+		 * op = null;
+		 * 
+		 * //using a new SectionConnectionStrategy constructor SectionClusterList
+		 * clusters = new SectionClusterList(rupSetA, connectionStrategy, op);
+		 * 
+		 * //Old constructors (as per package
+		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests )
+		 * InversionFaultSystemRupSet rupSetB = new InversionFaultSystemRupSet(branch,
+		 * clusters, rupSetA.getFaultSectionDataList());
+		 *
+		 * END Attempt 2
+		 * 
+		 */
+
 	}
 
 	/**
@@ -282,7 +288,7 @@ public class NSHMInversionRunner {
 //		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
 //				mfdInequalityConstraintWt);
 //		
-		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet, 
+		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
 				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 		return this;
 	}
