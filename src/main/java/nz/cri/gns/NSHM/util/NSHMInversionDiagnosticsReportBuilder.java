@@ -8,6 +8,7 @@ public class NSHMInversionDiagnosticsReportBuilder {
     String name;
     String ruptureSetName;
     String outputDir;
+    String faultFilter;
 
     public NSHMInversionDiagnosticsReportBuilder() {
     }
@@ -26,13 +27,29 @@ public class NSHMInversionDiagnosticsReportBuilder {
         this.outputDir = outputDir;
         return this;
     }
-
-    public void generate() throws IOException, DocumentException {
-        String[] args = new String[]
-                {"--name", name,
-                        "--rupture-set", ruptureSetName,
-                        "--output-dir", outputDir};
-        NSHM_InversionDiagnosticsReport.create(args).generatePage();
+    
+    public NSHMInversionDiagnosticsReportBuilder setFaultFilter(String faultFilter) {
+    	this.faultFilter = faultFilter;
+    	return this;
     }
 
+    public void generateRateDiagnosticsPlot() throws IOException, DocumentException {
+        String[] args = new String[]
+                {"--name", name,
+                  "--rupture-set", ruptureSetName,
+                  "--output-dir", outputDir};
+        NSHM_InversionRateDiagnosticsPlot.create(args).generatePage();
+    }
+
+    public void generateFilteredInversionDiagnosticsReport() throws IOException, DocumentException {
+        String[] args = new String[]
+                {"--name", name,
+                  "--rupture-set", ruptureSetName,
+                  "--output-dir", outputDir,
+                  "--fault-name", faultFilter};
+        NSHM_FilteredInversionDiagnosticsReport.create(args).generatePage();
+    }
+    
+    
+    
 }

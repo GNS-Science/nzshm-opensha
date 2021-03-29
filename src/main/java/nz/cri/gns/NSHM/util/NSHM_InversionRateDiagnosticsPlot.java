@@ -34,14 +34,15 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosti
 
 import com.google.common.base.Preconditions;
 
-public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
+public class NSHM_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageGen {
 
 	public static void main(String[] args) throws IOException, DocumentException {
 		System.setProperty("java.awt.headless", "true");
 		create(args).generatePage();
+		System.out.println("Done!");
 	}
 
-	public static NSHM_InversionDiagnosticsReport create(String [] args) throws IOException, DocumentException {
+	public static NSHM_InversionRateDiagnosticsPlot create(String [] args) throws IOException, DocumentException {
 		Options options = createOptions();
 
 		CommandLineParser parser = new DefaultParser();
@@ -56,58 +57,21 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 			formatter.printHelp(ClassUtils.getClassNameWithoutPackage(RupSetDiagnosticsPageGen.class), options, true);
 			System.exit(2);
 		}
-		return new NSHM_InversionDiagnosticsReport(cmd);
+		return new NSHM_InversionRateDiagnosticsPlot(cmd);
 	}
 
-	public NSHM_InversionDiagnosticsReport(CommandLine cmd) throws IOException, DocumentException {
+	public NSHM_InversionRateDiagnosticsPlot(CommandLine cmd) throws IOException, DocumentException {
 		super(cmd);
-		// TODO Auto-generated constructor stub
 	};
 
 	@Override
 	public void generatePage() throws IOException { // throws IOException
-		List<String> lines = new ArrayList<>();
-		lines.add("# Rupture Set Diagnostics: " + inputName);
 
-		lines.add("");
-		lines.addAll(RupSetDiagnosticsPageGen.getBasicLines(inputRupSet, inputRups));
-		lines.add("");
-
-		int tocIndex = lines.size();
-		String topLink = "*[(top)](#table-of-contents)*";
-
-		File resourcesDir = new File(outputDir, "resources");
-		Preconditions.checkState(resourcesDir.exists() || resourcesDir.mkdir());
-
-//		if (inputConfig != null) {
-//			lines.add("## Plausibility Configuration");
-//			lines.add(topLink); lines.add("");
-//			lines.addAll(getPlausibilityLines(inputConfig, inputJumps));
-//			lines.add("");
-//		}
-
-		// length and magnitude distributions
-
-		lines.add("## Rupture Size Histograms");
-		lines.add(topLink);
-		lines.add("");
-
-		File rupHtmlDir = new File(outputDir, "hist_rup_pages");
-		Preconditions.checkState(rupHtmlDir.exists() || rupHtmlDir.mkdir());
-
-		if (!skipHistograms) {
-			for (HistScalar scalar : HistScalar.values()) {
-				lines.addAll(generateScalarLines(scalar, topLink, resourcesDir));
-			}
-		}
-
-		System.out.println("DONE building, writing markdown and HTML");
-		System.out.println(" to " + outputDir.getAbsolutePath());
-		writeMarkdown(outputDir, summary, lines, tocIndex);
-
-		if (indexDir != null) {
-			System.out.println("Writing index to " + indexDir.getAbsolutePath());
-			writeIndex(indexDir);
+		//just plot the mag-rate curves for now
+		for (HistScalar scalar : HistScalar.values()) {
+			if (scalar != HistScalar.MAG)
+				continue;
+			generateScalarLines(scalar, outputDir);
 		}
 
 		if (distAzCacheFile != null && (numAzCached < distAzCalc.getNumCachedAzimuths()
@@ -117,21 +81,10 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		}
 	}
 
-	private List<String> generateScalarLines(HistScalar scalar, String topLink, File resourcesDir) throws IOException {
+	private void generateScalarLines(HistScalar scalar, File resourcesDir) throws IOException {
 
 		List<HistScalarValues> inputScalarVals = new ArrayList<>();
-		List<String> lines = new ArrayList<>();
 
-		if (scalar != HistScalar.MAG)
-			return lines;
-
-		lines.add("### " + scalar.name);
-		lines.add(topLink);
-		lines.add("");
-		lines.add(scalar.description);
-		lines.add("");
-
-		TableBuilder table = MarkdownUtils.tableBuilder();
 		HistScalarValues inputScalars = new HistScalarValues(scalar, inputRupSet, inputSol, inputRups, distAzCalc);
 		inputScalarVals.add(inputScalars);
 
@@ -143,23 +96,18 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 			plotRuptureHistogram(outputDir, "MAG_rates_log", inputScalars, compScalars, inputUniques, MAIN_COLOR,
 					true, true, yRange);
 			yRange = new Range(Math.pow(10, -6), Math.pow(10, -1));
-			//yRange = new Range(Math.pow(10, Math.floor(Math.log10(minY))), Math.pow(10, Math.ceil(Math.log10(maxY))));
 
 			plotRuptureHistogram(outputDir, "MAG_rates_log_fixed_yscale", inputScalars, compScalars, inputUniques,
 					MAIN_COLOR, true, true, yRange);
 
-//			plotRuptureHistograms(
-//					resourcesDir, "hist_"+ scalar.name(), table, inputScalars,
-//					inputUniques, compScalars, compUniques);
 		} catch (IllegalStateException wee) {
 			// ah well
 			System.out.println("Exception caught in Catch block");
 		}
-
-		return lines;
+		return;
 	}
 
-	public static File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
+	public File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
 			HistScalarValues compScalarVals, HashSet<UniqueRupture> compUniques, Color color, boolean logY,
 			boolean rateWeighted, Range yRange) throws IOException {
 		List<Integer> includeIndexes = new ArrayList<>();
@@ -169,7 +117,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 				logY, rateWeighted, yRange);
 	}
 
-	public static File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
+	public File plotRuptureHistogram(File outputDir, String prefix, HistScalarValues scalarVals,
 			Collection<Integer> includeIndexes, HistScalarValues compScalarVals, HashSet<UniqueRupture> compUniques,
 			Color color, boolean logY, boolean rateWeighted, Range yRange) throws IOException {
 
@@ -260,7 +208,7 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 			}
 		}
 
-		String title = histScalar.name + " Histogram";
+		String title = inputName + " " + histScalar.name + " Histogram";
 		String xAxisLabel = histScalar.xAxisLabel;
 		String yAxisLabel = rateWeighted ? "Annual Rate" : "Count";
 
@@ -309,9 +257,9 @@ public class NSHM_InversionDiagnosticsReport extends RupSetDiagnosticsPageGen {
 		gp.drawGraphPanel(spec, logX, logY, xRange, yRange);
 		gp.getChartPanel().setSize(800, 600);
 		File pngFile = new File(outputDir, prefix + ".png");
-		File pdfFile = new File(outputDir, prefix + ".pdf");
+//		File pdfFile = new File(outputDir, prefix + ".pdf");
 		gp.saveAsPNG(pngFile.getAbsolutePath());
-		gp.saveAsPDF(pdfFile.getAbsolutePath());
+//		gp.saveAsPDF(pdfFile.getAbsolutePath());
 
 		return pngFile;
 	}
