@@ -53,7 +53,7 @@ public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		/*
 		 * build a map of downdip ruptures with length
 		 */
-		Map<Integer, Double> ruptureLengths = new HashMap<>();
+		Map<ClusterRupture, Double> ruptureLengths = new HashMap<>();
 		Integer currentMin; // , currentMax;
 
 		for (int r = 0; r < ruptures.size(); r++) {
@@ -83,7 +83,7 @@ public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 				}
 			}
 			if (length > 0)
-				ruptureLengths.put(rup.hashCode(), length);
+				ruptureLengths.put(rup, length);
 		}
 
 		for (int r = 0; r < ruptures.size(); r++) {
@@ -109,8 +109,8 @@ public class NSHMSlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 			}
 
 			// extend length for downdip ruptures
-			if (ruptureLengths.get(rup.hashCode()) != null)
-				totLength += ruptureLengths.get(rup.hashCode());
+			if (ruptureLengths.get(rup) != null)
+				totLength += ruptureLengths.get(rup);
 
 			rupAreas[r] = totArea;
 			rupLengths[r] = totLength;

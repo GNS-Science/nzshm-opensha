@@ -9,7 +9,6 @@ import nz.cri.gns.NSHM.opensha.ruptures.downDip.*;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder.ParentSectsRupDebugCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
@@ -17,8 +16,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.To
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ConnectionPointsPermutationStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.UCERF3ClusterPermuationStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveClusterPermuationStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 
 import org.opensha.sha.faultSurface.FaultSection;
@@ -308,7 +306,7 @@ public class NSHMRuptureSetBuilder {
 		case UCERF3:
 			// creates ruptures covering the incremental permutations of sub-sections in
 			// each cluster
-			permutationStrategy = new UCERF3ClusterPermuationStrategy();
+			permutationStrategy = new ExhaustiveClusterPermuationStrategy();
 			break;
 		}
 
@@ -355,22 +353,23 @@ public class NSHMRuptureSetBuilder {
 
 	private void buildConfig() {
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
-		JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
+		///JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
 
 		// connection strategy: parent faults connect at closest point, and only when
 		// dist <=5 km
 		ClusterConnectionStrategy connectionStrategy = new FaultTypeSeparationConnectionStrategy(downDipRegistry,
 				subSections, distAzCalc, maxDistance);
+
 		System.out.println("Built connectionStrategy");
 
 		int maxNumSplays = 0; // don't allow any splays
 
 		PlausibilityConfiguration.Builder configBuilder = PlausibilityConfiguration
 				.builder(connectionStrategy, distAzCalc).maxSplays(maxNumSplays)
-				.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
-				.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
-				.add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc,
-						maxCumulativeAzimuthChange))
+				//.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
+				//.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
+				//.add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc,
+				//		maxCumulativeAzimuthChange))
 				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
 		if (faultIdfilterType != null) {
 			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
@@ -387,12 +386,13 @@ public class NSHMRuptureSetBuilder {
 	 * @throws IOException
 	 */
 	public SlipAlongRuptureModelRupSet buildRuptureSet() throws DocumentException, IOException {
-
-		loadFaults();
-		if (null != downDipFile) {
+		if (fsdFile != null)
+			loadFaults();
+		
+		if (downDipFile != null)
 			// TODO call this multiple times to implement multiple downdip faults
 			loadSubductionFault(10000, downDipFaultName, downDipFile);
-		}
+		
 		System.out.println("Have " + subSections.size() + " sub-sections in total");
 
 		buildConfig();
@@ -424,10 +424,19 @@ public class NSHMRuptureSetBuilder {
 
 		// TODO: consider overloading this for Hikurangi to provide
 		// Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
-		NSHMSlipEnabledRuptureSet rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
-				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-		rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
-		return rupSet;
+		NSHMSlipEnabledRuptureSet rupSet = null;
+		try {
+//			rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
+//					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
+			rupSet = new NSHMSlipEnabledRuptureSet(ruptures, subSections,
+					ScalingRelationships.TMG_SUB_2017, SlipAlongRuptureModels.UNIFORM);
+			
+			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());	
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return rupSet;	
 	}
 
 	/**

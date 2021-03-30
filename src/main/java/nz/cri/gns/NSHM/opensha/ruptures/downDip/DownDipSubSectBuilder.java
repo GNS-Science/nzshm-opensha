@@ -32,13 +32,24 @@ public class DownDipSubSectBuilder {
 	private Map<Integer, Integer> idToColMap;
 	//	private static Random slipRateGenerator = new Random();
 	
-	private static DownDipFaultSection buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
+	private static DownDipFaultSection buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip, double slipRate) {
 		DownDipFaultSection fsd = new DownDipFaultSection();
 
 		//hack for testing
 		//float divisor = if (sectionId < 100) ? 
 		//		double aveLongTermSlipRate = slipRateGenerator.nextDouble() * 0.2;
-		fsd.setAveSlipRate(25d);
+		
+		/* a default of -1000 for no slip rate data */
+		// South: -1000, centre:-2000, north:-3000
+		if (slipRate == -1000.0)
+			fsd.setAveSlipRate(0.0);
+		if (slipRate == -2000.0)
+			fsd.setAveSlipRate(0.0);
+		if (slipRate == -3000.0)
+			fsd.setAveSlipRate(50.0); 
+		if (slipRate >= 0.0)
+			fsd.setAveSlipRate(slipRate);
+
 		fsd.setSectionId(sectionId);
 		fsd.setFaultTrace(trace);
 		fsd.setAveUpperDepth(upper);
@@ -48,23 +59,32 @@ public class DownDipSubSectBuilder {
 		return fsd.clone();
 	}
 	
+	
+	private static double fixLongitudeOffset(String longitude) {
+		double lon = Float.parseFloat((String) longitude);
+		if (lon < 0)
+			lon += 360.0d;
+		return lon;
+	}
+	
 	private static DownDipFaultSection buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
 		// along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
 		// [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]	
 		FaultTrace trace = new FaultTrace("SubductionTile_" + (String)row.get(0) + "_" + (String)row.get(1) );
 		trace.add(new Location(Float.parseFloat((String)row.get(3)), 
-			Float.parseFloat((String)row.get(2)), 
+			fixLongitudeOffset(row.get(2)), 
 			Float.parseFloat((String)row.get(7)))
 		);
 		trace.add(new Location(Float.parseFloat((String)row.get(5)),    //lat
-			Float.parseFloat((String)row.get(4)), 						//lon
+			fixLongitudeOffset(row.get(4)), 							//lon
 			Float.parseFloat((String)row.get(7)))						//top_depth (km)
 		);
 	
 		return buildFSD(sectionId, trace, 
 			Float.parseFloat((String)row.get(7)), //top
 			Float.parseFloat((String)row.get(8)), //bottom
-			Float.parseFloat((String)row.get(6))); //dip	
+			Float.parseFloat((String)row.get(6)), //dip
+			Float.parseFloat((String)row.get(9))); //slip_deficit (or slip rate)
 	}
 
     /**

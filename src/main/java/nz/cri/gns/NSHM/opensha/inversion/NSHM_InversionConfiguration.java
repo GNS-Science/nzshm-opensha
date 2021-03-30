@@ -8,11 +8,13 @@ import org.dom4j.Element;
 import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import com.google.common.collect.Lists;
 
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 
@@ -35,16 +37,16 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	private SlipRateConstraintWeightingType slipRateWeighting;
 //	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
-	private double magnitudeEqualityConstraintWt;
-	private double magnitudeInequalityConstraintWt;
+	protected double magnitudeEqualityConstraintWt;
+	protected double magnitudeInequalityConstraintWt;
 //	private double rupRateConstraintWt;
 //	private double participationSmoothnessConstraintWt;
 //	private double participationConstraintMagBinSize;
-//	private double nucleationMFDConstraintWt;
+	private double nucleationMFDConstraintWt;
 //	private double mfdSmoothnessConstraintWt;
 //	private double mfdSmoothnessConstraintWtForPaleoParents;
 //	private double rupRateSmoothingConstraintWt;
-//	private double minimizationConstraintWt;
+	private double minimizationConstraintWt;
 //	private double momentConstraintWt;
 //	private double parkfieldConstraintWt;
 //	private double[] aPrioriRupConstraint;
@@ -268,7 +270,8 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		double momentConstraintWt = 0;
 
 		// get MFD constraints
-		List<MFD_InversionConstraint> mfdConstraints = rupSet.getInversionTargetMFDs().getMFDConstraints();
+		List<MFD_InversionConstraint> mfdConstraints = ((NSHM_InversionTargetMFDs) rupSet.getInversionTargetMFDs())
+				.getMFDConstraints();
 
 		double MFDTransitionMag = 7.85; // magnitude to switch from MFD equality to MFD inequality
 
@@ -288,7 +291,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		double participationSmoothnessConstraintWt;
 //		
 //		// weight of nucleation MFD constraint - applied on subsection basis
-//		double nucleationMFDConstraintWt;
+		double nucleationMFDConstraintWt;
 //		
 //		// weight of spatial MFD smoothness constraint (recommended:  1000)
 //		double mfdSmoothnessConstraintWt;
@@ -298,36 +301,41 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		double eventRateSmoothnessWt;
 //		
 //		// fraction of the minimum rupture rate basis to be used as initial rates
-//		double minimumRuptureRateFraction;
+		double minimumRuptureRateFraction = 0;
 //		
 //		double[] aPrioriRupConstraint;
-//		double[] initialRupModel;
-//		double[] minimumRuptureRateBasis;
+		double[] initialRupModel = null;
+		double[] minimumRuptureRateBasis = null;
 //		
-//		SummedMagFreqDist targetOnFaultMFD =  rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
+		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
 ////		System.out.println("SUPRA SEIS MFD = ");
 ////		System.out.println(rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD());
-//		
 
 		if (model.isConstrained()) {
 			// CONSTRAINED BRANCHES
 			if (model == InversionModels.CHAR_CONSTRAINED) {
 //				participationSmoothnessConstraintWt = 0;
-//				nucleationMFDConstraintWt = 0.01;
+				nucleationMFDConstraintWt = 0.01;
 //				mfdSmoothnessConstraintWt = 0;
 //				mfdSmoothnessConstraintWtForPaleoParents = 1000;
 //				eventRateSmoothnessWt = 0;
 //				rupRateConstraintWt = 0;
 //				aPrioriRupConstraint = getUCERF2Solution(rupSet);
 //				initialRupModel = Arrays.copyOf(aPrioriRupConstraint, aPrioriRupConstraint.length); 
-//				minimumRuptureRateFraction = 0.01;
-//				minimumRuptureRateBasis = adjustStartingModel(getSmoothStartingSolution(rupSet,targetOnFaultMFD), mfdConstraints, rupSet, true);
+
+				// For water level
+// >>			minimumRuptureRateFraction = 0.01;
+				minimumRuptureRateFraction = 0.0;
+
+// >>				minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
+// >>						UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD),
+// >>						mfdConstraints, rupSet, true);
 
 //				initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
 //				if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0) initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet, true);
 //				initialRupModel = adjustParkfield(rupSet, initialRupModel);
 //				initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
-//				initialRupModel = new double[initialRupModel.length];
+				initialRupModel = new double[rupSet.getNumRuptures()];
 			} else if (model == InversionModels.GR_CONSTRAINED) {
 //				participationSmoothnessConstraintWt = 1000;
 //				nucleationMFDConstraintWt = 0;
@@ -381,15 +389,21 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 
 		// NSHM-style config using setter methods...
 		NSHM_InversionConfiguration newConfig = new NSHM_InversionConfiguration()
-				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
-				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-				.setMfdEqualityConstraints(mfdEqualityConstraints).setMfdInequalityConstraints(mfdInequalityConstraints)
+		// MFD config
+//				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+//				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+//				.setMfdEqualityConstraints(mfdEqualityConstraints)
+//				.setMfdInequalityConstraints(mfdInequalityConstraints)
+				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
-				.setSlipRateWeightingType(slipRateWeighting);
+				.setSlipRateWeightingType(slipRateWeighting)
+				// Rate Minimization config
+				.setMinimizationConstraintWt(minimizationConstraintWt)
+				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
+				.setMinimumRuptureRateBasis(minimumRuptureRateBasis).setInitialRupModel(initialRupModel);
 
 		return newConfig;
-
 	}
 
 	/**
@@ -403,7 +417,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 	 * @param maxMag
 	 * @return newMFDConstraints
 	 */
-	private static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(
+	protected static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(
 			List<MFD_InversionConstraint> mfdConstraints, double minMag, double maxMag) {
 
 		List<MFD_InversionConstraint> newMFDConstraints = new ArrayList<MFD_InversionConstraint>();
@@ -514,16 +528,16 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		this.participationConstraintMagBinSize = participationConstraintMagBinSize;
 //	}
 
-//	public double getMinimizationConstraintWt() {
-//		return minimizationConstraintWt;
-//	}
-//
-//	public void setMinimizationConstraintWt(
-//			double relativeMinimizationConstraintWt) {
-//		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
-//	}
+	public double getMinimizationConstraintWt() {
+		return minimizationConstraintWt;
+	}
 
-//	public double getMomentConstraintWt() {
+	public NSHM_InversionConfiguration setMinimizationConstraintWt(double relativeMinimizationConstraintWt) {
+		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
+		return this;
+	}
+
+	// public double getMomentConstraintWt() {
 //		return momentConstraintWt;
 //	}
 //
@@ -557,6 +571,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 		this.minimumRuptureRateBasis = minimumRuptureRateBasis;
 		return this;
 	}
+
 //
 //	public double getSmoothnessWt() {
 //		return smoothnessWt;
@@ -566,13 +581,14 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		this.smoothnessWt = relativeSmoothnessWt;
 //	}
 //
-//	public double getNucleationMFDConstraintWt() {
-//		return nucleationMFDConstraintWt;
-//	}
-//
-//	public void setNucleationMFDConstraintWt(double relativeNucleationMFDConstraintWt) {
-//		this.nucleationMFDConstraintWt = relativeNucleationMFDConstraintWt;
-//	}
+	public double getNucleationMFDConstraintWt() {
+		return nucleationMFDConstraintWt;
+	}
+
+	public NSHM_InversionConfiguration setNucleationMFDConstraintWt(double relativeNucleationMFDConstraintWt) {
+		this.nucleationMFDConstraintWt = relativeNucleationMFDConstraintWt;
+		return this;
+	}
 //	
 //	public double getMFDSmoothnessConstraintWt() {
 //		return mfdSmoothnessConstraintWt;
@@ -634,7 +650,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		return eventRateSmoothnessWt;
 //	}
 //
-//	public void setEventRateSmoothnessWt(double eventRateSmoothnessWt) {
+//	public NSHM_InversionConfiguration setEventRateSmoothnessWt(double eventRateSmoothnessWt) {
 //		this.eventRateSmoothnessWt = eventRateSmoothnessWt;
 //	}
 //	
@@ -642,7 +658,7 @@ public class NSHM_InversionConfiguration implements XMLSaveable {
 //		return rupRateSmoothingConstraintWt;
 //	}
 //
-//	public void setRupRateSmoothingConstraintWt(double rupRateSmoothingConstraintWt) {
+//	public NSHM_InversionConfiguration setRupRateSmoothingConstraintWt(double rupRateSmoothingConstraintWt) {
 //		this.rupRateSmoothingConstraintWt = rupRateSmoothingConstraintWt;
 //	}
 

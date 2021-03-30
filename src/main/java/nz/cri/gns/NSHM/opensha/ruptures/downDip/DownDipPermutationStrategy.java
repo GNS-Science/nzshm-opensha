@@ -242,4 +242,9 @@ public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
         return Joiner.on(",").join(Ints.asList(indexes));
     }
 
+	@Override
+	public String getName() {
+		return new String("DownDip Permutation Strategy");
+	}
+
 }

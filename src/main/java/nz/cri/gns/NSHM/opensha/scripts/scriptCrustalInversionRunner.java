@@ -40,8 +40,8 @@ public class scriptCrustalInversionRunner {
         faultIdInOption.setValueSeparator(',');
 
         Options options = new Options()
-                .addRequiredOption("f", "fsdFile", true, "an opensha-xml Fault Source file")
                 .addRequiredOption("o", "outputDir", true, "an existing directory to receive output file(s)")
+                .addOption("f", "fsdFile", true, "an opensha-xml Fault Source file")
                 .addOption("g", "generateRuptureSet", false, "generate rupture set (flag only)")
                 .addOption("x", "rupSetForInversion", true, "rupture set file for inversion")
                 .addOption("l", "maxSubSectionLength", true, "maximum sub section length (in units of DDW) default")
@@ -61,10 +61,10 @@ public class scriptCrustalInversionRunner {
 
     protected static void generateRuptures(CommandLine cmd) throws IOException, DocumentException {
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
-        File fsdFile = new File(cmd.getOptionValue("fsdFile"));
+//        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
+        File rupSetFile = new File(outputDir, "CFM_hk_slipdef50_TMG2_rupture_set.zip");
+
         NSHMRuptureSetBuilder builder = new NSHMRuptureSetBuilder();
-        builder.setFaultModelFile(fsdFile);
 
         //		.setFaultIdIn(Sets.newHashSet(89, 90, 91, 92, 93));
         //		.setMaxFaultSections(2000) 	// overide defauls like so
@@ -72,9 +72,14 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("Arguments");
         System.out.println("=========");
-        System.out.println("fsdFile: " + cmd.getOptionValue("fsdFile"));
         System.out.println("outputDir: " + outputDir);
 
+        if (cmd.hasOption("fsdFile"))  {
+        	System.out.println("set fsdFile to " + cmd.getOptionValue("fsdFile"));
+        	File fsdFile = new File(cmd.getOptionValue("fsdFile"));
+        	builder.setFaultModelFile(fsdFile);
+        }
+        
         if (cmd.hasOption("ruptureStrategy")) {
             System.out.println("set permutationStrategy to " + cmd.getOptionValue("ruptureStrategy"));
             RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.valueOf(cmd.getOptionValue("ruptureStrategy"));
@@ -113,13 +118,15 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        builder.setDownDipMinFill(0.8d)
-        	.setThinningFactor(0.1)
-        	.setDownDipAspectRatio(2, 5, 7)
-        	.setDownDipSizeCoarseness(0.01)
-        	.setDownDipPositionCoarseness(0.01);
+        builder
+        	.setDownDipMinFill(0.1d) //d,e null ; f 0.1 ;
+//        	.setThinningFactor(0.1)
+        	.setDownDipAspectRatio(2, 5, 7) //d 2,5,5  ; e2,5,7 +f ;
+//        	.setDownDipSizeCoarseness(0.01)
+        	.setDownDipPositionCoarseness(0.05); //d 0.01 ; e 0.05 +f ;
 
-        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+//        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
@@ -155,7 +162,9 @@ public class scriptCrustalInversionRunner {
         long inversionMins = 1; // run it for this many minutes
         long syncInterval = 10; // seconds between inversion synchronisations
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
+        //  File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
+        File solFile = new File(outputDir, "CFM_hk_slipdef0_scaling_TMG_solution_TEST_Non0_m5-3_eq10_ineq1000_minRRF0_bval0.94_2m_sf.zip");
+        
         File rupSetFile = null;
 
         if (cmd.hasOption("generateRuptureSet")) {
@@ -180,6 +189,7 @@ public class scriptCrustalInversionRunner {
                 .setInversionMinutes(inversionMins)
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
+        		.setGutenbergRichterMFDWeights(10d, 1000d)
         		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);

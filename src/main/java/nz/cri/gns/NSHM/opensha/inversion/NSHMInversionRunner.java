@@ -1,39 +1,31 @@
 package nz.cri.gns.NSHM.opensha.inversion;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
-import nz.cri.gns.NSHM.opensha.ruptures.NSHMSlipEnabledRuptureSet;
-import nz.cri.gns.NSHM.opensha.inversion.NSHM_InversionFaultSystemSolution;
-
 import org.dom4j.DocumentException;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RuptureConnectionSearch;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
+
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
-import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
+import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.inversion.SectionClusterList;
+import scratch.UCERF3.inversion.SectionConnectionStrategy;
 //import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.*;
 import scratch.UCERF3.utils.FaultSystemIO;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
+import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,10 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.opensha.commons.geo.Location;
-import org.opensha.commons.geo.LocationList;
-import org.opensha.commons.geo.Region;
 
 /**
  * Runs the standard NSHM inversion on a rupture set.
@@ -172,13 +160,61 @@ public class NSHMInversionRunner {
 	 * @throws IOException
 	 */
 	public NSHMInversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
-		FaultSystemRupSet rupSet = loadRupSet(ruptureSetFile);
-
-		// convert rupture set to NSHM_InversionFaultSystemRuptSet for logicTree etc
+		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
 
-		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSet, branch);
+		InversionFaultSystemRupSet rupSetB = InversionFaultSystemRupSet.fromRuptureSet(rupSetA, branch);
+		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSetB);
 		return this;
+
+		/*
+		 * BEGIN Attempt one
+		 * 
+		 * an attempt to build ClusterRups outside the init - probably a bad idea.
+		 * 
+		 * // here we're trying to initialise Clusters properly
+		 * SectionDistanceAzimuthCalculator distCalc =
+		 * rupSetA.getPlausibilityConfiguration().getDistAzCalc(); double maxDist =
+		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
+		 * (); boolean cumulativeJumps = true;
+		 * //rupSet.getPlausibilityConfiguration().getDistAzCalc().
+		 * RuptureConnectionSearch search = new RuptureConnectionSearch(rupSetA,
+		 * distCalc, maxDist, cumulativeJumps); rupSetA.buildClusterRups(search);
+		 *
+		 * END Attempt one
+		 * 
+		 */
+
+		/*
+		 * BEGIN Attempt two
+		 * 
+		 * Code block here is an attempt to build new InversionFaultSystemRupSet using
+		 * the method outlined in
+		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests
+		 * 
+		 * this left me confused about OldPlausibilityConfiguration.
+		 * 
+		 * It also required a new constructor on SectionConnectionStrategy whivh seemd
+		 * off.
+		 * 
+		 * double maxDist =
+		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
+		 * (); SectionConnectionStrategy connectionStrategy = new
+		 * UCERF3SectionConnectionStrategy(maxDist, null); OldPlausibilityConfiguration
+		 * op = null;
+		 * 
+		 * //using a new SectionConnectionStrategy constructor SectionClusterList
+		 * clusters = new SectionClusterList(rupSetA, connectionStrategy, op);
+		 * 
+		 * //Old constructors (as per package
+		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests )
+		 * InversionFaultSystemRupSet rupSetB = new InversionFaultSystemRupSet(branch,
+		 * clusters, rupSetA.getFaultSectionDataList());
+		 *
+		 * END Attempt 2
+		 * 
+		 */
+
 	}
 
 	/**
@@ -249,8 +285,11 @@ public class NSHMInversionRunner {
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
-		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
-				mfdInequalityConstraintWt);
+//		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
+//				mfdInequalityConstraintWt);
+//		
+		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
+				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 		return this;
 	}
 
@@ -258,6 +297,7 @@ public class NSHMInversionRunner {
 	protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
 		FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
 		return fsRupSet;
+
 	}
 
 	/**
@@ -270,35 +310,23 @@ public class NSHMInversionRunner {
 	 */
 	public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
-		///////
-		// This is now in NSHM_InversionGenerator with parameters defined in
-		/////// NSHM_InversionConfiguration...
-		// /*
-		// * Slip rate constraints
-		// */
-		// constraints.add(new
-		/////// SlipRateInversionConstraint(this.slipRateConstraintWt_normalized,
-		// this.slipRateConstraintWt_unnormalized,
-		// this.slipRateWeighting, rupSet, rupSet.getSlipRateForAllSections()));
-		//
-		// /* MFD constraints are now built here
-		// *
-		// */
-		// inversionMFDs = new NSHM_InversionTargetMFDs(this.rupSet);
-		// for (InversionConstraint constraint : inversionMFDs.getMFDConstraints()) {
-		// constraints.add(constraint);
-		// }
-		//
-		/////////////////////////////
-
 		// weight of entropy-maximization constraint (not used in UCERF3)
 		double smoothnessWt = 0;
 
 		/*
 		 * Build inversion inputs
 		 */
+		List<AveSlipConstraint> aveSlipConstraints = null;
+		// try {
+		// aveSlipConstraints =
+		// AveSlipConstraint.load(rupSet.getFaultSectionDataList());
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// System.exit(1);
+		// }
+
 		NSHM_InversionInputGenerator inputGen = new NSHM_InversionInputGenerator(rupSet, inversionConfiguration, null,
-				null, null, null);
+				aveSlipConstraints, null, null);
 
 		inputGen.generateInputs(true);
 		// column compress it for fast annealing
@@ -310,6 +338,11 @@ public class NSHMInversionRunner {
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
 
 		completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+
+		// Bring up window to track progress
+		// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
+		// 0.1d);
+		// ....
 		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
 
 		// this is the "sub completion criteria" - the amount of time (or iterations)
