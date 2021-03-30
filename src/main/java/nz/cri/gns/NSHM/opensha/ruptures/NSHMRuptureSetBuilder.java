@@ -353,7 +353,7 @@ public class NSHMRuptureSetBuilder {
 
 	private void buildConfig() {
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
-		///JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
+		JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
 
 		// connection strategy: parent faults connect at closest point, and only when
 		// dist <=5 km
@@ -366,10 +366,10 @@ public class NSHMRuptureSetBuilder {
 
 		PlausibilityConfiguration.Builder configBuilder = PlausibilityConfiguration
 				.builder(connectionStrategy, distAzCalc).maxSplays(maxNumSplays)
-				//.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
-				//.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
-				//.add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc,
-				//		maxCumulativeAzimuthChange))
+				.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
+				.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
+				.add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc,
+						maxCumulativeAzimuthChange))
 				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
 		if (faultIdfilterType != null) {
 			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
