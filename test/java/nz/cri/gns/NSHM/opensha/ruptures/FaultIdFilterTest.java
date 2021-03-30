@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -18,10 +19,7 @@ import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FaultIdFilterTest {
 
@@ -104,7 +102,7 @@ public class FaultIdFilterTest {
         for (int i = 0; i < clusters.length; i++) {
             clusters[i] = mockFaultSubsectionCluster(parentIds[i]);
         }
-        Set<Integer> jumps = new HashSet<>();
+        List<Integer> jumps = new LinkedList<>();
         for (int i = 0; i < parentIds.length - 1; i++) {
             jumps.add(i);
         }
@@ -114,9 +112,9 @@ public class FaultIdFilterTest {
         when(u2.size()).thenReturn(parentIds.length - 1);
 
         Constructor<ClusterRupture> con = ClusterRupture.class.getDeclaredConstructor(
-                FaultSubsectionCluster[].class, ImmutableSet.class, ImmutableMap.class, UniqueRupture.class, UniqueRupture.class, Boolean.TYPE);
+                FaultSubsectionCluster[].class, ImmutableList.class, ImmutableMap.class, UniqueRupture.class, UniqueRupture.class, Boolean.TYPE);
         con.setAccessible(true);
-        return con.newInstance(clusters, ImmutableSet.copyOf(jumps), ImmutableMap.of(), u1, u2, true);
+        return con.newInstance(clusters, ImmutableList.copyOf(jumps), ImmutableMap.of(), u1, u2, true);
     }
 
     public Jump mockJump(int toParentId) {
