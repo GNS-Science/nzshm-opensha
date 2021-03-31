@@ -41,8 +41,8 @@ public class NSHMRuptureSetBuilderIntegration {
                         .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
                         .buildRuptureSet();
 
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/inttestrupset.zip"));
-
+        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testCantBuildKaikoura2016.zip"));
+        
         assertEquals(667, ruptureSet.getClusterRuptures().size());
         assertFalse(hasRuptureWithFaults(kaikouraFaults, ruptureSet));
     }
@@ -56,7 +56,7 @@ public class NSHMRuptureSetBuilderIntegration {
                         .setFaultModelFile(new File("src/integration/resources/alpine-vernon.xml"))
                         .buildRuptureSet();
 
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/inttestrupset.zip"));
+        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testAlpineVernon.zip"));
 
         assertEquals(3101, ruptureSet.getClusterRuptures().size());
         assertTrue(hasRuptureWithFaults(faults, ruptureSet));
