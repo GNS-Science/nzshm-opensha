@@ -194,9 +194,9 @@ public class NSHM_SubductionInversionConfiguration extends NSHM_InversionConfigu
 			// For water level
 			minimumRuptureRateFraction = 0.0;
 
-			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
-					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints,
-					rupSet, true);
+//			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
+//					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints,
+//					rupSet, true);
 
 			initialRupModel = new double[rupSet.getNumRuptures()];
 		}
