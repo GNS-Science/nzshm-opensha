@@ -17,4 +17,4 @@ cache:
 
 script:
   - ./gradlew check -x test
-  - ./gradlew localTests
+  - ./gradlew localTests integrationTest
