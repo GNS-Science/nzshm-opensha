@@ -26,18 +26,11 @@ public class NSHMInversionRunnerIntegration {
 	 */
 	@Test 
 	public void testLoadRuptureSetForInversion() throws IOException, DocumentException {
-		
 		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(new File("src/integration/resources/AlpineVernonRuptureSet.zip"));
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-
+		
 		NSHM_InversionFaultSystemRuptSet ruptureSet = new NSHM_InversionFaultSystemRuptSet(rupSetA, branch);
-
 		assertEquals(3101, ruptureSet.getClusterRuptures().size());
-		
-		rupSetA.setClusterRuptures(null);
-		ruptureSet = new NSHM_InversionFaultSystemRuptSet(rupSetA, branch);
-		assertEquals(3101, ruptureSet.getClusterRuptures().size());		
-		
 	}
 	
 	/**
