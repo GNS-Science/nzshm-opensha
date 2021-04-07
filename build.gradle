@@ -34,9 +34,6 @@ sourceSets {
         java {
             srcDirs = ['src/main/java']
         }
-	resources {
-	    exclude '**/resources/**'
-	}
     }
 
     test {
@@ -56,9 +53,8 @@ sourceSets {
             srcDirs = ['src/integration/java']
         }
 
-        resources.srcDir('src/integration/resources')
         resources {
-            srcDirs = ['src/integration/resources']
+            srcDirs = ['src/integration/resources', 'src/main/java']
         }
     }
 }

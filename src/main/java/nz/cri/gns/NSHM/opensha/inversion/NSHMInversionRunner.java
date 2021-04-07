@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public class NSHMInversionRunner {
 
-	protected long inversionMins = 1;
+	protected long inversionSecs = 60;
 	protected long syncInterval = 10;
 	protected int numThreads = Runtime.getRuntime().availableProcessors();
 	protected NSHM_InversionFaultSystemRuptSet rupSet = null;
@@ -91,16 +91,27 @@ public class NSHMInversionRunner {
 	}
 
 	/**
-	 * Sets how many minutes the inversion runs for. Default is 1 minute.
+	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
 	 * @param inversionMinutes the duration of the inversion in minutes.
 	 * @return this runner.
 	 */
 	public NSHMInversionRunner setInversionMinutes(long inversionMinutes) {
-		this.inversionMins = inversionMinutes;
+		this.inversionSecs = inversionMinutes * 60;
 		return this;
 	}
 
+	/**
+	 * Sets how many minutes the inversion runs for. Default is 60 seconds.
+	 * 
+	 * @param inversionSeconds the duration of the inversion in seconds.
+	 * @return this runner.
+	 */
+	public NSHMInversionRunner setInversionSeconds(long inversionSeconds) {
+		this.inversionSecs = inversionSeconds;
+		return this;
+	}
+	
 	/**
 	 * @param energyDelta
 	 * @param energyPercentDelta
@@ -163,8 +174,7 @@ public class NSHMInversionRunner {
 		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
 
-		InversionFaultSystemRupSet rupSetB = InversionFaultSystemRupSet.fromRuptureSet(rupSetA, branch);
-		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSetB);
+		this.rupSet = new NSHM_InversionFaultSystemRuptSet(rupSetA, branch);
 		return this;
 
 		/*
@@ -194,7 +204,7 @@ public class NSHMInversionRunner {
 		 * 
 		 * this left me confused about OldPlausibilityConfiguration.
 		 * 
-		 * It also required a new constructor on SectionConnectionStrategy whivh seemd
+		 * It also required a new constructor on SectionConnectionStrategy which seemed
 		 * off.
 		 * 
 		 * double maxDist =
@@ -285,11 +295,11 @@ public class NSHMInversionRunner {
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
-//		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
-//				mfdInequalityConstraintWt);
-//		
-		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
-				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
+		inversionConfiguration = NSHM_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
+				mfdInequalityConstraintWt);
+		
+//		inversionConfiguration = NSHM_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
+//				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 		return this;
 	}
 
@@ -333,7 +343,7 @@ public class NSHMInversionRunner {
 		inputGen.columnCompress();
 
 		// inversion completion criteria (how long it will run)
-		this.completionCriterias.add(TimeCompletionCriteria.getInMinutes(inversionMins));
+		this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
 		if (!(this.energyChangeCompletionCriteria == null))
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
 

@@ -1,8 +1,12 @@
 package nz.cri.gns.NSHM.opensha.inversion;
 
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RuptureConnectionSearch;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
+
 import nz.cri.gns.NSHM.opensha.analysis.NSHM_FaultSystemRupSetCalc;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
@@ -23,17 +27,15 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 	private static final long serialVersionUID = 1091962054533163866L;
 
 	/**
-	 * Use this constructor to enhance a rupture set with the additional input
-	 * required for an Inversion
+	 * Constructor which relies on the super-class implementation
 	 * 
 	 * @param rupSet
+	 * @param branch
 	 */
-	public NSHM_InversionFaultSystemRuptSet(InversionFaultSystemRupSet rupSet) {
-		super(rupSet, rupSet.getLogicTreeBranch(), null, 
-				rupSet.getAveSlipForAllRups(),rupSet.getCloseSectionsListList(),
-				rupSet.getRupturesForClusters(), rupSet.getSectionsForClusters());
-	}
-
+	public NSHM_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, LogicTreeBranch branch) {
+		super(rupSet, branch);
+	}		
+	
 	/**
 	 * This returns the final minimum mag for a given fault section. This uses a
 	 * generic version of computeMinSeismoMagForSections() instead of the UCERF3
@@ -54,7 +56,7 @@ public class NSHM_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet
 	@Override
 	public InversionTargetMFDs getInversionTargetMFDs() {
 		if (inversionMFDs == null)
-			inversionMFDs = new InversionTargetMFDs(this);
+			inversionMFDs = new NSHM_InversionTargetMFDs(this);
 		return inversionMFDs;
 	}
 	
