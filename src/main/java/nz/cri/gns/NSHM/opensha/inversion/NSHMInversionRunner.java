@@ -18,6 +18,7 @@ import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.inversion.SectionConnectionStrategy;
 //import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
@@ -50,7 +51,7 @@ public class NSHMInversionRunner {
 	private CompletionCriteria completionCriteria;
 	private ThreadedSimulatedAnnealing tsa;
 	private double[] initialState;
-	private NSHM_InversionFaultSystemSolution solution;
+	private InversionFaultSystemSolution solution;
 
 	/*
 	 * Sliprate constraint default settings
@@ -384,7 +385,7 @@ public class NSHMInversionRunner {
 				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
 		}
 
-		solution = new NSHM_InversionFaultSystemSolution(rupSet, solution_adjusted);
+		solution = new InversionFaultSystemSolution(rupSet, solution_adjusted);
 		return solution;
 	}
 

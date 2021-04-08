@@ -25,7 +25,7 @@ public class FilteredInversionFaultSystemSolution {
 	 * Produce a new InversionFaultSystemSolution with a subset of the originals ruptures
 	 * based on an input filter.
 	 * 
-	 * @param inputSol the original invsersion solution
+	 * @param inputSol the original inversion solution
 	 * @param selectedSubSects a list of subsection IDs tio filter on.
 	 * @return the new filtered solution
 	 */
