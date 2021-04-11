@@ -55,9 +55,5 @@ public class FilteredInversionFaultSystemSolution {
 	public FaultSystemRupSet getFilteredRupSet() {
 		return filteredRupSet;
 	}
-
-	public List<ClusterRupture> getFilteredRups() {
-		return filteredRupSet.getClusterRuptures();
-	}
 		
 }
