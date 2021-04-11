@@ -5,7 +5,7 @@ jdk: openjdk8
 before_install:
   - git clone https://github.com/GNS-Science/opensha-commons.git /home/travis/build/GNS-Science/opensha-commons
   - git clone https://github.com/opensha/opensha-core.git /home/travis/build/GNS-Science/opensha-core
-  - git clone --branch=upstream/promote https://github.com/GNS-Science/opensha-ucerf3.git /home/travis/build/GNS-Science/opensha-ucerf3
+  - git clone --branch=upstream/29_RupSetDiagnosticsPageGen_from_promote https://github.com/GNS-Science/opensha-ucerf3.git /home/travis/build/GNS-Science/opensha-ucerf3
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
