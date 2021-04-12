@@ -14,9 +14,9 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.Ju
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.TotalAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ConnectionPointsPermutationStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveClusterPermuationStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ConnectionPointsRuptureGrowingStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveUnilateralRuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 
 import org.opensha.sha.faultSurface.FaultSection;
@@ -294,19 +294,19 @@ public class NSHMRuptureSetBuilder {
 
 	/**
 	 * @param permutationStrategyClass which strategy to choose
-	 * @return a ClusterPermutationStrategy object
+	 * @return a RuptureGrowingStrategy object
 	 */
-	private ClusterPermutationStrategy createPermutationStrategy(RupturePermutationStrategy permutationStrategyClass) {
-		ClusterPermutationStrategy permutationStrategy = null;
+	private RuptureGrowingStrategy createPermutationStrategy(RupturePermutationStrategy permutationStrategyClass) {
+		RuptureGrowingStrategy permutationStrategy = null;
 		switch (permutationStrategyClass) {
 		case POINTS:
 			// creates ruptures in blocks defined by the connection points between clusters
-			permutationStrategy = new ConnectionPointsPermutationStrategy();
+			permutationStrategy = new ConnectionPointsRuptureGrowingStrategy();
 			break;
 		case UCERF3:
 			// creates ruptures covering the incremental permutations of sub-sections in
 			// each cluster
-			permutationStrategy = new ExhaustiveClusterPermuationStrategy();
+			permutationStrategy = new ExhaustiveUnilateralRuptureGrowingStrategy();
 			break;
 		}
 
@@ -407,7 +407,7 @@ public class NSHMRuptureSetBuilder {
 		// ParentSectsRupDebugCriteria(false, true, 2);
 		// builder.setDebugCriteria(debugCriteria, true);
 
-		ClusterPermutationStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
+		RuptureGrowingStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
 		// debugging
 		// numThreads = 1;
 		ruptures = getBuilder().build(permutationStrategy, numThreads);

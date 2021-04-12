@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterPermutationStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
-public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
+public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
 
     public interface Constraint {
         boolean apply(DownDipSubSectBuilder builder, int startRow, int startCol, int rowCount, int colCount);
@@ -21,10 +21,10 @@ public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
     private Constraint constraint;
 
     private final DownDipRegistry registry;
-    private final ClusterPermutationStrategy crustalStrategy;
+    private final RuptureGrowingStrategy crustalStrategy;
     private static final boolean D = false;
 
-    public DownDipPermutationStrategy(DownDipRegistry registry, ClusterPermutationStrategy crustalStrategy) {
+    public DownDipPermutationStrategy(DownDipRegistry registry, RuptureGrowingStrategy crustalStrategy) {
         this.registry = registry;
         this.crustalStrategy = crustalStrategy;
     }
@@ -118,9 +118,9 @@ public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
             return constraint.apply(builder, startRow, startCol, rowCount, colCount);
         }
     }
-
+    
     @Override
-    public List<FaultSubsectionCluster> getPermutations(
+    public List<FaultSubsectionCluster> getVariations(
             FaultSubsectionCluster fullCluster, FaultSection firstSection) {
         if (constraint == null) {
             constraint = (builder, a, b, c, d) -> true;
@@ -133,7 +133,7 @@ public class DownDipPermutationStrategy implements ClusterPermutationStrategy {
 
         DownDipSubSectBuilder downDipBuilder = registry.getBuilder(fullCluster.parentSectionID);
         if (downDipBuilder == null) {
-            permutations = crustalStrategy.getPermutations(fullCluster, firstSection);
+            permutations = crustalStrategy.getVariations(fullCluster, firstSection);
         } else {
             // this is a down-dip fault section, only build rectangular permutations
             int startCol = downDipBuilder.getColumn(firstSection);
