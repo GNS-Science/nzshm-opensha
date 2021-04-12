@@ -15,7 +15,9 @@ gradle-app.setting
 
 # ignore outputs from test code
 /data/output/**
-
+data/ruptureSets/
+data/solutions/
+data/inversionSolutions
 
 # eclipse
 
@@ -31,5 +33,3 @@ bin/**
 # *.pytest
 
 .idea/
-data/ruptureSets/
-data/solutions/
