@@ -36,11 +36,17 @@ public class NSHM_FilteredInversionDiagnosticsReport {
 	public static void main(String[] args) throws IOException, DocumentException {
 		System.setProperty("java.awt.headless", "true");
 		parseArgs(args);
-		getReportBuilder().generatePage();
+		RupSetDiagnosticsPageGen builder = getReportBuilder();
+
+		builder.setSkipPlausibility(true);
+		builder.setSkipBiasiWesnousky(true);
+		builder.setSkipConnectivity(true);
+		builder.setSkipSegmentation(true);
+		builder.generatePage();
 		
-		//try again
-		filterExpression = "Alpine Kaniere to Springs Junction";
-		getReportBuilder().generatePage();
+//		//try again
+//		filterExpression = "Alpine Kaniere to Springs Junction";
+//		getReportBuilder().generatePage();
 		
 		System.out.println("Done!");
 	}
