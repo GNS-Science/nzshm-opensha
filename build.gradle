@@ -88,14 +88,14 @@ test {
     exclude 'org/opensha/**'
     exclude '**/DataSuite'
     filter {
-        includeTestsMatching('*NSHM_NZ.*')
+        includeTestsMatching('*NZSHM22.*')
         getIncludePatterns().remove('*Suite*')
     }
 }
 
 task localTests(type: Test, dependsOn: testClasses) {
     //filter { excludeTestsMatching('*.opensha.commons.*')} 
-    filter { includeTestsMatching('*NSHM_NZ.*') }
+    filter { includeTestsMatching('*NZSHM22.*') }
     filter { includeTestsMatching('*nz.cri.gns.*') }
     filter { includeTestsMatching('*UCERF3.inversion.*') }
     //filter { excludeTestsMatching 'generic.*' } 
