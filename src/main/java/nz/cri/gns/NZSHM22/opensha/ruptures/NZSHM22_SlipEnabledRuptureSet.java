@@ -122,6 +122,7 @@ public class NZSHM22_SlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 
 		String info = "Test down-dip subsectioning rup set";
 
+		//TODO: load slip rate StdDevs
 		init(subSections, sectSlipRates, null, sectAreasReduced, rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths,
 				info);
 		setClusterRuptures(ruptures);
