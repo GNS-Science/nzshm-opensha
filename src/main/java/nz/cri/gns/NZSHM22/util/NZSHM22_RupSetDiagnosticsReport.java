@@ -68,19 +68,23 @@ public class NZSHM22_RupSetDiagnosticsReport {
 	private static File outputDir;
 	private static File inputDir;
 	private static String filterExpression;
+	private static RupSetDiagnosticsPageGen builder;
 	
 	public static void main(String[] args) throws IOException, DocumentException {
 		System.setProperty("java.awt.headless", "true");
 
 		ArrayList<FileMeta> metadataList = new ArrayList<FileMeta>();
 		
-		inputDir = new File("../opensha-ucerf3/tmp");
-//		File outputRoot = new File("/tmp");
+		inputDir = new File("../nshm-nz-opensha/data/ruptureSets");
+		File outputRoot = new File("./tmp");
 				
 		//Set up metadata
 //		metadataList.add(new FileMeta(
 //				"nz_demo5_crustal_10km_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_sectFractGrow0.05.zip",
 //				"CFM", "DistCutoffClosestSect", "Unilateral"));
+//		metadataList.add( new FileMeta(
+//				"ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.0.zip", 
+//				"CFM", "UCERF3-Az580", "NZSHM22"));
 		metadataList.add(new FileMeta(
 				"nz_demo5_crustal_adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_sectFractGrow0.05.zip",
 				"CFM", "AdaptiveDistCutoffClosestSect", "Unilateral"));
@@ -100,29 +104,30 @@ public class NZSHM22_RupSetDiagnosticsReport {
 		
 		ArrayList<FaultMeta> faultList = new ArrayList<FaultMeta>();		
 		faultList.add(new FaultMeta("Wellington Hutt Valley", "WHV"));
-		faultList.add(new FaultMeta("Alpine Kaniere to Springs Junction", "AKSJ"));
-		faultList.add(new FaultMeta("Cape Egmont Central", "CEC"));
-		faultList.add(new FaultMeta("Wellington Pahiatua", "WLPH"));
-		faultList.add(new FaultMeta("Napier 1931", "NP31"));	
+//		faultList.add(new FaultMeta("Alpine Kaniere to Springs Junction", "AKSJ"));
+//		faultList.add(new FaultMeta("Cape Egmont Central", "CEC"));
+//		faultList.add(new FaultMeta("Wellington Pahiatua", "WLPH"));
+//		faultList.add(new FaultMeta("Napier 1931", "NP31"));	
+		faultList.add(new FaultMeta("Kekerengu", "KKR"));
 		
 		for (FileMeta metadata : metadataList) {
 
 			System.out.println("Building report for: " +  metadata.folderName());
 		
-			outputDir = new File(inputDir, metadata.folderName());
+			outputDir = new File(outputRoot, metadata.folderName());
 			Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 			
 			inputRupSet = FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
 			inputSol = null;
-			inputName = "Coulomb Test April 14 " + metadata.folderName();
+			inputName = "Azimuth vs Coulomb 2021-04-21 " + metadata.folderName();
 		
-//			RupSetDiagnosticsPageGen builder = new RupSetDiagnosticsPageGen(inputRupSet, 
-//					inputSol, inputName, outputDir);
-//			builder.setSkipPlausibility(true);
-//			builder.setSkipBiasiWesnousky(true);
-//			builder.setSkipConnectivity(true);
-//			builder.setSkipSegmentation(true);
-//			builder.generatePage();		
+			builder = new RupSetDiagnosticsPageGen(inputRupSet, 
+					inputSol, inputName, outputDir);
+			builder.setSkipPlausibility(true);
+			builder.setSkipBiasiWesnousky(true);
+			builder.setSkipConnectivity(true);
+			builder.setSkipSegmentation(true);
+			builder.generatePage();		
 
 			for (FaultMeta faultmeta : faultList) {
 				System.out.println("Building report for: " +  metadata.folderName() + " " + faultmeta.faultname);
@@ -130,7 +135,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 				Preconditions.checkState(outputSubDir.exists() || outputSubDir.mkdir());
 				applyFilter(faultmeta.faultname);
 
-				RupSetDiagnosticsPageGen builder = new RupSetDiagnosticsPageGen(
+				builder = new RupSetDiagnosticsPageGen(
 						filtRupSet, 
 						inputSol, inputName + " filter: " + faultmeta.faultname, 
 						outputSubDir);
@@ -146,13 +151,6 @@ public class NZSHM22_RupSetDiagnosticsReport {
 	
 		System.out.println("Done!");
 	}
-
-//	public static RupSetDiagnosticsPageGen getReportBuilder() throws IOException, DocumentException {
-//		//		Preconditions.checkState(filtRupSet != null,
-//		//				"filtRupSet is null, please applyFilter() before this method");
-//		//applyFilter(filterExpression); 
-//		return new RupSetDiagnosticsPageGen(filtRupSet, filtSol, inputName, outputDir);
-//	}
 	
 //	static void parseArgs(String [] args) throws IOException, DocumentException {
 //		Options options = RupSetDiagnosticsPageGen.createOptions();

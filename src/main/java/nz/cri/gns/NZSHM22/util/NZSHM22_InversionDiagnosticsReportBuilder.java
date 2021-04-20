@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.util;
 
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen;
 
 import java.io.IOException;
 
@@ -48,7 +49,12 @@ public class NZSHM22_InversionDiagnosticsReportBuilder {
                   "--output-dir", outputDir,
                   "--fault-name", faultFilter};
         NZSHM22_FilteredInversionDiagnosticsReport.parseArgs(args);
-        NZSHM22_FilteredInversionDiagnosticsReport.getReportBuilder().generatePage();
+        RupSetDiagnosticsPageGen builder = NZSHM22_FilteredInversionDiagnosticsReport.getReportBuilder();
+		builder.setSkipPlausibility(true);
+		builder.setSkipBiasiWesnousky(true);
+		builder.setSkipConnectivity(true);
+		builder.setSkipSegmentation(true);     
+        builder.generatePage();
         //        NZSHM22_FilteredInversionDiagnosticsReport.createReportBuilder(args).generatePage();
     }
     
