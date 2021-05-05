@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <OpenSHA>
   <FaultModel>
-    <i0 sectionId="95" sectionName="Fidget" aveLongTermSlipRate="2.0" slipRateStdDev="1.0" aveDip="90.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="345.3" parentSectionId="-1" connector="false">
+    <i0 sectionId="95" sectionName="Fidget" aveLongTermSlipRate="2.0" slipRateStDev="1.0" aveDip="90.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="345.3" parentSectionId="-1" connector="false">
       <FaultTrace name="Fidget">
         <Location Latitude="-42.0978" Longitude="173.8165" Depth="0.0000"/>
         <Location Latitude="-42.1083" Longitude="173.7500" Depth="0.0000"/>
@@ -10,7 +10,7 @@
         <Location Latitude="-42.1750" Longitude="173.4280" Depth="0.0000"/>
       </FaultTrace>
     </i0>
-    <i1 sectionId="132" sectionName="HopeConwayOS" aveLongTermSlipRate="21.4" slipRateStdDev="2.3" aveDip="80.0" aveRake="173.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="339.1" parentSectionId="-1" connector="false">
+    <i1 sectionId="132" sectionName="HopeConwayOS" aveLongTermSlipRate="21.4" slipRateStDev="2.3" aveDip="80.0" aveRake="173.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="339.1" parentSectionId="-1" connector="false">
       <FaultTrace name="HopeConwayOS">
         <Location Latitude="-42.2000" Longitude="174.0000" Depth="0.0000"/>
         <Location Latitude="-42.3417" Longitude="173.6180" Depth="0.0000"/>
@@ -25,7 +25,7 @@
         <Location Latitude="-42.5755" Longitude="172.6484" Depth="0.0000"/>
       </FaultTrace>
     </i1>
-    <i2 sectionId="136" sectionName="Hundalee" aveLongTermSlipRate="1.2" slipRateStdDev="0.9" aveDip="55.0" aveRake="90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="324.8" parentSectionId="-1" connector="false">
+    <i2 sectionId="136" sectionName="Hundalee" aveLongTermSlipRate="1.2" slipRateStDev="0.9" aveDip="55.0" aveRake="90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="324.8" parentSectionId="-1" connector="false">
       <FaultTrace name="Hundalee">
         <Location Latitude="-42.3833" Longitude="173.8550" Depth="0.0000"/>
         <Location Latitude="-42.5174" Longitude="173.4794" Depth="0.0000"/>
@@ -37,14 +37,14 @@
         <Location Latitude="-42.6912" Longitude="173.2633" Depth="0.0000"/>
       </FaultTrace>
     </i2>
-    <i3 sectionId="149" sectionName="Jordan" aveLongTermSlipRate="20.0" slipRateStdDev="2.0" aveDip="37.0" aveRake="100.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="297.6" parentSectionId="-1" connector="false">
+    <i3 sectionId="149" sectionName="Jordan" aveLongTermSlipRate="20.0" slipRateStDev="2.0" aveDip="37.0" aveRake="100.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="297.6" parentSectionId="-1" connector="false">
       <FaultTrace name="Jordan">
         <Location Latitude="-42.0978" Longitude="173.8165" Depth="0.0000"/>
         <Location Latitude="-42.1917" Longitude="173.7270" Depth="0.0000"/>
         <Location Latitude="-42.3236" Longitude="173.6637" Depth="0.0000"/>
       </FaultTrace>
     </i3> 
-    <i4 sectionId="162" sectionName="Kekerengu 1" aveLongTermSlipRate="20.0" slipRateStdDev="2.0" aveDip="60.0" aveRake="135.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="324.3" parentSectionId="-1" connector="false">
+    <i4 sectionId="162" sectionName="Kekerengu 1" aveLongTermSlipRate="20.0" slipRateStDev="2.0" aveDip="60.0" aveRake="135.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="324.3" parentSectionId="-1" connector="false">
       <FaultTrace name="Kekerengu 1">
         <Location Latitude="-41.9519" Longitude="174.0822" Depth="0.0000"/>
         <Location Latitude="-41.9855" Longitude="173.9841" Depth="0.0000"/>
@@ -52,7 +52,7 @@
         <Location Latitude="-42.0978" Longitude="173.8165" Depth="0.0000"/>
       </FaultTrace>
     </i4>         
-    <i5 sectionId="178" sectionName="Leader" aveLongTermSlipRate="0.2" slipRateStdDev="0.1" aveDip="55.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="300.6" parentSectionId="-1" connector="false">
+    <i5 sectionId="178" sectionName="Leader" aveLongTermSlipRate="0.2" slipRateStDev="0.1" aveDip="55.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="300.6" parentSectionId="-1" connector="false">
       <FaultTrace name="Leader">
         <Location Latitude="-42.4241" Longitude="173.3198" Depth="0.0000"/>
         <Location Latitude="-42.4493" Longitude="173.2716" Depth="0.0000"/>
@@ -64,20 +64,20 @@
         <Location Latitude="-42.6500" Longitude="173.1667" Depth="0.0000"/>
       </FaultTrace>
     </i5>
-    <i6 sectionId="189" sectionName="LondonHill" aveLongTermSlipRate="0.2" slipRateStdDev="0.1" aveDip="50.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="115.6" parentSectionId="-1" connector="false">
+    <i6 sectionId="189" sectionName="LondonHill" aveLongTermSlipRate="0.2" slipRateStDev="0.1" aveDip="50.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="115.6" parentSectionId="-1" connector="false">
       <FaultTrace name="LondonHill">
         <Location Latitude="-41.9519" Longitude="174.0822" Depth="0.0000"/>
         <Location Latitude="-41.6833" Longitude="174.2483" Depth="0.0000"/>
       </FaultTrace>
     </i6>    
-    <i7 sectionId="245" sectionName="Needles" aveLongTermSlipRate="16.0" slipRateStdDev="3.0" aveDip="80.0" aveRake="157.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="317.5" parentSectionId="-1" connector="false">
+    <i7 sectionId="245" sectionName="Needles" aveLongTermSlipRate="16.0" slipRateStDev="3.0" aveDip="80.0" aveRake="157.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="317.5" parentSectionId="-1" connector="false">
       <FaultTrace name="Needles">
         <Location Latitude="-41.6900" Longitude="174.4533" Depth="0.0000"/>
         <Location Latitude="-41.7950" Longitude="174.2700" Depth="0.0000"/>
         <Location Latitude="-41.9519" Longitude="174.0822" Depth="0.0000"/>
       </FaultTrace>
     </i7>    
-    <i8 sectionId="310" sectionName="Papatea" aveLongTermSlipRate="0.3" slipRateStdDev="0.1" aveDip="60.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="247.0" parentSectionId="-1" connector="false">
+    <i8 sectionId="310" sectionName="Papatea" aveLongTermSlipRate="0.3" slipRateStDev="0.1" aveDip="60.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="15.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="247.0" parentSectionId="-1" connector="false">
       <FaultTrace name="Papatea">
         <Location Latitude="-42.0978" Longitude="173.8165" Depth="0.0000"/>
         <Location Latitude="-42.1245" Longitude="173.8617" Depth="0.0000"/>
@@ -87,7 +87,7 @@
         <Location Latitude="-42.2417" Longitude="173.8817" Depth="0.0000"/>
       </FaultTrace>
     </i8>
-    <i9 sectionId="387" sectionName="StoneJug" aveLongTermSlipRate="0.1" slipRateStdDev="0.1" aveDip="70.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="237.7" parentSectionId="-1" connector="false">
+    <i9 sectionId="387" sectionName="StoneJug" aveLongTermSlipRate="0.1" slipRateStDev="0.1" aveDip="70.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="237.7" parentSectionId="-1" connector="false">
       <FaultTrace name="StoneJug">
         <Location Latitude="-42.4149" Longitude="173.3228" Depth="0.0000"/>
         <Location Latitude="-42.4229" Longitude="173.3537" Depth="0.0000"/>
@@ -98,7 +98,7 @@
         <Location Latitude="-42.5386" Longitude="173.4462" Depth="0.0000"/>
       </FaultTrace>
     </i9>      
-    <i10 sectionId="400" sectionName="TheHumps" aveLongTermSlipRate="0.3" slipRateStdDev="0.3" aveDip="50.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="167.2" parentSectionId="-1" connector="false">
+    <i10 sectionId="400" sectionName="TheHumps" aveLongTermSlipRate="0.3" slipRateStDev="0.3" aveDip="50.0" aveRake="180.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="167.2" parentSectionId="-1" connector="false">
       <FaultTrace name="TheHumps">
         <Location Latitude="-42.6309" Longitude="172.8880" Depth="0.0000"/>
         <Location Latitude="-42.6350" Longitude="172.9761" Depth="0.0000"/>
