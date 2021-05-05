@@ -35,6 +35,26 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
     }
 
     @Test
+    public void testRuptureSetSlipRateMethods() throws IOException, DocumentException {
+
+    	//see TODO in NZSHM22_SlipEnabledRuptureSet
+        SlipAlongRuptureModelRupSet ruptureSet =
+                new NZSHM22_RuptureSetBuilder()
+                        .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
+                        .buildRuptureSet();
+        
+        assertEquals(667, ruptureSet.getClusterRuptures().size());
+        assertEquals(667, ruptureSet.getAveSlipForAllRups().length);
+        assertEquals(68, ruptureSet.getSlipRateForAllSections().length);
+        assertEquals(68, ruptureSet.getSlipRateStdDevForAllSections().length);
+        
+        assertEquals("HopeConwayOS", ruptureSet.getFaultSectionData(11).getParentSectionName());
+        assertEquals(new Float(0.0214), new Float(ruptureSet.getSlipRateForSection(11)));
+        assertEquals(new Float(2.3), new Float(ruptureSet.getFaultSectionData(11).getOrigSlipRateStdDev()));
+        assertEquals(new Float(2.3), new Float(ruptureSet.getSlipRateStdDevForSection(11)));
+    }
+    
+    @Test
     public void testCantBuildKaikoura2016() throws IOException, DocumentException {
 
         Set<Integer> kaikouraFaults = Sets.newHashSet(95, 132, 136, 149, 162, 178, 189, 245, 310, 387, 400);
@@ -44,9 +64,7 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
                         .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
                         .buildRuptureSet();
 
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testCantBuildKaikoura2016.zip"));
-        
-        assertEquals(667, ruptureSet.getClusterRuptures().size());
+        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testCantBuildKaikoura2016.zip"));        
         assertFalse(hasRuptureWithFaults(kaikouraFaults, ruptureSet));
     }
 
@@ -59,10 +77,14 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
                         .setFaultModelFile(new File("src/integration/resources/alpine-vernon.xml"))
                         .buildRuptureSet();
 
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testAlpineVernon.zip"));
+        FaultSystemIO.writeRupSet(ruptureSet, new File("./tmp/testAlpineVernon.zip"));
 
         assertEquals(3101, ruptureSet.getClusterRuptures().size());
         assertTrue(hasRuptureWithFaults(faults, ruptureSet));
+
+        assertEquals(3101, ruptureSet.getAveSlipForAllRups().length);
+        assertEquals(86, ruptureSet.getSlipRateForAllSections().length);
+        assertEquals(86, ruptureSet.getSlipRateStdDevForAllSections().length);
     }
 
 
