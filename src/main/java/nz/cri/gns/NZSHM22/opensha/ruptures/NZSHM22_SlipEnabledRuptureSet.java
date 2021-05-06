@@ -33,13 +33,26 @@ public class NZSHM22_SlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		// fault system rup set,
 		// mostly as a demonstration)
 		double[] sectSlipRates = new double[subSections.size()];
+		double[] sectSlipRateStdDevs = new double[subSections.size()];
+
 		double[] sectAreasReduced = new double[subSections.size()];
 		double[] sectAreasOrig = new double[subSections.size()];
 		for (int s = 0; s < sectSlipRates.length; s++) {
 			FaultSection sect = subSections.get(s);
 			sectAreasReduced[s] = sect.getArea(true);
 			sectAreasOrig[s] = sect.getArea(false);
+			
+			//See discussion below about getReduced...
 			sectSlipRates[s] = sect.getReducedAveSlipRate() * 1e-3; // mm/yr => m/yr
+			sectSlipRateStdDevs[s] = sect.getReducedSlipRateStdDev();
+
+			/*
+			 * These will return different values if the input fault section data defines a couplingCoeff <> 1.0. 
+			 * in UCERF3 FM3.2 all the values were 1.0
+			 */
+			//	assert sect.getOrigAveSlipRate() == sect.getReducedAveSlipRate(); 
+			//	assert sect.getOrigSlipRateStdDev() == sect.getReducedSlipRateStdDev();
+		
 		}
 
 		double[] rupMags = new double[ruptures.size()];
@@ -123,7 +136,7 @@ public class NZSHM22_SlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 		String info = "Test down-dip subsectioning rup set";
 
 		//TODO: load slip rate StdDevs
-		init(subSections, sectSlipRates, null, sectAreasReduced, rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths,
+		init(subSections, sectSlipRates, sectSlipRateStdDevs, sectAreasReduced, rupsIDsList, rupMags, rupRakes, rupAreas, rupLengths,
 				info);
 		setClusterRuptures(ruptures);
 	}

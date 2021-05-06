@@ -7,12 +7,15 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RuptureConnecti
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
+import com.google.common.base.Preconditions;
+
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
@@ -60,7 +63,7 @@ public class NZSHM22_InversionRunner {
 	// since it helps fit slow-moving faults).
 	// If unnormalized, misfit is absolute difference.
 	// BOTH includes both normalized and unnormalized constraints.
-	protected UCERF3InversionConfiguration.SlipRateConstraintWeightingType slipRateWeighting = UCERF3InversionConfiguration.SlipRateConstraintWeightingType.BOTH; // (recommended:
+	protected SlipRateConstraintWeightingType slipRateWeightingType = SlipRateConstraintWeightingType.BOTH; // (recommended:
 																																									// BOTH)
 	// For SlipRateConstraintWeightingType.NORMALIZED (also used for
 	// SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
@@ -84,6 +87,8 @@ public class NZSHM22_InversionRunner {
 	protected double mfdInequalityConstraintWt = 1000;
 
 	private NZSHM22_InversionConfiguration inversionConfiguration;
+	private int slipRateUncertaintyWeight;
+	private int slipRateUncertaintyScalingFactor;
 
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
@@ -274,16 +279,39 @@ public class NZSHM22_InversionRunner {
 	 *                       fromUCERF3InversionConfiguration.SlipRateConstraintWeightingType
 	 * @param normalizedWt
 	 * @param unnormalizedWt
+	 * @throws IllegalArgumentException if the weighting types is not supported by this constraint
 	 * @return
 	 */
 	public NZSHM22_InversionRunner setSlipRateConstraint(
-			UCERF3InversionConfiguration.SlipRateConstraintWeightingType weightingType, double normalizedWt,
+			SlipRateConstraintWeightingType weightingType, double normalizedWt,
 			double unnormalizedWt) {
-		this.slipRateWeighting = weightingType;
+		Preconditions.checkArgument(weightingType != SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED,
+				"setSlipRateConstraint() using  %s is not supported. Use setSlipRateUncertaintyConstraint() instead.", weightingType);
+		this.slipRateWeightingType = weightingType;
 		this.slipRateConstraintWt_normalized = normalizedWt;
 		this.slipRateConstraintWt_unnormalized = unnormalizedWt;
 		return this;
 	}
+	
+	
+	/**
+	 * New NZSHM22 Slip rate uncertainty constraint
+	 * 
+	 * @param uncertaintyWeight
+	 * @param scalingFactor
+	 * @throws IllegalArgumentException if the weighting types is not supported by this constraint
+	 * @return
+	 */
+	public NZSHM22_InversionRunner setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType weightingType, 
+			int uncertaintyWeight, int scalingFactor) {
+		Preconditions.checkArgument(weightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED,
+				"setSlipRateUncertaintyConstraint() using %s is not supported. Use setSlipRateConstraint() instead.", weightingType);
+		this.slipRateWeightingType = weightingType;
+		this.slipRateUncertaintyWeight = uncertaintyWeight;
+		this.slipRateUncertaintyScalingFactor = scalingFactor;
+		return this;
+	}	
+	
 
 	public NZSHM22_InversionRunner setInversionConfiguration(NZSHM22_InversionConfiguration config) {
 		System.out.println("Building Inversion Configuration");
@@ -301,6 +329,17 @@ public class NZSHM22_InversionRunner {
 		
 //		inversionConfiguration = NZSHM22_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
 //				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
+		
+		//set up slip rate config
+		inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
+		if (this.slipRateWeightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
+			System.out.println("config for UNCERTAINTY_ADJUSTED " + this.slipRateUncertaintyWeight + ", " + this.slipRateUncertaintyScalingFactor);
+			inversionConfiguration.setSlipRateUncertaintyConstraintWt(this.slipRateUncertaintyWeight);
+			inversionConfiguration.setSlipRateUncertaintyConstraintScalingFactor(this.slipRateUncertaintyScalingFactor);
+		} else {
+			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
+			inversionConfiguration.setSlipRateConstraintWt_unnormalized(this.slipRateConstraintWt_unnormalized);
+		}
 		return this;
 	}
 
@@ -336,6 +375,7 @@ public class NZSHM22_InversionRunner {
 		// System.exit(1);
 		// }
 
+			
 		NZSHM22_InversionInputGenerator inputGen = new NZSHM22_InversionInputGenerator(rupSet, inversionConfiguration, null,
 				aveSlipConstraints, null, null);
 

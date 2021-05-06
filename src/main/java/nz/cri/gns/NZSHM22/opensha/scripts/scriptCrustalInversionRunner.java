@@ -26,6 +26,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.FaultSystemIO;
 
@@ -34,7 +35,9 @@ import scratch.UCERF3.utils.FaultSystemIO;
  */
 public class scriptCrustalInversionRunner {
 
-    public static CommandLine parseCommandLine(String[] args) throws ParseException {
+    private static SlipRateConstraintWeightingType weightingType = SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED;
+
+	public static CommandLine parseCommandLine(String[] args) throws ParseException {
 
         Option faultIdInOption = new Option("n", "faultIdIn", true, "a list of faultSectionIDs to filter on");
         faultIdInOption.setArgs(Option.UNLIMITED_VALUES);
@@ -62,8 +65,9 @@ public class scriptCrustalInversionRunner {
 
     protected static void generateRuptures(CommandLine cmd) throws IOException, DocumentException {
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-//        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
-        File rupSetFile = new File(outputDir, "CFM_hk_slipdef50_TMG2_rupture_set.zip");
+        File rupSetFile = new File(outputDir, "CFM_crustal_rupture_set.zip");
+        
+//        File rupSetFile = new File(outputDir, "CFM_hk_slipdef50_TMG2_rupture_set.zip");
 
         NZSHM22_RuptureSetBuilder builder = new NZSHM22_RuptureSetBuilder();
 
@@ -127,7 +131,7 @@ public class scriptCrustalInversionRunner {
         	.setDownDipPositionCoarseness(0.05); //d 0.01 ; e 0.05 +f ;
 
 //        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
-        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
+//        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
@@ -163,8 +167,8 @@ public class scriptCrustalInversionRunner {
         long inversionMins = 1; // run it for this many minutes
         long syncInterval = 10; // seconds between inversion synchronisations
         File outputDir = new File(cmd.getOptionValue("outputDir"));
-        //  File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
-        File solFile = new File(outputDir, "CFM_hk_slipdef0_scaling_TMG_solution_TEST_Non0_m5-3_eq10_ineq1000_minRRF0_bval0.94_2m_sf.zip");
+        File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
+//        File solFile = new File(outputDir, "CFM_hk_slipdef0_scaling_TMG_solution_TEST_Non0_m5-3_eq10_ineq1000_minRRF0_bval0.94_2m_sf.zip");
         
         File rupSetFile = null;
 
@@ -191,6 +195,7 @@ public class scriptCrustalInversionRunner {
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
         		.setGutenbergRichterMFDWeights(10d, 1000d)
+        		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2)
         		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();
         FaultSystemIO.writeSol(solution, solFile);

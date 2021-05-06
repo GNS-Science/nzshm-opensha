@@ -21,6 +21,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.FaultSystemIO;
 
@@ -90,7 +91,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         long syncInterval = 1; // seconds between inversion synchronisations
         File solFile = new File(tempFolder, "testAlpineVernonInversion.zip");
 
-           NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
                 .setInversionSeconds(inversionSecs) // or use inversionMinutes
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(new File(alpineVernonRupturesUrl.toURI()))
@@ -100,6 +101,20 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         System.out.println(runner.byFaultNameMetrics());
         FaultSystemIO.writeSol(solution, solFile);
 
+	}
+	
+	//TODO we should use junit>=4.13 and assertThrows instead 
+	// see https://stackoverflow.com/questions/156503/how-do-you-assert-that-a-certain-exception-is-thrown-in-junit-4-tests 
+	@Test(expected = IllegalArgumentException.class)
+	public void testSetSlipRateConstraintThrowsWithInvalidArgument() {
+        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        		.setSlipRateConstraint(SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED, 1, 2);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testSetSlipRateUncertaintyConstraintThrowsWithInvalidArgument() {
+        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        		.setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType.BOTH, 1, 2);
 	}
 
 }

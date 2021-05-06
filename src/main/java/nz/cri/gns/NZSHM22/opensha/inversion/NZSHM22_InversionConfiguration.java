@@ -35,7 +35,12 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 	private double slipRateConstraintWt_normalized;
 	private double slipRateConstraintWt_unnormalized;
 	private SlipRateConstraintWeightingType slipRateWeighting;
-//	private double paleoRateConstraintWt; 
+	
+	//New NZSHM scaling 
+	private int slipRateUncertaintyConstraintWt;
+	private int slipRateUncertaintyConstraintScalingFactor;
+
+	//	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
 	protected double magnitudeEqualityConstraintWt;
 	protected double magnitudeInequalityConstraintWt;
@@ -389,11 +394,11 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 
 		// NSHM-style config using setter methods...
 		NZSHM22_InversionConfiguration newConfig = new NZSHM22_InversionConfiguration()
-		// MFD config
-//				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
-//				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-//				.setMfdEqualityConstraints(mfdEqualityConstraints)
-//				.setMfdInequalityConstraints(mfdInequalityConstraints)
+				// MFD config
+				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+				.setMfdEqualityConstraints(mfdEqualityConstraints)
+				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
@@ -466,6 +471,26 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 		return this;
 	}
 
+	
+	public int getSlipRateUncertaintyConstraintWt() {
+		return slipRateUncertaintyConstraintWt;
+	}
+
+	public NZSHM22_InversionConfiguration setSlipRateUncertaintyConstraintWt(int slipRateUncertaintyConstraintWt) {
+		this.slipRateUncertaintyConstraintWt = slipRateUncertaintyConstraintWt;
+		return this;
+	}
+
+	public int getSlipRateUncertaintyConstraintScalingFactor() {
+		return slipRateUncertaintyConstraintScalingFactor;
+	}	
+	
+	public NZSHM22_InversionConfiguration setSlipRateUncertaintyConstraintScalingFactor(int slipRateUncertaintyConstraintScalingFactor) {
+		this.slipRateUncertaintyConstraintScalingFactor = slipRateUncertaintyConstraintScalingFactor;
+		return this;
+	}
+	
+	
 //	public double getPaleoRateConstraintWt() {
 //		return paleoRateConstraintWt;
 //	}
@@ -783,4 +808,6 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 		}
 		return mfds;
 	}
+
+
 }

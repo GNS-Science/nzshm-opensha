@@ -26,6 +26,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Ru
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateSmoothingInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateUncertaintyInversionConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.TotalMomentInversionConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
 //import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -54,6 +55,7 @@ import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 import scratch.UCERF3.utils.paleoRateConstraints.PaleoProbabilityModel;
 import scratch.UCERF3.utils.paleoRateConstraints.PaleoRateConstraint;
 import scratch.UCERF3.utils.paleoRateConstraints.UCERF3_PaleoProbabilityModel;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 /**
  * This class is used to generate inversion inputs (A/A_ineq matrices, d/d_ineq
@@ -115,8 +117,16 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 			List<AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
 
 		System.out.println("buildConstraints");
-		System.out.println("config.getSlipRateConstraintWt_normalized(): " + config.getSlipRateConstraintWt_normalized());
-		System.out.println("config.getSlipRateConstraintWt_unnormalized(): " +  config.getSlipRateConstraintWt_unnormalized());
+		System.out.println("================");
+		
+		System.out.println("config.getSlipRateWeightingType(): " + config.getSlipRateWeightingType());
+		if (config.getSlipRateWeightingType() == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
+			System.out.println("config.getSlipRateUncertaintyConstraintWt() :" +  config.getSlipRateUncertaintyConstraintWt());
+			System.out.println("config.getSlipRateUncertaintyConstraintScalingFactor() :" +  config.getSlipRateUncertaintyConstraintScalingFactor());
+		} else {
+			System.out.println("config.getSlipRateConstraintWt_normalized(): " + config.getSlipRateConstraintWt_normalized());
+			System.out.println("config.getSlipRateConstraintWt_unnormalized(): " +  config.getSlipRateConstraintWt_unnormalized());
+		}
 		System.out.println("config.getMinimizationConstraintWt(): " +  config.getMinimizationConstraintWt());
 		System.out.println("config.getMagnitudeEqualityConstraintWt(): " +  config.getMagnitudeEqualityConstraintWt());
 		System.out.println("config.getMagnitudeInequalityConstraintWt(): " +   config.getMagnitudeInequalityConstraintWt());
@@ -125,14 +135,23 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 		// builds constraint instances
 		List<InversionConstraint> constraints = new ArrayList<>();
 
-		double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
-
-		if (config.getSlipRateConstraintWt_normalized() > 0d || config.getSlipRateConstraintWt_unnormalized() > 0d)
-			// add slip rate constraint
-			constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(),
-					config.getSlipRateConstraintWt_unnormalized(), config.getSlipRateWeightingType(), rupSet,
-					sectSlipRateReduced));
-
+		if (config.getSlipRateWeightingType() == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
+			//NZSHM22 new slip-rate constraint
+			double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
+			double[] stdDevReduced = rupSet.getSlipRateStdDevForAllSections();
+			constraints.add(new SlipRateUncertaintyInversionConstraint(config.getSlipRateUncertaintyConstraintWt(),
+					config.getSlipRateUncertaintyConstraintScalingFactor(), rupSet, sectSlipRateReduced, stdDevReduced));
+		} else {
+			//UCERF3 style slip rate constraints...
+			if (config.getSlipRateConstraintWt_normalized() > 0d || config.getSlipRateConstraintWt_unnormalized() > 0d) {
+				// add slip rate constraint
+				double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
+				constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(),
+						config.getSlipRateConstraintWt_unnormalized(), config.getSlipRateWeightingType(), rupSet,
+						sectSlipRateReduced));
+			}
+		}
+		
 //		if (config.getPaleoRateConstraintWt() > 0d)
 //			constraints.add(new PaleoRateInversionConstraint(rupSet, config.getPaleoRateConstraintWt(),
 //					paleoRateConstraints, paleoProbabilityModel));
