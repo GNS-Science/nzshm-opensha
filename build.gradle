@@ -35,25 +35,6 @@ jar {
 
 sourceSets {
 
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-	resources {
-	    exclude '**/resources/**'
-	}
-    }
-
-    test {
-        java {
-            srcDirs = ['test/java']
-        }
-        resources {
-            srcDirs = ['test/resources']
-            exclude '**/*.java'
-        }
-    }
-
     intTest {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output

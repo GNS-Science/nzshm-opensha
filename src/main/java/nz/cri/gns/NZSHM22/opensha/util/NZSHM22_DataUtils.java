@@ -25,7 +25,7 @@ public class NZSHM22_DataUtils {
 	 * have forward slashes as it is for jar file loading. It cannot use
 	 * File.separator.
 	 */
-	public static String DATA_URL_PREFIX = "/resources/data";
+	public static String DATA_URL_PREFIX = "/data";
 
 	/**
 	 * This gives the URL of a file in the specified sub directory of our UCERF3
