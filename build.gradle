@@ -1,25 +1,30 @@
-/*
- * opensha-ucerf3 dependencies
- */
 
-//apply from: '../opensha-ucerf3/build.gradle'
-apply from: '../opensha-commons/build-common.gradle'
+apply plugin: 'java-library'
 
-apply plugin: 'jacoco'
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+compileJava.options.encoding = "UTF-8"
 
 dependencies {
-
-    compileOnly project(path: ':opensha-ucerf3', configuration: 'compileOnly')
-    compileAndResource project(path: ':opensha-ucerf3')
-
-    compileAndResource 'com.google.code.gson:gson:2.8.5'
-    compileAndResource 'commons-cli:commons-cli:1.4'
-
     /* no remote repo */
-    compileAndResource files('python/share/py4j/py4j0.10.9.1.jar') //Py4j jar installed locally  via `pip install py4j`
+    implementation files('python/share/py4j/py4j0.10.9.1.jar') //Py4j jar installed locally  via `pip install py4j`
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:3.5.13'
+    implementation project(path: ':opensha')
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:3.5.13'
+}
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    apiResolvable {
+        description 'resolvable extension of the api classpath'
+        canBeResolved=true
+        extendsFrom api
+    }
 }
 
 jar {
@@ -30,25 +35,6 @@ jar {
 
 sourceSets {
 
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-	resources {
-	    exclude '**/resources/**'
-	}
-    }
-
-    test {
-        java {
-            srcDirs = ['test/java']
-        }
-        resources {
-            srcDirs = ['test/resources']
-            exclude '**/*.java'
-        }
-    }
-
     intTest {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
@@ -56,9 +42,8 @@ sourceSets {
             srcDirs = ['src/integration/java']
         }
 
-        resources.srcDir('src/integration/resources')
         resources {
-            srcDirs = ['src/integration/resources']
+            srcDirs = ['src/integration/resources', 'src/main/java']
         }
     }
 }
@@ -71,6 +56,24 @@ configurations {
 dependencies {
     intTestImplementation 'junit:junit:4.12'
     intTestImplementation 'com.google.jimfs:jimfs:1.1'
+}
+
+task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
+    baseName = project.name + '-all'
+    from {
+        configurations.apiResolvable.collect { it.isDirectory() ? it : zipTree(it).matching {
+            exclude { it.path.contains('META-INF') }
+        }}
+    }
+
+    // include compiled source from this project
+    from sourceSets.main.allJava
+    // include upstream project fat jar
+    from zipTree(file('../opensha/build/libs/opensha-all.jar'))
+
+    duplicatesStrategy = 'exclude'
+      //  from sourceSets.main.allJava
+    with jar
 }
 
 task integrationTest(type: Test) {
@@ -89,53 +92,22 @@ test {
     exclude 'org/opensha/**'
     exclude '**/DataSuite'
     filter {
-        includeTestsMatching('*NSHM_NZ.*')
+        includeTestsMatching('*NZSHM22.*')
         getIncludePatterns().remove('*Suite*')
     }
 }
 
 task localTests(type: Test, dependsOn: testClasses) {
-    //filter { excludeTestsMatching('*.opensha.commons.*')} 
-    filter { includeTestsMatching('*NSHM_NZ.*') }
+    //filter { excludeTestsMatching('*.opensha.commons.*')}
+    filter { includeTestsMatching('*NZSHM22.*') }
     filter { includeTestsMatching('*nz.cri.gns.*') }
     filter { includeTestsMatching('*UCERF3.inversion.*') }
-    //filter { excludeTestsMatching 'generic.*' } 
+    //filter { excludeTestsMatching 'generic.*' }
     // excludes a whole package, "generic". NB this is not a regex:
-    // '*' is simply "wildcard" and dot means dot ... other more 
+    // '*' is simply "wildcard" and dot means dot ... other more
     // sophisticated "ANT-style" patterns are available in class Test
 
-    //filter { excludeTestsMatching '*_FT' } 
+    //filter { excludeTestsMatching '*_FT' }
     // also exclude all test classes ending in "_FT" (e.g. for "functional test")
-}
-
-
-
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled true
-    }
-    afterEvaluate {
-        classDirectories = files(classDirectories.files.collect {
-            fileTree(
-                    dir: it,
-                    exclude: ['**/util/**',])
-        })
-    }
-}
-check.dependsOn jacocoTestReport
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            element = 'CLASS'
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 1.0
-            }
-        }
-    }
 }
 

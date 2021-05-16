@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSHA>
+  <FaultModel>
+    <i0 sectionId="0" sectionName=" AhuririR      " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="45.0" aveRake="90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="280.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AhuririR">
+        <Location Latitude="-44.07" Longitude="169.70000000000002" Depth="0.0"/>
+        <Location Latitude="-44.213" Longitude="169.623" Depth="0.0"/>
+        <Location Latitude="-44.298" Longitude="169.61300000000003" Depth="0.0"/>
+        <Location Latitude="-44.445" Longitude="169.692" Depth="0.0"/>
+      </FaultTrace>
+    </i0>
+    <i1 sectionId="1" sectionName=" AkaOtaki      " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="75.0" aveRake="45.0" aveUpperDepth="0.0" aveLowerDepth="20.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="145.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AkaOtaki">
+        <Location Latitude="-40.692" Longitude="175.437" Depth="0.0"/>
+        <Location Latitude="-40.8" Longitude="175.333" Depth="0.0"/>
+        <Location Latitude="-40.88300000000001" Longitude="175.225" Depth="0.0"/>
+        <Location Latitude="-40.983" Longitude="175.15000000000003" Depth="0.0"/>
+        <Location Latitude="-41.058" Longitude="175.098" Depth="0.0"/>
+        <Location Latitude="-41.122" Longitude="175.042" Depth="0.0"/>
+      </FaultTrace>
+    </i1>
+    <i2 sectionId="2" sectionName=" Akatore       " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="45.0" aveRake="90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="120.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="Akatore">
+        <Location Latitude="-45.947" Longitude="170.363" Depth="0.0"/>
+        <Location Latitude="-45.985" Longitude="170.29" Depth="0.0"/>
+        <Location Latitude="-46.092" Longitude="170.182" Depth="0.0"/>
+        <Location Latitude="-46.105" Longitude="170.178" Depth="0.0"/>
+        <Location Latitude="-46.167" Longitude="170.103" Depth="0.0"/>
+        <Location Latitude="-46.205" Longitude="170.06200000000004" Depth="0.0"/>
+        <Location Latitude="-46.212" Longitude="170.035" Depth="0.0"/>
+        <Location Latitude="-46.235" Longitude="170.027" Depth="0.0"/>
+        <Location Latitude="-46.292" Longitude="169.968" Depth="0.0"/>
+        <Location Latitude="-46.355" Longitude="169.963" Depth="0.0"/>
+        <Location Latitude="-46.42" Longitude="169.995" Depth="0.0"/>
+      </FaultTrace>
+    </i2>
+    <i3 sectionId="3" sectionName=" Albury        " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="60.0" aveRake="90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="245.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="Albury">
+        <Location Latitude="-44.198" Longitude="170.808" Depth="0.0"/>
+        <Location Latitude="-44.116" Longitude="170.761" Depth="0.0"/>
+        <Location Latitude="-44.033" Longitude="170.713" Depth="0.0"/>
+      </FaultTrace>
+    </i3>    
+    <i4 sectionId="4" sectionName=" AldermanE01   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="290.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE01">
+        <Location Latitude="-36.98" Longitude="176.448" Depth="0.0"/>
+        <Location Latitude="-37.022" Longitude="176.434" Depth="0.0"/>
+        <Location Latitude="-37.065" Longitude="176.42" Depth="0.0"/>
+      </FaultTrace>
+    </i4>
+    <i5 sectionId="5" sectionName=" AldermanE02   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="315.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE02">
+        <Location Latitude="-36.953" Longitude="176.457" Depth="0.0"/>
+        <Location Latitude="-37.009" Longitude="176.4" Depth="0.0"/>
+        <Location Latitude="-37.065" Longitude="176.343" Depth="0.0"/>
+      </FaultTrace>
+    </i5>
+    <i6 sectionId="6" sectionName=" AldermanE03   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="300.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE03">
+        <Location Latitude="-36.938" Longitude="176.533" Depth="0.0"/>
+        <Location Latitude="-36.993" Longitude="176.505" Depth="0.0"/>
+        <Location Latitude="-37.048" Longitude="176.477" Depth="0.0"/>
+      </FaultTrace>
+    </i6>
+    <i7 sectionId="7" sectionName=" AldermanE04   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="305.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE04">
+        <Location Latitude="-36.843" Longitude="176.633" Depth="0.0"/>
+        <Location Latitude="-36.904" Longitude="176.594" Depth="0.0"/>
+        <Location Latitude="-36.965" Longitude="176.555" Depth="0.0"/>
+      </FaultTrace>
+    </i7>
+    <i8 sectionId="8" sectionName=" AldermanE05   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="320.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE05">
+        <Location Latitude="-36.883" Longitude="176.548" Depth="0.0"/>
+        <Location Latitude="-36.913" Longitude="176.51" Depth="0.0"/>
+        <Location Latitude="-36.943" Longitude="176.472" Depth="0.0"/>
+      </FaultTrace>
+    </i8>
+    <i9 sectionId="9" sectionName=" AldermanE06   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="325.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE06">
+        <Location Latitude="-36.76" Longitude="176.71" Depth="0.0"/>
+        <Location Latitude="-36.817" Longitude="176.63" Depth="0.0"/>
+        <Location Latitude="-36.875" Longitude="176.55" Depth="0.0"/>
+      </FaultTrace>
+    </i9>
+    <i10 sectionId="10" sectionName=" AldermanE07   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="115.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanE07">
+        <Location Latitude="-37.197" Longitude="176.213" Depth="0.0"/>
+        <Location Latitude="-37.153" Longitude="176.307" Depth="0.0"/>
+        <Location Latitude="-37.108" Longitude="176.4" Depth="0.0"/>
+      </FaultTrace>
+    </i10>
+
+    <i11 sectionId="11" sectionName=" AldermanW01   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="109.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanW01">
+        <Location Latitude="-37.093" Longitude="176.282" Depth="0.0"/>
+        <Location Latitude="-37.014" Longitude="176.31" Depth="0.0"/>
+        <Location Latitude="-36.935" Longitude="176.338" Depth="0.0"/>
+      </FaultTrace>
+    </i11>
+    <i12 sectionId="12" sectionName=" AldermanW02   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="149.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanW02">
+        <Location Latitude="-36.987" Longitude="176.33500000000004" Depth="0.0"/>
+        <Location Latitude="-36.922" Longitude="176.357" Depth="0.0"/>
+        <Location Latitude="-36.855" Longitude="176.39" Depth="0.0"/>
+      </FaultTrace>
+    </i12>
+    <i13 sectionId="13" sectionName=" AldermanW03   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="144.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanW03">
+        <Location Latitude="-36.878" Longitude="176.405" Depth="0.0"/>
+        <Location Latitude="-36.86" Longitude="176.48" Depth="0.0"/>
+        <Location Latitude="-36.82" Longitude="176.525" Depth="0.0"/>
+      </FaultTrace>
+    </i13>
+    <i14 sectionId="14" sectionName=" AldermanW04   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="117.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanW04">
+        <Location Latitude="-36.863" Longitude="176.408" Depth="0.0"/>
+        <Location Latitude="-36.845" Longitude="176.452" Depth="0.0"/>
+        <Location Latitude="-36.81" Longitude="176.502" Depth="0.0"/>
+      </FaultTrace>
+    </i14>
+    <i15 sectionId="15" sectionName=" AldermanW05   " aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="12.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="106.0" parentSectionId="-1" connector="false">
+      <FaultTrace name="AldermanW05">
+        <Location Latitude="-36.707" Longitude="176.433" Depth="0.0"/>
+        <Location Latitude="-36.756" Longitude="176.402" Depth="0.0"/>
+        <Location Latitude="-36.805" Longitude="176.372" Depth="0.0"/>
+      </FaultTrace>
+    </i15>
+  </FaultModel>
+</OpenSHA>

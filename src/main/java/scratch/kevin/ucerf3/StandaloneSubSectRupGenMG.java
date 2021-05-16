@@ -17,7 +17,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import nz.cri.gns.NSHM.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import scratch.UCERF3.enumTreeBranches.DeformationModels;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
