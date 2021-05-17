@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Set;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
@@ -34,7 +35,7 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
  */
 public class NZSHM22_RuptureSetBuilder {
 
-	final FaultSectionList subSections;
+	FaultSectionList subSections;
 	List<ClusterRupture> ruptures;
 	PlausibilityConfiguration plausibilityConfig;
 	ClusterRuptureBuilder builder;
@@ -44,6 +45,7 @@ public class NZSHM22_RuptureSetBuilder {
 	String downDipFaultName = null;
 	Set<Integer> faultIds;
 	FaultIdFilter.FilterType faultIdfilterType = null;
+	NZSHM22_FaultModels faultModel = null;
 
 	double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
 	double maxDistance = 5; // max distance for linking multi fault ruptures, km
@@ -290,6 +292,11 @@ public class NZSHM22_RuptureSetBuilder {
 		return this;
 	}
 
+	public NZSHM22_RuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
+		this.faultModel = faultModel;
+		return this;
+	}
+
 	/**
 	 * @param permutationStrategyClass which strategy to choose
 	 * @return a RuptureGrowingStrategy object
@@ -317,37 +324,47 @@ public class NZSHM22_RuptureSetBuilder {
 		return permutationStrategy;
 	}
 
-	private void loadFaults() throws MalformedURLException, DocumentException {
-		if (fsdFile != null) {
-			FaultSectionList fsd = FaultSectionList.fromList((FaultModels.loadStoredFaultSections(fsdFile)));
-			System.out.println("Fault model has " + fsd.size() + " fault sections");
+    private void loadFaults() throws IOException, DocumentException {
+        if (faultModel != null) {
+            faultModel.fetchFaultSections(subSections);
+        } else if (downDipFile != null) {
+            try (FileInputStream in = new FileInputStream(downDipFile)) {
+                DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
+            }
+        } else if (fsdFile != null) {
+            subSections = FaultSectionList.fromList((FaultModels.loadStoredFaultSections(fsdFile)));
+        } else {
+            throw new IllegalArgumentException("No fault model specified.");
+        }
+
+        System.out.println("Fault model has " + subSections.size() + " fault sections");
+
+        if (fsdFile != null || (faultModel != null && faultModel.isCrustal())) {
 
 			if (maxFaultSections < 1000 || skipFaultSections > 0) {
 				final long endSection = maxFaultSections + skipFaultSections;
 				final long skipSections = skipFaultSections;
-				fsd.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
-				System.out.println("Fault model now has " + fsd.size() + " fault sections");
+				subSections.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
+				System.out.println("Fault model filtered to " + subSections.size() + " fault sections");
 			}
 
-			// build the subsections
-			subSections.addParents(fsd);
-			for (FaultSection parentSect : fsd) {
-				double ddw = parentSect.getOrigDownDipWidth();
-				double maxSectLength = ddw * maxSubSectionLength;
-				System.out.println("Get subSections in " + parentSect.getName());
-				// the "2" here sets a minimum number of sub sections
-				List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength,
-						subSections.getSafeId(), 2);
-				getSubSections().addAll(newSubSects);
-				System.out.println("Produced " + newSubSects.size() + " subSections in " + parentSect.getName());
-			}
-			System.out.println(subSections.size() + " Sub Sections");
-		}
-	}
-
-	private void loadSubductionFault(int id, String faultName, File file) throws IOException {
-		DownDipSubSectBuilder.loadFromFile(subSections, id, faultName, file);
-	}
+            FaultSectionList fsd = subSections;
+            subSections = new FaultSectionList();
+            // build the subsections
+            subSections.addParents(fsd);
+            for (FaultSection parentSect : fsd) {
+                double ddw = parentSect.getOrigDownDipWidth();
+                double maxSectLength = ddw * maxSubSectionLength;
+                System.out.println("Get subSections in " + parentSect.getName());
+                // the "2" here sets a minimum number of sub sections
+                List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength,
+                        subSections.getSafeId(), 2);
+                getSubSections().addAll(newSubSects);
+                System.out.println("Produced " + newSubSects.size() + " subSections in " + parentSect.getName());
+            }
+            System.out.println(subSections.size() + " Sub Sections created.");
+        }
+    }
 
 	private void buildConfig() {
 		SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
@@ -384,14 +401,8 @@ public class NZSHM22_RuptureSetBuilder {
 	 * @throws IOException
 	 */
 	public SlipAlongRuptureModelRupSet buildRuptureSet() throws DocumentException, IOException {
-		if (fsdFile != null)
-			loadFaults();
 
-		if (downDipFile != null)
-			// TODO call this multiple times to implement multiple downdip faults
-			loadSubductionFault(10000, downDipFaultName, downDipFile);
-
-		System.out.println("Have " + subSections.size() + " sub-sections in total");
+	    loadFaults();
 
 		buildConfig();
 		System.out.println("Built PlausibilityConfiguration");

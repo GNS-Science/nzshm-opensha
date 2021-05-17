@@ -39,22 +39,21 @@ public class DownDipSubSectBuilder {
 	 * Loads a downdip fault from a CSV file and adds all sections to the subSections list
 	 * passed to the registry constructor.
 	 *
+	 * @param subSections the subsection list to be populated
 	 * @param id      The imaginary parent fault id.
 	 * @param name    The name of the fault.
-	 * @param csvFile The CSV file.
+	 * @param in      The InputStream
 	 * @throws IOException
 	 */
-	public static void loadFromFile(FaultSectionList subSections, int id, String name, File csvFile) throws IOException {
+	public static void loadFromStream(FaultSectionList subSections, int id, String name, InputStream in) throws IOException {
 		FaultSectionPrefData interfaceParentSection = new FaultSectionPrefData();
 		interfaceParentSection.setSectionId(id);
 		interfaceParentSection.setSectionName(name);
 		interfaceParentSection.setAveDip(1); // otherwise the FaultSectionList will complain
 		subSections.addParent(interfaceParentSection);
 
-		try (InputStream inputStream = new FileInputStream(csvFile)) {
-			DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(name, interfaceParentSection, subSections.getSafeId(), inputStream);
-			subSections.addAll(downDipBuilder.getSubSectsList());
-		}
+		DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(name, interfaceParentSection, subSections.getSafeId(), in);
+		subSections.addAll(downDipBuilder.getSubSectsList());
 	}
 	
 	private static DownDipFaultSection buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip, double slipRate) {
