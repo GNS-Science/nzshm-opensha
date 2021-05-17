@@ -34,7 +34,6 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
  */
 public class NZSHM22_RuptureSetBuilder {
 
-	final DownDipRegistry downDipRegistry;
 	final FaultSectionList subSections;
 	List<ClusterRupture> ruptures;
 	PlausibilityConfiguration plausibilityConfig;
@@ -74,7 +73,6 @@ public class NZSHM22_RuptureSetBuilder {
 	 */
 	public NZSHM22_RuptureSetBuilder() {
 		subSections = new FaultSectionList();
-		downDipRegistry = new DownDipRegistry(subSections);
 	}
 
 	/**
@@ -247,7 +245,7 @@ public class NZSHM22_RuptureSetBuilder {
 	 * @param maxAspect      the maximum aspect ratio
 	 * @param depthThreshold the threshold (count of rows) from which the maxAspect
 	 *                       constraint will be ignored
-	 * 
+	 *
 	 * @return this builder
 	 */
 	public NZSHM22_RuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect, int depthThreshold) {
@@ -311,7 +309,7 @@ public class NZSHM22_RuptureSetBuilder {
 		}
 
 		if (null != downDipFile) {
-			permutationStrategy = new DownDipPermutationStrategy(downDipRegistry, permutationStrategy)
+			permutationStrategy = new DownDipPermutationStrategy(permutationStrategy)
 					.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
 					.addPositionCoarsenessConstraint(downDipPositionCoarseness).addMinFillConstraint(downDipMinFill)
 					.addSizeCoarsenessConstraint(downDipSizeCoarseness);
@@ -348,7 +346,7 @@ public class NZSHM22_RuptureSetBuilder {
 	}
 
 	private void loadSubductionFault(int id, String faultName, File file) throws IOException {
-		downDipRegistry.loadFromFile(id, faultName, file);
+		DownDipSubSectBuilder.loadFromFile(subSections, id, faultName, file);
 	}
 
 	private void buildConfig() {
@@ -357,7 +355,7 @@ public class NZSHM22_RuptureSetBuilder {
 
 		// connection strategy: parent faults connect at closest point, and only when
 		// dist <=5 km
-		ClusterConnectionStrategy connectionStrategy = new FaultTypeSeparationConnectionStrategy(downDipRegistry,
+		ClusterConnectionStrategy connectionStrategy = new FaultTypeSeparationConnectionStrategy(
 				subSections, distAzCalc, maxDistance);
 
 		System.out.println("Built connectionStrategy");
@@ -368,7 +366,7 @@ public class NZSHM22_RuptureSetBuilder {
 				.builder(connectionStrategy, distAzCalc).maxSplays(maxNumSplays)
 				.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
 				.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
-				.add(new DownDipSafeCumulativeAzimuthChangeFilter(downDipRegistry, azimuthCalc,
+				.add(new DownDipSafeCumulativeAzimuthChangeFilter(azimuthCalc,
 						maxCumulativeAzimuthChange))
 				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
 		if (faultIdfilterType != null) {
@@ -388,11 +386,11 @@ public class NZSHM22_RuptureSetBuilder {
 	public SlipAlongRuptureModelRupSet buildRuptureSet() throws DocumentException, IOException {
 		if (fsdFile != null)
 			loadFaults();
-		
+
 		if (downDipFile != null)
 			// TODO call this multiple times to implement multiple downdip faults
 			loadSubductionFault(10000, downDipFaultName, downDipFile);
-		
+
 		System.out.println("Have " + subSections.size() + " sub-sections in total");
 
 		buildConfig();
@@ -416,7 +414,7 @@ public class NZSHM22_RuptureSetBuilder {
 			System.out.println("Built " + ruptures.size() + " total ruptures");
 		} else {
 			ruptures = RuptureThinning.filterRuptures(ruptures,
-					RuptureThinning.downDipPredicate(downDipRegistry).or(RuptureThinning
+					RuptureThinning.downDipPredicate().or(RuptureThinning
 							.coarsenessPredicate(thinningFactor)
 							.or(RuptureThinning.endToEndPredicate(getPlausibilityConfig().getConnectionStrategy()))));
 			System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
@@ -430,13 +428,13 @@ public class NZSHM22_RuptureSetBuilder {
 					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
 //			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
 //					ScalingRelationships.TMG_SUB_2017, SlipAlongRuptureModels.UNIFORM);
-			
-			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());	
+
+			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return rupSet;	
+		return rupSet;
 	}
 
 	/**

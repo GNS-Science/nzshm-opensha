@@ -5,8 +5,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipRegistry;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,11 +29,10 @@ public class RuptureThinning {
 
     /**
      * Returns a predicate that takes a ClusterRupture and returns true iff the rupture is on a downdip fault.
-     * @param registry
      * @return
      */
-    public static Predicate<ClusterRupture> downDipPredicate(DownDipRegistry registry){
-        return rupture -> registry.isDownDip(rupture.clusters[0]);
+    public static Predicate<ClusterRupture> downDipPredicate(){
+        return rupture -> DownDipFaultSection.isDownDip(rupture.clusters[0]);
     }
 
     /**

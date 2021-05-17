@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 import java.util.ArrayList;
 import java.util.List;
 
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
@@ -20,12 +21,10 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
 
     private Constraint constraint;
 
-    private final DownDipRegistry registry;
     private final RuptureGrowingStrategy crustalStrategy;
     private static final boolean D = false;
 
-    public DownDipPermutationStrategy(DownDipRegistry registry, RuptureGrowingStrategy crustalStrategy) {
-        this.registry = registry;
+    public DownDipPermutationStrategy(RuptureGrowingStrategy crustalStrategy) {
         this.crustalStrategy = crustalStrategy;
     }
 
@@ -131,7 +130,7 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
 
         List<FaultSubsectionCluster> permutations = new ArrayList<>();
 
-        DownDipSubSectBuilder downDipBuilder = registry.getBuilder(fullCluster.parentSectionID);
+        DownDipSubSectBuilder downDipBuilder = DownDipFaultSection.getBuilder(fullCluster);
         if (downDipBuilder == null) {
             permutations = crustalStrategy.getVariations(fullCluster, firstSection);
         } else {
