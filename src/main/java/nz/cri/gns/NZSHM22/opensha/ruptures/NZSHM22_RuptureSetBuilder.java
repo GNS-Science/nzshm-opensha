@@ -65,6 +65,39 @@ public class NZSHM22_RuptureSetBuilder {
 	double downDipMinFill = 1; // 1 means only allow complete rectangles
 	double downDipPositionCoarseness = 0; // 0 means no coarseness
 	double downDipSizeCoarseness = 0; // 0 means no coarseness
+	
+	public String getDescriptiveString() {
+		String description = "RupSet_Az";
+		if (faultModel != null) {
+			description = description + "_FM(" + faultModel.name() + ")";
+		}
+		if (fsdFile != null) {
+			description = description + "_FF(" + fsdFile.getName() + ")";
+		}
+		if (downDipFile != null) {
+			description = description + "_SF(" + downDipFile.getName() + ")";
+		}
+		if (downDipFile != null || (faultModel != null && !faultModel.isCrustal())) {
+			description += "_ddAsRa(" + downDipMinAspect + "," + downDipMaxAspect + "," + downDipAspectDepthThreshold + ")";
+			description += "_ddMnFl(" + downDipMinFill + ")";
+			description += "_ddPsCo(" + downDipPositionCoarseness + ")";
+			description += "_ddSzCo(" + downDipSizeCoarseness + ")";
+		} else {
+			description += "_mxSbScLn(" + maxSubSectionLength + ")";
+			//description += "_skFtSc(" + skipFaultSections + ")";
+		}
+
+		description += "_mxAzCh(" + maxTotalAzimuthChange + ")";
+		description += "_mxCmAzCh(" + maxCumulativeAzimuthChange + ")";
+		//description += "_mxFaSe(" + maxFaultSections + ")";
+		description += "_mxJpDs(" + maxDistance + ")";
+		description += "_mxTtAzCh(" + maxTotalAzimuthChange + ")";
+		//description += "_mnSsPrPa(" + minSubSectsPerParent + ")";
+		//description += "_pmSt(" + permutationStrategyClass.name() + ")";
+		description += "_thFc(" + thinningFactor + ")";
+
+		return description;
+	}
 
 	public enum RupturePermutationStrategy {
 		UCERF3, POINTS,
