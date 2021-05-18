@@ -57,7 +57,7 @@ public class NZSHM22_RuptureSetBuilder {
 	float maxTotalAzimuthChange = 60;
 	float maxCumulativeAzimuthChange = 560;
 	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.UCERF3;
-	double thinningFactor = Double.NaN;
+	double thinningFactor = 0;
 	double downDipMinAspect = 1;
 	double downDipMaxAspect = 3;
 	int downDipAspectDepthThreshold = Integer.MAX_VALUE; // from this 'depth' (in tile rows) the max aspect constraint
@@ -421,7 +421,7 @@ public class NZSHM22_RuptureSetBuilder {
 		// numThreads = 1;
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
 
-		if (Double.isNaN(thinningFactor)) {
+		if (thinningFactor == 0) {
 			System.out.println("Built " + ruptures.size() + " total ruptures");
 		} else {
 			ruptures = RuptureThinning.filterRuptures(ruptures,
