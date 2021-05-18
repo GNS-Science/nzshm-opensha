@@ -142,11 +142,7 @@ public class NZSHM22_RuptureSetBuilder {
 	 * @return NZSHM22_RuptureSetBuilder the builder
 	 */
 	public NZSHM22_RuptureSetBuilder setThinningFactor(double thinningFactor) {
-		if (thinningFactor > 0.0) {
-			this.thinningFactor = thinningFactor;
-		} else {
-			this.thinningFactor = Double.NaN;
-		}
+		this.thinningFactor = thinningFactor;
 		return this;
 	}
 
@@ -454,7 +450,7 @@ public class NZSHM22_RuptureSetBuilder {
 		// numThreads = 1;
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
 
-		if (thinningFactor == 0) {
+		if (thinningFactor <= 0) {
 			System.out.println("Built " + ruptures.size() + " total ruptures");
 		} else {
 			ruptures = RuptureThinning.filterRuptures(ruptures,
