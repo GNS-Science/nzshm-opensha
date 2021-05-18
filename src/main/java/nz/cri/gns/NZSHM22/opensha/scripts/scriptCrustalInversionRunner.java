@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -45,6 +46,7 @@ public class scriptCrustalInversionRunner {
 
         Options options = new Options()
                 .addRequiredOption("o", "outputDir", true, "an existing directory to receive output file(s)")
+                .addOption("m", "faultModel", true, "the name of a supported fault model")
                 .addOption("f", "fsdFile", true, "an opensha-xml Fault Source file")
                 .addOption("g", "generateRuptureSet", false, "generate rupture set (flag only)")
                 .addOption("x", "rupSetForInversion", true, "rupture set file for inversion")
@@ -119,6 +121,10 @@ public class scriptCrustalInversionRunner {
         }
         if(cmd.hasOption("thinning")){
             builder.setThinningFactor(Double.parseDouble(cmd.getOptionValue("thinning")));
+        }
+        if(cmd.hasOption("faultModel")){
+            System.out.println("Fault Model is " + cmd.getOptionValue("faultModel"));
+            builder.setFaultModel(NZSHM22_FaultModels.valueOf(cmd.getOptionValue("faultModel")));
         }
 
         System.out.println("=========");

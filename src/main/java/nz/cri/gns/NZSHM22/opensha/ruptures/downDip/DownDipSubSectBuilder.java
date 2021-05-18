@@ -1,5 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -7,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationUtils;
@@ -14,6 +17,7 @@ import org.opensha.commons.geo.LocationVector;
 import org.opensha.commons.util.FaultUtils;
 //import org.opensha.refFaultParamDb.vo.FaultSection;
 //import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.SimpleFaultData;
@@ -30,7 +34,27 @@ public class DownDipSubSectBuilder {
 	private int parentID;
 	private Map<Integer, Integer> idToRowMap;
 	private Map<Integer, Integer> idToColMap;
-	//	private static Random slipRateGenerator = new Random();
+
+	/**
+	 * Loads a downdip fault from a CSV file and adds all sections to the subSections list
+	 * passed to the registry constructor.
+	 *
+	 * @param subSections the subsection list to be populated
+	 * @param id      The imaginary parent fault id.
+	 * @param name    The name of the fault.
+	 * @param in      The InputStream
+	 * @throws IOException
+	 */
+	public static void loadFromStream(FaultSectionList subSections, int id, String name, InputStream in) throws IOException {
+		FaultSectionPrefData interfaceParentSection = new FaultSectionPrefData();
+		interfaceParentSection.setSectionId(id);
+		interfaceParentSection.setSectionName(name);
+		interfaceParentSection.setAveDip(1); // otherwise the FaultSectionList will complain
+		subSections.addParent(interfaceParentSection);
+
+		DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(name, interfaceParentSection, subSections.getSafeId(), in);
+		subSections.addAll(downDipBuilder.getSubSectsList());
+	}
 	
 	private static DownDipFaultSection buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip, double slipRate) {
 		DownDipFaultSection fsd = new DownDipFaultSection();
@@ -130,15 +154,17 @@ public class DownDipSubSectBuilder {
 		
 		for (int row=1; row<csv.getNumRows(); row++) {
 			List<String> csvLine = csv.getLine(row);
+			colIndex = Integer.parseInt(csvLine.get(0));
+			rowIndex = Integer.parseInt(csvLine.get(1));
 			DownDipFaultSection fs = buildFaultSectionFromCsvRow(startID, csvLine);
 			fs.setParentSectionId(parentSection.getSectionId());
 			fs.setParentSectionName(parentSection.getSectionName());
-			fs.setSectionName(parentSection.getSectionName() + "; col: " + csvLine.get(0) + ", row: " + csvLine.get(1));
-			colIndex = Integer.parseInt(csvLine.get(0));
-			rowIndex = Integer.parseInt(csvLine.get(1));
-			
+			fs.setSectionName(parentSection.getSectionName() + "; col: " + colIndex + ", row: " + rowIndex);
+			fs.setRowIndex(rowIndex);
+			fs.setColIndex(colIndex);
+			fs.setBuilder(this);
 			try  {
-				subSects[colIndex][rowIndex] = fs.setRowIndex(rowIndex).setColIndex(colIndex);
+				subSects[colIndex][rowIndex] = fs;
 				idToRowMap.put(startID, rowIndex);
 				idToColMap.put(startID, colIndex);
 				startID++;
@@ -224,7 +250,7 @@ public class DownDipSubSectBuilder {
 			}
 		}
 	}
-	
+
 	public FaultSection[][] getSubSects() {
 		return subSects;
 	}

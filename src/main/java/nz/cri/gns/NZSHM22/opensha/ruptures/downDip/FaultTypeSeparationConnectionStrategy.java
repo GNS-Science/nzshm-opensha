@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
@@ -14,24 +15,20 @@ import java.util.List;
  */
 public class FaultTypeSeparationConnectionStrategy extends DistCutoffClosestSectClusterConnectionStrategy {
 
-    DownDipRegistry registry;
-
     /**
      * Creates a new FaultTypeSeparationConnectionStrategy
-     * @param registry the downdip registry
      * @param subSects a list of all faultsections
      * @param distCalc the distance calculator
      * @param maxJumpDist the maximum jump distance in km
      */
-    public FaultTypeSeparationConnectionStrategy(DownDipRegistry registry, List<? extends FaultSection> subSects,
+    public FaultTypeSeparationConnectionStrategy( List<? extends FaultSection> subSects,
                                                  SectionDistanceAzimuthCalculator distCalc, double maxJumpDist) {
         super(subSects, distCalc, maxJumpDist);
-        this.registry = registry;
     }
 
     @Override
     protected List<Jump> buildPossibleConnections(FaultSubsectionCluster from, FaultSubsectionCluster to) {
-        if (registry.isDownDip(from) || registry.isDownDip(to)) {
+        if (DownDipFaultSection.isDownDip(from) || DownDipFaultSection.isDownDip(to)) {
             return null;
         } else {
             return super.buildPossibleConnections(from, to);

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 //import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
@@ -62,6 +63,16 @@ public class NZSHM22_PythonGateway {
 	 */
 	static class CachedNSHMRuptureSetBuilder extends NZSHM22_RuptureSetBuilder {
 		SlipAlongRuptureModelRupSet ruptureSet;
+
+		/**
+		 * Chooses a known fault model.
+		 * @param faultModel the name of a known fault model
+		 * @return this object
+		 */
+		public NZSHM22_RuptureSetBuilder setFaultModel(String faultModel){
+			setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
+			return this;
+		}
 
 		/**
 		 * 

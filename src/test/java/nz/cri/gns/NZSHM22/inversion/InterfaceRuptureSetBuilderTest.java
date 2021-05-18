@@ -8,7 +8,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
-import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipRegistry;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 
 import java.io.InputStream;
@@ -131,8 +130,8 @@ public class InterfaceRuptureSetBuilderTest {
 
         InputStream csvdata = InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
         DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, csvdata);
-        DownDipRegistry downDipRegistry = mock(DownDipRegistry.class);
-        when(downDipRegistry.getBuilder(downDipBuilder.getParentID())).thenReturn(downDipBuilder);
+//        DownDipRegistry downDipRegistry = mock(DownDipRegistry.class);
+//        when(downDipRegistry.getBuilder(downDipBuilder.getParentID())).thenReturn(downDipBuilder);
 
         List<FaultSection> subSections = new ArrayList<>();
         subSections.addAll(downDipBuilder.getSubSectsList());
@@ -146,7 +145,7 @@ public class InterfaceRuptureSetBuilderTest {
         SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 
         // this creates rectangular permutations only for our down-dip fault to speed up rupture building
-        RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(downDipRegistry, new ExhaustiveUnilateralRuptureGrowingStrategy());
+        RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(new ExhaustiveUnilateralRuptureGrowingStrategy());
 
         // connection strategy: parent faults connect at closest point, and only when dist <=5 km
         ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);
