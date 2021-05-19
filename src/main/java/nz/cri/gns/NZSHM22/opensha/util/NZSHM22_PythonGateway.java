@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 //import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
@@ -51,9 +52,13 @@ public class NZSHM22_PythonGateway {
 
 	public static void main(String[] args) {
 		NZSHM22_PythonGateway app = new NZSHM22_PythonGateway();
-
+		
+		String DEFAULT_PORT = "25333";
+		String port = Optional.of(System.getenv("NZSHM22_APP_PORT")).orElse(DEFAULT_PORT);
+		System.out.println("NZSHM22 Java gateway listening on port; " + port);
+		
 		// app is now the gateway.entry_point
-		GatewayServer server = new GatewayServer(app);
+		GatewayServer server = new GatewayServer(app, Integer.parseInt(port));
 		server.start();
 	}
 

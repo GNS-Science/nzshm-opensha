@@ -70,6 +70,7 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
     from sourceSets.main.allJava
     // include upstream project fat jar
     from zipTree(file('../opensha/build/libs/opensha-all.jar'))
+    from zipTree(file('python/share/py4j/py4j0.10.9.1.jar'))
 
     duplicatesStrategy = 'exclude'
       //  from sourceSets.main.allJava
