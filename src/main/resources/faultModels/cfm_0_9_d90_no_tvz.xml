@@ -418,17 +418,17 @@
         <Location Latitude="-37.3396" Longitude="179.6563" Depth="0.0000"/>
         <Location Latitude="-37.1509" Longitude="179.8437" Depth="0.0000"/>
         <Location Latitude="-37.0100" Longitude="179.9814" Depth="0.0000"/>
-        <Location Latitude="-36.9231" Longitude="-179.9097" Depth="0.0000"/>
-        <Location Latitude="-36.8300" Longitude="-179.8410" Depth="0.0000"/>
+        <Location Latitude="-36.9231" Longitude="180.0903" Depth="0.0000"/>
+        <Location Latitude="-36.8300" Longitude="180.1590" Depth="0.0000"/>
       </FaultTrace>
     </i37>
     <i38 sectionId="38" sectionName="Awanui 3" aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="60.0" aveRake="-45.0" aveUpperDepth="0.0" aveLowerDepth="14.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="303.9" parentSectionId="-1" connector="false">
       <FaultTrace name="Awanui 3">
-        <Location Latitude="-36.8272" Longitude="-179.7746" Depth="0.0000"/>
-        <Location Latitude="-36.6059" Longitude="-179.7229" Depth="0.0000"/>
-        <Location Latitude="-36.4198" Longitude="-179.5700" Depth="0.0000"/>
-        <Location Latitude="-36.2905" Longitude="-179.4710" Depth="0.0000"/>
-        <Location Latitude="-36.0114" Longitude="-179.2414" Depth="0.0000"/>
+        <Location Latitude="-36.8272" Longitude="180.2254" Depth="0.0000"/>
+        <Location Latitude="-36.6059" Longitude="180.2771" Depth="0.0000"/>
+        <Location Latitude="-36.4198" Longitude="180.4300" Depth="0.0000"/>
+        <Location Latitude="-36.2905" Longitude="180.5290" Depth="0.0000"/>
+        <Location Latitude="-36.0114" Longitude="180.7586" Depth="0.0000"/>
       </FaultTrace>
     </i38>
     <i39 sectionId="39" sectionName="Awatere: Northeast 1" aveLongTermSlipRate="6.0" slipRateStdDev="2.0" aveDip="75.0" aveRake="-20.0" aveUpperDepth="0.0" aveLowerDepth="22.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="323.3" parentSectionId="-1" connector="false">
@@ -2676,31 +2676,31 @@
     </i259>
     <i260 sectionId="260" sectionName="Kermadec Trench" aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="30.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="14.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="303.2" parentSectionId="-1" connector="false">
       <FaultTrace name="Kermadec Trench">
-        <Location Latitude="-35.9258" Longitude="-178.9534" Depth="0.0000"/>
-        <Location Latitude="-35.9757" Longitude="-178.9705" Depth="0.0000"/>
-        <Location Latitude="-36.1211" Longitude="-179.0823" Depth="0.0000"/>
-        <Location Latitude="-36.1823" Longitude="-179.1008" Depth="0.0000"/>
-        <Location Latitude="-36.2862" Longitude="-179.1901" Depth="0.0000"/>
-        <Location Latitude="-36.3832" Longitude="-179.2322" Depth="0.0000"/>
-        <Location Latitude="-36.5056" Longitude="-179.3295" Depth="0.0000"/>
-        <Location Latitude="-36.6037" Longitude="-179.3752" Depth="0.0000"/>
-        <Location Latitude="-36.6605" Longitude="-179.4003" Depth="0.0000"/>
-        <Location Latitude="-36.8079" Longitude="-179.4874" Depth="0.0000"/>
-        <Location Latitude="-36.8875" Longitude="-179.5566" Depth="0.0000"/>
-        <Location Latitude="-37.0340" Longitude="-179.7085" Depth="0.0000"/>
-        <Location Latitude="-37.1417" Longitude="-179.7266" Depth="0.0000"/>
-        <Location Latitude="-37.2911" Longitude="-179.8802" Depth="0.0000"/>
-        <Location Latitude="-37.3385" Longitude="-179.8936" Depth="0.0000"/>
-        <Location Latitude="-37.4019" Longitude="-179.9341" Depth="0.0000"/>
-        <Location Latitude="-37.4832" Longitude="-179.9563" Depth="0.0000"/>
+        <Location Latitude="-35.9258" Longitude="181.0466" Depth="0.0000"/>
+        <Location Latitude="-35.9757" Longitude="181.0295" Depth="0.0000"/>
+        <Location Latitude="-36.1211" Longitude="180.9177" Depth="0.0000"/>
+        <Location Latitude="-36.1823" Longitude="180.8992" Depth="0.0000"/>
+        <Location Latitude="-36.2862" Longitude="180.8099" Depth="0.0000"/>
+        <Location Latitude="-36.3832" Longitude="180.7678" Depth="0.0000"/>
+        <Location Latitude="-36.5056" Longitude="180.6705" Depth="0.0000"/>
+        <Location Latitude="-36.6037" Longitude="180.6248" Depth="0.0000"/>
+        <Location Latitude="-36.6605" Longitude="180.5997" Depth="0.0000"/>
+        <Location Latitude="-36.8079" Longitude="180.5126" Depth="0.0000"/>
+        <Location Latitude="-36.8875" Longitude="180.4434" Depth="0.0000"/>
+        <Location Latitude="-37.0340" Longitude="180.2915" Depth="0.0000"/>
+        <Location Latitude="-37.1417" Longitude="180.2734" Depth="0.0000"/>
+        <Location Latitude="-37.2911" Longitude="180.1198" Depth="0.0000"/>
+        <Location Latitude="-37.3385" Longitude="180.1064" Depth="0.0000"/>
+        <Location Latitude="-37.4019" Longitude="180.0659" Depth="0.0000"/>
+        <Location Latitude="-37.4832" Longitude="180.0437" Depth="0.0000"/>
         <Location Latitude="-37.7583" Longitude="179.8024" Depth="0.0000"/>
         <Location Latitude="-37.7580" Longitude="179.7986" Depth="0.0000"/>
       </FaultTrace>
     </i260>
     <i261 sectionId="261" sectionName="Kermadec Trench slope1" aveLongTermSlipRate="0.0" slipRateStdDev="0.0" aveDip="30.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="14.0" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="309.9" parentSectionId="-1" connector="false">
       <FaultTrace name="Kermadec Trench slope1">
-        <Location Latitude="-37.1416" Longitude="-179.8586" Depth="0.0000"/>
-        <Location Latitude="-37.3219" Longitude="-179.9659" Depth="0.0000"/>
+        <Location Latitude="-37.1416" Longitude="180.1414" Depth="0.0000"/>
+        <Location Latitude="-37.3219" Longitude="180.0341" Depth="0.0000"/>
         <Location Latitude="-37.3530" Longitude="179.9447" Depth="0.0000"/>
         <Location Latitude="-37.4836" Longitude="179.8822" Depth="0.0000"/>
         <Location Latitude="-37.5785" Longitude="179.7605" Depth="0.0000"/>
