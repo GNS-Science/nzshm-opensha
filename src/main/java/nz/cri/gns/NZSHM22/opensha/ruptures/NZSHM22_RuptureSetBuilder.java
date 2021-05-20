@@ -464,10 +464,10 @@ public class NZSHM22_RuptureSetBuilder {
 		// Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
 		NZSHM22_SlipEnabledRuptureSet rupSet = null;
 		try {
-			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
 //			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-//					ScalingRelationships.TMG_SUB_2017, SlipAlongRuptureModels.UNIFORM);
+//					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
+			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
+					ScalingRelationships.TMG_CRU_2017, SlipAlongRuptureModels.UNIFORM);
 
 			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
 		} catch (Exception e) {

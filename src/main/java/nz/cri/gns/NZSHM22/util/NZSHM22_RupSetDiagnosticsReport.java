@@ -75,8 +75,8 @@ public class NZSHM22_RupSetDiagnosticsReport {
 
 		ArrayList<FileMeta> metadataList = new ArrayList<FileMeta>();
 		
-		inputDir = new File("../nshm-nz-opensha/data/ruptureSets");
-		File outputRoot = new File("./tmp");
+		inputDir = new File("../DATA/2022-05-19-02");
+		File outputRoot = new File("../DATA/2022-05-19-02");
 				
 		//Set up metadata
 //		metadataList.add(new FileMeta(
@@ -85,12 +85,12 @@ public class NZSHM22_RupSetDiagnosticsReport {
 //		metadataList.add( new FileMeta(
 //				"ruptset_ddw0.5_jump5.0_SANS_TVZ2_580.0_2_UCERF3_thin0.0.zip", 
 //				"CFM", "UCERF3-Az580", "NZSHM22"));
-		metadataList.add(new FileMeta(
-				"nz_demo5_crustal_adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_sectFractGrow0.05.zip",
-				"CFM", "AdaptiveDistCutoffClosestSect", "Unilateral"));
-		metadataList.add(new FileMeta(
-				"nz_demo5_crustal_adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_bilateral_sectFractGrow0.05.zip",
-				"CFM", "AdaptiveDistCutoffClosestSect", "Bilateral"));
+//		metadataList.add(new FileMeta(
+//				"nz_demo5_crustal_adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_sectFractGrow0.05.zip",
+//				"CFM", "AdaptiveDistCutoffClosestSect", "Unilateral"));
+//		metadataList.add(new FileMeta(
+//				"nz_demo5_crustal_adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_bilateral_sectFractGrow0.05.zip",
+//				"CFM", "AdaptiveDistCutoffClosestSect", "Bilateral"));
 //		metadataList.add(new FileMeta(
 //				"nz_demo5_crustal_DEPTH30__10km_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_sectFractGrow0.05.zip",
 //				"30km", "DistCutoffClosestSect", "Unilateral"));
@@ -100,15 +100,24 @@ public class NZSHM22_RupSetDiagnosticsReport {
 //		metadataList.add(new FileMeta(
 //				"nz_demo5_crustal_DEPTH30__adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_bilateral_sectFractGrow0.05.zip",
 //				"30km", "AdaptiveDistCutoffClosestSect", "Bilateral"));
-		
+	
+		metadataList.add(new FileMeta(
+				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+				"CFM0.9", "UCERF3", "dflt"));
+		metadataList.add(new FileMeta(
+				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+				"CFM0.3", "UCERF3", "dflt"));		
+		metadataList.add(new FileMeta(
+				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+				"CFM0.9", "UCERF3", "thin 0.1"));
+		metadataList.add(new FileMeta(
+				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+				"CFM0.3", "UCERF3", "thin 0.1"));		
 		
 		ArrayList<FaultMeta> faultList = new ArrayList<FaultMeta>();		
-		faultList.add(new FaultMeta("Wellington Hutt Valley", "WHV"));
+//		faultList.add(new FaultMeta("Wellington Hutt Valley", "WHV"));
 //		faultList.add(new FaultMeta("Alpine Kaniere to Springs Junction", "AKSJ"));
-//		faultList.add(new FaultMeta("Cape Egmont Central", "CEC"));
-//		faultList.add(new FaultMeta("Wellington Pahiatua", "WLPH"));
-//		faultList.add(new FaultMeta("Napier 1931", "NP31"));	
-		faultList.add(new FaultMeta("Kekerengu", "KKR"));
+//		faultList.add(new FaultMeta("Kekerengu", "KKR"));
 		
 		for (FileMeta metadata : metadataList) {
 
@@ -119,7 +128,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 			
 			inputRupSet = FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
 			inputSol = null;
-			inputName = "Azimuth vs Coulomb 2021-04-21 " + metadata.folderName();
+			inputName = "May 19th, 2021 #2 TMG_CRU_2017 " + metadata.folderName();
 		
 			builder = new RupSetDiagnosticsPageGen(inputRupSet, 
 					inputSol, inputName, outputDir);
@@ -127,7 +136,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 			builder.setSkipBiasiWesnousky(true);
 			builder.setSkipConnectivity(true);
 			builder.setSkipSegmentation(true);
-			builder.generatePage();		
+			builder.generatePage();
 
 			for (FaultMeta faultmeta : faultList) {
 				System.out.println("Building report for: " +  metadata.folderName() + " " + faultmeta.faultname);
