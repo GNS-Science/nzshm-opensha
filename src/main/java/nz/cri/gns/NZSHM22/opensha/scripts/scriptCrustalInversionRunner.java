@@ -17,18 +17,15 @@ import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionRunner;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultIdFilter;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilder;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilder.RupturePermutationStrategy;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
 
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
-import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.FaultSystemIO;
 
 /**
@@ -71,7 +68,7 @@ public class scriptCrustalInversionRunner {
         
 //        File rupSetFile = new File(outputDir, "CFM_hk_slipdef50_TMG2_rupture_set.zip");
 
-        NZSHM22_RuptureSetBuilder builder = new NZSHM22_RuptureSetBuilder();
+        NZSHM22_AzimuthalRuptureSetBuilder builder = new NZSHM22_AzimuthalRuptureSetBuilder();
 
         //		.setFaultIdIn(Sets.newHashSet(89, 90, 91, 92, 93));
         //		.setMaxFaultSections(2000) 	// overide defauls like so

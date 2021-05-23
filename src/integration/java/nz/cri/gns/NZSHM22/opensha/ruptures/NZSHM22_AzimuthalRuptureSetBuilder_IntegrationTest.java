@@ -5,21 +5,18 @@ import static org.junit.Assert.*;
 
 import com.google.common.collect.Sets;
 
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilder;
-
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
-import scratch.UCERF3.utils.FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class NZSHM22_RuptureSetBuilder_IntegrationTest {
+public class NZSHM22_AzimuthalRuptureSetBuilder_IntegrationTest {
 
     public boolean hasRuptureWithFaults(Set<Integer> faults, SlipAlongRuptureModelRupSet rupSet) {
         for (ClusterRupture rupture : rupSet.getClusterRuptures()) {
@@ -39,7 +36,7 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
 
     	//see TODO in NZSHM22_SlipEnabledRuptureSet
         SlipAlongRuptureModelRupSet ruptureSet =
-                new NZSHM22_RuptureSetBuilder()
+                new NZSHM22_AzimuthalRuptureSetBuilder()
                         .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
                         .buildRuptureSet();
         
@@ -60,7 +57,7 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
         Set<Integer> kaikouraFaults = Sets.newHashSet(95, 132, 136, 149, 162, 178, 189, 245, 310, 387, 400);
 
         SlipAlongRuptureModelRupSet ruptureSet =
-                new NZSHM22_RuptureSetBuilder()
+                new NZSHM22_AzimuthalRuptureSetBuilder()
                         .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
                         .buildRuptureSet();
 
@@ -73,7 +70,7 @@ public class NZSHM22_RuptureSetBuilder_IntegrationTest {
         Set<Integer> faults = Sets.newHashSet( 23, 24, 130, 50, 48, 46, 585);
 
         SlipAlongRuptureModelRupSet ruptureSet =
-                new NZSHM22_RuptureSetBuilder()
+                new NZSHM22_AzimuthalRuptureSetBuilder()
                         .setFaultModelFile(new File("src/integration/resources/alpine-vernon.xml"))
                         .buildRuptureSet();
 
