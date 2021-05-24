@@ -260,6 +260,7 @@ public class NZSHM22_InversionRateDiagnosticsPlot extends RupSetDiagnosticsPageG
 //		File pdfFile = new File(outputDir, prefix + ".pdf");
 		gp.saveAsPNG(pngFile.getAbsolutePath());
 //		gp.saveAsPDF(pdfFile.getAbsolutePath());
+		gp.saveAsTXT(outputDir +"/"+ prefix +".txt");
 
 		return pngFile;
 	}
