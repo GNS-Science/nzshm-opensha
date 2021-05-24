@@ -173,6 +173,7 @@ public class scriptCrustalInversionRunner {
         File solFile = new File(outputDir, "CFM_crustal_solution_new.zip");
 //        File solFile = new File(outputDir, "CFM_hk_slipdef0_scaling_TMG_solution_TEST_Non0_m5-3_eq10_ineq1000_minRRF0_bval0.94_2m_sf.zip");
         
+
         File rupSetFile = null;
 
         if (cmd.hasOption("generateRuptureSet")) {

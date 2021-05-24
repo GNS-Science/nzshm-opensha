@@ -76,8 +76,8 @@ public class NZSHM22_InversionTargetMFDs extends InversionTargetMFDs {
 	/*
 	 * MFD constraint default settings
 	 */
-	protected double totalRateM5 = 5d;
-	protected double bValue = 1d;
+	protected double totalRateM5 = 4.58d; //#5d;
+	protected double bValue = 1.01d; //1d;
 	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
 												// USGS/UCERF3) [KKS, CBC]
 	protected int mfdNum = 40;
@@ -87,9 +87,7 @@ public class NZSHM22_InversionTargetMFDs extends InversionTargetMFDs {
 	protected double mfdEqualityConstraintWt = 10;
 	protected double mfdInequalityConstraintWt = 1000;
 
-	// protected List<MFD_InversionConstraint> constraints = new ArrayList<>();
 	protected List<MFD_InversionConstraint> mfdConstraints = new ArrayList<>();
-//    private ArrayList<MFD_InversionConstraint> mfdConstraints;
 
     public List<MFD_InversionConstraint> getMFDConstraints() {
     	return mfdConstraints;
@@ -165,8 +163,9 @@ public class NZSHM22_InversionTargetMFDs extends InversionTargetMFDs {
 		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault; //WE want this as MFD
 		offFaultRegionRateMgt5 = totalRegionRateMgt5-onFaultRegionRateMgt5;
 		
+		//TODO Are these actually used for anything we need in NZSHM22
 		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
-//		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
+		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
 		
 		// make the total target GR MFD
 		// TODO: why MIN_MAG = 0 ??

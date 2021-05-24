@@ -40,7 +40,7 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 	private int slipRateUncertaintyConstraintWt;
 	private int slipRateUncertaintyConstraintScalingFactor;
 
-	//	private double paleoRateConstraintWt; 
+//	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
 	protected double magnitudeEqualityConstraintWt;
 	protected double magnitudeInequalityConstraintWt;
@@ -725,7 +725,9 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 
 		el.addAttribute("slipRateConstraintWt_normalized", slipRateConstraintWt_normalized + "");
 		el.addAttribute("slipRateConstraintWt_unnormalized", slipRateConstraintWt_unnormalized + "");
-		el.addAttribute("slipRateWeighting", slipRateWeighting.name() + "");
+		el.addAttribute("slipRateWeighting", slipRateWeighting.name() + "");		
+		el.addAttribute("slipRateUncertaintyConstraintWt", slipRateUncertaintyConstraintWt + "");
+		el.addAttribute("slipRateUncertaintyConstraintScalingFactor", slipRateUncertaintyConstraintScalingFactor + "");
 //		el.addAttribute("paleoRateConstraintWt", paleoRateConstraintWt+"");
 //		el.addAttribute("paleoSlipConstraintWt", paleoSlipConstraintWt+"");
 		el.addAttribute("magnitudeEqualityConstraintWt", magnitudeEqualityConstraintWt + "");
@@ -737,7 +739,7 @@ public class NZSHM22_InversionConfiguration implements XMLSaveable {
 //		el.addAttribute("mfdSmoothnessConstraintWt", mfdSmoothnessConstraintWt+"");
 //		el.addAttribute("mfdSmoothnessConstraintWtForPaleoParents", mfdSmoothnessConstraintWtForPaleoParents+"");
 //		el.addAttribute("rupRateSmoothingConstraintWt", rupRateSmoothingConstraintWt+"");
-//		el.addAttribute("minimizationConstraintWt", minimizationConstraintWt+"");
+		el.addAttribute("minimizationConstraintWt", minimizationConstraintWt+"");
 //		el.addAttribute("momentConstraintWt", momentConstraintWt+"");
 //		el.addAttribute("parkfieldConstraintWt", parkfieldConstraintWt+"");
 //		el.addAttribute("MFDTransitionMag", MFDTransitionMag+"");
