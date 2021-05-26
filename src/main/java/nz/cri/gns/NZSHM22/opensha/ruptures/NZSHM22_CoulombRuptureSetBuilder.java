@@ -135,6 +135,24 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         return this;
     }
 
+    protected static String fmt(float d) {
+        if (d == (long) d)
+            return String.format("%d", (long) d);
+        else
+            return Float.toString(d);
+    }
+
+    protected static String fmt(double d) {
+        if (d == (long) d)
+            return String.format("%d", (long) d);
+        else
+            return Double.toString(d);
+    }
+
+    protected static String fmt(boolean b) {
+        return b ? "T" : "F";
+    }
+
     @Override
     public String getDescriptiveName() {
         String description = "RupSet_Cl";
@@ -148,24 +166,24 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             description = description + "_SF(" + downDipFile.getName() + ")";
         }
 
-        description += "_noIndPth(" + noIndirectPaths + ")";
-        description += "_slpRtePrb(" + slipRateProb + ")";
-        description += "_slpIncLon(" + slipIncludeLonger + ")";
-        description += "_cffFrcInt(" + cffFractInts + ")";
-        description += "_cffRtoN(" + cffRatioN + ")";
-        description += "_cffRtoThr(" + cffRatioThresh + ")";
-        description += "_cffRelPrb(" + cffRelativeProb + ")";
-        description += "_favJmp(" + favorableJumps + ")";
-        description += "_jmpPrbThr(" + jumpProbThresh + ")";
-        description += "_cmlRakThr(" + cmlRakeThresh + ")";
-        description += "_maxJmpDst(" + maxJumpDist + ")";
-        description += "_plsCon(" + plausibleConnections + ")";
-        description += "_adaMinDst(" + adaptiveMinDist + ")";
-        description += "_adaSctFrc(" + adaptiveSectFract + ")";
-        description += "_bi(" + bilateral + ")";
+        description += "_noInP(" + fmt(noIndirectPaths) + ")";
+        description += "_slRtP(" + fmt(slipRateProb) + ")";
+        description += "_slInL(" + fmt(slipIncludeLonger) + ")";
+        description += "_cfFr(" + fmt(cffFractInts) + ")";
+        description += "_cfRN(" + fmt(cffRatioN) + ")";
+        description += "_cfRTh(" + fmt(cffRatioThresh) + ")";
+        description += "_cfRP(" + fmt(cffRelativeProb) + ")";
+        description += "_fvJm(" + fmt(favorableJumps) + ")";
+        description += "_jmPTh(" + fmt(jumpProbThresh) + ")";
+        description += "_cmRkTh(" + fmt(cmlRakeThresh) + ")";
+        description += "_mxJmD(" + fmt(maxJumpDist) + ")";
+        description += "_plCn(" + fmt(plausibleConnections) + ")";
+        description += "_adMnD(" + fmt(adaptiveMinDist) + ")";
+        description += "_adScFr(" + fmt(adaptiveSectFract) + ")";
+        description += "_bi(" + fmt(bilateral) + ")";
 
-        description += "_stfGrdSpc(" + stiffGridSpacing + ")";
-        description += "_coeFrc(" + coeffOfFriction + ")";
+        description += "_stGrSp(" + fmt(stiffGridSpacing) + ")";
+        description += "_coFr(" + fmt(coeffOfFriction) + ")";
 
 
         return description;
@@ -594,17 +612,17 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             builder.setDebugCriteria(debugCriteria, stopAfterDebug);
         System.out.println("Building ruptures with " + numThreads + " threads...");
         Stopwatch watch = Stopwatch.createStarted();
-        List<ClusterRupture> rups = builder.build(growingStrat, numThreads);
+        ruptures = builder.build(growingStrat, numThreads);
         watch.stop();
         long millis = watch.elapsed(TimeUnit.MILLISECONDS);
         double secs = millis / 1000d;
         double mins = (secs / 60d);
         DecimalFormat timeDF = new DecimalFormat("0.00");
-        System.out.println("Built " + countDF.format(rups.size()) + " ruptures in " + timeDF.format(secs)
-                + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(rups.size(), millis));
+        System.out.println("Built " + countDF.format(ruptures.size()) + " ruptures in " + timeDF.format(secs)
+                + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(ruptures.size(), millis));
 
 
-        FaultSystemRupSet ruptures = ClusterRuptureBuilder.buildClusterRupSet(scale, subSections, config, rups);
+        FaultSystemRupSet origRupSet = ClusterRuptureBuilder.buildClusterRupSet(scale, subSections, config, ruptures);
 
         // TODO: consider overloading this for Hikurangi to provide
         // Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
@@ -612,7 +630,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         try {
 //			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
 //					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-            rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures.getClusterRuptures(), subSections,
+            rupSet = new NZSHM22_SlipEnabledRuptureSet(origRupSet.getClusterRuptures(), subSections,
                     ScalingRelationships.TMG_CRU_2017, SlipAlongRuptureModels.UNIFORM);
 
             rupSet.setPlausibilityConfiguration(config);
@@ -664,68 +682,84 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         return oneDigitDF.format(perHour) + " rups/hr";
     }
 
-    public void setNoIndirectPaths(boolean noIndirectPaths) {
+    public NZSHM22_CoulombRuptureSetBuilder setNoIndirectPaths(boolean noIndirectPaths) {
         this.noIndirectPaths = noIndirectPaths;
+        return this;
     }
 
-    public void setSlipRateProb(float slipRateProb) {
+    public NZSHM22_CoulombRuptureSetBuilder setSlipRateProb(float slipRateProb) {
         this.slipRateProb = slipRateProb;
+        return this;
     }
 
-    public void setSlipIncludeLonger(boolean slipIncludeLonger) {
+    public NZSHM22_CoulombRuptureSetBuilder setSlipIncludeLonger(boolean slipIncludeLonger) {
         this.slipIncludeLonger = slipIncludeLonger;
+        return this;
     }
 
-    public void setCffFractInts(float cffFractInts) {
+    public NZSHM22_CoulombRuptureSetBuilder setCffFractInts(float cffFractInts) {
         this.cffFractInts = cffFractInts;
+        return this;
     }
 
-    public void setCffRatioN(int cffRatioN) {
+    public NZSHM22_CoulombRuptureSetBuilder setCffRatioN(int cffRatioN) {
         this.cffRatioN = cffRatioN;
+        return this;
     }
 
-    public void setCffRatioThresh(float cffRatioThresh) {
+    public NZSHM22_CoulombRuptureSetBuilder setCffRatioThresh(float cffRatioThresh) {
         this.cffRatioThresh = cffRatioThresh;
+        return this;
     }
 
-    public void setCffRelativeProb(float cffRelativeProb) {
+    public NZSHM22_CoulombRuptureSetBuilder setCffRelativeProb(float cffRelativeProb) {
         this.cffRelativeProb = cffRelativeProb;
+        return this;
     }
 
-    public void setFavorableJumps(boolean favorableJumps) {
+    public NZSHM22_CoulombRuptureSetBuilder setFavorableJumps(boolean favorableJumps) {
         this.favorableJumps = favorableJumps;
+        return this;
     }
 
-    public void setJumpProbThresh(float jumpProbThresh) {
+    public NZSHM22_CoulombRuptureSetBuilder setJumpProbThresh(float jumpProbThresh) {
         this.jumpProbThresh = jumpProbThresh;
+        return this;
     }
 
-    public void setCmlRakeThresh(float cmlRakeThresh) {
+    public NZSHM22_CoulombRuptureSetBuilder setCmlRakeThresh(float cmlRakeThresh) {
         this.cmlRakeThresh = cmlRakeThresh;
+        return this;
     }
 
-    public void setMaxJumpDist(double maxJumpDist) {
+    public NZSHM22_CoulombRuptureSetBuilder setMaxJumpDistance(double maxJumpDist) {
         this.maxJumpDist = maxJumpDist;
+        return this;
     }
 
-    public void setPlausibleConnections(boolean plausibleConnections) {
+    public NZSHM22_CoulombRuptureSetBuilder setPlausibleConnections(boolean plausibleConnections) {
         this.plausibleConnections = plausibleConnections;
+        return this;
     }
 
-    public void setAdaptiveMinDist(double adaptiveMinDist) {
+    public NZSHM22_CoulombRuptureSetBuilder setAdaptiveMinDist(double adaptiveMinDist) {
         this.adaptiveMinDist = adaptiveMinDist;
+        return this;
     }
 
-    public void setAdaptiveSectFract(float adaptiveSectFract) {
+    public NZSHM22_CoulombRuptureSetBuilder setAdaptiveSectFract(float adaptiveSectFract) {
         this.adaptiveSectFract = adaptiveSectFract;
+        return this;
     }
 
-    public void setBilateral(boolean bilateral) {
+    public NZSHM22_CoulombRuptureSetBuilder setBilateral(boolean bilateral) {
         this.bilateral = bilateral;
+        return this;
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
+        System.out.println(builder.getDescriptiveName());
         builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
         builder.setMaxFaultSections(30);
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();

@@ -8,13 +8,13 @@ import java.util.Optional;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import py4j.GatewayServer;
-import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.utils.FaultSystemIO;
 
@@ -23,26 +23,20 @@ import scratch.UCERF3.utils.FaultSystemIO;
  */
 public class NZSHM22_PythonGateway {
 
-    static NZSHM22_AbstractRuptureSetBuilder builder;
-    static FaultSystemRupSet ruptureSet;
+	static NZSHM22_AbstractRuptureSetBuilder builder;
     static CachedNSHMInversionRunner runner;
     static NZSHM22_HazardCalculatorBuilder calculator = new NZSHM22_HazardCalculatorBuilder();
 
-    /**
-     * Get a new rupture set builder. Note that we want a new builder for
-     * each new rupture set to ensure the setup is clean. Use the method provided by the gateway
-     * to cache the produced rupture set to allow inspection etc.
-     */
-    public static NZSHM22_AbstractRuptureSetBuilder getBuilder(String type) {
-        switch (type) {
-            case "azimuth":
-                builder = new NZSHM22_AzimuthalRuptureSetBuilder();
-                break;
-            case "coulomb":
-                builder = new NZSHM22_CoulombRuptureSetBuilder();
-                break;
-        }
-        return builder;
+    public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
+        NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
+        builder = azBuilder;
+        return azBuilder;
+    }
+
+    public static NZSHM22_CoulombRuptureSetBuilder getCoulombRuptureSetBuilder(){
+        NZSHM22_CoulombRuptureSetBuilder coulBuilder = new NZSHM22_CachedCoulombRuptureSetBuilder();
+        builder = coulBuilder;
+        return coulBuilder;
     }
 
     /**
@@ -72,71 +66,125 @@ public class NZSHM22_PythonGateway {
     }
 
     /**
-     * Chooses a known fault model for the rupture set builder
-     *
-     * @param faultModel the name of a known fault model
-     * @return this object
+     * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
      */
-    public NZSHM22_PythonGateway setFaultModel(String faultModel) {
-        builder.setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
-        return this;
+    static class NZSHM22_CachedAzimuthalRuptureSetBuilder extends NZSHM22_AzimuthalRuptureSetBuilder {
+        NZSHM22_SlipEnabledRuptureSet ruptureSet;
+
+        /**
+         * Chooses a known fault model.
+         * @param faultModel the name of a known fault model
+         * @return this object
+         */
+        public NZSHM22_CachedAzimuthalRuptureSetBuilder setFaultModel(String faultModel){
+            setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
+            return this;
+        }
+
+        /**
+         *
+         * @param permutationStrategyClass one of 'DOWNDIP', 'POINTS', 'UCERF3'
+         * @return this
+         */
+        public NZSHM22_CachedAzimuthalRuptureSetBuilder setPermutationStrategy(String permutationStrategyClass) {
+
+            super.setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
+            return this;
+        }
+
+        /**
+         * Sets the FaultModel file for all crustal faults
+         *
+         * @param fsdFileName the XML FaultSection data file containing source fault
+         *                    information
+         * @return this builder
+         */
+        public NZSHM22_CachedAzimuthalRuptureSetBuilder setFaultModelFile(String fsdFileName) {
+            setFaultModelFile(new File(fsdFileName));
+            return this;
+        }
+
+        /**
+         * Sets the subduction fault. At the moment, only one fault can be set.
+         *
+         * @param faultName The name fo the fault.
+         * @param fileName  the CSV file containing all sections.
+         * @return this builder
+         */
+        public NZSHM22_CachedAzimuthalRuptureSetBuilder setSubductionFault(String faultName, String fileName) {
+            setSubductionFault(faultName, new File(fileName));
+            return this;
+        }
+
+        /**
+         * Caches the results of the build
+         */
+        @Override
+        public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+            ruptureSet = super.buildRuptureSet();
+            return ruptureSet;
+        }
+
+        /**
+         * Write the cached rupture set to disk.
+         *
+         * @param rupSetFileName
+         * @throws IOException
+         */
+        public void writeRuptureSet(String rupSetFileName) throws IOException {
+            File rupSetFile = new File(rupSetFileName);
+            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+        }
     }
 
     /**
-     * Sets the permutation strategy of the builder
-     *
-     * @param permutationStrategyClass one of 'DOWNDIP', 'POINTS', 'UCERF3'
-     * @return this
+     * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
      */
-    public NZSHM22_PythonGateway setPermutationStrategy(String permutationStrategyClass) {
-        ((NZSHM22_AzimuthalRuptureSetBuilder) builder).setPermutationStrategy(NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy.valueOf(permutationStrategyClass));
-        return this;
+    static class NZSHM22_CachedCoulombRuptureSetBuilder extends NZSHM22_CoulombRuptureSetBuilder {
+        NZSHM22_SlipEnabledRuptureSet ruptureSet;
+
+        /**
+         * Chooses a known fault model.
+         * @param faultModel the name of a known fault model
+         * @return this object
+         */
+        public NZSHM22_CachedCoulombRuptureSetBuilder setFaultModel(String faultModel){
+            setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
+            return this;
+        }
+
+        /**
+         * Sets the FaultModel file for all crustal faults
+         *
+         * @param fsdFileName the XML FaultSection data file containing source fault
+         *                    information
+         * @return this builder
+         */
+        public NZSHM22_CachedCoulombRuptureSetBuilder setFaultModelFile(String fsdFileName) {
+            setFaultModelFile(new File(fsdFileName));
+            return this;
+        }
+
+        /**
+         * Caches the results of the build
+         */
+        @Override
+        public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+            ruptureSet = super.buildRuptureSet();
+            return ruptureSet;
+        }
+
+        /**
+         * Write the cached rupture set to disk.
+         *
+         * @param rupSetFileName
+         * @throws IOException
+         */
+        public void writeRuptureSet(String rupSetFileName) throws IOException {
+            File rupSetFile = new File(rupSetFileName);
+            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+        }
     }
-
-    /**
-     * Sets the builder's FaultModel file for all crustal faults
-     *
-     * @param fsdFileName the XML FaultSection data file containing source fault
-     *                    information
-     * @return this builder
-     */
-    public NZSHM22_PythonGateway setFaultModelFile(String fsdFileName) {
-        builder.setFaultModelFile(new File(fsdFileName));
-        return this;
-    }
-
-    /**
-     * Sets the subduction fault. At the moment, only one fault can be set.
-     *
-     * @param faultName The name fo the fault.
-     * @param fileName  the CSV file containing all sections.
-     * @return this builder
-     */
-    public NZSHM22_PythonGateway setSubductionFault(String faultName, String fileName) {
-        builder.setSubductionFault(faultName, new File(fileName));
-        return this;
-    }
-
-    /**
-     * Caches the results of the build
-     */
-
-    public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
-        ruptureSet = builder.buildRuptureSet();
-        return ruptureSet;
-    }
-
-    /**
-     * Write the cached rupture set to disk.
-     *
-     * @param rupSetFileName
-     * @throws IOException
-     */
-    public void writeRuptureSet(String rupSetFileName) throws IOException {
-        File rupSetFile = new File(rupSetFileName);
-        FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
-    }
-
 
     /**
      * Python helper that wraps NZSHM22_InversionRunner
@@ -147,7 +195,6 @@ public class NZSHM22_PythonGateway {
         /**
          * like run(File ruptureSetFile), but caches the result
          *
-         * @param ruptureSetFileName the name of a rupture set file
          * @return the solution
          * @throws IOException
          * @throws DocumentException
