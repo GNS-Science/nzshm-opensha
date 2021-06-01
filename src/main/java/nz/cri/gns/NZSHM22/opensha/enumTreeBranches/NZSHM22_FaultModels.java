@@ -3,13 +3,19 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.ExceptionUtils;
 import org.opensha.commons.util.XMLUtils;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.logicTree.LogicTreeBranchNode;
+import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.List;
+import java.util.Map;
 
 public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultModels> {
 
@@ -32,6 +38,8 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
     private final boolean crustal;
     private final int id;
 
+    private Map<String, List<Integer>> namedFaultsMapAlt;
+
     private NZSHM22_FaultModels(String modelName, String fileName) {
         this.modelName = modelName;
         this.fileName = fileName;
@@ -48,20 +56,47 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
         this.weight = 1.0;
     }
 
+    protected InputStream getStream(String fileName) {
+        return getClass().getResourceAsStream(resourcePath + fileName);
+    }
+
     /**
      * Loads the sections of the fault model into sections.
+     *
      * @param sections a list to be populated by fault sections.
      * @throws IOException
      * @throws DocumentException
      */
     public void fetchFaultSections(FaultSectionList sections) throws IOException, DocumentException {
-        try (InputStream in = getClass().getResourceAsStream(resourcePath + fileName)) {
+        try (InputStream in = getStream(fileName)) {
             if (crustal) {
                 sections.addAll(FaultModels.loadStoredFaultSections(XMLUtils.loadDocument(in)));
             } else {
                 DownDipSubSectBuilder.loadFromStream(sections, id, modelName, in);
             }
         }
+    }
+
+    /**
+     * This returns a mapping between a named fault (String keys) and the sections included in the
+     * named fault (sections IDs ids).
+     * name.
+     *
+     * @return the map from fault name to section Ids
+     */
+    public Map<String, List<Integer>> getNamedFaultsMapAlt() {
+        if (namedFaultsMapAlt == null) {
+            synchronized (this) {
+                if (namedFaultsMapAlt == null) {
+                    try (Reader reader = new InputStreamReader(getStream(fileName + ".FaultsByNameAlt.txt"))) {
+                        namedFaultsMapAlt = FaultModels.parseNamedFaultsAltFile(reader);
+                    } catch (Throwable t) {
+                        throw ExceptionUtils.asRuntimeException(t);
+                    }
+                }
+            }
+        }
+        return namedFaultsMapAlt;
     }
 
     public boolean isCrustal() {
