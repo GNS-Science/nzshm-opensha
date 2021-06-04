@@ -3,17 +3,17 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.util.ExceptionUtils;
 import org.opensha.commons.util.XMLUtils;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.logicTree.LogicTreeBranchNode;
 import scratch.UCERF3.utils.UCERF3_DataUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,10 +91,13 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
         if (namedFaultsMapAlt == null) {
             synchronized (this) {
                 if (namedFaultsMapAlt == null) {
-                    try (Reader reader = new InputStreamReader(getStream(fileName + ".FaultsByNameAlt.txt"))) {
-                        namedFaultsMapAlt = FaultModels.parseNamedFaultsAltFile(reader);
-                    } catch (Throwable t) {
-                        throw ExceptionUtils.asRuntimeException(t);
+                    InputStream in = getStream(fileName + ".FaultsByNameAlt.txt");
+                    if (in != null) {
+                        try (Reader reader = new InputStreamReader(in)) {
+                            namedFaultsMapAlt = FaultModels.parseNamedFaultsAltFile(reader);
+                        } catch (Throwable t) {
+                            throw ExceptionUtils.asRuntimeException(t);
+                        }
                     }
                 }
             }
@@ -134,5 +137,43 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
     @Override
     public String toString() {
         return getName();
+    }
+
+    /**
+     * Generate named faults file from a faultmodel
+     * @param args
+     * @throws DocumentException
+     * @throws IOException
+     */
+    public static void main(String[] args) throws DocumentException, IOException {
+
+        NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010;
+
+        FaultSectionList sections = new FaultSectionList();
+        faultModel.fetchFaultSections(sections);
+        Map<String, Integer> ids = new HashMap<>();
+        for (FaultSection section : sections) {
+            String name = section.getSectionName().toLowerCase();
+            name = name.replaceAll("[\\W_]", "");
+            ids.put(name, section.getSectionId());
+        }
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(new File(faultModel.fileName + ".FaultsByNameAlt.txt")))) {
+            CSVFile<String> csv = CSVFile.readStream(faultModel.getStream("namedFaultDefinitionsByRuss.csv"), false);
+            for (List<String> row : csv) {
+                if (row.get(0) != null && row.get(0).length() > 0) {
+                    out.print("\n");
+                    out.print(row.get(0));
+                }
+                out.print("\t");
+                String name = row.get(1).toLowerCase().replaceAll("[\\W_]", "");
+                if (!ids.containsKey(name)) {
+                    System.out.println("Fault \"" + row.get(1) + "\" cannot be found in model");
+                } else {
+                    out.print(ids.get(name));
+                }
+            }
+
+        }
     }
 }

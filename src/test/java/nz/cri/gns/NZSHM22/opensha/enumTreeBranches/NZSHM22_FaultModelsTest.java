@@ -14,9 +14,16 @@ public class NZSHM22_FaultModelsTest {
     public void testFetchFaultSections() throws DocumentException, IOException {
         for(NZSHM22_FaultModels model : NZSHM22_FaultModels.values()){
             FaultSectionList sections = new FaultSectionList();
-            System.out.println(model.getName());
             model.fetchFaultSections(sections);
             assertTrue(model.getName(), sections.size() > 0);
+        }
+    }
+
+    @Test
+    public void testFetchNamedFaults() {
+        // just checking that we don't explode
+        for(NZSHM22_FaultModels model : NZSHM22_FaultModels.values()){
+            model.getNamedFaultsMapAlt();
         }
     }
 }
