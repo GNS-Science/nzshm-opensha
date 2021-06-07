@@ -53,6 +53,10 @@ public class NZSHM22_PythonGateway {
         return calculator;
     }
 
+    public static MFDPlotBuilder getMFDPlotBuilder(){
+        return new MFDPlotBuilder();
+    }
+
     public static void main(String[] args) {
         NZSHM22_PythonGateway app = new NZSHM22_PythonGateway();
 

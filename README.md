@@ -8,13 +8,8 @@ NSHM NZ Programme opensha applications (patterned on opensha-ucerf3 &amp; opensh
 
 ## Getting started 
 
- This project depends on three opensha repos...
-
  ```
-
-git clone https://github.com/opensha/opensha-commons.git &&\
-git clone https://github.com/opensha/opensha-core.git &&\
-git clone https://github.com/opensha/opensha-ucerf3.git &&\
+git clone https://github.com/opensha/opensha.git &&\
 git clone https://github.com/GNS-Science/nshm-nz-opensha.git
  ```
 
