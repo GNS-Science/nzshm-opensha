@@ -9,6 +9,8 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
+import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
+
 import org.dom4j.DocumentException;
 
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
@@ -26,7 +28,14 @@ public class NZSHM22_PythonGateway {
 	static NZSHM22_AbstractRuptureSetBuilder builder;
     static CachedNSHMInversionRunner runner;
     static NZSHM22_HazardCalculatorBuilder calculator = new NZSHM22_HazardCalculatorBuilder();
+    static NZSHM22_InversionDiagnosticsReportBuilder inversionReportBuilder;
 
+    
+    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
+    	inversionReportBuilder = new NZSHM22_InversionDiagnosticsReportBuilder();
+    	return inversionReportBuilder;
+    }
+    
     public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
         NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
         builder = azBuilder;
@@ -224,5 +233,7 @@ public class NZSHM22_PythonGateway {
 //    public static NZSHM22_InversionDiagnosticsReportBuilder createReportBuilder() {
 //        return new NZSHM22_InversionDiagnosticsReportBuilder();
 //    }
+
+
 
 }

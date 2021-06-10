@@ -3,6 +3,11 @@ package nz.cri.gns.NZSHM22.util;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen;
 
+import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.FaultSystemSolution;
+import scratch.UCERF3.utils.FaultSystemIO;
+
+import java.io.File;
 import java.io.IOException;
 
 public class NZSHM22_InversionDiagnosticsReportBuilder {
@@ -42,6 +47,21 @@ public class NZSHM22_InversionDiagnosticsReportBuilder {
         NZSHM22_InversionRateDiagnosticsPlot.create(args).generatePage();
     }
 
+    public void generateInversionDiagnosticsReport() throws IOException, DocumentException {
+
+		FaultSystemSolution inputSol = FaultSystemIO.loadSol(new File(ruptureSetName));
+		FaultSystemRupSet inputRupSet = inputSol.getRupSet();
+		
+        RupSetDiagnosticsPageGen builder = new RupSetDiagnosticsPageGen(
+        		inputRupSet, inputSol, name, new File(outputDir));
+		builder.setSkipPlausibility(true);
+		builder.setSkipBiasiWesnousky(true);
+		builder.setSkipConnectivity(true);
+		builder.setSkipSegmentation(true);
+		builder.generatePage();        
+    }
+    
+    
     public void generateFilteredInversionDiagnosticsReport() throws IOException, DocumentException {
         String[] args = new String[]
                 {"--name", name,
