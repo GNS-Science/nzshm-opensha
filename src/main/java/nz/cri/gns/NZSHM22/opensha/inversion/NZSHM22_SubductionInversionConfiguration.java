@@ -28,7 +28,7 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_InversionConfiguration {
+public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInversionConfiguration {
 
 	public static final String XML_METADATA_NAME = "InversionConfiguration";
 
@@ -77,7 +77,6 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_InversionC
 			NZSHM22_InversionFaultSystemRuptSet rupSet) {
 		double mfdEqualityConstraintWt = DEFAULT_MFD_EQUALITY_WT;
 		double mfdInequalityConstraintWt = DEFAULT_MFD_INEQUALITY_WT;
-
 		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 	}
 
@@ -97,9 +96,13 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_InversionC
 	 */
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt) {
-		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, null);
+		double totalRateM5 = 5; 
+		double bValue = 1;
+		double mfdTransitionMag = 7.75;
+		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,bValue, mfdTransitionMag);
 	}
-
+	
+	
 	/**
 	 * This generates an inversion configuration for the given inversion model and
 	 * rupture set
@@ -112,14 +115,17 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_InversionC
 	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY
 	 *                                  constraint relative to slip-rate constraint
 	 *                                  (recommended: 1000)
-	 * @param modifiers                 command line modifier arguments (can be
-	 *                                  null)
+	 * @param totalRateM5
+	 * @param bValue
+	 * @param mfdTransitionMag
 	 * @return
 	 */
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
-			CommandLine modifiers) {
+			double totalRateM5, double bValue, double mfdTransitionMag) {
 
+		double MFDTransitionMag = mfdTransitionMag; // magnitude to switch from MFD equality to MFD inequality
+		
 		/*
 		 * ******************************************* COMMON TO ALL MODELS
 		 * *******************************************
@@ -166,11 +172,11 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_InversionC
 //		double momentConstraintWt = 0;
 
 		// setup MFD constraints
-		NZSHM22_SubductionInversionTargetMFDs inversionMFDs = new NZSHM22_SubductionInversionTargetMFDs(rupSet);
+		NZSHM22_SubductionInversionTargetMFDs inversionMFDs = new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFDConstraints();
 
-		double MFDTransitionMag = 7.85; // magnitude to switch from MFD equality to MFD inequality
+
 
 		String metadata = "";
 

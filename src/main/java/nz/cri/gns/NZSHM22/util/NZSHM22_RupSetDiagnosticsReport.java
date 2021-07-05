@@ -75,8 +75,8 @@ public class NZSHM22_RupSetDiagnosticsReport {
 
 		ArrayList<FileMeta> metadataList = new ArrayList<FileMeta>();
 		
-		inputDir = new File("../DATA/2022-05-19-02");
-		File outputRoot = new File("../DATA/2022-05-19-02");
+		inputDir = new File("src/python/automation/tmp");
+		File outputRoot = new File("/tmp/NZSHM");
 				
 		//Set up metadata
 //		metadataList.add(new FileMeta(
@@ -101,18 +101,27 @@ public class NZSHM22_RupSetDiagnosticsReport {
 //				"nz_demo5_crustal_DEPTH30__adapt5_10km_sMax1_direct_cmlRake360_jumpP0.001_slipP0.05incr_cff0.75IntsPos_comb2Paths_cffFavP0.01_cffFavRatioN2P0.5_bilateral_sectFractGrow0.05.zip",
 //				"30km", "AdaptiveDistCutoffClosestSect", "Bilateral"));
 	
+//		metadataList.add(new FileMeta(
+//				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+//				"CFM0.9", "UCERF3", "dflt"));
+//		metadataList.add(new FileMeta(
+//				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
+//				"CFM0.3", "UCERF3", "dflt"));		
+//		metadataList.add(new FileMeta(
+//				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+//				"CFM0.9", "UCERF3", "thin 0.1"));
+//		metadataList.add(new FileMeta(
+//				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
+//				"CFM0.3", "UCERF3", "thin 0.1"));		
+			
 		metadataList.add(new FileMeta(
-				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
-				"CFM0.9", "UCERF3", "dflt"));
-		metadataList.add(new FileMeta(
-				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0).zip",
-				"CFM0.3", "UCERF3", "dflt"));		
-		metadataList.add(new FileMeta(
-				"RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
-				"CFM0.9", "UCERF3", "thin 0.1"));
-		metadataList.add(new FileMeta(
-				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.1).zip",
-				"CFM0.3", "UCERF3", "thin 0.1"));		
+//				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_10)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(1.0)_ddPsCo(0.03)_ddSzCo(0.03)_thFc(0.0).zip",
+//				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_10)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(0.1)_ddPsCo(0.02)_ddSzCo(0.02)_thFc(0.0).zip",
+//				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(1.0)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip",
+//				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.3)_ddPsCo(0.005)_ddSzCo(0.005)_thFc(0.0).zip",
+//				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.005)_ddSzCo(0.005)_thFc(0.0).zip",
+				"downloads/RmlsZToxMTA3LjBYNzNpMw==/NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjQ4Nk16REF5_RmlsZToxMTA3LjBYNzNpMw==.zip",
+				"CRU", "TVZ", "0"));
 		
 		ArrayList<FaultMeta> faultList = new ArrayList<FaultMeta>();		
 //		faultList.add(new FaultMeta("Wellington Hutt Valley", "WHV"));

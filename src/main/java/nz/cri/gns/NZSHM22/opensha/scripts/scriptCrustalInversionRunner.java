@@ -16,7 +16,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultIdFilter;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
@@ -126,15 +126,15 @@ public class scriptCrustalInversionRunner {
 
         System.out.println("=========");
 
-        builder
-        	.setDownDipMinFill(0.1d) //d,e null ; f 0.1 ;
-//        	.setThinningFactor(0.1)
-        	.setDownDipAspectRatio(2, 5, 7) //d 2,5,5  ; e2,5,7 +f ;
-//        	.setDownDipSizeCoarseness(0.01)
-        	.setDownDipPositionCoarseness(0.05); //d 0.01 ; e 0.05 +f ;
-
-//        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
-//        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
+//        builder
+//        	.setDownDipMinFill(0.1d) //d,e null ; f 0.1 ;
+////        	.setThinningFactor(0.1)
+//        	.setDownDipAspectRatio(2, 5, 7) //d 2,5,5  ; e2,5,7 +f ;
+////        	.setDownDipSizeCoarseness(0.01)
+//        	.setDownDipPositionCoarseness(0.05); //d 0.01 ; e 0.05 +f ;
+//
+////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
+////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
         FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
@@ -194,14 +194,15 @@ public class scriptCrustalInversionRunner {
             syncInterval = Long.parseLong(cmd.getOptionValue("syncInterval"));
         }
 
-        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
                 .setInversionMinutes(inversionMins)
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
-        		.setGutenbergRichterMFDWeights(10d, 1000d)
+        		.setGutenbergRichterMFDWeights(10d, 1000d))
         		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2)
         		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();
+        System.out.println(runner.getSolutionMetrics());
         FaultSystemIO.writeSol(solution, solFile);
     }
 

@@ -3,6 +3,10 @@ package nz.cri.gns.NZSHM22.util;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen;
 
+import com.google.common.base.Preconditions;
+
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.utils.FaultSystemIO;
@@ -61,6 +65,20 @@ public class NZSHM22_InversionDiagnosticsReportBuilder {
 		builder.generatePage();        
     }
     
+    public void generateRuptureSetDiagnosticsReport() throws IOException, DocumentException {
+
+		FaultSystemRupSet inputRupSet = FaultSystemIO.loadRupSet(new File(ruptureSetName));
+		FaultSystemSolution inputSol = null;
+			
+        RupSetDiagnosticsPageGen builder = new RupSetDiagnosticsPageGen(
+        		inputRupSet, inputSol, name, new File(outputDir));
+		builder.setSkipPlausibility(true);
+		builder.setSkipBiasiWesnousky(true);
+		builder.setSkipConnectivity(true);
+		builder.setSkipSegmentation(true);
+		builder.generatePage();        
+    }
+    
     
     public void generateFilteredInversionDiagnosticsReport() throws IOException, DocumentException {
         String[] args = new String[]
@@ -78,6 +96,19 @@ public class NZSHM22_InversionDiagnosticsReportBuilder {
         //        NZSHM22_FilteredInversionDiagnosticsReport.createReportBuilder(args).generatePage();
     }
     
-    
+	public static void main(String[] args) throws IOException, DocumentException {
+		
+		File inputDir = new File("/tmp/NZSHM/inversions");
+		File outputRoot = new File(inputDir, "report");
+		Preconditions.checkState(outputRoot.exists() || outputRoot.mkdir());
+			
+		NZSHM22_InversionDiagnosticsReportBuilder builder = new NZSHM22_InversionDiagnosticsReportBuilder();
+		builder.setRuptureSetName("/tmp/NZSHM/inversions/SubductionInversionSolution.zip")
+			.setName("Hikurangi")
+			.setOutputDir(outputRoot.getAbsolutePath());
+//		builder.generateInversionDiagnosticsReport(); 
+		builder.generateRateDiagnosticsPlot();
+		
+	}  
     
 }

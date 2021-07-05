@@ -15,8 +15,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionRunner;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionConfiguration;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
@@ -91,7 +91,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         long syncInterval = 1; // seconds between inversion synchronisations
         File solFile = new File(tempFolder, "testAlpineVernonInversion.zip");
 
-        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        NZSHM22_CrustalInversionRunner runner = (NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
                 .setInversionSeconds(inversionSecs) // or use inversionMinutes
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(new File(alpineVernonRupturesUrl.toURI()))
@@ -107,13 +107,13 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 	// see https://stackoverflow.com/questions/156503/how-do-you-assert-that-a-certain-exception-is-thrown-in-junit-4-tests 
 	@Test(expected = IllegalArgumentException.class)
 	public void testSetSlipRateConstraintThrowsWithInvalidArgument() {
-        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        NZSHM22_CrustalInversionRunner runner = (NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
         		.setSlipRateConstraint(SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED, 1, 2);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testSetSlipRateUncertaintyConstraintThrowsWithInvalidArgument() {
-        NZSHM22_InversionRunner runner = new NZSHM22_InversionRunner()
+        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner()
         		.setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType.BOTH, 1, 2);
 	}
 

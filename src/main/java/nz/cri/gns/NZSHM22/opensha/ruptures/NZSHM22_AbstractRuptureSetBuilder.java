@@ -1,15 +1,19 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
+import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
+	
+	PlausibilityConfiguration plausibilityConfig;
+	
     FaultSectionList subSections;
     List<ClusterRupture> ruptures;
     ClusterRuptureBuilder builder;
@@ -29,14 +36,58 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     NZSHM22_FaultModels faultModel = null;
 
     int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
+    int minSubSections = 2; // New NZSHM22
 
     long maxFaultSections = 100000; // maximum fault ruptures to process
     long skipFaultSections = 0; // skip n fault ruptures, default 0"
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
     int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 
-    public abstract String getDescriptiveName();
+	protected ScalingRelationships scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
+	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
 
+    protected static String fmt(float d) {
+        if (d == (long) d)
+            return String.format("%d", (long) d);
+        else
+            return Float.toString(d);
+    }
+
+    protected static String fmt(double d) {
+        if (d == (long) d)
+            return String.format("%d", (long) d);
+        else
+            return Double.toString(d);
+    }
+
+    protected static String fmt(boolean b) {
+        return b ? "T" : "F";
+    }
+    
+    public String getDescriptiveName() {
+        String description = "";
+        if (faultModel != null) {
+            description = description + "_FM(" + faultModel.name() + ")";
+        }
+        if (fsdFile != null) {
+            description = description + "_FF(" + fsdFile.getName() + ")";
+        }
+        if (downDipFile != null) {
+            description = description + "_SF(" + downDipFile.getName() + ")";
+        }        
+        description += "_mnSbS(" + fmt(minSubSections) + ")";
+        description += "_mnSSPP(" + fmt(minSubSectsPerParent) + ")";
+        description += "_mxSSL(" + fmt(maxSubSectionLength) + ")";
+        
+        if (maxFaultSections != 100000) {
+        	description += "_mxFS(" + fmt(maxFaultSections) + ")";
+        }
+        if (skipFaultSections != 0) {
+        	description += "_skFS(" + fmt(skipFaultSections) + ")";       	
+        }
+        return description;
+    }
+    
     public abstract NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException ;
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
@@ -56,18 +107,37 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return this;
     }
 
-    /**
-     * Sets the subduction fault. At the moment, only one fault can be set.
-     *
-     * @param faultName   The name fo the fault.
-     * @param downDipFile the CSV file containing all sections.
-     * @return this builder
-     */
-    public NZSHM22_AbstractRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-        this.downDipFaultName = faultName;
-        this.downDipFile = downDipFile;
-        return this;
-    }
+    
+	public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(ScalingRelationships scalingRelationship) {
+		this.scalingRelationship = scalingRelationship;
+		return this;
+	}
+	
+	public ScalingRelationships getScalingRelationship() {
+		return this.scalingRelationship;
+	}
+	
+	public NZSHM22_AbstractRuptureSetBuilder setSlipAlongRuptureModel(SlipAlongRuptureModels slipAlongRuptureModel) {
+		this.slipAlongRuptureModel = slipAlongRuptureModel;
+		return this;
+	}
+	
+	public SlipAlongRuptureModels getSlipAlongRuptureModel() {
+		return this.slipAlongRuptureModel;
+	}	
+    
+//    /**
+//     * Sets the subduction fault. At the moment, only one fault can be set.
+//     *
+//     * @param faultName   The name fo the fault.
+//     * @param downDipFile the CSV file containing all sections.
+//     * @return this builder
+//     */
+//    public NZSHM22_AbstractRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
+//        this.downDipFaultName = faultName;
+//        this.downDipFile = downDipFile;
+//        return this;
+//    }
 
 
     /**
@@ -113,6 +183,15 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return this;
     }
 
+    /**
+     * @param minSubSections sets the minimum subsections, 2 is default
+     * @return NZSHM22_RuptureSetBuilder the builder
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setMinSubSections(int minSubSections) {
+        this.minSubSections = minSubSections;
+        return this;
+    }    
+    
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
             faultModel.fetchFaultSections(subSections);
@@ -175,4 +254,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public ClusterRuptureBuilder getBuilder() {
         return builder;
     }
+    
+	/**
+	 * @return the plausabilityConfig
+	 */
+	public PlausibilityConfiguration getPlausibilityConfig() {
+		return plausibilityConfig;
+	}    
 }

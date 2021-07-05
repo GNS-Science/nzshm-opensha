@@ -9,6 +9,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilde
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSubSectionsFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.TotalAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
@@ -18,8 +19,10 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistance
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.*;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
+import scratch.UCERF3.utils.FaultSystemIO;
 
 /**
  * Builds opensha SlipAlongRuptureModelRupSet rupture sets using NZ NSHM
@@ -39,45 +42,33 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 	float maxCumulativeAzimuthChange = 560;
 	RupturePermutationStrategy permutationStrategyClass = RupturePermutationStrategy.UCERF3;
 	double thinningFactor = 0;
-	double downDipMinAspect = 1;
-	double downDipMaxAspect = 3;
-	int downDipAspectDepthThreshold = Integer.MAX_VALUE; // from this 'depth' (in tile rows) the max aspect constraint
+//	double downDipMinAspect = 1;
+//	double downDipMaxAspect = 3;
+//	int downDipAspectDepthThreshold = Integer.MAX_VALUE; // from this 'depth' (in tile rows) the max aspect constraint
 															// is ignored
-	double downDipMinFill = 1; // 1 means only allow complete rectangles
-	double downDipPositionCoarseness = 0; // 0 means no coarseness
-	double downDipSizeCoarseness = 0; // 0 means no coarseness
+//	double downDipMinFill = 1; // 1 means only allow complete rectangles
+//	double downDipPositionCoarseness = 0; // 0 means no coarseness
+//	double downDipSizeCoarseness = 0; // 0 means no coarseness
 
 	@Override
 	public String getDescriptiveName() {
 		String description = "RupSet_Az";
-		if (faultModel != null) {
-			description = description + "_FM(" + faultModel.name() + ")";
-		}
-		if (fsdFile != null) {
-			description = description + "_FF(" + fsdFile.getName() + ")";
-		}
-		if (downDipFile != null) {
-			description = description + "_SF(" + downDipFile.getName() + ")";
-		}
-		if (downDipFile != null || (faultModel != null && !faultModel.isCrustal())) {
-			description += "_ddAsRa(" + downDipMinAspect + "," + downDipMaxAspect + "," + downDipAspectDepthThreshold + ")";
-			description += "_ddMnFl(" + downDipMinFill + ")";
-			description += "_ddPsCo(" + downDipPositionCoarseness + ")";
-			description += "_ddSzCo(" + downDipSizeCoarseness + ")";
-		} else {
-			description += "_mxSbScLn(" + maxSubSectionLength + ")";
-			//description += "_skFtSc(" + skipFaultSections + ")";
-		}
+		description += super.getDescriptiveName();
+		
+//		if (downDipFile != null || (faultModel != null && !faultModel.isCrustal())) {
+//			description += "_ddAsRa(" + downDipMinAspect + "," + downDipMaxAspect + "," + downDipAspectDepthThreshold + ")";
+//			description += "_ddMnFl(" + downDipMinFill + ")";
+//			description += "_ddPsCo(" + downDipPositionCoarseness + ")";
+//			description += "_ddSzCo(" + downDipSizeCoarseness + ")";
+//		}
 
 		description += "_mxAzCh(" + maxTotalAzimuthChange + ")";
 		description += "_mxCmAzCh(" + maxCumulativeAzimuthChange + ")";
-		//description += "_mxFaSe(" + maxFaultSections + ")";
 		description += "_mxJpDs(" + maxDistance + ")";
 		description += "_mxTtAzCh(" + maxTotalAzimuthChange + ")";
-		//description += "_mnSsPrPa(" + minSubSectsPerParent + ")";
+
 		//description += "_pmSt(" + permutationStrategyClass.name() + ")";
 		description += "_thFc(" + thinningFactor + ")";
-
 		return description;
 	}
 
@@ -100,9 +91,9 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setFaultModelFile(fsdFile);
 	}
 
-	public NZSHM22_AzimuthalRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
-	}
+//	public NZSHM22_AzimuthalRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
+//		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
+//	}
 
 	public NZSHM22_AzimuthalRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
 		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMaxFaultSections(maxFaultSections);
@@ -118,6 +109,10 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 
 	public NZSHM22_AzimuthalRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
 		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMinSubSectsPerParent(minSubSectsPerParent);
+	}
+
+	public NZSHM22_AzimuthalRuptureSetBuilder setMinSubSections(int minSubSections) {
+		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMinSubSections(minSubSections);
 	}
 
 
@@ -198,71 +193,71 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		return this;
 	}
 
-	/**
-	 * Sets the aspect ratio boundaries for subduction zone ruptures.
-	 *
-	 * @param minAspect the minimum aspect ratio
-	 * @param maxAspect the maximum aspect ratio
-	 * @return this builder
-	 */
-	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect) {
-		this.downDipMinAspect = minAspect;
-		this.downDipMaxAspect = maxAspect;
-		return this;
-	}
-
-	/**
-	 * Sets the aspect ratio boundaries for subduction zone ruptures with elastic
-	 * aspect ratinos set with depthThreshold.
-	 *
-	 * @param minAspect      the minimum aspect ratio
-	 * @param maxAspect      the maximum aspect ratio
-	 * @param depthThreshold the threshold (count of rows) from which the maxAspect
-	 *                       constraint will be ignored
-	 *
-	 * @return this builder
-	 */
-	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect, int depthThreshold) {
-		this.downDipMinAspect = minAspect;
-		this.downDipMaxAspect = maxAspect;
-		this.downDipAspectDepthThreshold = depthThreshold;
-		return this;
-	}
-
-	/**
-	 * Sets the required rectangularity for subduction zone ruptures. A value of 1
-	 * means all ruptures need to be rectangular. A value smaller of 1 indicates the
-	 * minimum percentage of actual section within the rupture rectangle.
-	 *
-	 * @param minFill the minimum fill of the rupture rectangle
-	 * @return this builder
-	 */
-	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipMinFill(double minFill) {
-		this.downDipMinFill = minFill;
-		return this;
-	}
-
-	/**
-	 * Sets the position coarseness for subduction zone ruptures.
-	 *
-	 * @param epsilon epsilon
-	 * @return this builder
-	 */
-	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipPositionCoarseness(double epsilon) {
-		this.downDipPositionCoarseness = epsilon;
-		return this;
-	}
-
-	/**
-	 * Sets the size coarseness for subduction zone ruptures.
-	 *
-	 * @param epsilon epsilon
-	 * @return this builder
-	 */
-	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipSizeCoarseness(double epsilon) {
-		this.downDipSizeCoarseness = epsilon;
-		return this;
-	}
+//	/**
+//	 * Sets the aspect ratio boundaries for subduction zone ruptures.
+//	 *
+//	 * @param minAspect the minimum aspect ratio
+//	 * @param maxAspect the maximum aspect ratio
+//	 * @return this builder
+//	 */
+//	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect) {
+//		this.downDipMinAspect = minAspect;
+//		this.downDipMaxAspect = maxAspect;
+//		return this;
+//	}
+//
+//	/**
+//	 * Sets the aspect ratio boundaries for subduction zone ruptures with elastic
+//	 * aspect ratinos set with depthThreshold.
+//	 *
+//	 * @param minAspect      the minimum aspect ratio
+//	 * @param maxAspect      the maximum aspect ratio
+//	 * @param depthThreshold the threshold (count of rows) from which the maxAspect
+//	 *                       constraint will be ignored
+//	 *
+//	 * @return this builder
+//	 */
+//	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect, int depthThreshold) {
+//		this.downDipMinAspect = minAspect;
+//		this.downDipMaxAspect = maxAspect;
+//		this.downDipAspectDepthThreshold = depthThreshold;
+//		return this;
+//	}
+//
+//	/**
+//	 * Sets the required rectangularity for subduction zone ruptures. A value of 1
+//	 * means all ruptures need to be rectangular. A value smaller of 1 indicates the
+//	 * minimum percentage of actual section within the rupture rectangle.
+//	 *
+//	 * @param minFill the minimum fill of the rupture rectangle
+//	 * @return this builder
+//	 */
+//	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipMinFill(double minFill) {
+//		this.downDipMinFill = minFill;
+//		return this;
+//	}
+//
+//	/**
+//	 * Sets the position coarseness for subduction zone ruptures.
+//	 *
+//	 * @param epsilon epsilon
+//	 * @return this builder
+//	 */
+//	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipPositionCoarseness(double epsilon) {
+//		this.downDipPositionCoarseness = epsilon;
+//		return this;
+//	}
+//
+//	/**
+//	 * Sets the size coarseness for subduction zone ruptures.
+//	 *
+//	 * @param epsilon epsilon
+//	 * @return this builder
+//	 */
+//	public NZSHM22_AzimuthalRuptureSetBuilder setDownDipSizeCoarseness(double epsilon) {
+//		this.downDipSizeCoarseness = epsilon;
+//		return this;
+//	}
 
 	/**
 	 * @param permutationStrategyClass which strategy to choose
@@ -282,12 +277,12 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 			break;
 		}
 
-		if (null != downDipFile) {
-			permutationStrategy = new DownDipPermutationStrategy(permutationStrategy)
-					.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
-					.addPositionCoarsenessConstraint(downDipPositionCoarseness).addMinFillConstraint(downDipMinFill)
-					.addSizeCoarsenessConstraint(downDipSizeCoarseness);
-		}
+//		if (null != downDipFile) {
+//			permutationStrategy = new DownDipPermutationStrategy(permutationStrategy)
+//					.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
+//					.addPositionCoarsenessConstraint(downDipPositionCoarseness).addMinFillConstraint(downDipMinFill)
+//					.addSizeCoarsenessConstraint(downDipSizeCoarseness);
+//		}
 		return permutationStrategy;
 	}
 
@@ -309,8 +304,12 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 				.add(new JumpAzimuthChangeFilter(azimuthCalc, maxAzimuthChange))
 				.add(new TotalAzimuthChangeFilter(azimuthCalc, maxTotalAzimuthChange, true, true))
 				.add(new DownDipSafeCumulativeAzimuthChangeFilter(azimuthCalc,
-						maxCumulativeAzimuthChange))
-				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy));
+						maxCumulativeAzimuthChange))	
+				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy)); 
+        
+        if (minSubSections > 2)
+        	configBuilder.add(new MinSubSectionsFilter(minSubSections));
+        
 		if (faultIdfilterType != null) {
 			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
 		}
@@ -343,6 +342,11 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		// builder.setDebugCriteria(debugCriteria, true);
 
 		RuptureGrowingStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
+//RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(null);
+//				.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
+//				.addPositionCoarsenessConstraint(downDipPositionCoarseness).addMinFillConstraint(downDipMinFill)
+//				.addSizeCoarsenessConstraint(downDipSizeCoarseness);
+		
 		// debugging
 		// numThreads = 1;
 		ruptures = getBuilder().build(permutationStrategy, numThreads);
@@ -361,11 +365,8 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		// Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
 		NZSHM22_SlipEnabledRuptureSet rupSet = null;
 		try {
-//			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-//					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
 			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-					ScalingRelationships.TMG_CRU_2017, SlipAlongRuptureModels.UNIFORM);
-
+					this.getScalingRelationship(), this.getSlipAlongRuptureModel());
 			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -382,5 +383,32 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		return plausibilityConfig;
 	}
 
+    public static void main(String[] args) throws DocumentException, IOException {
+    	NZSHM22_AzimuthalRuptureSetBuilder builder = new NZSHM22_AzimuthalRuptureSetBuilder();
+        //builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
+        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
+        builder.setMaxFaultSections(100);
+        builder
+        	.setMinSubSections(5)
+//        	.setMinSubSectsPerParent(2)
+//        	.setMaxAzimuthChange(560)
+//        	.setMaxJumpDistance(5d)
+        	.setThinningFactor(0.2);
+        
+    	builder
+		.setScalingRelationship(ScalingRelationships.TMG_CRU_2017)
+		.setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED);
+    	
+//    	builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_10)
+//    		.setDownDipAspectRatio(2, 5, 7)
+//    		.setDownDipMinFill(0.01)
+//    		.setDownDipPositionCoarseness(0.01)
+//    		.setDownDipSizeCoarseness(0.01);
+//    	
+
+    	System.out.println(builder.getDescriptiveName());
+        NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
+        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+    }
 
 }

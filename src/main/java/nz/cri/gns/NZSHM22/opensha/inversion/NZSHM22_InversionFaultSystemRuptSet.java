@@ -23,7 +23,9 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	// (e.g., we need to know the sub-seismo on-fault moment rates to reduce slip
 	// rates accordingly)
 	private InversionTargetMFDs inversionMFDs;
-
+	
+	//TODO: fix this ....... public final static double MIN_MAG_FOR_SEISMOGENIC_RUPS = 7.0;
+	
 	private static final long serialVersionUID = 1091962054533163866L;
 
 	/**
@@ -47,6 +49,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	@Override
 	public synchronized double getFinalMinMagForSection(int sectIndex) {
 		if (minMagForSectArray == null) {
+			// TODO: experiment to test this with higher than U3 6.0
 			minMagForSectArray = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,
 					MIN_MAG_FOR_SEISMOGENIC_RUPS);
 		}
@@ -56,7 +59,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	@Override
 	public InversionTargetMFDs getInversionTargetMFDs() {
 		if (inversionMFDs == null)
-			inversionMFDs = new NZSHM22_InversionTargetMFDs(this);
+			inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(this);
 		return inversionMFDs;
 	}
 	

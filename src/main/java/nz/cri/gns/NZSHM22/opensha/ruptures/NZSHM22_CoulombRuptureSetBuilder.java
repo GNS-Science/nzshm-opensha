@@ -105,9 +105,9 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         return (NZSHM22_CoulombRuptureSetBuilder) super.setFaultModelFile(fsdFile);
     }
 
-    public NZSHM22_CoulombRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
-    }
+//    public NZSHM22_CoulombRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
+//        return (NZSHM22_CoulombRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
+//    }
 
     public NZSHM22_CoulombRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
         return (NZSHM22_CoulombRuptureSetBuilder) super.setMaxFaultSections(maxFaultSections);
@@ -135,37 +135,14 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         return this;
     }
 
-    protected static String fmt(float d) {
-        if (d == (long) d)
-            return String.format("%d", (long) d);
-        else
-            return Float.toString(d);
-    }
-
-    protected static String fmt(double d) {
-        if (d == (long) d)
-            return String.format("%d", (long) d);
-        else
-            return Double.toString(d);
-    }
-
-    protected static String fmt(boolean b) {
-        return b ? "T" : "F";
-    }
-
+	public NZSHM22_CoulombRuptureSetBuilder setMinSubSections(int minSubSections) {
+		return (NZSHM22_CoulombRuptureSetBuilder) super.setMinSubSections(minSubSections);
+	}    
+    
     @Override
     public String getDescriptiveName() {
         String description = "RupSet_Cl";
-        if (faultModel != null) {
-            description = description + "_FM(" + faultModel.name() + ")";
-        }
-        if (fsdFile != null) {
-            description = description + "_FF(" + fsdFile.getName() + ")";
-        }
-        if (downDipFile != null) {
-            description = description + "_SF(" + downDipFile.getName() + ")";
-        }
-
+		description += super.getDescriptiveName();
         description += "_noInP(" + fmt(noIndirectPaths) + ")";
         description += "_slRtP(" + fmt(slipRateProb) + ")";
         description += "_slInL(" + fmt(slipIncludeLonger) + ")";
@@ -184,7 +161,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
         description += "_stGrSp(" + fmt(stiffGridSpacing) + ")";
         description += "_coFr(" + fmt(coeffOfFriction) + ")";
-
 
         return description;
     }
@@ -439,7 +415,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
          */
 //		configBuilder.u3All(CoulombRates.loadUCERF3CoulombRates(fm)); outputName += "_ucerf3";
         if (minSubSectsPerParent > 1) {
-            configBuilder.minSectsPerParent(2, true, true); // always do this one
+            configBuilder.minSectsPerParent(this.minSubSectsPerParent, true, true); // always do this one
         }
         if (noIndirectPaths) {
             configBuilder.noIndirectPaths(true);
@@ -587,7 +563,11 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             configBuilder.add(adaptiveStrat.buildConnPointCleanupFilter(connectionStrategy));
             growingStrat = adaptiveStrat;
         }
-
+       
+        if (minSubSections > 2) {
+        	configBuilder.add(new MinSubSectionsFilter(minSubSections));
+        }
+        	
         // build our configuration
         PlausibilityConfiguration config = configBuilder.build();
 
@@ -628,11 +608,8 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         // Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
         NZSHM22_SlipEnabledRuptureSet rupSet = null;
         try {
-//			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-//					ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.UNIFORM);
-            rupSet = new NZSHM22_SlipEnabledRuptureSet(origRupSet.getClusterRuptures(), subSections,
-                    ScalingRelationships.TMG_CRU_2017, SlipAlongRuptureModels.UNIFORM);
-
+			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
+					this.getScalingRelationship(), this.getSlipAlongRuptureModel());
             rupSet.setPlausibilityConfiguration(config);
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -759,10 +736,18 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
-        System.out.println(builder.getDescriptiveName());
+        
+        //builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
         builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
-        builder.setMaxFaultSections(30);
+        builder.setMaxFaultSections(100);
+        builder
+        	.setMinSubSections(5)
+        	.setAdaptiveMinDist(6.0d)
+        	.setMaxJumpDistance(15d)
+        	.setAdaptiveSectFract(0.1f);
+        
+        System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        FaultSystemIO.writeRupSet(ruptureSet, new File("c:\\tmp\\" + builder.getDescriptiveName() + ".zip"));
+        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
     }
 }

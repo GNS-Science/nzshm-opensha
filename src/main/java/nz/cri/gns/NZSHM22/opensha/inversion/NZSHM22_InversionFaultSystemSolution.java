@@ -6,16 +6,22 @@ import org.opensha.sha.magdist.ArbIncrementalMagFreqDist;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
+
+import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
+import scratch.UCERF3.griddedSeismicity.UCERF3_GridSourceGenerator;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.utils.FaultSystemIO;
 
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 
 public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSolution {
 
@@ -24,7 +30,18 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         super(new NZSHM22_InversionFaultSystemRuptSet(rupSet, rupSet.getLogicTreeBranch()), rates, config, energies);
     }
 
-    public static NZSHM22_InversionFaultSystemSolution fromSolution(InversionFaultSystemSolution solution) {
+	/**
+	 * Can be used on the fly for when InversionConfiguration is not available/relevant/fit for use
+     * @param rupSet
+     * @param rates
+     * @param energies
+     */
+    public NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet,
+			double[] rates, Map<String, Double> energies) {
+    	this(rupSet, rates, null, energies);
+	}   
+    
+	public static NZSHM22_InversionFaultSystemSolution fromSolution(InversionFaultSystemSolution solution) {
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 solution.getRupSet(),
@@ -32,8 +49,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
                 solution.getInversionConfiguration(),
                 solution.getEnergies());
 
-        // this will come with the hazards branch
-        //ifss.setGridSourceProvider(new NZSHM22_GridSourceGenerator(ifss));
+        ifss.setGridSourceProvider(new NZSHM22_GridSourceGenerator(ifss));
         return ifss;
     }
 
@@ -63,7 +79,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
             List<Integer> ruptures = rupSet.getRupturesForParentSection(parentSectionID);
             if (ruptures != null) {
                 rups.addAll(ruptures);
-            }else{
+            } else {
                 System.out.println("nothing for " + parentSectionID);
             }
         }
@@ -93,4 +109,15 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 
         return mfd;
     }
+    
+	/**
+	 * Returns GridSourceProvider - unlike UCERf3 this does not create a provider if it's not set, 
+	 * as Subduction has no GridSource Provider
+	 * 
+	 * @return
+	 */
+	public GridSourceProvider getGridSourceProvider() {
+		return gridSourceProvider;
+	}    
+    
 }

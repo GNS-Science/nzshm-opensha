@@ -73,15 +73,12 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 	/*
 	 * MFD constraint default settings
 	 */
-	protected double totalRateM5 = 3d; //5d; 40;
-	protected double bValue = 1d;
+	protected double totalRateM5 = 0.7d; //5d; 40;
+	protected double bValue = 1.1d;
 	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-												// USGS/UCERF3) [KKS, CBC]
-//	protected int mfdNum = 40;
-//	protected double mfdMin = 5.05d;
-//	protected double mfdMax = 8.95;
+										     // USGS/UCERF3) [KKS, CBC]
 
-	protected double mfdEqualityConstraintWt = 10;
+	protected double mfdEqualityConstraintWt = 10; //10, 100, 1000
 	protected double mfdInequalityConstraintWt = 1000;
 
 	// protected List<MFD_InversionConstraint> constraints = new ArrayList<>();
@@ -91,12 +88,23 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
     public List<MFD_InversionConstraint> getMFDConstraints() {
     	return mfdConstraints;
     }
-    
-      
-   	@SuppressWarnings("unused")
+
+	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
+		double totalRateM5, double bValue, double mfdTransitionMag) {
+		this.totalRateM5 = totalRateM5;
+		this.bValue = bValue;
+		this.mfdTransitionMag = mfdTransitionMag;
+		this.invRupSet = invRupSet;
+		init();
+	}
+
 	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
 		this.invRupSet = invRupSet;
-
+		init();
+	}
+	
+	private void init() {
+		
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
 		// equivalent
 		LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
@@ -119,9 +127,8 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 		}
 		
 		// sorting out scaling
-		double bVal = 0.94d, scalingFactor = 1;
 		roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
-		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5*scalingFactor, bVal); //TODO: revisit
+		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5, bValue); //TODO: revisit
 		
 		if (MFD_STATS) {
 			System.out.println("totalTargetGR after setAllButTotMoRate");
@@ -163,7 +170,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 
 		mfdConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD, null));	
 	}
-
 
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_NoCal() {

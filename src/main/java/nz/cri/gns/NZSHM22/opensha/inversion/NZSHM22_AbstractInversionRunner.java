@@ -1,47 +1,35 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import org.dom4j.DocumentException;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RuptureConnectionSearch;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
-import org.opensha.sha.faultSurface.FaultSection;
-
-import com.google.common.base.Preconditions;
-
-import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.FaultSystemSolution;
-import scratch.UCERF3.SlipEnabledSolution;
-import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
-import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
-import scratch.UCERF3.inversion.laughTest.OldPlausibilityConfiguration;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
-import scratch.UCERF3.inversion.CommandLineInversionRunner;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.inversion.SectionClusterList;
-import scratch.UCERF3.inversion.SectionConnectionStrategy;
-//import scratch.UCERF3.inversion.CommandLineInversionRunner.getSectionMoments;
-import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
-import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.completion.*;
-import scratch.UCERF3.utils.FaultSystemIO;
-import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Runs the standard NSHM inversion on a rupture set.
- */
-public class NZSHM22_InversionRunner {
+import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+
+import com.google.common.base.Preconditions;
+
+import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.SlipEnabledSolution;
+import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.inversion.CommandLineInversionRunner;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
+import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
+import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
+import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
+import scratch.UCERF3.utils.FaultSystemIO;
+
+public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected long inversionSecs = 60;
 	protected long syncInterval = 10;
@@ -54,7 +42,10 @@ public class NZSHM22_InversionRunner {
 	private CompletionCriteria completionCriteria;
 	private ThreadedSimulatedAnnealing tsa;
 	private double[] initialState;
-	private InversionFaultSystemSolution solution;
+	private NZSHM22_InversionFaultSystemSolution solution;
+
+	private Map<String, Double> finalEnergies = new HashMap<String, Double>();
+	private InversionInputGenerator inversionInputGenerator;
 
 	/*
 	 * Sliprate constraint default settings
@@ -63,38 +54,18 @@ public class NZSHM22_InversionRunner {
 	// since it helps fit slow-moving faults).
 	// If unnormalized, misfit is absolute difference.
 	// BOTH includes both normalized and unnormalized constraints.
-	protected SlipRateConstraintWeightingType slipRateWeightingType = SlipRateConstraintWeightingType.BOTH; // (recommended:
-																																									// BOTH)
+	protected SlipRateConstraintWeightingType slipRateWeightingType;// = SlipRateConstraintWeightingType.BOTH; //
+																	// (recommended:
+																	// BOTH)
 	// For SlipRateConstraintWeightingType.NORMALIZED (also used for
 	// SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
-	protected double slipRateConstraintWt_normalized = 1;
+	protected double slipRateConstraintWt_normalized;
 	// For SlipRateConstraintWeightingType.UNNORMALIZED (also used for
 	// SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
-	protected double slipRateConstraintWt_unnormalized = 100;
+	protected double slipRateConstraintWt_unnormalized;
 
-	/*
-	 * MFD constraint default settings
-	 */
-	protected double totalRateM5 = 5d;
-	protected double bValue = 1d;
-	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-												// USGS/UCERF3) [KKS, CBC]
-	protected int mfdNum = 40;
-	protected double mfdMin = 5.05d;
-	protected double mfdMax = 8.95;
-
-	protected double mfdEqualityConstraintWt = 10;
-	protected double mfdInequalityConstraintWt = 1000;
-
-	private NZSHM22_InversionConfiguration inversionConfiguration;
-	private int slipRateUncertaintyWeight;
-	private int slipRateUncertaintyScalingFactor;
-
-	/**
-	 * Creates a new NZSHM22_InversionRunner with defaults.
-	 */
-	public NZSHM22_InversionRunner() {
-	}
+	protected double mfdEqualityConstraintWt; // = 10;
+	protected double mfdInequalityConstraintWt;// = 1000;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -102,7 +73,7 @@ public class NZSHM22_InversionRunner {
 	 * @param inversionMinutes the duration of the inversion in minutes.
 	 * @return this runner.
 	 */
-	public NZSHM22_InversionRunner setInversionMinutes(long inversionMinutes) {
+	public NZSHM22_AbstractInversionRunner setInversionMinutes(long inversionMinutes) {
 		this.inversionSecs = inversionMinutes * 60;
 		return this;
 	}
@@ -113,19 +84,21 @@ public class NZSHM22_InversionRunner {
 	 * @param inversionSeconds the duration of the inversion in seconds.
 	 * @return this runner.
 	 */
-	public NZSHM22_InversionRunner setInversionSeconds(long inversionSeconds) {
+	public NZSHM22_AbstractInversionRunner setInversionSeconds(long inversionSeconds) {
 		this.inversionSecs = inversionSeconds;
 		return this;
 	}
-	
+
 	/**
-	 * @param energyDelta
+	 * @param energyDelta        may be set to 0 to noop this method
 	 * @param energyPercentDelta
 	 * @param lookBackMins
 	 * @return
 	 */
-	public NZSHM22_InversionRunner setEnergyChangeCompletionCriteria(double energyDelta, double energyPercentDelta,
-			double lookBackMins) {
+	public NZSHM22_AbstractInversionRunner setEnergyChangeCompletionCriteria(double energyDelta,
+			double energyPercentDelta, double lookBackMins) {
+		if (energyDelta == 0.0d)
+			return this;
 		this.energyChangeCompletionCriteria = new EnergyChangeCompletionCriteria(energyDelta, energyPercentDelta,
 				lookBackMins);
 		return this;
@@ -137,7 +110,7 @@ public class NZSHM22_InversionRunner {
 	 * @param syncInterval the interval in seconds.
 	 * @return this runner.
 	 */
-	public NZSHM22_InversionRunner setSyncInterval(long syncInterval) {
+	public NZSHM22_AbstractInversionRunner setSyncInterval(long syncInterval) {
 		this.syncInterval = syncInterval;
 		return this;
 	}
@@ -149,20 +122,22 @@ public class NZSHM22_InversionRunner {
 	 * @param numThreads the number of threads.
 	 * @return this runner.
 	 */
-	public NZSHM22_InversionRunner setNumThreads(int numThreads) {
+	public NZSHM22_AbstractInversionRunner setNumThreads(int numThreads) {
 		this.numThreads = numThreads;
 		return this;
 	}
 
 	/**
-	 * Sets the FaultModel file f
-	 *
-	 * @param ruptureSetFileName the rupture file name
-	 * @return this builder
-	 * @throws DocumentException
-	 * @throws IOException
+	 * @param inputGen
+	 * @return
 	 */
-	public NZSHM22_InversionRunner setRuptureSetFile(String ruptureSetFileName) throws IOException, DocumentException {
+	public NZSHM22_AbstractInversionRunner setInversionInputGenerator(InversionInputGenerator inputGen) {
+		this.inversionInputGenerator = inputGen;
+		return this;
+	}
+
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(String ruptureSetFileName)
+			throws IOException, DocumentException {
 		File rupSetFile = new File(ruptureSetFileName);
 		this.setRuptureSetFile(rupSetFile);
 		return this;
@@ -176,85 +151,12 @@ public class NZSHM22_InversionRunner {
 	 * @throws DocumentException
 	 * @throws IOException
 	 */
-	public NZSHM22_InversionRunner setRuptureSetFile(File ruptureSetFile) throws IOException, DocumentException {
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
+			throws IOException, DocumentException {
 		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
 
 		this.rupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
-		return this;
-
-		/*
-		 * BEGIN Attempt one
-		 * 
-		 * an attempt to build ClusterRups outside the init - probably a bad idea.
-		 * 
-		 * // here we're trying to initialise Clusters properly
-		 * SectionDistanceAzimuthCalculator distCalc =
-		 * rupSetA.getPlausibilityConfiguration().getDistAzCalc(); double maxDist =
-		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
-		 * (); boolean cumulativeJumps = true;
-		 * //rupSet.getPlausibilityConfiguration().getDistAzCalc().
-		 * RuptureConnectionSearch search = new RuptureConnectionSearch(rupSetA,
-		 * distCalc, maxDist, cumulativeJumps); rupSetA.buildClusterRups(search);
-		 *
-		 * END Attempt one
-		 * 
-		 */
-
-		/*
-		 * BEGIN Attempt two
-		 * 
-		 * Code block here is an attempt to build new InversionFaultSystemRupSet using
-		 * the method outlined in
-		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests
-		 * 
-		 * this left me confused about OldPlausibilityConfiguration.
-		 * 
-		 * It also required a new constructor on SectionConnectionStrategy which seemed
-		 * off.
-		 * 
-		 * double maxDist =
-		 * rupSetA.getPlausibilityConfiguration().getConnectionStrategy().getMaxJumpDist
-		 * (); SectionConnectionStrategy connectionStrategy = new
-		 * UCERF3SectionConnectionStrategy(maxDist, null); OldPlausibilityConfiguration
-		 * op = null;
-		 * 
-		 * //using a new SectionConnectionStrategy constructor SectionClusterList
-		 * clusters = new SectionClusterList(rupSetA, connectionStrategy, op);
-		 * 
-		 * //Old constructors (as per package
-		 * scratch.UCERF3.inversion.laughTest.TestIncrementalVsFullTests )
-		 * InversionFaultSystemRupSet rupSetB = new InversionFaultSystemRupSet(branch,
-		 * clusters, rupSetA.getFaultSectionDataList());
-		 *
-		 * END Attempt 2
-		 * 
-		 */
-
-	}
-
-	/**
-	 * Sets GutenbergRichterMFD arguments
-	 * 
-	 * @param totalRateM5      the number of M>=5's per year. TODO: ref David
-	 *                         Rhodes/Chris Roland? [KKS, CBC]
-	 * @param bValue
-	 * @param mfdTransitionMag magnitude to switch from MFD equality to MFD
-	 *                         inequality TODO: how to validate this number for NZ?
-	 *                         (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-	 * @param mfdNum
-	 * @param mfdMin
-	 * @param mfdMax
-	 * @return
-	 */
-	public NZSHM22_InversionRunner setGutenbergRichterMFD(double totalRateM5, double bValue, double mfdTransitionMag,
-			int mfdNum, double mfdMin, double mfdMax) {
-		this.totalRateM5 = totalRateM5;
-		this.bValue = bValue;
-		this.mfdTransitionMag = mfdTransitionMag;
-		this.mfdNum = mfdNum;
-		this.mfdMin = mfdMin;
-		this.mfdMax = mfdMax;
 		return this;
 	}
 
@@ -263,7 +165,7 @@ public class NZSHM22_InversionRunner {
 	 * @param mfdInequalityConstraintWt
 	 * @return
 	 */
-	public NZSHM22_InversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt,
+	public NZSHM22_AbstractInversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt) {
 		this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
 		this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
@@ -271,83 +173,45 @@ public class NZSHM22_InversionRunner {
 	}
 
 	/**
+	 * UCERF3-style Slip rate constraint
+	 * 
 	 * If normalized, slip rate misfit is % difference for each section (recommended
 	 * since it helps fit slow-moving faults). If unnormalized, misfit is absolute
 	 * difference. BOTH includes both normalized and unnormalized constraints.
 	 * 
-	 * @param weightingType  a value
-	 *                       fromUCERF3InversionConfiguration.SlipRateConstraintWeightingType
+	 * @param weightingType  a value from
+	 *                       UCERF3InversionConfiguration.SlipRateConstraintWeightingType
 	 * @param normalizedWt
 	 * @param unnormalizedWt
-	 * @throws IllegalArgumentException if the weighting types is not supported by this constraint
+	 * @throws IllegalArgumentException if the weighting types is not supported by
+	 *                                  this constraint
 	 * @return
 	 */
-	public NZSHM22_InversionRunner setSlipRateConstraint(
-			SlipRateConstraintWeightingType weightingType, double normalizedWt,
-			double unnormalizedWt) {
+	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(SlipRateConstraintWeightingType weightingType,
+			double normalizedWt, double unnormalizedWt) {
 		Preconditions.checkArgument(weightingType != SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED,
-				"setSlipRateConstraint() using  %s is not supported. Use setSlipRateUncertaintyConstraint() instead.", weightingType);
+				"setSlipRateConstraint() using  %s is not supported. Use setSlipRateUncertaintyConstraint() instead.",
+				weightingType);
 		this.slipRateWeightingType = weightingType;
 		this.slipRateConstraintWt_normalized = normalizedWt;
 		this.slipRateConstraintWt_unnormalized = unnormalizedWt;
 		return this;
 	}
-	
-	
+
 	/**
-	 * New NZSHM22 Slip rate uncertainty constraint
+	 * UCERF3-style Slip rate constraint
 	 * 
-	 * @param uncertaintyWeight
-	 * @param scalingFactor
-	 * @throws IllegalArgumentException if the weighting types is not supported by this constraint
+	 * @param weightingType  a string value from
+	 *                       UCERF3InversionConfiguration.SlipRateConstraintWeightingType
+	 * @param normalizedWt
+	 * @param unnormalizedWt
+	 * @throws IllegalArgumentException if the weighting types is not supported by
+	 *                                  this constraint
 	 * @return
 	 */
-	public NZSHM22_InversionRunner setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType weightingType, 
-			int uncertaintyWeight, int scalingFactor) {
-		Preconditions.checkArgument(weightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED,
-				"setSlipRateUncertaintyConstraint() using %s is not supported. Use setSlipRateConstraint() instead.", weightingType);
-		this.slipRateWeightingType = weightingType;
-		this.slipRateUncertaintyWeight = uncertaintyWeight;
-		this.slipRateUncertaintyScalingFactor = scalingFactor;
-		return this;
-	}	
-	
-
-	public NZSHM22_InversionRunner setInversionConfiguration(NZSHM22_InversionConfiguration config) {
-		System.out.println("Building Inversion Configuration");
-		inversionConfiguration = config;
-		return this;
-	}
-
-	public NZSHM22_InversionRunner configure() {
-		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
-
-		// this contains all inversion weights
-		inversionConfiguration = NZSHM22_InversionConfiguration.forModel(inversionModel, rupSet, mfdEqualityConstraintWt,
-				mfdInequalityConstraintWt);
-		
-//		inversionConfiguration = NZSHM22_SubductionInversionConfiguration.forModel(inversionModel, rupSet,
-//				mfdEqualityConstraintWt, mfdInequalityConstraintWt);
-		
-		//set up slip rate config
-		inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
-		if (this.slipRateWeightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
-			System.out.println("config for UNCERTAINTY_ADJUSTED " + this.slipRateUncertaintyWeight + ", " + this.slipRateUncertaintyScalingFactor);
-			inversionConfiguration.setSlipRateUncertaintyConstraintWt(this.slipRateUncertaintyWeight);
-			inversionConfiguration.setSlipRateUncertaintyConstraintScalingFactor(this.slipRateUncertaintyScalingFactor);
-		} else {
-			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
-			inversionConfiguration.setSlipRateConstraintWt_unnormalized(this.slipRateConstraintWt_unnormalized);
-		}
-		return this;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected FaultSystemRupSet loadRupSet(File file) throws IOException, DocumentException {
-		FaultSystemRupSet fsRupSet = FaultSystemIO.loadRupSet(file);
-		return fsRupSet;
-
+	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(String weightingType, double normalizedWt,
+			double unnormalizedWt) {
+		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt, unnormalizedWt);
 	}
 
 	/**
@@ -358,30 +222,14 @@ public class NZSHM22_InversionRunner {
 	 * @throws IOException
 	 * @throws DocumentException
 	 */
-	public FaultSystemSolution runInversion() throws IOException, DocumentException {
+	public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
 
 		// weight of entropy-maximization constraint (not used in UCERF3)
 		double smoothnessWt = 0;
 
-		/*
-		 * Build inversion inputs
-		 */
-		List<AveSlipConstraint> aveSlipConstraints = null;
-		// try {
-		// aveSlipConstraints =
-		// AveSlipConstraint.load(rupSet.getFaultSectionDataList());
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// System.exit(1);
-		// }
-
-			
-		NZSHM22_InversionInputGenerator inputGen = new NZSHM22_InversionInputGenerator(rupSet, inversionConfiguration, null,
-				aveSlipConstraints, null, null);
-
-		inputGen.generateInputs(true);
+		inversionInputGenerator.generateInputs(true);
 		// column compress it for fast annealing
-		inputGen.columnCompress();
+		inversionInputGenerator.columnCompress();
 
 		// inversion completion criteria (how long it will run)
 		this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
@@ -400,12 +248,12 @@ public class NZSHM22_InversionRunner {
 		// between synchronization
 		CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
 
-		initialState = inputGen.getInitialSolution();
+		initialState = inversionInputGenerator.getInitialSolution();
 
-		tsa = new ThreadedSimulatedAnnealing(inputGen.getA(), inputGen.getD(), initialState, smoothnessWt,
-				inputGen.getA_ineq(), inputGen.getD_ineq(), inputGen.getWaterLevelRates(), numThreads,
-				subCompletionCriteria);
-		tsa.setConstraintRanges(inputGen.getConstraintRowRanges());
+		tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
+				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
+				inversionInputGenerator.getWaterLevelRates(), numThreads, subCompletionCriteria);
+		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
@@ -416,17 +264,58 @@ public class NZSHM22_InversionRunner {
 		double[] solution_raw = tsa.getBestSolution();
 
 		// adjust for minimum rates if applicable
-		double[] solution_adjusted = inputGen.adjustSolutionForWaterLevel(solution_raw);
+		double[] solution_adjusted = inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
 
 		Map<ConstraintRange, Double> energies = tsa.getEnergies();
 		if (energies != null) {
 			System.out.println("Final energies:");
-			for (ConstraintRange range : energies.keySet())
+			for (ConstraintRange range : energies.keySet()) {
+				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
 				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
+			}
 		}
 
-		solution = new InversionFaultSystemSolution(rupSet, solution_adjusted);
+		// TODO, do we really do want to store the config and energies now?
+		solution = new NZSHM22_InversionFaultSystemSolution(rupSet, solution_adjusted, finalEnergies); // , null,
+																										// energies);
 		return solution;
+	}
+
+	@SuppressWarnings("deprecation")
+	public Map<String, String> getSolutionMetrics() {
+		Map<String, String> metrics = new HashMap<String, String>();
+
+		// Completion
+		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria) completionCriteria;
+		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
+		int numRups = initialState.length;
+
+		metrics.put("total_perturbations", Long.toString(numPerturbs));
+		metrics.put("total_ruptures", Integer.toString(numRups));
+
+		int rupsPerturbed = 0;
+		double[] solution_no_min_rates = tsa.getBestSolution();
+		int numAboveWaterlevel = 0;
+		for (int i = 0; i < numRups; i++) {
+			if ((float) solution_no_min_rates[i] != (float) initialState[i])
+				rupsPerturbed++;
+			if (solution_no_min_rates[i] > 0)
+				numAboveWaterlevel++;
+		}
+
+		metrics.put("perturbed_ruptures", Integer.toString(rupsPerturbed));
+		metrics.put("avg_perturbs_per_pertubed_rupture",
+				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
+		metrics.put("ruptures_above_water_level_ratio",
+				new Double((double) numAboveWaterlevel / (double) numRups).toString());
+
+		for (String range : finalEnergies.keySet()) {
+			String metric_name = "final_energy_" + range.replaceAll("\\s+", "_").toLowerCase();
+			System.out.println(metric_name + " : " + finalEnergies.get(range).toString());
+			metrics.put(metric_name, finalEnergies.get(range).toString());
+		}
+
+		return metrics;
 	}
 
 	public String completionCriteriaMetrics() {
@@ -544,5 +433,7 @@ public class NZSHM22_InversionRunner {
 		info += "\n";
 		return info;
 	}
+
+	protected abstract NZSHM22_AbstractInversionRunner configure();
 
 }

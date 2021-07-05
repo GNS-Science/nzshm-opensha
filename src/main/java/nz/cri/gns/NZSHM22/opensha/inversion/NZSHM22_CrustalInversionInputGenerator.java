@@ -65,7 +65,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintW
  *
  *
  */
-public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
+public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenerator {
 
 	private static final boolean D = false;
 	/**
@@ -77,13 +77,13 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 
 	// inputs
 	private NZSHM22_InversionFaultSystemRuptSet rupSet;
-	private NZSHM22_InversionConfiguration config;
+	private NZSHM22_CrustalInversionConfiguration config;
 	private List<PaleoRateConstraint> paleoRateConstraints;
 	private List<AveSlipConstraint> aveSlipConstraints;
 	private double[] improbabilityConstraint;
 	private PaleoProbabilityModel paleoProbabilityModel;
 
-	public NZSHM22_InversionInputGenerator(NZSHM22_InversionFaultSystemRuptSet rupSet, NZSHM22_InversionConfiguration config,
+	public NZSHM22_CrustalInversionInputGenerator(NZSHM22_InversionFaultSystemRuptSet rupSet, NZSHM22_CrustalInversionConfiguration config,
 			List<PaleoRateConstraint> paleoRateConstraints, List<AveSlipConstraint> aveSlipConstraints,
 			double[] improbabilityConstraint, // may become an object in the future
 			PaleoProbabilityModel paleoProbabilityModel) {
@@ -113,7 +113,7 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 	}
 
 	private static List<InversionConstraint> buildConstraints(NZSHM22_InversionFaultSystemRuptSet rupSet,
-			NZSHM22_InversionConfiguration config, List<PaleoRateConstraint> paleoRateConstraints,
+			NZSHM22_CrustalInversionConfiguration config, List<PaleoRateConstraint> paleoRateConstraints,
 			List<AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
 
 		System.out.println("buildConstraints");
@@ -249,7 +249,7 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 		return constraints;
 	}
 
-	private static double[] buildWaterLevel(NZSHM22_InversionConfiguration config, FaultSystemRupSet rupSet) {
+	private static double[] buildWaterLevel(NZSHM22_CrustalInversionConfiguration config, FaultSystemRupSet rupSet) {
 		double minimumRuptureRateFraction = config.getMinimumRuptureRateFraction();
 		if (minimumRuptureRateFraction > 0) {
 			// set up minimum rupture rates (water level)
@@ -338,7 +338,7 @@ public class NZSHM22_InversionInputGenerator extends InversionInputGenerator {
 		return distanceAlongRup;
 	}
 
-	public NZSHM22_InversionConfiguration getConfig() {
+	public NZSHM22_CrustalInversionConfiguration getConfig() {
 		return config;
 	}
 

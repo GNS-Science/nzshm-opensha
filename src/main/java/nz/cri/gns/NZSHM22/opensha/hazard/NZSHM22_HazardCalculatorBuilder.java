@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.Site;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
@@ -21,7 +22,6 @@ import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
 
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.erf.FaultSystemSolutionERF;
-import scratch.UCERF3.utils.FaultSystemIO;
 
 /**
  * Creates a NZSHM22_HazardCalculator
@@ -83,8 +83,8 @@ public class NZSHM22_HazardCalculatorBuilder {
         return this;
     }
 
-    FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
-        FaultSystemSolution fss = FaultSystemIO.loadSol(solutionFile);
+    protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
+        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
 
         FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
         if (forecastTimespan != null) {
@@ -96,7 +96,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         return erf;
     }
 
-    ScalarIMR createGmpe() {
+    protected ScalarIMR createGmpe() {
         ScalarIMR gmpe = AttenRelRef.ASK_2014.instance(null);
         gmpe.setParamDefaults();
         // for PGA (units: g)
