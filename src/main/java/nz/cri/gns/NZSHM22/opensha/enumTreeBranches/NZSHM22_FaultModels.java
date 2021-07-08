@@ -31,7 +31,10 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
 //    SBD_0_1_HKR_30("Hikurangi 30km", "subduction_tile_parameters_30.csv", 10000),
 //    SBD_0_1_HKR_10("Hikurangi 10km", "subduction_tile_parameters.csv", 10000),
     SBD_0_1_HKR_KRM_10("Hikurangi,Kermadec 10km", "hk_tile_parameters_10.csv", 10000),
-    SBD_0_1_HKR_KRM_30("Hikurangi,Kermadec 30km", "hk_tile_parameters_30.csv", 10000);
+    SBD_0_1_HKR_KRM_30("Hikurangi,Kermadec 30km", "hk_tile_parameters_30.csv", 10000),
+
+    SBD_0_1_HKR_LR_10("Hikurangi, Kermadec to Louisville ridge, 10km", "hk_tile_parameters_10-short.csv", 10000),
+    SBD_0_1_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km", "hk_tile_parameters_30-short.csv", 10000);
 
     private final static String resourcePath = "/faultModels/";
 
