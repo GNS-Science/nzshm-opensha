@@ -137,7 +137,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
             // need to clone it if you're going to have multiple sites in memory at once
 
-            System.out.println("Site parameters:");
+//            System.out.println("Site parameters:");
             for (Parameter<?> siteParam : gmpe.getSiteParams()) {
 
                 siteParam = (Parameter<?>) siteParam.clone();
@@ -146,12 +146,12 @@ public class NZSHM22_HazardCalculatorBuilder {
 //                // set Vs30 to 600 m/s
 //                ((Parameter<Double>) siteParam).setValue(new Double(600d));
                 site.addParameter(siteParam);
-                System.out.println(siteParam.getName() + ": " + siteParam.getValue());
+//                System.out.println(siteParam.getName() + ": " + siteParam.getValue());
             }
 
             // x-values for the hazard curve
             DiscretizedFunc xValues = new IMT_Info().getDefaultHazardCurve(gmpe.getIntensityMeasure());
-            System.out.println("Default x-values:\n" + xValues);
+//            System.out.println("Default x-values:\n" + xValues);
 
             // need natural log x-values for curve calculation
             DiscretizedFunc logHazCurve = new ArbitrarilyDiscretizedFunc();
@@ -165,7 +165,7 @@ public class NZSHM22_HazardCalculatorBuilder {
             }
 
             // Calculate the curve
-            System.out.println("Calculating hazard curve");
+//            System.out.println("Calculating hazard curve");
             // this actually stores the y-values directly in logHazCurve
             calc.getHazardCurve(logHazCurve, site, gmpe, erf);
 

@@ -6,6 +6,8 @@ import java.util.Optional;
 
 //import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
+import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
@@ -32,15 +34,15 @@ public class NZSHM22_PythonGateway {
 	static NZSHM22_AbstractRuptureSetBuilder builder;
     static CachedCrustalInversionRunner crustalInversionRunner;
     static CachedSubductionInversionRunner subductionInversionRunner;
-    static NZSHM22_HazardCalculatorBuilder calculator = new NZSHM22_HazardCalculatorBuilder();
+    static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
     static NZSHM22_InversionDiagnosticsReportBuilder inversionReportBuilder;
+    static NZSHM22_GridHazardCalculator gridHazCalc;
 
-    
     public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
     	inversionReportBuilder = new NZSHM22_InversionDiagnosticsReportBuilder();
     	return inversionReportBuilder;
     }
-    
+
     public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
         NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
         builder = azBuilder;
@@ -58,8 +60,8 @@ public class NZSHM22_PythonGateway {
         builder = subBuilder;
         return subBuilder;
     }
-    
-    
+
+
     /**
      * Get a new cached inversion runner. For now we want a new one to ensure the
      * setup is clean, but this can maybe be optimised. The produced solution is
@@ -79,9 +81,15 @@ public class NZSHM22_PythonGateway {
         subductionInversionRunner = new CachedSubductionInversionRunner();
         return subductionInversionRunner;
     }
-    
-    public static NZSHM22_HazardCalculatorBuilder getCalculator() {
-        return calculator;
+
+    public static NZSHM22_HazardCalculatorBuilder getHazardCalculatorBuilder() {
+        hazardCalcBuilder = new NZSHM22_HazardCalculatorBuilder();
+        return hazardCalcBuilder;
+    }
+
+    public static NZSHM22_GridHazardCalculator getGridHazardCalculator(NZSHM22_HazardCalculator calculator){
+        gridHazCalc = new NZSHM22_GridHazardCalculator(calculator);
+        return gridHazCalc;
     }
 
     public static MFDPlotBuilder getMFDPlotBuilder(){
@@ -246,9 +254,9 @@ public class NZSHM22_PythonGateway {
             File rupSetFile = new File(rupSetFileName);
             FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
-    }    
-    
-    
+    }
+
+
     /**
      * Python helper that wraps NZSHM22_InversionRunner
      */
@@ -266,7 +274,7 @@ public class NZSHM22_PythonGateway {
             solution = super.runInversion();
             return solution;
         }
-        
+
         /**
          * Writes the cached solution (see the run method) to file.
          *
@@ -295,7 +303,7 @@ public class NZSHM22_PythonGateway {
             solution = super.runInversion();
             return solution;
         }
-        
+
         /**
          * Writes the cached solution (see the run method) to file.
          *
@@ -306,7 +314,7 @@ public class NZSHM22_PythonGateway {
             File solutionFile = new File(solutionFileName);
             FaultSystemIO.writeSol(solution, solutionFile);
         }
-    }    
+    }
 
     // TODO: restore this with the required upstream changes in opensha-ucerf3
 //    public static NZSHM22_InversionDiagnosticsReportBuilder createReportBuilder() {

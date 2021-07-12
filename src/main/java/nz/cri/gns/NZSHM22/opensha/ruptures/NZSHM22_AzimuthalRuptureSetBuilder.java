@@ -9,7 +9,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilde
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSubSectionsFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.TotalAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
@@ -19,7 +18,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistance
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.*;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
-import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.utils.FaultSystemIO;
@@ -110,11 +108,6 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 	public NZSHM22_AzimuthalRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
 		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMinSubSectsPerParent(minSubSectsPerParent);
 	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setMinSubSections(int minSubSections) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMinSubSections(minSubSections);
-	}
-
 
 	/**
 	 * For testing of specific ruptures
@@ -307,9 +300,6 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 						maxCumulativeAzimuthChange))	
 				.add(new MinSectsPerParentFilter(minSubSectsPerParent, true, true, connectionStrategy)); 
         
-        if (minSubSections > 2)
-        	configBuilder.add(new MinSubSectionsFilter(minSubSections));
-        
 		if (faultIdfilterType != null) {
 			configBuilder.add(FaultIdFilter.create(faultIdfilterType, faultIds));
 		}
@@ -389,7 +379,6 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
         builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
         builder.setMaxFaultSections(100);
         builder
-        	.setMinSubSections(5)
 //        	.setMinSubSectsPerParent(2)
 //        	.setMaxAzimuthChange(560)
 //        	.setMaxJumpDistance(5d)

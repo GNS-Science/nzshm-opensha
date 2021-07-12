@@ -135,10 +135,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         return this;
     }
 
-	public NZSHM22_CoulombRuptureSetBuilder setMinSubSections(int minSubSections) {
-		return (NZSHM22_CoulombRuptureSetBuilder) super.setMinSubSections(minSubSections);
-	}    
-    
     @Override
     public String getDescriptiveName() {
         String description = "RupSet_Cl";
@@ -564,10 +560,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             growingStrat = adaptiveStrat;
         }
        
-        if (minSubSections > 2) {
-        	configBuilder.add(new MinSubSectionsFilter(minSubSections));
-        }
-        	
         // build our configuration
         PlausibilityConfiguration config = configBuilder.build();
 
@@ -741,7 +733,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
         builder.setMaxFaultSections(100);
         builder
-        	.setMinSubSections(5)
         	.setAdaptiveMinDist(6.0d)
         	.setMaxJumpDistance(15d)
         	.setAdaptiveSectFract(0.1f);

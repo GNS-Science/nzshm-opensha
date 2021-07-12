@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
@@ -9,8 +9,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
@@ -34,6 +32,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     String downDipFaultName = null;
     Set<Integer> faultIds;
     NZSHM22_FaultModels faultModel = null;
+    NZSHM22_DeformationModels deformationModel = null;
 
     int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
     int minSubSections = 2; // New NZSHM22
@@ -92,6 +91,28 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
         this.faultModel = faultModel;
+        return this;
+    }
+
+    /**
+     * Sets the (optional) deformation model. FaultModel must be set before calling this method.
+     * @param deformationModel
+     * @return this
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setDeformationModel(String modelName){
+        return setDeformationModel(NZSHM22_DeformationModels.valueOf(modelName));
+    }
+
+    /**
+     * Sets the (optional) deformation model. FaultModel must be set before calling this method.
+     * @param deformationModel
+     * @return this
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setDeformationModel(NZSHM22_DeformationModels deformationModel) {
+        if (!deformationModel.isApplicableTo(faultModel)) {
+            throw new IllegalArgumentException("DeformationModel '" + deformationModel.getName() + "' is not applicable to fault model '" + (faultModel == null ? "null" : faultModel.getName()) + "'");
+        }
+        this.deformationModel = deformationModel;
         return this;
     }
 
@@ -190,7 +211,15 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public NZSHM22_AbstractRuptureSetBuilder setMinSubSections(int minSubSections) {
         this.minSubSections = minSubSections;
         return this;
-    }    
+    }
+
+    protected void applyDeformationModel() {
+        if (deformationModel != null) {
+            for (FaultSection section : subSections) {
+                deformationModel.applyTo(section);
+            }
+        }
+    }
     
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
@@ -232,6 +261,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             }
             System.out.println(subSections.size() + " Sub Sections created.");
         }
+
+        applyDeformationModel();
     }
 
     /**
