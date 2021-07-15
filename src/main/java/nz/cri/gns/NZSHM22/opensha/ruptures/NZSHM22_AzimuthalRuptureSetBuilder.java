@@ -81,34 +81,6 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 		subSections = new FaultSectionList();
 	}
 
-	public NZSHM22_AzimuthalRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setFaultModel(faultModel);
-	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setFaultModelFile(File fsdFile) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setFaultModelFile(fsdFile);
-	}
-
-//	public NZSHM22_AzimuthalRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-//		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
-//	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMaxFaultSections(maxFaultSections);
-	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setSkipFaultSections(int skipFaultSections) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setSkipFaultSections(skipFaultSections);
-	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setNumThreads(int numThreads) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setNumThreads(numThreads);
-	}
-
-	public NZSHM22_AzimuthalRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
-		return (NZSHM22_AzimuthalRuptureSetBuilder) super.setMinSubSectsPerParent(minSubSectsPerParent);
-	}
-
 	/**
 	 * For testing of specific ruptures
 	 *

@@ -97,34 +97,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         subSections = new FaultSectionList();
     }
 
-    public NZSHM22_CoulombRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setFaultModel(faultModel);
-    }
-
-    public NZSHM22_CoulombRuptureSetBuilder setFaultModelFile(File fsdFile) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setFaultModelFile(fsdFile);
-    }
-
-//    public NZSHM22_CoulombRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-//        return (NZSHM22_CoulombRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
-//    }
-
-    public NZSHM22_CoulombRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setMaxFaultSections(maxFaultSections);
-    }
-
-    public NZSHM22_CoulombRuptureSetBuilder setSkipFaultSections(int skipFaultSections) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setSkipFaultSections(skipFaultSections);
-    }
-
-    public NZSHM22_CoulombRuptureSetBuilder setNumThreads(int numThreads) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setNumThreads(numThreads);
-    }
-
-    public NZSHM22_CoulombRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
-        return (NZSHM22_CoulombRuptureSetBuilder) super.setMinSubSectsPerParent(minSubSectsPerParent);
-    }
-
     public NZSHM22_CoulombRuptureSetBuilder setStiffGridSpacing(double stiffGridSpacing) {
         this.stiffGridSpacing = stiffGridSpacing;
         return this;

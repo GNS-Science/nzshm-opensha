@@ -68,19 +68,10 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
         return this;
     }
-    
-    /**
-     * Chooses a known fault model.
-     * @param faultModel the name of a known fault model
-     * @return this object
-     */
-	public NZSHM22_SubductionRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
-		return (NZSHM22_SubductionRuptureSetBuilder) super.setFaultModel(faultModel);
-	}
 
     /**
      * Chooses a known SlipAlongRuptureModel model.
-     * @param faultModel the name of a known model
+     * @param slipAlongRuptureModel the name of a known slipAlongRuptureModel
      * @return this object
      */
 	public NZSHM22_SubductionRuptureSetBuilder setSlipAlongRuptureModel(String slipAlongRuptureModel) {
@@ -90,7 +81,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 	
     /**
      * Chooses a known ScalingRelationship model.
-     * @param faultModel the name of a known model
+     * @param scalingRelationship the name of a known scalingRelationship
      * @return this object
      */
 	public NZSHM22_SubductionRuptureSetBuilder setScalingRelationship(String scalingRelationship) {
@@ -98,18 +89,6 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 		return this;
 	}
 	
-	public NZSHM22_SubductionRuptureSetBuilder setFaultModelFile(File fsdFile) {
-		return (NZSHM22_SubductionRuptureSetBuilder) super.setFaultModelFile(fsdFile);
-	}
-
-//	public NZSHM22_SubductionRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-//		return (NZSHM22_SubductionRuptureSetBuilder) super.setSubductionFault(faultName, downDipFile);
-//	}
-
-	public NZSHM22_SubductionRuptureSetBuilder setNumThreads(int numThreads) {
-		return (NZSHM22_SubductionRuptureSetBuilder) super.setNumThreads(numThreads);
-	}	
-
 	/**
 	 * Sets the aspect ratio boundaries for subduction zone ruptures.
 	 *
@@ -265,7 +244,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 //		.setThinningFactor(0.2);
 
     	//Built 322982 total ruptures
-    	builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_10)
+    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_10))
 		.setDownDipAspectRatio(2, 5, 7)
 		.setDownDipPositionCoarseness(0.02)
 		.setDownDipSizeCoarseness(0.02)

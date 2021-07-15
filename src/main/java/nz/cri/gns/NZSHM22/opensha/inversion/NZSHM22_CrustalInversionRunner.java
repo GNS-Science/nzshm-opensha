@@ -94,7 +94,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		List<AveSlipConstraint> aveSlipConstraints = null;
 		NZSHM22_CrustalInversionInputGenerator inversionInputGenerator = new NZSHM22_CrustalInversionInputGenerator(
 				rupSet, inversionConfiguration, null, aveSlipConstraints, null, null);
-		super.setInversionInputGenerator(inversionInputGenerator);
+		setInversionInputGenerator(inversionInputGenerator);
 		return this;
 	}
 

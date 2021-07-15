@@ -63,7 +63,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		NZSHM22_SubductionInversionInputGenerator inversionInputGenerator = new NZSHM22_SubductionInversionInputGenerator(
 				rupSet, inversionConfiguration);
-		super.setInversionInputGenerator(inversionInputGenerator);
+		setInversionInputGenerator(inversionInputGenerator);
 		return this;
 	}
 

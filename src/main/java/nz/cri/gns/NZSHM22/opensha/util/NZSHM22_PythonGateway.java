@@ -131,7 +131,7 @@ public class NZSHM22_PythonGateway {
          */
         public NZSHM22_CachedAzimuthalRuptureSetBuilder setPermutationStrategy(String permutationStrategyClass) {
 
-            super.setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
+            setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
             return this;
         }
 
