@@ -63,6 +63,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 				scalingFactor);
 	}
 
+	public NZSHM22_CrustalInversionRunner setMinMagForSeismogenicRups(double minMag){
+		NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
+		return this;
+	}
+
 	public NZSHM22_CrustalInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);

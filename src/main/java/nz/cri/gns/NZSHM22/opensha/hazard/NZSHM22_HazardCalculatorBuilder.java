@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.Site;
@@ -80,6 +81,11 @@ public class NZSHM22_HazardCalculatorBuilder {
      */
     public NZSHM22_HazardCalculatorBuilder setLinear(boolean linear) {
         this.linear = linear;
+        return this;
+    }
+
+    public NZSHM22_HazardCalculatorBuilder setMinMagForSeismogenicRups(double minMag){
+        NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
         return this;
     }
 

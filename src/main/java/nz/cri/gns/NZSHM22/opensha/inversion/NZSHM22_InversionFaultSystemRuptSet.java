@@ -23,10 +23,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	// (e.g., we need to know the sub-seismo on-fault moment rates to reduce slip
 	// rates accordingly)
 	private InversionTargetMFDs inversionMFDs;
-	
-	//TODO: fix this ....... public final static double MIN_MAG_FOR_SEISMOGENIC_RUPS = 7.0;
-	
+
 	private static final long serialVersionUID = 1091962054533163866L;
+
+	// overwrite isRupBelowMinMagsForSects from InversionFaultSystemRupSet
+	private boolean[] isRupBelowMinMagsForSects;
+	protected static double minMagForSeismogenicRups = 6.0;
 
 	/**
 	 * Constructor which relies on the super-class implementation
@@ -49,9 +51,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	@Override
 	public synchronized double getFinalMinMagForSection(int sectIndex) {
 		if (minMagForSectArray == null) {
-			// TODO: experiment to test this with higher than U3 6.0
 			minMagForSectArray = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,
-					MIN_MAG_FOR_SEISMOGENIC_RUPS);
+					minMagForSeismogenicRups);
 		}
 		return minMagForSectArray[sectIndex];
 	}
@@ -67,5 +68,31 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		this.inversionMFDs = inversionMFDs;
 		return this;
 	}
+
+	public static void setMinMagForSeismogenicRups(double minMag){
+		minMagForSeismogenicRups = minMag;
+	}
+
+    /**
+     * This tells whether the given rup is below any of the final minimum magnitudes
+     * of the sections utilized by the rup.  Actually, the test is really whether the
+     * mag falls below the lower bin edge implied by the section min mags; see doc for
+     * computeWhichRupsFallBelowSectionMinMags()).
+     *
+     * @param rupIndex
+     * @return
+     */
+    @Override
+    public synchronized boolean isRuptureBelowSectMinMag(int rupIndex) {
+        // see if it needs to be computed
+        if (isRupBelowMinMagsForSects == null) {
+            if (minMagForSectArray == null) {
+                minMagForSectArray = FaultSystemRupSetCalc.computeMinSeismoMagForSections(this, minMagForSeismogenicRups);
+            }
+            isRupBelowMinMagsForSects = FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(this, minMagForSectArray);
+        }
+
+        return isRupBelowMinMagsForSects[rupIndex];
+    }
 
 }
