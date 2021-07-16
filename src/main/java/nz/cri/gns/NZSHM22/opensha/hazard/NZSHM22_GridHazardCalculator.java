@@ -76,6 +76,120 @@ public class NZSHM22_GridHazardCalculator {
         return result;
     }
 
+    /**
+     * Runs the calculator and returns the result as tabular data (rows of String values).
+     * The first row contains the column headers, e.g.
+     * "lat", "long", "PofET 0.02", "PofET 0.1", "0.0001", "0.00013", ...
+     * Then each row contains the values for each of these columns.
+     *
+     * @return rows of Strings representing the hazards in the specified grid.
+     */
+    public List<List<String>> getTabularGridHazards() {
+        List<List<String>> result = new ArrayList<>();
+        List<String> row = new ArrayList<>();
+
+        List<GridHazards> hazards = run();
+
+        // header row
+        row.add("lat");
+        row.add("long");
+        for (double value : pOfEts) {
+            row.add("PofET " + value);
+        }
+        for (double value : hazards.get(0).hazards.xValues()) {
+            row.add(value + "");
+        }
+
+        result.add(row);
+
+        // data rows
+        for (GridHazards gridHazards : hazards) {
+            row = new ArrayList<>();
+            row.add(gridHazards.location.getLatitude() + "");
+            row.add(gridHazards.location.getLongitude() + "");
+            for (double value : gridHazards.hazardsAtPOfEts) {
+                row.add(value + "");
+            }
+            for (double value : gridHazards.hazards.yValues()) {
+                row.add(value + "");
+            }
+            result.add(row);
+        }
+
+        return result;
+    }
+
+    /**
+     * creates a geojson hazard grid for debugging.
+     *
+     * @param pofetIndex which pofet the map should be created for
+     * @param fileName
+     * @throws IOException
+     */
+    public void createGeoJson(int pofetIndex, String fileName) throws IOException {
+        List<GridHazards> result = run();
+
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        for (GridHazards hazards : result) {
+            double value = hazards.hazardsAtPOfEts.get(pofetIndex);
+            if (value < min) {
+                min = value;
+            }
+            if (value > max) {
+                max = value;
+            }
+        }
+
+        double sp = spacing * 0.5;
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(fileName))) {
+            out.println("{\n" +
+                    "  \"type\": \"FeatureCollection\",\n" +
+                    "  \"features\": [");
+
+            boolean previous = false;
+
+            for (GridHazards hazards : result) {
+                double value = hazards.hazardsAtPOfEts.get(pofetIndex);
+                double lat = hazards.location.getLatitude();
+                double lon = hazards.location.getLongitude();
+                if (!Double.isNaN(value)) {
+
+                    if (previous) {
+                        out.println(",");
+                    } else {
+                        previous = true;
+                    }
+
+                    out.println("{\"type\": \"Feature\",\n" +
+                            " \"geometry\": {\n" +
+                            " \"type\": \"Polygon\",\n" +
+                            " \"coordinates\": [[");
+                    out.println("  [" + (lon - sp) + "," + (lat - sp) + "],");
+                    out.println("  [" + (lon + sp) + "," + (lat - sp) + "],");
+                    out.println("  [" + (lon + sp) + "," + (lat + sp) + "],");
+                    out.println("  [" + (lon - sp) + "," + (lat + sp) + "],");
+                    out.println("  [" + (lon - sp) + "," + (lat - sp) + "]");
+
+                    out.println("]]},"); // coordinates, geometry
+
+
+                    long colour = Math.round((1 - ((value - min) / (max - min))) * 255);
+
+
+                    out.println(" \"properties\": {\n" +
+                            "  \"fill\": \"#FF" + String.format("%02X", colour) + "FF\",\n" +
+                            "  \"fill-opacity\": 0.5,\n" +
+                            "  \"stroke-width\": 0\n" +
+                            " }}");
+                }
+            }
+
+            out.println("]}");
+        }
+    }
+
     public List<Double> calcHazardsAtPOfEt(DiscretizedFunc hazardCurve) {
         List<Double> result = new ArrayList<>();
         for (Double pOfEt : pOfEts) {
@@ -101,37 +215,27 @@ public class NZSHM22_GridHazardCalculator {
     public static void main(String[] args) throws DocumentException, IOException {
 
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("C:\\Code\\NZSHM\\nshm-nz-opensha\\src\\test\\resources\\AlpineVernonInversionSolution.zip");
+        builder.setSolutionFile("src\\test\\resources\\AlpineVernonInversionSolution.zip");
+        // builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
         builder.setForecastTimespan(50);
         builder.setLinear(true); // has to be linear to make pofet calc work
         NZSHM22_GridHazardCalculator gridCalc = new NZSHM22_GridHazardCalculator(builder.build());
         gridCalc.setRegion("NZ_TEST_GRIDDED");
         gridCalc.setSpacing(0.1);
-        List<GridHazards> result = gridCalc.run();
-        
-        try (PrintWriter out = new PrintWriter(new FileWriter("c:/tmp/hazgrid.csv"))) {
-            // print header
-            out.print("lat, long,");
-            for(double value : gridCalc.pOfEts){
-                out.print("PofET " + value + ",");
-            }
-            for (double value : result.get(0).hazards.xValues()) {
-                out.print(value + ",");
-            }
-            out.println();
 
-            // print data
-            for (GridHazards gridHazards:result) {
-                out.print(gridHazards.location.getLatitude() + ", " + gridHazards.location.getLongitude() + ", ");
-                for (double value : gridHazards.hazardsAtPOfEts) {
-                    out.print(value + ",");
+        gridCalc.createGeoJson(0, "c:/tmp/hazard.json");
+
+        List<List<String>> result = gridCalc.getTabularGridHazards();
+
+        try (PrintWriter out = new PrintWriter(new FileWriter("c:/tmp/hazgrid2.csv"))) {
+            for (List<String> row : result) {
+                for (String value : row) {
+                    out.print(value + ", ");
                 }
-                for (double value : gridHazards.hazards.yValues()) {
-                    out.print(value + ",");
-                }
-                out.println();
+                out.print("\n");
             }
         }
+
         System.out.println("done.");
     }
 
