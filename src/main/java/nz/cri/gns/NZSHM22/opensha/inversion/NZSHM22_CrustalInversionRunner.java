@@ -1,16 +1,37 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
+import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.commons.data.function.HistogramFunction;
+import org.opensha.commons.data.function.XY_DataSetList;
+import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
+import org.opensha.commons.gui.plot.PlotLineType;
+import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalarValues;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
+
 import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
+import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -76,6 +97,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 
+		
+		solutionMfds = inversionConfiguration.getInversionTargetMfds().getMFDConstraintComponents();
+	
 		// set up slip rate config
 		inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
 		if (this.slipRateWeightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
@@ -108,13 +132,25 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
 		NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-				.setInversionSeconds(10).setRuptureSetFile(ruptureSet).setGutenbergRichterMFDWeights(100.0, 1000.0))
-						.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
+				.setInversionSeconds(10)
+				.setRuptureSetFile(ruptureSet)
+				.setGutenbergRichterMFDWeights(100.0, 1000.0))
+				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
+		runner.configure();
+    			
 		NZSHM22_InversionFaultSystemSolution solution = runner.configure().runInversion();
+		
+		System.out.println("Solution MFDS...");
+		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+			System.out.println(row);
+		}
+//		System.out.println(solution.getEnergies().toString());
 
-		File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
-
-		FaultSystemIO.writeSol(solution, solutionFile);
+//		File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
+//
+//		FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
+
+
 }

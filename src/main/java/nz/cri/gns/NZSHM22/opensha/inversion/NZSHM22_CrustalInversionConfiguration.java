@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
@@ -78,6 +79,8 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 
 	private String metadata;
 
+	private NZSHM22_CrustalInversionTargetMFDs inversionTargetMfds;
+	
 	/**
 	 * 
 	 */
@@ -312,7 +315,10 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 //		
-		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
+		NZSHM22_CrustalInversionTargetMFDs inversionTargetMfds = (NZSHM22_CrustalInversionTargetMFDs) rupSet.getInversionTargetMFDs();
+		//SummedMagFreqDist targetOnFaultMFD = inversionTargetMfds.getOnFaultSupraSeisMFD();
+		
+		
 ////		System.out.println("SUPRA SEIS MFD = ");
 ////		System.out.println(rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD());
 
@@ -394,6 +400,7 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 
 		// NSHM-style config using setter methods...
 		NZSHM22_CrustalInversionConfiguration newConfig = new NZSHM22_CrustalInversionConfiguration()
+				.setInversionTargetMfds(inversionTargetMfds)
 				// MFD config
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
 				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
@@ -809,6 +816,15 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 			mfds.add(constr);
 		}
 		return mfds;
+	}
+
+	public NZSHM22_CrustalInversionTargetMFDs getInversionTargetMfds() {
+		return inversionTargetMfds;
+	}
+
+	public NZSHM22_CrustalInversionConfiguration setInversionTargetMfds(NZSHM22_CrustalInversionTargetMFDs inversionTargetMfds) {
+		this.inversionTargetMfds = inversionTargetMfds;
+		return this;
 	}
 
 
