@@ -72,7 +72,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		File inputDir = new File("/home/chrisbc/Downloads");
 		File outputRoot = new File("/tmp/NZSHM");
 		File ruptureSet = new File(inputDir,
-				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.2)_ddPsCo(0.0)_ddSzCo(0.005)_thFc(0.0).zip");
+				"RupSet_Sub_FM(SBD_0_2_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.2)_ddPsCo(0.0)_ddSzCo(0.005)_thFc(0.0).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 

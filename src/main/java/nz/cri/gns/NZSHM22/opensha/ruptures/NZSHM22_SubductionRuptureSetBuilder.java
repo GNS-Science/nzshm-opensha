@@ -244,11 +244,11 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 //		.setThinningFactor(0.2);
 
     	//Built 322982 total ruptures
-    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_10))
+    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_2_HKR_LR_30))
 		.setDownDipAspectRatio(2, 5, 7)
-		.setDownDipPositionCoarseness(0.02)
-		.setDownDipSizeCoarseness(0.02)
-		.setDownDipMinFill(0.3);    	
+		.setDownDipPositionCoarseness(0.0)
+		.setDownDipSizeCoarseness(0.0)
+		.setDownDipMinFill(0.5);    	
     	
     	builder
     		.setScalingRelationship(ScalingRelationships.TMG_SUB_2017)
