@@ -98,7 +98,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
 
 		
-		solutionMfds = inversionConfiguration.getInversionTargetMfds().getMFDConstraintComponents();
+		solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
 	
 		// set up slip rate config
 		inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
@@ -132,7 +132,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
 		NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-				.setInversionSeconds(10)
+				.setInversionSeconds(1)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0))
 				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);

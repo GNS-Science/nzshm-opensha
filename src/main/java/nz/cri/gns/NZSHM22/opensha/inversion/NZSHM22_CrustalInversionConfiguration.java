@@ -29,42 +29,9 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  * @author chrisbc
  *
  */
-public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
+public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConfiguration {
 
-	public static final String XML_METADATA_NAME = "InversionConfiguration";
 
-	private double slipRateConstraintWt_normalized;
-	private double slipRateConstraintWt_unnormalized;
-	private SlipRateConstraintWeightingType slipRateWeighting;
-	
-	//New NZSHM scaling 
-	private int slipRateUncertaintyConstraintWt;
-	private int slipRateUncertaintyConstraintScalingFactor;
-
-//	private double paleoRateConstraintWt; 
-//	private double paleoSlipConstraintWt;
-	protected double magnitudeEqualityConstraintWt;
-	protected double magnitudeInequalityConstraintWt;
-//	private double rupRateConstraintWt;
-//	private double participationSmoothnessConstraintWt;
-//	private double participationConstraintMagBinSize;
-	private double nucleationMFDConstraintWt;
-//	private double mfdSmoothnessConstraintWt;
-//	private double mfdSmoothnessConstraintWtForPaleoParents;
-//	private double rupRateSmoothingConstraintWt;
-	private double minimizationConstraintWt;
-//	private double momentConstraintWt;
-//	private double parkfieldConstraintWt;
-//	private double[] aPrioriRupConstraint;
-	private double[] initialRupModel;
-	// these are the rates that should be used for water level computation. this
-	// will
-	// often be set equal to initial rup model or a priori rup constraint
-	private double[] minimumRuptureRateBasis;
-	private double MFDTransitionMag;
-	private List<MFD_InversionConstraint> mfdEqualityConstraints;
-	private List<MFD_InversionConstraint> mfdInequalityConstraints;
-	private double minimumRuptureRateFraction;
 
 //	private double smoothnessWt; // rupture rate smoothness (entropy)
 //	private double eventRateSmoothnessWt; // parent section event-rate smoothing
@@ -79,8 +46,6 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 
 	private String metadata;
 
-	private NZSHM22_CrustalInversionTargetMFDs inversionTargetMfds;
-	
 	/**
 	 * 
 	 */
@@ -399,103 +364,32 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 		}
 
 		// NSHM-style config using setter methods...
-		NZSHM22_CrustalInversionConfiguration newConfig = new NZSHM22_CrustalInversionConfiguration()
+		NZSHM22_CrustalInversionConfiguration newConfig = (NZSHM22_CrustalInversionConfiguration) new NZSHM22_CrustalInversionConfiguration()
 				.setInversionTargetMfds(inversionTargetMfds)
 				// MFD config
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
 				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-				.setMfdEqualityConstraints(mfdEqualityConstraints)
-				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
 				.setSlipRateWeightingType(slipRateWeighting)
+				
+				.setMfdEqualityConstraints(mfdEqualityConstraints)
+				.setMfdInequalityConstraints(mfdInequalityConstraints)
+
 				// Rate Minimization config
 				.setMinimizationConstraintWt(minimizationConstraintWt)
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
-				.setMinimumRuptureRateBasis(minimumRuptureRateBasis).setInitialRupModel(initialRupModel);
+				.setMinimumRuptureRateBasis(minimumRuptureRateBasis)
+				.setInitialRupModel(initialRupModel);
 
 		return newConfig;
 	}
 
-	/**
-	 * This method returns the input MFD constraint array with each constraint now
-	 * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
-	 * best results, set minMag & maxMag to points along original MFD constraint
-	 * (i.e. 7.05, 7.15, etc)
-	 * 
-	 * @param mfConstraints
-	 * @param minMag
-	 * @param maxMag
-	 * @return newMFDConstraints
-	 */
-	protected static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(
-			List<MFD_InversionConstraint> mfdConstraints, double minMag, double maxMag) {
 
-		List<MFD_InversionConstraint> newMFDConstraints = new ArrayList<MFD_InversionConstraint>();
-
-		for (int i = 0; i < mfdConstraints.size(); i++) {
-			IncrementalMagFreqDist originalMFD = mfdConstraints.get(i).getMagFreqDist();
-			double delta = originalMFD.getDelta();
-			IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag,
-					(int) Math.round((maxMag - minMag) / delta + 1.0));
-			newMFD.setTolerance(delta / 2.0);
-			for (double m = minMag; m <= maxMag; m += delta) {
-				// WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
-				// points along original MFD constraint (i.e. 7.05, 7.15, etc)
-				newMFD.set(m, originalMFD.getClosestYtoX(m));
-			}
-			newMFDConstraints.add(i, new MFD_InversionConstraint(newMFD, mfdConstraints.get(i).getRegion()));
-		}
-
-		return newMFDConstraints;
-	}
-
-	public double getSlipRateConstraintWt_normalized() {
-		return slipRateConstraintWt_normalized;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setSlipRateConstraintWt_normalized(double slipRateConstraintWt_normalized) {
-		this.slipRateConstraintWt_normalized = slipRateConstraintWt_normalized;
-		return this;
-	}
-
-	public double getSlipRateConstraintWt_unnormalized() {
-		return slipRateConstraintWt_unnormalized;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setSlipRateConstraintWt_unnormalized(double slipRateConstraintWt_unnormalized) {
-		this.slipRateConstraintWt_unnormalized = slipRateConstraintWt_unnormalized;
-		return this;
-	}
-
-	public SlipRateConstraintWeightingType getSlipRateWeightingType() {
-		return slipRateWeighting;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setSlipRateWeightingType(SlipRateConstraintWeightingType slipRateWeighting) {
-		this.slipRateWeighting = slipRateWeighting;
-		return this;
-	}
 
 	
-	public int getSlipRateUncertaintyConstraintWt() {
-		return slipRateUncertaintyConstraintWt;
-	}
 
-	public NZSHM22_CrustalInversionConfiguration setSlipRateUncertaintyConstraintWt(int slipRateUncertaintyConstraintWt) {
-		this.slipRateUncertaintyConstraintWt = slipRateUncertaintyConstraintWt;
-		return this;
-	}
-
-	public int getSlipRateUncertaintyConstraintScalingFactor() {
-		return slipRateUncertaintyConstraintScalingFactor;
-	}	
-	
-	public NZSHM22_CrustalInversionConfiguration setSlipRateUncertaintyConstraintScalingFactor(int slipRateUncertaintyConstraintScalingFactor) {
-		this.slipRateUncertaintyConstraintScalingFactor = slipRateUncertaintyConstraintScalingFactor;
-		return this;
-	}
 	
 	
 //	public double getPaleoRateConstraintWt() {
@@ -513,25 +407,6 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //	public void setPaleoSlipWt(double paleoSlipConstraintWt) {
 //		this.paleoSlipConstraintWt = paleoSlipConstraintWt;
 //	}
-
-	public double getMagnitudeEqualityConstraintWt() {
-		return magnitudeEqualityConstraintWt;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMagnitudeEqualityConstraintWt(double relativeMagnitudeEqualityConstraintWt) {
-		this.magnitudeEqualityConstraintWt = relativeMagnitudeEqualityConstraintWt;
-		return this;
-	}
-
-	public double getMagnitudeInequalityConstraintWt() {
-		return magnitudeInequalityConstraintWt;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMagnitudeInequalityConstraintWt(
-			double relativeMagnitudeInequalityConstraintWt) {
-		this.magnitudeInequalityConstraintWt = relativeMagnitudeInequalityConstraintWt;
-		return this;
-	}
 
 //	public double getRupRateConstraintWt() {
 //		return rupRateConstraintWt;
@@ -560,14 +435,7 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //		this.participationConstraintMagBinSize = participationConstraintMagBinSize;
 //	}
 
-	public double getMinimizationConstraintWt() {
-		return minimizationConstraintWt;
-	}
 
-	public NZSHM22_CrustalInversionConfiguration setMinimizationConstraintWt(double relativeMinimizationConstraintWt) {
-		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
-		return this;
-	}
 
 	// public double getMomentConstraintWt() {
 //		return momentConstraintWt;
@@ -586,23 +454,7 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //		this.aPrioriRupConstraint = aPrioriRupConstraint;
 //	}
 
-	public double[] getInitialRupModel() {
-		return initialRupModel;
-	}
 
-	public NZSHM22_CrustalInversionConfiguration setInitialRupModel(double[] initialRupModel) {
-		this.initialRupModel = initialRupModel;
-		return this;
-	}
-
-	public double[] getMinimumRuptureRateBasis() {
-		return minimumRuptureRateBasis;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMinimumRuptureRateBasis(double[] minimumRuptureRateBasis) {
-		this.minimumRuptureRateBasis = minimumRuptureRateBasis;
-		return this;
-	}
 
 //
 //	public double getSmoothnessWt() {
@@ -613,14 +465,7 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //		this.smoothnessWt = relativeSmoothnessWt;
 //	}
 //
-	public double getNucleationMFDConstraintWt() {
-		return nucleationMFDConstraintWt;
-	}
 
-	public NZSHM22_CrustalInversionConfiguration setNucleationMFDConstraintWt(double relativeNucleationMFDConstraintWt) {
-		this.nucleationMFDConstraintWt = relativeNucleationMFDConstraintWt;
-		return this;
-	}
 //	
 //	public double getMFDSmoothnessConstraintWt() {
 //		return mfdSmoothnessConstraintWt;
@@ -638,33 +483,6 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //		this.mfdSmoothnessConstraintWtForPaleoParents = relativeMFDSmoothnessConstraintWtForPaleoParents;
 //	}
 
-	public List<MFD_InversionConstraint> getMfdEqualityConstraints() {
-		return mfdEqualityConstraints;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMfdEqualityConstraints(List<MFD_InversionConstraint> mfdEqualityConstraints) {
-		this.mfdEqualityConstraints = mfdEqualityConstraints;
-		return this;
-	}
-
-	public List<MFD_InversionConstraint> getMfdInequalityConstraints() {
-		return mfdInequalityConstraints;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMfdInequalityConstraints(
-			List<MFD_InversionConstraint> mfdInequalityConstraints) {
-		this.mfdInequalityConstraints = mfdInequalityConstraints;
-		return this;
-	}
-
-	public double getMinimumRuptureRateFraction() {
-		return minimumRuptureRateFraction;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMinimumRuptureRateFraction(double minimumRuptureRateFraction) {
-		this.minimumRuptureRateFraction = minimumRuptureRateFraction;
-		return this;
-	}
 
 	public String getMetadata() {
 		return metadata;
@@ -700,14 +518,6 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //		BOTH;  // Include both normalized and unnormalized constraints.  This doubles the number of slip-rate constraints, and is a compromise between normalized (which fits slow faults better on a difference basis) and the unnormalized constraint (which fits fast faults better on a ratio basis)
 //	}
 
-	public double getMFDTransitionMag() {
-		return MFDTransitionMag;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setMFDTransitionMag(double mFDTransitionMag) {
-		MFDTransitionMag = mFDTransitionMag;
-		return this;
-	}
 
 //	public boolean isAPrioriConstraintForZeroRates() {
 //		return aPrioriConstraintForZeroRates;
@@ -726,53 +536,7 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 //	}
 //
 
-	@Override
-	public Element toXMLMetadata(Element root) {
-		Element el = root.addElement(XML_METADATA_NAME);
 
-		el.addAttribute("slipRateConstraintWt_normalized", slipRateConstraintWt_normalized + "");
-		el.addAttribute("slipRateConstraintWt_unnormalized", slipRateConstraintWt_unnormalized + "");
-		el.addAttribute("slipRateWeighting", slipRateWeighting.name() + "");		
-		el.addAttribute("slipRateUncertaintyConstraintWt", slipRateUncertaintyConstraintWt + "");
-		el.addAttribute("slipRateUncertaintyConstraintScalingFactor", slipRateUncertaintyConstraintScalingFactor + "");
-//		el.addAttribute("paleoRateConstraintWt", paleoRateConstraintWt+"");
-//		el.addAttribute("paleoSlipConstraintWt", paleoSlipConstraintWt+"");
-		el.addAttribute("magnitudeEqualityConstraintWt", magnitudeEqualityConstraintWt + "");
-		el.addAttribute("magnitudeInequalityConstraintWt", magnitudeInequalityConstraintWt + "");
-//		el.addAttribute("rupRateConstraintWt", rupRateConstraintWt+"");
-//		el.addAttribute("participationSmoothnessConstraintWt", participationSmoothnessConstraintWt+"");
-//		el.addAttribute("participationConstraintMagBinSize", participationConstraintMagBinSize+"");
-//		el.addAttribute("nucleationMFDConstraintWt", nucleationMFDConstraintWt+"");
-//		el.addAttribute("mfdSmoothnessConstraintWt", mfdSmoothnessConstraintWt+"");
-//		el.addAttribute("mfdSmoothnessConstraintWtForPaleoParents", mfdSmoothnessConstraintWtForPaleoParents+"");
-//		el.addAttribute("rupRateSmoothingConstraintWt", rupRateSmoothingConstraintWt+"");
-		el.addAttribute("minimizationConstraintWt", minimizationConstraintWt+"");
-//		el.addAttribute("momentConstraintWt", momentConstraintWt+"");
-//		el.addAttribute("parkfieldConstraintWt", parkfieldConstraintWt+"");
-//		el.addAttribute("MFDTransitionMag", MFDTransitionMag+"");
-		el.addAttribute("minimumRuptureRateFraction", minimumRuptureRateFraction + "");
-//		el.addAttribute("smoothnessWt", smoothnessWt+"");
-//		el.addAttribute("eventRateSmoothnessWt", eventRateSmoothnessWt+"");
-
-		// write MFDs
-		Element equalMFDsEl = el.addElement("MFD_EqualityConstraints");
-		mfdsToXML(equalMFDsEl, mfdEqualityConstraints);
-		Element inequalMFDsEl = el.addElement("MFD_InequalityConstraints");
-		mfdsToXML(inequalMFDsEl, mfdInequalityConstraints);
-
-		return null;
-	}
-
-	private static void mfdsToXML(Element el, List<MFD_InversionConstraint> constraints) {
-		for (int i = 0; i < constraints.size(); i++) {
-			MFD_InversionConstraint constr = constraints.get(i);
-			constr.toXMLMetadata(el);
-		}
-		// now set indexes
-		List<Element> subEls = XMLUtils.getSubElementsList(el);
-		for (int i = 0; i < subEls.size(); i++)
-			subEls.get(i).addAttribute("index", i + "");
-	}
 
 //	public static NZSHM22_InversionConfiguration fromXMLMetadata(Element confEl) {
 //		double slipRateConstraintWt_normalized = Double.parseDouble(confEl.attributeValue("slipRateConstraintWt_normalized"));
@@ -816,15 +580,6 @@ public class NZSHM22_CrustalInversionConfiguration implements XMLSaveable {
 			mfds.add(constr);
 		}
 		return mfds;
-	}
-
-	public NZSHM22_CrustalInversionTargetMFDs getInversionTargetMfds() {
-		return inversionTargetMfds;
-	}
-
-	public NZSHM22_CrustalInversionConfiguration setInversionTargetMfds(NZSHM22_CrustalInversionTargetMFDs inversionTargetMfds) {
-		this.inversionTargetMfds = inversionTargetMfds;
-		return this;
 	}
 
 

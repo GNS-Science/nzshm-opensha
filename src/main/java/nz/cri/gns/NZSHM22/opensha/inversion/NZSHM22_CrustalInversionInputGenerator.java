@@ -77,7 +77,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 
 	// inputs
 	private NZSHM22_InversionFaultSystemRuptSet rupSet;
-	private NZSHM22_CrustalInversionConfiguration config;
+	private AbstractInversionConfiguration config;
 	private List<PaleoRateConstraint> paleoRateConstraints;
 	private List<AveSlipConstraint> aveSlipConstraints;
 	private double[] improbabilityConstraint;
@@ -338,7 +338,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		return distanceAlongRup;
 	}
 
-	public NZSHM22_CrustalInversionConfiguration getConfig() {
+	public AbstractInversionConfiguration getConfig() {
 		return config;
 	}
 
