@@ -88,6 +88,12 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
     public List<MFD_InversionConstraint> getMFDConstraints() {
     	return mfdConstraints;
     }
+    
+	private List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<IncrementalMagFreqDist>();
+	
+	public List<IncrementalMagFreqDist> getMFDConstraintComponents() {
+    	return mfdConstraintComponents;
+    }    
 
 	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
 		double totalRateM5, double bValue, double mfdTransitionMag) {
@@ -144,7 +150,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 //		subMagSevenMFD.zeroAboveMag(magAtSeven);
 
 		//Doctor the target, setting a small value instead of 0
-	 	for (int i = 0; i < 19; i++) {
+	 	for (int i = 0; i < 20; i++) {
 			totalTargetGR.set(i, 1.0e-20); 
 		}
 		
@@ -169,6 +175,11 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 		mfdConstraints = new ArrayList<MFD_InversionConstraint>();
 
 		mfdConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD, null));	
+		
+		// Now collect the target MFDS we might want for plots
+		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
+		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
+
 	}
 
 	@Override

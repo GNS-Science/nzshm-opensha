@@ -28,7 +28,7 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInversionConfiguration {
+public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionConfiguration {
 
 	public static final String XML_METADATA_NAME = "InversionConfiguration";
 
@@ -47,11 +47,11 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInv
 	// will
 	// often be set equal to initial rup model or a priori rup constraint
 	private double[] minimumRuptureRateBasis;
-	private double MFDTransitionMag;
-	private List<MFD_InversionConstraint> mfdEqualityConstraints;
-	private List<MFD_InversionConstraint> mfdInequalityConstraints;
+//	private double MFDTransitionMag;
+//	private List<MFD_InversionConstraint> mfdEqualityConstraints;
+//	private List<MFD_InversionConstraint> mfdInequalityConstraints;
 	private double minimumRuptureRateFraction;
-
+	
 	protected final static boolean D = true; // for debugging
 
 	private String metadata;
@@ -176,7 +176,7 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInv
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFDConstraints();
 
-
+		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
 
 		String metadata = "";
 
@@ -230,6 +230,7 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInv
 
 		// NSHM-style config using setter methods...
 		NZSHM22_SubductionInversionConfiguration newConfig = (NZSHM22_SubductionInversionConfiguration) new NZSHM22_SubductionInversionConfiguration()
+				.setInversionTargetMfds(inversionTargetMfds)
 				// MFD config
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
 				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
@@ -242,7 +243,8 @@ public class NZSHM22_SubductionInversionConfiguration extends NZSHM22_CrustalInv
 				// Rate Minimization config
 				.setMinimizationConstraintWt(minimizationConstraintWt)
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
-				.setMinimumRuptureRateBasis(minimumRuptureRateBasis).setInitialRupModel(initialRupModel);
+				.setMinimumRuptureRateBasis(minimumRuptureRateBasis)
+				.setInitialRupModel(initialRupModel);
 
 		return newConfig;
 	}
