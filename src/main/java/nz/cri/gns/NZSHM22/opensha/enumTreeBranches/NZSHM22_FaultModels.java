@@ -42,7 +42,10 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
 			"hk_tile_parameters_30-short-flat-eastcape.csv", 10000),
 
 	SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit flattened near east cape",
-			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv", 10000);
+			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv", 10000),
+	
+	SBD_0_2A_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit flattened near east cape",
+			"hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv", 10000);
 
 	private final static String resourcePath = "/faultModels/";
 

@@ -90,8 +90,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends InversionTargetMFDs {
 	// NZSHM22 bValue and MinMag5 rates by region,
 	private double totalRateM5_SansTVZ = 3.6;
 	private double totalRateM5_TVZ = 0.4;
-	private double bValue_SansTVZ = 1.05;
-	private double bValue_TVZ = 1.25;
+	private double bValue_SansTVZ = 1.05; //1.08
+	private double bValue_TVZ = 1.25; //1.4
 	
 	private double onFaultRegionRateMgt5_SansTVZ;
 	private double onFaultRegionRateMgt5_TVZ;
