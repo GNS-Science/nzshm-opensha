@@ -84,11 +84,12 @@ public class NZSHM22_HazardCalculatorBuilder {
         return this;
     }
 
-    public NZSHM22_HazardCalculatorBuilder setMinMagForSeismogenicRups(double minMag){
+    public NZSHM22_HazardCalculatorBuilder setMinMagForSeismogenicRups(double minMag) {
         NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
         FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
 
@@ -125,7 +126,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         return new ConcreteNSHMHazardCalculator(erf, gmpe);
     }
 
-    class ConcreteNSHMHazardCalculator implements NZSHM22_HazardCalculator {
+    class ConcreteNSHMHazardCalculator extends NZSHM22_HazardCalculator {
 
         FaultSystemSolutionERF erf;
         ScalarIMR gmpe;
