@@ -173,8 +173,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends InversionTargetMFDs {
 		this.mMaxOffFault = 8.05d;
 		this.applyImpliedCouplingCoeff = logicTreeBranch.getValue(MomentRateFixes.class).isApplyCC();	// true if MomentRateFixes = APPLY_IMPLIED_CC or APPLY_CC_AND_RELAX_MFD
 //		this.spatialSeisPDF = logicTreeBranch.getValue(SpatialSeisPDF.class);
-		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1246;
-
+//		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1246;
+		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1346;
+	
 		// convert mMaxOffFault to bin center
 		mMaxOffFault -= DELTA_MAG / 2;
 
