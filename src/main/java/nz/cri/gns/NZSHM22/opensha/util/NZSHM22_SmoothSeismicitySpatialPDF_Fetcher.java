@@ -35,6 +35,8 @@ public class NZSHM22_SmoothSeismicitySpatialPDF_Fetcher {
 	public static final String FILENAME_1246_R = "BEST2FLTOLDNC1246r.txt";
 	public static final String FILENAME_1456 = "BESTFLTOLDNC1456.txt";
 	public static final String FILENAME_1456_R = "BESTFLTOLDNC1456r.txt";
+	public static final String FILENAME_1346 = "Gruenthalmod1346ConfDSMsss.txt";
+	
 
 	public static double[] get1246() {
 		return new NZSHM22_GridReader(FILENAME_1246).getValues();
@@ -52,6 +54,11 @@ public class NZSHM22_SmoothSeismicitySpatialPDF_Fetcher {
 		return new NZSHM22_GridReader(FILENAME_1456_R).getValues();
 	}
 
+	public static double[] get1346() {
+		return new NZSHM22_GridReader(FILENAME_1346).getValues();
+	}	
+	
+	
 //	public static GriddedGeoDataSet getUCERF2pdfAsGeoData() {
 //		return readPDF_Data(FILENAME);
 //	}
