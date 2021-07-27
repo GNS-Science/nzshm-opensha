@@ -79,6 +79,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double mfdEqualityConstraintWt; // = 10;
 	protected double mfdInequalityConstraintWt;// = 1000;
 
+	protected double totalRateM5; // = 5d;
+	protected double bValue; // = 1d;
+	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
+	// // USGS/UCERF3) [KKS, CBC]
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -225,7 +230,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			double unnormalizedWt) {
 		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt, unnormalizedWt);
 	}
-
+	
 	/**
 	 * Runs the inversion on the specified rupture set. make sure to call
 	 * .configure() first.

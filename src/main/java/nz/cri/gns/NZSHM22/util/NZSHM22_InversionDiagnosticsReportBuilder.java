@@ -98,17 +98,16 @@ public class NZSHM22_InversionDiagnosticsReportBuilder {
     
 	public static void main(String[] args) throws IOException, DocumentException {
 		
-		File inputDir = new File("/tmp/NZSHM/inversions");
+		File inputDir = new File("/home/chrisbc/DEV/GNS/opensha-new/AWS_S3_DATA/WORKING");
 		File outputRoot = new File(inputDir, "report");
 		Preconditions.checkState(outputRoot.exists() || outputRoot.mkdir());
 			
 		NZSHM22_InversionDiagnosticsReportBuilder builder = new NZSHM22_InversionDiagnosticsReportBuilder();
-		builder.setRuptureSetName("/tmp/NZSHM/inversions/SubductionInversionSolution.zip")
-			.setName("Hikurangi")
+		builder.setRuptureSetName("/home/chrisbc/DEV/GNS/opensha-new/AWS_S3_DATA/WORKING/NZSHM22_InversionSolution-ed2cf3b4-b2f5-4956-8ba7-9119965edce5.zip")
+			.setName("CRUSTAL_DEMO")
 			.setOutputDir(outputRoot.getAbsolutePath());
 //		builder.generateInversionDiagnosticsReport(); 
 		builder.generateRateDiagnosticsPlot();
-		
 	}  
     
 }

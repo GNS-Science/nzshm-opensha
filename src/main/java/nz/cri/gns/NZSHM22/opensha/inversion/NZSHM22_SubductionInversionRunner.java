@@ -14,10 +14,6 @@ import java.util.ArrayList;
  * Runs the standard NSHM inversion on a crustal rupture set.
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
-	private double totalRateM5; // = 5d;
-	private double bValue; // = 1d;
-	private Double mfdTransitionMag; // = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-	// // USGS/UCERF3) [KKS, CBC]
 
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
@@ -25,7 +21,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	public NZSHM22_SubductionInversionRunner() {
 		super();
 	}
-
+	
 	/**
 	 * Sets GutenbergRichterMFD arguments
 	 * 
@@ -46,8 +42,8 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		this.bValue = bValue;
 		this.mfdTransitionMag = mfdTransitionMag;
 		return this;
-	}
-
+	}	
+	
 	public NZSHM22_SubductionInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);

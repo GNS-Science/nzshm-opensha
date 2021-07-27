@@ -95,12 +95,12 @@ public class NZSHM22_InversionRunner_IntegrationTest {
                 .setInversionSeconds(inversionSecs) // or use inversionMinutes
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(new File(alpineVernonRupturesUrl.toURI()))
-        		.setGutenbergRichterMFDWeights(10d, 1000d)
-        		.configure(); //do this last thing before runInversion!
+        		.setGutenbergRichterMFDWeights(10d, 1000d);
+        		
+        runner.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();       
         System.out.println(runner.byFaultNameMetrics());
         FaultSystemIO.writeSol(solution, solFile);
-
 	}
 	
 	//TODO we should use junit>=4.13 and assertThrows instead 
