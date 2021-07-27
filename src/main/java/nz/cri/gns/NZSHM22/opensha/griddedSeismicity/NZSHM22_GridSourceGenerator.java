@@ -257,14 +257,13 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		return fracNormal[idx];
 	}
 
-	// FIXME: which files should we use?
 	private synchronized static void checkInitFocalMechGrids() {
 		if (fracStrikeSlip == null)
-			fracStrikeSlip = new NZSHM22_GridReader("BEST2FLTOLDNC1246.txt").getValues();
+			fracStrikeSlip = new NZSHM22_GridReader("strikeFocalHazMech.grid").getValues();
 		if (fracReverse == null)
-			fracReverse = new NZSHM22_GridReader("BEST2FLTOLDNC1246r.txt").getValues();
+			fracReverse = new NZSHM22_GridReader("reverseFocalMech.grid").getValues();
 		if (fracNormal == null)
-			fracNormal = new NZSHM22_GridReader("BEST2FLTOLDNC1246.txt").getValues();
+			fracNormal = new NZSHM22_GridReader("normalFocalMech.grid").getValues();
 	}
 
 }
