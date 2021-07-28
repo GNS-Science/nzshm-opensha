@@ -97,7 +97,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         if (forecastTimespan != null) {
             erf.getTimeSpan().setDuration(forecastTimespan); // 50 years
         }
-        erf.getParameter(IncludeBackgroundParam.NAME).setValue(IncludeBackgroundOption.EXCLUDE);
+        erf.getParameter(IncludeBackgroundParam.NAME).setValue(IncludeBackgroundOption.INCLUDE);
         erf.updateForecast();
 //        System.out.println("ERF has " + erf.getNumSources() + " sources");
         return erf;
@@ -190,5 +190,18 @@ public class NZSHM22_HazardCalculatorBuilder {
 //        double imlAt2percent = linearHazCurve.getFirstInterpolatedX_inLogXLogYDomain(0.02);
 //        System.out.println("2% in " + (float) erf.getTimeSpan().getDuration() + " yr hazard: " + imlAt2percent);
         }
+    }
+
+    public static void main(String[] args) throws DocumentException, IOException {
+        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
+        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
+                .setLinear(true)
+                .setForecastTimespan(50);
+
+        NZSHM22_HazardCalculator calculator = builder.build();
+
+        System.out.println(calculator.calc(-41.288889, 174.777222));
+        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
+
     }
 }
