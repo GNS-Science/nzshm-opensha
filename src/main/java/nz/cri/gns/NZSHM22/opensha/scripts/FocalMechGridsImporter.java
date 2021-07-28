@@ -164,18 +164,29 @@ public class FocalMechGridsImporter {
 
         System.out.println("Creating " + region.getNodeCount() + " grid nodes");
 
+        Set<String> seen = new HashSet<>();
+
         int i = 0;
         try (PrintWriter normalOut = new PrintWriter(new FileWriter("c:/tmp/normalFocalMech.grid"));
              PrintWriter reverseOut = new PrintWriter(new FileWriter("c:/tmp/reverseFocalMech.grid"));
              PrintWriter strikeSlipOut = new PrintWriter(new FileWriter("c:/tmp/strikeFocalHazMech.grid"))) {
             for (Location location : region.getNodeList()) {
+                String locString = location.getLongitude() + " " + location.getLatitude() + " ";
+
+                if (seen.contains(locString)) {
+                    System.out.println("duplicate location");
+                    continue;
+                } else {
+                    seen.add(locString);
+                }
+
                 GridPoint sourcePoint = nearestSourcePoint(source, location);
                 if (i++ % 500 == 0) {
                     System.out.print(".");
                 }
-                normalOut.println(location.getLatitude() + " " + location.getLongitude() + " " + sourcePoint.mechs.get(Mechs.NORMAL));
-                reverseOut.println(location.getLatitude() + " " + location.getLongitude() + " " + sourcePoint.mechs.get(Mechs.REVERSE));
-                strikeSlipOut.println(location.getLatitude() + " " + location.getLongitude() + " " + sourcePoint.mechs.get(Mechs.STRIKESLIP));
+                normalOut.println(locString + sourcePoint.mechs.get(Mechs.NORMAL));
+                reverseOut.println(locString + sourcePoint.mechs.get(Mechs.REVERSE));
+                strikeSlipOut.println(locString + sourcePoint.mechs.get(Mechs.STRIKESLIP));
             }
         }
         System.out.println("\nMax distance to source " + maxDist);
