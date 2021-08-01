@@ -156,7 +156,7 @@ public class FocalMechGridsImporter {
 
         GriddedRegion region = new GriddedRegion(new NewZealandRegions.NZ_TEST_GRIDDED().getBorder(),
                 BorderType.MERCATOR_LINEAR,
-                0.05, //safe with GridReader.getValue()
+                0.1, //GridReader expects values not closer than 0.1 from each other
                 GriddedRegion.ANCHOR_0_0);
 
         System.out.println("Target bounding box");
