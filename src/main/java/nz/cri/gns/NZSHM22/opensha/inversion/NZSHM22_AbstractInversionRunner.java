@@ -228,9 +228,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(String weightingType, double normalizedWt,
 			double unnormalizedWt) {
-		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt, unnormalizedWt);
+		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt,
+				unnormalizedWt);
 	}
-	
+
 	/**
 	 * Runs the inversion on the specified rupture set. make sure to call
 	 * .configure() first.
@@ -457,30 +458,30 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return solutionMfds;
 	}
 
-
 	/**
 	 * build an MFD from the inversion solution
 	 * 
-	 * @param rateWeighted if false, returns the count of ruptures by magnitude, irrespective of rate.
+	 * @param rateWeighted if false, returns the count of ruptures by magnitude,
+	 *                     irrespective of rate.
 	 * @return
 	 */
-	public HistogramFunction solutionMagFreqHistogram( boolean rateWeighted ) {
-	
-		HistScalarValues scalarVals = new HistScalarValues(HistScalar.MAG, 
-				solution.getRupSet(), solution, solution.getRupSet().getClusterRuptures(), null);
-	
+	public HistogramFunction solutionMagFreqHistogram(boolean rateWeighted) {
+
+		HistScalarValues scalarVals = new HistScalarValues(HistScalar.MAG, solution.getRupSet(), solution,
+				solution.getRupSet().getClusterRuptures(), null);
+
 		MinMaxAveTracker track = new MinMaxAveTracker();
 		List<Integer> includeIndexes = new ArrayList<>();
-		for (int r=0; r<scalarVals.getRupSet().getNumRuptures(); r++)
+		for (int r = 0; r < scalarVals.getRupSet().getNumRuptures(); r++)
 			includeIndexes.add(r);
 		for (int r : includeIndexes)
-			track.addValue(scalarVals.getValues().get(r)); 
+			track.addValue(scalarVals.getValues().get(r));
 
 		HistScalar histScalar = scalarVals.getScalar();
 		HistogramFunction histogram = histScalar.getHistogram(track);
 		boolean logX = histScalar.isLogX();
 
-		for (int i=0; i<includeIndexes.size(); i++) {
+		for (int i = 0; i < includeIndexes.size(); i++) {
 			int rupIndex = includeIndexes.get(i);
 			double scalar = scalarVals.getValues().get(i);
 			double y = rateWeighted ? scalarVals.getSol().getRateForRup(rupIndex) : 1;
@@ -490,15 +491,15 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			else
 				index = histogram.getClosestXIndex(scalar);
 			histogram.add(index, y);
-		}		
+		}
 		return histogram;
-	}	
-	
+	}
+
 	private void appendMfdRows(EvenlyDiscretizedFunc mfd, ArrayList<ArrayList<String>> rows, int series) {
 		ArrayList<String> row;
-		for (int i=0; i<mfd.size(); i++ ) {
+		for (int i = 0; i < mfd.size(); i++) {
 			row = new ArrayList<String>();
-			if (mfd.getY(i) > 0)  {
+			if (mfd.getY(i) > 0) {
 				row.add(Integer.toString(series));
 				row.add(mfd.getName());
 				row.add(Double.toString(Precision.round(mfd.getX(i), 2)));
@@ -507,26 +508,25 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			}
 		}
 	}
-	
+
 	public ArrayList<ArrayList<String>> getTabularSolutionMfds() {
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-		
+
 		int series = 0;
-		for(IncrementalMagFreqDist mfd : getSolutionMfds()) {
+		for (IncrementalMagFreqDist mfd : getSolutionMfds()) {
 			appendMfdRows(mfd, rows, series);
 			series++;
 		}
 
-		HistogramFunction magHist = solutionMagFreqHistogram(true);	
+		HistogramFunction magHist = solutionMagFreqHistogram(true);
 		magHist.setName("solutionMFD_rateWeighted");
 		appendMfdRows(magHist, rows, series);
 		series++;
-		
-		magHist = solutionMagFreqHistogram(false);	
+
+		magHist = solutionMagFreqHistogram(false);
 		magHist.setName("solutionMFD_unweighted");
 		appendMfdRows(magHist, rows, series);
 
-		
 //		for (int i=0; i<magHist.size(); i++ ) {
 //			row = new ArrayList<String>();
 //			if (magHist.getY(i) > 0) { 
@@ -540,59 +540,52 @@ public abstract class NZSHM22_AbstractInversionRunner {
 //
 //			}		
 //		}
-		
+
 		return rows;
-	
+
 	}
-	
+
 }
 
 /*
  * RATE weighted
  * 
-[4, solutionMFD_rateWeighted, 6.05, 0.035982715383508626]
-[4, solutionMFD_rateWeighted, 6.15, 0.029641386422769787]
-[4, solutionMFD_rateWeighted, 6.25, 0.030254034701153225]
-[4, solutionMFD_rateWeighted, 6.35, 0.0306043216243599]
-[4, solutionMFD_rateWeighted, 6.45, 0.024322684650372385]
-[4, solutionMFD_rateWeighted, 6.55, 0.022158879000868686]
-[4, solutionMFD_rateWeighted, 6.65, 0.021379133503583305]
-[4, solutionMFD_rateWeighted, 6.75, 0.018568259862133084]
-[4, solutionMFD_rateWeighted, 6.85, 0.014105723560756614]
-[4, solutionMFD_rateWeighted, 6.95, 0.011291153244683508]
-[4, solutionMFD_rateWeighted, 7.05, 0.008976383196834173]
-[4, solutionMFD_rateWeighted, 7.15, 0.005540971154343004]
-[4, solutionMFD_rateWeighted, 7.25, 0.00379557117014126]
-[4, solutionMFD_rateWeighted, 7.35, 0.0028662651520705035]
-[4, solutionMFD_rateWeighted, 7.45, 0.002246617621018292]
-[4, solutionMFD_rateWeighted, 7.55, 0.0017322019125362471]
-[4, solutionMFD_rateWeighted, 7.65, 0.0011151028046624063]
-[4, solutionMFD_rateWeighted, 7.75, 7.926473172138736E-4]
-[4, solutionMFD_rateWeighted, 7.85, 7.949262044675706E-4]
-[4, solutionMFD_rateWeighted, 7.95, 8.087707235396194E-4]
-[4, solutionMFD_rateWeighted, 8.05, 5.323763934074708E-4]
-
-[4, solutionMFD_rateWeighted, 6.05, 402.0]
-[4, solutionMFD_rateWeighted, 6.15, 352.0]
-[4, solutionMFD_rateWeighted, 6.25, 438.0]
-[4, solutionMFD_rateWeighted, 6.35, 536.0]
-[4, solutionMFD_rateWeighted, 6.45, 667.0]
-[4, solutionMFD_rateWeighted, 6.55, 839.0]
-[4, solutionMFD_rateWeighted, 6.65, 1068.0]
-[4, solutionMFD_rateWeighted, 6.75, 1345.0]
-[4, solutionMFD_rateWeighted, 6.85, 1758.0]
-[4, solutionMFD_rateWeighted, 6.95, 2352.0]
-[4, solutionMFD_rateWeighted, 7.05, 3167.0]
-[4, solutionMFD_rateWeighted, 7.15, 4347.0]
-[4, solutionMFD_rateWeighted, 7.25, 5794.0]
-[4, solutionMFD_rateWeighted, 7.35, 7122.0]
-[4, solutionMFD_rateWeighted, 7.45, 8605.0]
-[4, solutionMFD_rateWeighted, 7.55, 10163.0]
-[4, solutionMFD_rateWeighted, 7.65, 10703.0]
-[4, solutionMFD_rateWeighted, 7.75, 11386.0]
-[4, solutionMFD_rateWeighted, 7.85, 9986.0]
-[4, solutionMFD_rateWeighted, 7.95, 5470.0]
-[4, solutionMFD_rateWeighted, 8.05, 362.0]
-
-
+ * [4, solutionMFD_rateWeighted, 6.05, 0.035982715383508626] [4,
+ * solutionMFD_rateWeighted, 6.15, 0.029641386422769787] [4,
+ * solutionMFD_rateWeighted, 6.25, 0.030254034701153225] [4,
+ * solutionMFD_rateWeighted, 6.35, 0.0306043216243599] [4,
+ * solutionMFD_rateWeighted, 6.45, 0.024322684650372385] [4,
+ * solutionMFD_rateWeighted, 6.55, 0.022158879000868686] [4,
+ * solutionMFD_rateWeighted, 6.65, 0.021379133503583305] [4,
+ * solutionMFD_rateWeighted, 6.75, 0.018568259862133084] [4,
+ * solutionMFD_rateWeighted, 6.85, 0.014105723560756614] [4,
+ * solutionMFD_rateWeighted, 6.95, 0.011291153244683508] [4,
+ * solutionMFD_rateWeighted, 7.05, 0.008976383196834173] [4,
+ * solutionMFD_rateWeighted, 7.15, 0.005540971154343004] [4,
+ * solutionMFD_rateWeighted, 7.25, 0.00379557117014126] [4,
+ * solutionMFD_rateWeighted, 7.35, 0.0028662651520705035] [4,
+ * solutionMFD_rateWeighted, 7.45, 0.002246617621018292] [4,
+ * solutionMFD_rateWeighted, 7.55, 0.0017322019125362471] [4,
+ * solutionMFD_rateWeighted, 7.65, 0.0011151028046624063] [4,
+ * solutionMFD_rateWeighted, 7.75, 7.926473172138736E-4] [4,
+ * solutionMFD_rateWeighted, 7.85, 7.949262044675706E-4] [4,
+ * solutionMFD_rateWeighted, 7.95, 8.087707235396194E-4] [4,
+ * solutionMFD_rateWeighted, 8.05, 5.323763934074708E-4]
+ * 
+ * [4, solutionMFD_rateWeighted, 6.05, 402.0] [4, solutionMFD_rateWeighted,
+ * 6.15, 352.0] [4, solutionMFD_rateWeighted, 6.25, 438.0] [4,
+ * solutionMFD_rateWeighted, 6.35, 536.0] [4, solutionMFD_rateWeighted, 6.45,
+ * 667.0] [4, solutionMFD_rateWeighted, 6.55, 839.0] [4,
+ * solutionMFD_rateWeighted, 6.65, 1068.0] [4, solutionMFD_rateWeighted, 6.75,
+ * 1345.0] [4, solutionMFD_rateWeighted, 6.85, 1758.0] [4,
+ * solutionMFD_rateWeighted, 6.95, 2352.0] [4, solutionMFD_rateWeighted, 7.05,
+ * 3167.0] [4, solutionMFD_rateWeighted, 7.15, 4347.0] [4,
+ * solutionMFD_rateWeighted, 7.25, 5794.0] [4, solutionMFD_rateWeighted, 7.35,
+ * 7122.0] [4, solutionMFD_rateWeighted, 7.45, 8605.0] [4,
+ * solutionMFD_rateWeighted, 7.55, 10163.0] [4, solutionMFD_rateWeighted, 7.65,
+ * 10703.0] [4, solutionMFD_rateWeighted, 7.75, 11386.0] [4,
+ * solutionMFD_rateWeighted, 7.85, 9986.0] [4, solutionMFD_rateWeighted, 7.95,
+ * 5470.0] [4, solutionMFD_rateWeighted, 8.05, 362.0]
+ * 
+ * 
  */

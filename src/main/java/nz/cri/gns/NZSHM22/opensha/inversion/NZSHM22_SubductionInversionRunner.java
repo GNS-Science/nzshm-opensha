@@ -21,7 +21,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	public NZSHM22_SubductionInversionRunner() {
 		super();
 	}
-	
+
 	/**
 	 * Sets GutenbergRichterMFD arguments
 	 * 
@@ -42,8 +42,8 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		this.bValue = bValue;
 		this.mfdTransitionMag = mfdTransitionMag;
 		return this;
-	}	
-	
+	}
+
 	public NZSHM22_SubductionInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
@@ -52,8 +52,9 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,
 						bValue, mfdTransitionMag);
 
-		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
-		
+		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
+				.getMFDConstraintComponents();
+
 		if (this.slipRateWeightingType != null) {
 			inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
 			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
@@ -78,16 +79,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
 				.setInversionSeconds(10).setNumThreads(5).setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0)) // end super-class methods
-				.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
+						.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
 
 		NZSHM22_InversionFaultSystemSolution solution = runner.runInversion();
 		File solutionFile = new File(outputDir, "SubductionInversionSolution.zip");
-		
+
 		System.out.println("Solution MFDS...");
-		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+		for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}
-		
+
 		FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
