@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Runs the standard NSHM inversion on a crustal rupture set.
+ * Runs the standard NSHM inversion on a subduction rupture set.
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
 
@@ -79,7 +79,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
 				.setInversionSeconds(10).setNumThreads(5).setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0)) // end super-class methods
-						.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
+				.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
 
 		NZSHM22_InversionFaultSystemSolution solution = runner.runInversion();
 		File solutionFile = new File(outputDir, "SubductionInversionSolution.zip");
