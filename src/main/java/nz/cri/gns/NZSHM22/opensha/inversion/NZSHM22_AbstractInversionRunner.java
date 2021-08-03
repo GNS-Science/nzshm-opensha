@@ -527,65 +527,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		magHist.setName("solutionMFD_unweighted");
 		appendMfdRows(magHist, rows, series);
 
-//		for (int i=0; i<magHist.size(); i++ ) {
-//			row = new ArrayList<String>();
-//			if (magHist.getY(i) > 0) { 
-////				System.out.println(series + ", " + magHist.getName() + ", " +  Precision.round(magHist.getX(i), 2) + ", " + magHist.getY(i));
-////	
-////				row.add(Integer.toString(series));
-////				row.add(magHist.getName());
-////				row.add(Double.toString(Precision.round(magHist.getX(i), 2)));
-////				row.add(Double.toString(magHist.getY(i)));
-////				rows.add(row);
-//
-//			}		
-//		}
-
 		return rows;
 
 	}
 
 }
 
-/*
- * RATE weighted
- * 
- * [4, solutionMFD_rateWeighted, 6.05, 0.035982715383508626] [4,
- * solutionMFD_rateWeighted, 6.15, 0.029641386422769787] [4,
- * solutionMFD_rateWeighted, 6.25, 0.030254034701153225] [4,
- * solutionMFD_rateWeighted, 6.35, 0.0306043216243599] [4,
- * solutionMFD_rateWeighted, 6.45, 0.024322684650372385] [4,
- * solutionMFD_rateWeighted, 6.55, 0.022158879000868686] [4,
- * solutionMFD_rateWeighted, 6.65, 0.021379133503583305] [4,
- * solutionMFD_rateWeighted, 6.75, 0.018568259862133084] [4,
- * solutionMFD_rateWeighted, 6.85, 0.014105723560756614] [4,
- * solutionMFD_rateWeighted, 6.95, 0.011291153244683508] [4,
- * solutionMFD_rateWeighted, 7.05, 0.008976383196834173] [4,
- * solutionMFD_rateWeighted, 7.15, 0.005540971154343004] [4,
- * solutionMFD_rateWeighted, 7.25, 0.00379557117014126] [4,
- * solutionMFD_rateWeighted, 7.35, 0.0028662651520705035] [4,
- * solutionMFD_rateWeighted, 7.45, 0.002246617621018292] [4,
- * solutionMFD_rateWeighted, 7.55, 0.0017322019125362471] [4,
- * solutionMFD_rateWeighted, 7.65, 0.0011151028046624063] [4,
- * solutionMFD_rateWeighted, 7.75, 7.926473172138736E-4] [4,
- * solutionMFD_rateWeighted, 7.85, 7.949262044675706E-4] [4,
- * solutionMFD_rateWeighted, 7.95, 8.087707235396194E-4] [4,
- * solutionMFD_rateWeighted, 8.05, 5.323763934074708E-4]
- * 
- * [4, solutionMFD_rateWeighted, 6.05, 402.0] [4, solutionMFD_rateWeighted,
- * 6.15, 352.0] [4, solutionMFD_rateWeighted, 6.25, 438.0] [4,
- * solutionMFD_rateWeighted, 6.35, 536.0] [4, solutionMFD_rateWeighted, 6.45,
- * 667.0] [4, solutionMFD_rateWeighted, 6.55, 839.0] [4,
- * solutionMFD_rateWeighted, 6.65, 1068.0] [4, solutionMFD_rateWeighted, 6.75,
- * 1345.0] [4, solutionMFD_rateWeighted, 6.85, 1758.0] [4,
- * solutionMFD_rateWeighted, 6.95, 2352.0] [4, solutionMFD_rateWeighted, 7.05,
- * 3167.0] [4, solutionMFD_rateWeighted, 7.15, 4347.0] [4,
- * solutionMFD_rateWeighted, 7.25, 5794.0] [4, solutionMFD_rateWeighted, 7.35,
- * 7122.0] [4, solutionMFD_rateWeighted, 7.45, 8605.0] [4,
- * solutionMFD_rateWeighted, 7.55, 10163.0] [4, solutionMFD_rateWeighted, 7.65,
- * 10703.0] [4, solutionMFD_rateWeighted, 7.75, 11386.0] [4,
- * solutionMFD_rateWeighted, 7.85, 9986.0] [4, solutionMFD_rateWeighted, 7.95,
- * 5470.0] [4, solutionMFD_rateWeighted, 8.05, 362.0]
- * 
- * 
- */

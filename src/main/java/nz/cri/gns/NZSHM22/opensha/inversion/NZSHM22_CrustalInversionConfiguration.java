@@ -16,14 +16,6 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
  * @author chrisbc
  *
  */
-/**
- * @author chrisbc
- *
- */
-/**
- * @author chrisbc
- *
- */
 public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConfiguration {
 
 	protected final static boolean D = true; // for debugging
@@ -193,9 +185,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
 				.setSlipRateWeightingType(slipRateWeighting)
-
-				.setMfdEqualityConstraints(mfdEqualityConstraints).setMfdInequalityConstraints(mfdInequalityConstraints)
-
+				.setMfdEqualityConstraints(mfdEqualityConstraints)
+				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Rate Minimization config
 				.setMinimizationConstraintWt(minimizationConstraintWt)
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
