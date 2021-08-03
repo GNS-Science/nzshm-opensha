@@ -1,9 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.awt.geom.Point2D;
 
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.GriddedRegion;
@@ -91,7 +91,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 	//New fields
 
 	// NZSHM22 bValue and MinMag5 rates by region,
-	private double totalRateM5_SansTVZ = 3.6;
+	private double totalRateM5_SansTVZ = 3.6; //TODO: sweep these!
 	private double totalRateM5_TVZ = 0.4;
 	private double bValue_SansTVZ = 1.05; //1.08
 	private double bValue_TVZ = 1.25; //1.4
@@ -127,27 +127,23 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
     public List<MFD_InversionConstraint> getMFD_Constraints() {
     	return mfdConstraints;
     }
-    
-//    /**
-//     * Sets GutenbergRichterMFD arguments
-//     * @param totalRateM5 the number of  M>=5's per year. TODO: ref David Rhodes/Chris Roland? [KKS, CBC]
-//     * @param bValue
-//     * @param mfdTransitionMag magnitude to switch from MFD equality to MFD inequality TODO: how to validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-//     * @param mfdNum
-//     * @param mfdMin
-//     * @param mfdMax
-//     * @return
-//     */
-//    public NZSHM22_InversionTargetMFDs setGutenbergRichterMFD(double totalRateM5, double bValue, 
-//    		double mfdTransitionMag, int mfdNum, double mfdMin, double mfdMax ) {
-////        this.totalRateM5 = totalRateM5; 
-////        this.bValue = bValue;
-//        this.mfdTransitionMag = mfdTransitionMag;      
-//        this.mfdNum = mfdNum;
-//        this.mfdMin = mfdMin;
-//        this.mfdMax = mfdMax;
-//        return this;
-//    }    
+
+	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
+			double totalRateM5_Sans, double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ, double mfdTransitionMag) {
+			this.totalRateM5_SansTVZ = totalRateM5_Sans;
+			this.totalRateM5_TVZ = totalRateM5_TVZ;
+
+			this.bValue_SansTVZ = bValue_Sans;
+			this.bValue_TVZ = bValue_TVZ;
+
+			this.mfdTransitionMag = mfdTransitionMag;
+			init(invRupSet);
+		}
+
+	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
+		init(invRupSet);
+	}
+
 
     /**
      * @param mfdEqualityConstraintWt
@@ -159,10 +155,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
     	this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
     	this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
     	return this;
-    }       
+    }
     
-    @SuppressWarnings("unused")
-	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
+
+	protected void init(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
 
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
 		// equivalent
@@ -176,7 +172,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 		this.mMaxOffFault = 8.05d;
 		this.applyImpliedCouplingCoeff = logicTreeBranch.getValue(MomentRateFixes.class).isApplyCC();	// true if MomentRateFixes = APPLY_IMPLIED_CC or APPLY_CC_AND_RELAX_MFD
 //		this.spatialSeisPDF = logicTreeBranch.getValue(SpatialSeisPDF.class);
-		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1246;
+//		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1246;
+		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1346;
 
 		// convert mMaxOffFault to bin center
 		mMaxOffFault -= DELTA_MAG / 2;
@@ -348,12 +345,43 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 		targetOnFaultSupraSeisMFD_TVZ.subtractIncrementalMagFreqDist(trulyOffFaultMFD_TVZ);
 		targetOnFaultSupraSeisMFD_TVZ.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD_TVZ);
 
+//		//Doctor the target, setting a small value instead of 0
+//	 	for (int i = 0; i < 20; i++) {
+////			totalTargetGR.set(i, 1.0e-20);
+////			totalTargetGR_SansTVZ.set(i, 1.0e-20);
+////			totalTargetGR_TVZ.set(i, 1.0e-20);
+//	 		targetOnFaultSupraSeisMFD_SansTVZ.set(i, 1.0e-20);
+//	 		targetOnFaultSupraSeisMFD_TVZ.set(i, 1.0e-20);
+//	 	}
+
+//		// plan B
+//	 	IncrementalMagFreqDist set_sub_mags = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+//	 	for (int i = 0; i < 20; i++) {
+//	 		set_sub_mags.set(i, 1.0e-20);
+//	 	}
+//	 	targetOnFaultSupraSeisMFD_TVZ.addIncrementalMagFreqDist(set_sub_mags);
+
+	 	//Plan C
+	 	IncrementalMagFreqDist mutableMFD_SansTVZ = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+	 	for (int i = 0; i < targetOnFaultSupraSeisMFD_SansTVZ.size(); i++) {
+	 		mutableMFD_SansTVZ.set(i, targetOnFaultSupraSeisMFD_SansTVZ.get(i).getY());
+	 		if (i < 20)
+	 			mutableMFD_SansTVZ.set(i, 1.0e-20);
+	 	}
+
+	 	IncrementalMagFreqDist mutableMFD_TVZ = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+	 	for (int i = 0; i < targetOnFaultSupraSeisMFD_TVZ.size(); i++) {
+	 		mutableMFD_TVZ.set(i, targetOnFaultSupraSeisMFD_TVZ.get(i).getY());
+	 		if (i < 20)
+	 			mutableMFD_TVZ.set(i, 1.0e-20);
+	 	}
+
 		if (MFD_STATS) {
 			System.out.println("targetOnFaultSupraSeisMFD_SansTVZ(SummedMagFreqDist)");
-			System.out.println(targetOnFaultSupraSeisMFD_SansTVZ.toString());
+			System.out.println(mutableMFD_SansTVZ.toString());
 			System.out.println("");
 			System.out.println("targetOnFaultSupraSeisMFD_TVZ (SummedMagFreqDist)");
-			System.out.println(targetOnFaultSupraSeisMFD_TVZ.toString());
+			System.out.println(mutableMFD_TVZ.toString());
 			System.out.println("");
 		}
 		//TODO are these purely analysis?? for now they're off
@@ -366,10 +394,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 		// set the names
 		totalTargetGR_SansTVZ.setName("InversionTargetMFDs.totalTargetGR_SansTVZ");
 		totalTargetGR_TVZ.setName("InversionTargetMFDs.totalTargetGR_TVZ");
-
-		targetOnFaultSupraSeisMFD_SansTVZ.setName("InversionTargetMFDs.targetOnFaultSupraSeisMFD_SansTVZ");
-		targetOnFaultSupraSeisMFD_TVZ.setName("InversionTargetMFDs.targetOnFaultSupraSeisMFD_TVZ");
-
+		
+		mutableMFD_SansTVZ.setName("InversionTargetMFDs.targetOnFaultSupraSeisMFD_SansTVZ");
+		mutableMFD_TVZ.setName("InversionTargetMFDs.targetOnFaultSupraSeisMFD_TVZ");
+		
 		trulyOffFaultMFD_SansTVZ.setName("InversionTargetMFDs.trulyOffFaultMFD_SansTVZ.");
 		trulyOffFaultMFD_TVZ.setName("InversionTargetMFDs.trulyOffFaultMFD_TVZ.");
 
@@ -379,9 +407,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<MFD_InversionConstraint>();
 
-		mfdConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD_SansTVZ, regionSansTVZGridded));
-		mfdConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD_TVZ, regionTVZGridded));
-
+		mfdConstraints.add(new MFD_InversionConstraint(mutableMFD_SansTVZ, regionSansTVZGridded));
+		mfdConstraints.add(new MFD_InversionConstraint(mutableMFD_TVZ, regionTVZGridded));
+		
 		/*
 		 * TODO CBC the following block sets up base class var required later to save the solution,
 		 * namely:
@@ -429,9 +457,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 //		totalTargetGR.setName("totalTargetGR");
 //		trulyOffFaultMFD_SansTVZ.setName("trulyOffFaultMFD_SansTVZ");
 //		trulyOffFaultMFD_TVZ.setName("trulyOffFaultMFD_TVZ");
-		trulyOffFaultMFD.setName("trulyOffFaultMFD.all");
-		targetOnFaultSupraSeisMFD_SansTVZ.setName("targetOnFaultSupraSeisMFD_SansTVZ");
-		targetOnFaultSupraSeisMFD_TVZ.setName("targetOnFaultSupraSeisMFD_TVZ");
+		trulyOffFaultMFD.setName("trulyOffFaultMFD.all");	
+		mutableMFD_SansTVZ.setName("targetOnFaultSupraSeisMFD_SansTVZ");
+		mutableMFD_TVZ.setName("targetOnFaultSupraSeisMFD_TVZ");
 		totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD");
 
 		// Now collect the target MFDS we might want for plots
@@ -439,8 +467,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 //		mfdConstraintComponents.add(trulyOffFaultMFD_SansTVZ);
 //		mfdConstraintComponents.add(trulyOffFaultMFD_TVZ);
 		mfdConstraintComponents.add(trulyOffFaultMFD);
-		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD_SansTVZ);
-		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD_TVZ);
+		mfdConstraintComponents.add(mutableMFD_SansTVZ);
+		mfdConstraintComponents.add(mutableMFD_TVZ);
 		mfdConstraintComponents.add(totalSubSeismoOnFaultMFD);
 
 		if (MFD_STATS) {

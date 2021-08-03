@@ -18,13 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Runs the standard NSHM inversion on a crustal rupture set.
+ * Runs the standard NSHM inversion on a subduction rupture set.
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
-	private double totalRateM5; // = 5d;
-	private double bValue; // = 1d;
-	private Double mfdTransitionMag; // = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-	// // USGS/UCERF3) [KKS, CBC]
 
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
@@ -107,7 +103,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * slip_rate_unnormalized_weight	10000.0
 		 * mfd_mag_gt_5	29
 		 * mfd_b_value	1.05
-		 * mfd_transition_mag	9.15	
+		 * mfd_transition_mag	9.15
 		 */
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
 				.setRuptureSetFile(ruptureSet)
@@ -122,7 +118,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setSelectionInterval(2)
 				.setInversionAveraging(2, 10)
 				.runInversion();
-		
+
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}

@@ -37,7 +37,7 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
     @Test
     public void testMFDConstraints() throws DocumentException, URISyntaxException, IOException {
         NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
-        InversionTargetMFDs mfds = new NZSHM22_SubductionInversionTargetMFDs(ruptSet);
+        NZSHM22_SubductionInversionTargetMFDs mfds = new NZSHM22_SubductionInversionTargetMFDs(ruptSet);
 
         List<MFD_InversionConstraint> actual = mfds.getMFD_Constraints();
 

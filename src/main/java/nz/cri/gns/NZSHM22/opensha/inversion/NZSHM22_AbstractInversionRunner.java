@@ -52,7 +52,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private boolean inversionAveragingEnabled = false;
 	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
-	
+
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
 	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
@@ -75,6 +75,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected abstract NZSHM22_AbstractInversionRunner configure();
 
+	protected double totalRateM5; // = 5d;
+	protected double bValue; // = 1d;
+	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
+	// // USGS/UCERF3) [KKS, CBC]
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -96,7 +101,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		this.inversionSecs = inversionSeconds;
 		return this;
 	}
-	
+
 	/**
 	 * @param energyDelta        may be set to 0 to noop this method
 	 * @param energyPercentDelta
@@ -124,24 +129,24 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Sets the number of threads per selector; 
-	 * 
+	 * Sets the number of threads per selector;
+	 *
 	 * NB total threads allocated  = (numSolutionAverages * numThreadsPerAvg)
-	 * 
+	 *
 	 * @param numThreads the number of threads per solution selector (which might also be an averaging thread).
 	 * @return this runner.
 	 */
 	public NZSHM22_AbstractInversionRunner setNumThreadsPerSelector(Integer numThreads) {
 		this.inversionThreadsPerSelector = numThreads;
 		return this;
-	}	
-	
+	}
+
 	/**
 	 * Sets the length of time between sub-solution selections. Default is 10 seconds.
-	 * 
+	 *
 	 * @param interval the interval in seconds.
 	 * @return this runner.
-	 */	
+	 */
 	public NZSHM22_AbstractInversionRunner setSelectionInterval(long interval) {
 		this.selectionInterval = interval;
 		return this;
@@ -165,15 +170,15 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public NZSHM22_AbstractInversionRunner setInversionAveragingIntervalSecs(Integer seconds) {
 		this.inversionAveragingIntervalSecs = seconds;
 		return this;
-	}	
+	}
 
 	/**
-	 * Set up inversion averaging with one method call; 
-	 * 
+	 * Set up inversion averaging with one method call;
+	 *
 	 * This will also determine the total threads allocated = (numSolutionAverages * numThreadsPerAvg)
-	 * 
+	 *
 	 * @param numSolutionAverages the number of parallel selectors to average over
-	 * @param averagingIntervalSecs 
+	 * @param averagingIntervalSecs
 	 * @return
 	 */
 	public NZSHM22_AbstractInversionRunner setInversionAveraging(Integer numSolutionAverages,  Integer averagingIntervalSecs) {
@@ -182,18 +187,18 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		this.setInversionAveragingIntervalSecs(averagingIntervalSecs);
 		return this;
 	}
-	
+
 	/**
 	 * Enable/disable inversion averaging behaviour.
-	 * 
+	 *
 	 * @param enabled
 	 * @return
 	 */
 	public NZSHM22_AbstractInversionRunner setInversionAveraging(boolean enabled) {
 		this.inversionAveragingEnabled = enabled;
 		return this;
-	}	
-	
+	}
+
 	/**
 	 * @param perturbationFunction
 	 * @return
@@ -201,10 +206,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public NZSHM22_AbstractInversionRunner setPerturbationFunction(String perturbationFunction) {
 		return setPerturbationFunction(GenerationFunctionType.valueOf(perturbationFunction));
 	}
-	
+
 	/**
 	 * configure the perturbation function
-	 * 
+	 *
 	 * @param perturbationFunction
 	 * @return
 	 */
@@ -215,14 +220,14 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	/**
 	 * configure how Inversion treats values when they perturb < 0
-	 * 
+	 *
 	 * @param nonNegAlgorithm
 	 * @return
 	 */
 	public NZSHM22_AbstractInversionRunner setNonnegativityConstraintType(String nonNegAlgorithm) {
 		return this.setNonnegativityConstraintType(NonnegativityConstraintType.valueOf(nonNegAlgorithm));
 	}
-	
+
 	/**
 	 * @param nonNegAlgorithm
 	 * @return
@@ -309,7 +314,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(String weightingType, double normalizedWt,
 			double unnormalizedWt) {
-		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt, unnormalizedWt);
+		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt,
+				unnormalizedWt);
 	}
 
 	/**
@@ -350,21 +356,21 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		initialState = inversionInputGenerator.getInitialSolution();
 
 		int numThreads = this.inversionNumSolutionAverages * this.inversionThreadsPerSelector;
-		
+
 		if (this.inversionAveragingEnabled) {
 			Preconditions.checkState(inversionThreadsPerSelector <= numThreads);
-			
+
 			CompletionCriteria avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
-			
+
 			int threadsLeft = numThreads;
-			
+
 			// arrange lower-level (actual worker) SAs
 			List<SimulatedAnnealing> tsas = new ArrayList<>();
 			while (threadsLeft > 0) {
 				int myThreads = Integer.min(threadsLeft, inversionThreadsPerSelector);
 				if (myThreads > 1)
 					tsas.add(new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
-							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
+							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
 							myThreads, subCompletionCriteria));
 				else
 					tsas.add(new SerialSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
@@ -375,7 +381,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			tsa.setAverage(true);
 		} else {
 			tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
-					inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
+					inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
 					numThreads, subCompletionCriteria);
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
@@ -383,7 +389,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
 //		tsa.setRuptureSampler(null);
 		tsa.setPerturbationFunc(perturbationFunction);
-		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);		
+		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
@@ -571,28 +577,29 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	/**
 	 * build an MFD from the inversion solution
 	 * 
-	 * @param rateWeighted if false, returns the count of ruptures by magnitude, irrespective of rate.
+	 * @param rateWeighted if false, returns the count of ruptures by magnitude,
+	 *                     irrespective of rate.
 	 * @return
 	 */
 	public HistogramFunction solutionMagFreqHistogram( boolean rateWeighted ) {
 	
 		ClusterRuptures cRups = solution.getRupSet().getModule(ClusterRuptures.class);
-		
-		HistScalarValues scalarVals = new HistScalarValues(HistScalar.MAG, 
+
+		HistScalarValues scalarVals = new HistScalarValues(HistScalar.MAG,
 				solution.getRupSet(), solution, cRups.getAll(), null);
 	
 		MinMaxAveTracker track = new MinMaxAveTracker();
 		List<Integer> includeIndexes = new ArrayList<>();
-		for (int r=0; r<scalarVals.getRupSet().getNumRuptures(); r++)
+		for (int r = 0; r < scalarVals.getRupSet().getNumRuptures(); r++)
 			includeIndexes.add(r);
 		for (int r : includeIndexes)
-			track.addValue(scalarVals.getValues().get(r)); 
+			track.addValue(scalarVals.getValues().get(r));
 
 		HistScalar histScalar = scalarVals.getScalar();
 		HistogramFunction histogram = histScalar.getHistogram(track);
 		boolean logX = histScalar.isLogX();
 
-		for (int i=0; i<includeIndexes.size(); i++) {
+		for (int i = 0; i < includeIndexes.size(); i++) {
 			int rupIndex = includeIndexes.get(i);
 			double scalar = scalarVals.getValues().get(i);
 			double y = rateWeighted ? scalarVals.getSol().getRateForRup(rupIndex) : 1;
@@ -602,15 +609,15 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			else
 				index = histogram.getClosestXIndex(scalar);
 			histogram.add(index, y);
-		}		
+		}
 		return histogram;
-	}	
-	
+	}
+
 	private void appendMfdRows(EvenlyDiscretizedFunc mfd, ArrayList<ArrayList<String>> rows, int series) {
 		ArrayList<String> row;
-		for (int i=0; i<mfd.size(); i++ ) {
+		for (int i = 0; i < mfd.size(); i++) {
 			row = new ArrayList<String>();
-			if (mfd.getY(i) > 0)  {
+			if (mfd.getY(i) > 0) {
 				row.add(Integer.toString(series));
 				row.add(mfd.getName());
 				row.add(Double.toString(Precision.round(mfd.getX(i), 2)));
@@ -619,27 +626,27 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			}
 		}
 	}
-	
+
 	public ArrayList<ArrayList<String>> getTabularSolutionMfds() {
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-		
+
 		int series = 0;
-		for(IncrementalMagFreqDist mfd : getSolutionMfds()) {
+		for (IncrementalMagFreqDist mfd : getSolutionMfds()) {
 			appendMfdRows(mfd, rows, series);
 			series++;
 		}
 
-		HistogramFunction magHist = solutionMagFreqHistogram(true);	
+		HistogramFunction magHist = solutionMagFreqHistogram(true);
 		magHist.setName("solutionMFD_rateWeighted");
 		appendMfdRows(magHist, rows, series);
 		series++;
-		
-		magHist = solutionMagFreqHistogram(false);	
+
+		magHist = solutionMagFreqHistogram(false);
 		magHist.setName("solutionMFD_unweighted");
 		appendMfdRows(magHist, rows, series);
-		
+
 		return rows;
-	
+
 	}
-	
+
 }
