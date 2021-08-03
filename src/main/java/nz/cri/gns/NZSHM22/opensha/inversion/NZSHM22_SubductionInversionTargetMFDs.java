@@ -1,15 +1,21 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
+import org.opensha.commons.util.modules.SubModule;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -34,7 +40,8 @@ import scratch.UCERF3.enumTreeBranches.TotalMag5Rate;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.inversion.U3InversionTargetMFDs;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.RELM_RegionUtils;
 
@@ -60,9 +67,9 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
+public class NZSHM22_SubductionInversionTargetMFDs {
 
-	boolean MFD_STATS = true; //print some curves for analytics
+	static boolean MFD_STATS = true; //print some curves for analytics
 	
 //	// discretization parameters for MFDs
 	public final static double MIN_MAG = 5.05;
@@ -70,62 +77,28 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 	public final static int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
 	public final static double DELTA_MAG = 0.1;
 
-	/*
-	 * MFD constraint default settings
-	 */
-	protected double totalRateM5 = 0.7d; //5d; 40;
-	protected double bValue = 1.1d;
-	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-										     // USGS/UCERF3) [KKS, CBC]
-
-	protected double mfdEqualityConstraintWt = 10; //10, 100, 1000
-	protected double mfdInequalityConstraintWt = 1000;
-
-	// protected List<MFD_InversionConstraint> constraints = new ArrayList<>();
-	protected List<MFD_InversionConstraint> mfdConstraints = new ArrayList<>();
-//    private ArrayList<MFD_InversionConstraint> mfdConstraints;
-
-    public List<MFD_InversionConstraint> getMFDConstraints() {
-    	return mfdConstraints;
-    }
-    
-	private List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<IncrementalMagFreqDist>();
-	
-	public List<IncrementalMagFreqDist> getMFDConstraintComponents() {
-    	return mfdConstraintComponents;
-    }    
-
-	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
-		double totalRateM5, double bValue, double mfdTransitionMag) {
-		this.totalRateM5 = totalRateM5;
-		this.bValue = bValue;
-		this.mfdTransitionMag = mfdTransitionMag;
-		this.invRupSet = invRupSet;
-		init();
+	public static InversionTargetMFDs create(NZSHM22_InversionFaultSystemRuptSet invRupSet){
+		return create(invRupSet, 0.7, 1.1, 7.85);
 	}
 
-	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
-		this.invRupSet = invRupSet;
-		init();
-	}
-	
-	private void init() {
+	public static InversionTargetMFDs create(NZSHM22_InversionFaultSystemRuptSet invRupSet,
+									  double totalRateM5, double bValue, double mfdTransitionMag){
 		
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
 		// equivalent
-		LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
-		this.inversionModel = logicTreeBranch.getValue(InversionModels.class);
-		this.totalRegionRateMgt5 = this.totalRateM5;
-		this.mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault(); //TODO: set this to 8.05 (more NZ ish)
+		U3LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
+		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
+		//this.totalRegionRateMgt5 = this.totalRateM5;
+		double mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault(); //TODO: set this to 8.05 (more NZ ish)
 
 		// convert mMaxOffFault to bin center
 		List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 		
-		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
+		double origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
 		
 		// make the total target GR MFD
 		// TODO: why MIN_MAG = 0 ??
-		totalTargetGR = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+		GutenbergRichterMagFreqDist totalTargetGR = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
 		if (MFD_STATS) {
 			System.out.println("totalTargetGR");
 			System.out.println(totalTargetGR.toString());
@@ -133,8 +106,8 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 		}
 		
 		// sorting out scaling
-		roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
-		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRegionRateMgt5, bValue); //TODO: revisit
+		double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
+		totalTargetGR.setAllButTotMoRate(MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue); //TODO: revisit
 		
 		if (MFD_STATS) {
 			System.out.println("totalTargetGR after setAllButTotMoRate");
@@ -154,7 +127,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 			totalTargetGR.set(i, 1.0e-20); 
 		}
 		
-		targetOnFaultSupraSeisMFD = new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);		
+		SummedMagFreqDist targetOnFaultSupraSeisMFD = new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
 		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
 //		targetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(subMagSevenMFD);
 //		targetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
@@ -172,29 +145,19 @@ public class NZSHM22_SubductionInversionTargetMFDs extends InversionTargetMFDs {
 //		impliedTotalCouplingCoeff = totalTargetGR.getTotalMomentRate() / (origOnFltDefModMoRate + offFltDefModMoRate);
 
 		// Build the MFD Constraints for regions
-		mfdConstraints = new ArrayList<MFD_InversionConstraint>();
+		List<MFD_InversionConstraint> mfdConstraints = new ArrayList<>();
 
 		mfdConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD, null));	
 		
 		// Now collect the target MFDS we might want for plots
 		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
-		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
+//		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
+//		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
 
-	}
+		return new InversionTargetMFDs.Precomputed( invRupSet,
+				totalTargetGR, targetOnFaultSupraSeisMFD, null,
+				null, mfdConstraints, null);
 
-	@Override
-	public GutenbergRichterMagFreqDist getTotalTargetGR_NoCal() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public GutenbergRichterMagFreqDist getTotalTargetGR_SoCal() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List<MFD_InversionConstraint> getMFD_ConstraintsForNoAndSoCal() {
-		throw new UnsupportedOperationException();
 	}
 
 }
