@@ -36,7 +36,9 @@ import scratch.UCERF3.enumTreeBranches.TotalMag5Rate;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
+import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.RELM_RegionUtils;
 
@@ -62,7 +64,7 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_CrustalInversionTargetMFDs extends InversionTargetMFDs {
+public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 	NZSHM22_SpatialSeisPDF spatialSeisPDF;
 	NZSHM22_SpatialSeisPDF spatialSeisPDFforOnFaultRates;
@@ -163,7 +165,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends InversionTargetMFDs {
 
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
 		// equivalent
-		LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
+		U3LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
 		this.inversionModel = logicTreeBranch.getValue(InversionModels.class);
 		// this.totalRegionRateMgt5 =
 		// logicTreeBranch.getValue(TotalMag5Rate.class).getRateMag5();
