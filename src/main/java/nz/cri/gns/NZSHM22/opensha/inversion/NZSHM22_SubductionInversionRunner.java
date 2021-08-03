@@ -11,13 +11,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Runs the standard NSHM inversion on a crustal rupture set.
+ * Runs the standard NSHM inversion on a subduction rupture set.
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
-	private double totalRateM5; // = 5d;
-	private double bValue; // = 1d;
-	private Double mfdTransitionMag; // = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
-	// // USGS/UCERF3) [KKS, CBC]
 
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
@@ -56,8 +52,9 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,
 						bValue, mfdTransitionMag);
 
-		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
-		
+		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
+				.getMFDConstraintComponents();
+
 		if (this.slipRateWeightingType != null) {
 			inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
 			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
@@ -86,12 +83,12 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		NZSHM22_InversionFaultSystemSolution solution = runner.runInversion();
 		File solutionFile = new File(outputDir, "SubductionInversionSolution.zip");
-		
+
 		System.out.println("Solution MFDS...");
-		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+		for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}
-		
+
 		FaultSystemIO.writeSol(solution, solutionFile);
 
 	}

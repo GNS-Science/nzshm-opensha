@@ -42,6 +42,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 //	private NZSHM22_CrustalInversionConfiguration inversionConfiguration;
 	private int slipRateUncertaintyWeight;
 	private int slipRateUncertaintyScalingFactor;
+	private double totalRateM5_Sans = 3.6;
+	private double totalRateM5_TVZ = 0.4;
+	private double bValue_Sans = 1.05;
+	private double bValue_TVZ = 1.25;
 
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
@@ -80,12 +84,32 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 	 */
 	public NZSHM22_CrustalInversionRunner setSlipRateUncertaintyConstraint(String weightingType, int uncertaintyWeight,
 			int scalingFactor) {
-		return setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), uncertaintyWeight,
-				scalingFactor);
+		return setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType.valueOf(weightingType),
+				uncertaintyWeight, scalingFactor);
 	}
 
-	public NZSHM22_CrustalInversionRunner setMinMagForSeismogenicRups(double minMag){
+	public NZSHM22_CrustalInversionRunner setMinMagForSeismogenicRups(double minMag) {
 		NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
+		return this;
+	}
+
+	/**
+	 * Sets GutenbergRichterMFD arguments
+	 * 
+	 * @param totalRateM5_Sans
+	 * @param totalRateM5_TVZ
+	 * @param bValue_Sans
+	 * @param bValue_TVZ
+	 * @param mfdTransitionMag
+	 * @return
+	 */
+	public NZSHM22_CrustalInversionRunner setGutenbergRichterMFD(double totalRateM5_Sans, double totalRateM5_TVZ,
+			double bValue_Sans, double bValue_TVZ, double mfdTransitionMag) {
+		this.totalRateM5_Sans = totalRateM5_Sans;
+		this.totalRateM5_TVZ = totalRateM5_TVZ;
+		this.bValue_Sans = bValue_Sans;
+		this.bValue_TVZ = bValue_TVZ;
+		this.mfdTransitionMag = mfdTransitionMag;
 		return this;
 	}
 
@@ -94,12 +118,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
-		NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration
-				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
+		NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
+				inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
+				totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag);
 
-		
-		solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
-	
+		solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
+				.getMFDConstraintComponents();
+
 		// set up slip rate config
 		inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
 		if (this.slipRateWeightingType == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
@@ -124,24 +149,24 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 	public static void main(String[] args) throws IOException, DocumentException {
 
-		File inputDir = new File("/home/chrisbc/Downloads");
-		File outputRoot = new File("/tmp/NZSHM");
+		File inputDir = new File(
+				"/home/chrisbc/DEV/GNS/opensha-new/AWS_S3_DATA/WORKING/downloads/RmlsZTozMDMuMEJCOVVY");
+		File outputRoot = new File(inputDir, "../");
 		File ruptureSet = new File(inputDir,
-				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0)(1).zip");
+				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5).zip");
+//				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0)(1).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
 		NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-				.setInversionSeconds(1)
-				.setRuptureSetFile(ruptureSet)
-				.setGutenbergRichterMFDWeights(100.0, 1000.0))
-				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
+				.setInversionSeconds(5 * 60).setRuptureSetFile(ruptureSet).setGutenbergRichterMFDWeights(1000.0, 1000.0)
+				.setSlipRateConstraint("BOTH", 1000, 1000)).setGutenbergRichterMFD(5, 0.5, 1.2, 1.5, 7.85);
 		runner.configure();
-    			
+
 		NZSHM22_InversionFaultSystemSolution solution = runner.configure().runInversion();
-		
+
 		System.out.println("Solution MFDS...");
-		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+		for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}
 //		System.out.println(solution.getEnergies().toString());
@@ -151,6 +176,5 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 //		FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
-
 
 }

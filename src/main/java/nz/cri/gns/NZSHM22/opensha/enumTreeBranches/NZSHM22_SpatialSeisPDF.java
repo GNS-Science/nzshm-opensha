@@ -36,8 +36,15 @@ public enum NZSHM22_SpatialSeisPDF implements LogicTreeBranchNode<SpatialSeisPDF
 		public double[] getPDF() {
 			return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1456R();
 		}
-	};
+	},
 
+	NZSHM22_1346("NZSHM22_1346", "1346", 0.5d, 0.25d) {
+		@Override
+		public double[] getPDF() {
+			return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1346();
+		}
+	};	
+	
 	private String name, shortName;
 	private double charWeight, grWeight;
 
