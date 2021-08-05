@@ -155,6 +155,13 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public static NZSHM22_InversionFaultSystemRuptSet loadRupSet(File ruptureSetFile) throws DocumentException, IOException {
+		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
+		LogicTreeBranch branch = LogicTreeBranch.DEFAULT;
+
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
 	/**
 	 * Sets the FaultModel file
 	 *
@@ -165,10 +172,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
-		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-
-		this.rupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+		this.rupSet = loadRupSet(ruptureSetFile);
 		return this;
 	}
 
