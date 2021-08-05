@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
+import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 
 import java.awt.geom.Point2D;
@@ -35,9 +36,9 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
     @Test
     public void testMFDConstraints() throws DocumentException, URISyntaxException, IOException {
         NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
-        NZSHM22_SubductionInversionTargetMFDs mfds = new NZSHM22_SubductionInversionTargetMFDs(ruptSet);
+        InversionTargetMFDs mfds = NZSHM22_SubductionInversionTargetMFDs.create(ruptSet);
 
-        List<MFD_InversionConstraint> actual = mfds.getMFDConstraints();
+        List<MFD_InversionConstraint> actual = mfds.getMFD_Constraints();
 
         assertEquals(1, actual.size());
         MFD_InversionConstraint actualConstraint = actual.get(0);
