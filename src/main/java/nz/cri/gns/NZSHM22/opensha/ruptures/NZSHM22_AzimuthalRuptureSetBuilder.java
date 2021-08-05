@@ -369,7 +369,7 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 
     	System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
     }
 
 }
