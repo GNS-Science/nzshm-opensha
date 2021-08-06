@@ -24,7 +24,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import py4j.GatewayServer;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * A py4j gateway for building ruptures and running inversions.
@@ -176,7 +176,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -225,7 +225,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -252,7 +252,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -283,7 +283,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeSolution(String solutionFileName) throws IOException {
             File solutionFile = new File(solutionFileName);
-            FaultSystemIO.writeSol(solution, solutionFile);
+           U3FaultSystemIO.writeSol(solution, solutionFile);
         }
     }
     /**
@@ -312,7 +312,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeSolution(String solutionFileName) throws IOException {
             File solutionFile = new File(solutionFileName);
-            FaultSystemIO.writeSol(solution, solutionFile);
+           U3FaultSystemIO.writeSol(solution, solutionFile);
         }
     }
 

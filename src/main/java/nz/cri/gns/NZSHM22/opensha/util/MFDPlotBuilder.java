@@ -6,7 +6,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;

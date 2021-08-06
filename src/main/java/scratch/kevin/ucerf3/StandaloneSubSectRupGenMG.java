@@ -33,7 +33,7 @@ import scratch.UCERF3.inversion.coulomb.CoulombRatesTester.TestType;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
@@ -98,7 +98,7 @@ public class StandaloneSubSectRupGenMG {
 		// write subsection data to file
 		File subSectDataFile = new File(outputDir, "sub_sections.xml");
 		Document doc = XMLUtils.createDocumentWithRoot();
-		FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
+	U3FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subSectDataFile, doc);
 
 		// calculate distances between each subsection
@@ -164,7 +164,7 @@ public class StandaloneSubSectRupGenMG {
 //		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 //		
 //		File zipFile = new File(outputDir, "rupSet.zip");
-//		FaultSystemIO.writeRupSet(rupSet, zipFile);
+//	U3FaultSystemIO.writeRupSet(rupSet, zipFile);
 	}
 	
 	public static CoulombRates remapCoulombRates(List<FaultSection> subSections, FaultModels fm) throws IOException {

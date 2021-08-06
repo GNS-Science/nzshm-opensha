@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSolution {
 
@@ -57,7 +58,8 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
     }
 
     public static NZSHM22_InversionFaultSystemSolution fromFile(File file) throws DocumentException, IOException {
-        return fromSolution(FaultSystemIO.loadInvSol(file));
+        // FIXME this can only load old ones
+        return fromSolution(U3FaultSystemIO.loadInvSol(file));
     }
 
     public SummedMagFreqDist calcNucleationMFD_forParentSect(Set<Integer> parentSectionIDs, double minMag, double maxMag, int numMag) {
@@ -97,21 +99,23 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         return mfd;
     }
 
-    public SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(Set<Integer> parentSectionIDs) {
+//    public SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(Set<Integer> parentSectionIDs) {
+//
+//        SummedMagFreqDist mfd = new SummedMagFreqDist(InversionTargetMFDs.MIN_MAG, InversionTargetMFDs.NUM_MAG, InversionTargetMFDs.DELTA_MAG);
+//        InversionFaultSystemRupSet rupSet = getRupSet();
+//
+//        List<GutenbergRichterMagFreqDist> subSeismoMFDs = getFinalSubSeismoOnFaultMFD_List();
+//
+//        for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
+//            if (parentSectionIDs.contains(rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
+//                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(sectIndex));
+//            }
+//        }
+//
+//        return mfd;
+//    }
 
-        SummedMagFreqDist mfd = new SummedMagFreqDist(InversionTargetMFDs.MIN_MAG, InversionTargetMFDs.NUM_MAG, InversionTargetMFDs.DELTA_MAG);
-        InversionFaultSystemRupSet rupSet = getRupSet();
-
-        List<GutenbergRichterMagFreqDist> subSeismoMFDs = getFinalSubSeismoOnFaultMFD_List();
-
-        for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
-            if (parentSectionIDs.contains(rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
-                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(sectIndex));
-            }
-        }
-
-        return mfd;
-    }
+    GridSourceProvider gridSourceProvider = null;
     
 	/**
 	 * Returns GridSourceProvider - unlike UCERf3 this does not create a provider if it's not set, 
@@ -119,8 +123,15 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 	 * 
 	 * @return
 	 */
+	@Override
 	public GridSourceProvider getGridSourceProvider() {
 		return gridSourceProvider;
-	}    
-    
+	}
+
+	@Override
+    public void setGridSourceProvider(GridSourceProvider provider){
+	    gridSourceProvider = provider;
+    }
+
+
 }

@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.IDPairing;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -33,9 +34,9 @@ import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 import scratch.UCERF3.inversion.coulomb.CoulombRates;
 import scratch.UCERF3.inversion.coulomb.CoulombRatesRecord;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 public class StandaloneSubSectRupGenNZCFM {
@@ -139,7 +140,7 @@ public class StandaloneSubSectRupGenNZCFM {
 		// write subsection data to file
 		File subSectDataFile = new File(outputDir, "sub_sections.xml");
 		Document doc = XMLUtils.createDocumentWithRoot();
-		FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
+	U3FaultSystemIO.fsDataToXML(doc.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subSectDataFile, doc);
 		
 		/*I
@@ -224,12 +225,12 @@ public class StandaloneSubSectRupGenNZCFM {
 		fw.close();
 		
 		// build actual rupture set for magnitudes and such
-		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, DeformationModels.GEOLOGIC,
+		U3LogicTreeBranch branch = U3LogicTreeBranch.fromValues(fm, DeformationModels.GEOLOGIC,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
 		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 		
 		File zipFile = new File(outputDir, "rupSet.zip");
-		FaultSystemIO.writeRupSet(rupSet, zipFile);
+	U3FaultSystemIO.writeRupSet(rupSet, zipFile);
 	}
 	
 	public static CoulombRates remapCoulombRates(List<FaultSection> subSections, FaultModels fm) throws IOException {

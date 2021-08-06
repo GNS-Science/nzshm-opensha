@@ -25,7 +25,7 @@ import scratch.UCERF3.inversion.SectionCluster;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.inversion.SectionConnectionStrategy;
 import scratch.UCERF3.utils.DeformationModelFetcher;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class DownDipTestRupSetBuilder {
 
@@ -203,7 +203,7 @@ public class DownDipTestRupSetBuilder {
 		
 		FaultSystemRupSet rupSet = new FaultSystemRupSet(subSections, sectSlipRates, null, sectAreasReduced,
 				ruptures, rupMags, rupRakes, rupAreas, rupLengths, info);
-		FaultSystemIO.writeRupSet(rupSet, outputFile);
+	U3FaultSystemIO.writeRupSet(rupSet, outputFile);
 		
 		
 		// write rupture/subsection associations to file

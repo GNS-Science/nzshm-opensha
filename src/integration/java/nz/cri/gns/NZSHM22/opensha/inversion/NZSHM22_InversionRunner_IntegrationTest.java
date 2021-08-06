@@ -23,7 +23,7 @@ import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_InversionRunner_IntegrationTest {
 	
@@ -56,7 +56,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 	@Test 
 	public void testLoadRuptureSetForInversion() throws IOException, DocumentException, URISyntaxException {
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(new File(alpineVernonRupturesUrl.toURI()));
+		FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(new File(alpineVernonRupturesUrl.toURI()));
 		NZSHM22_InversionFaultSystemRuptSet ruptureSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
 		assertEquals(3101, ruptureSet.getClusterRuptures().size());
 	}
@@ -71,7 +71,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 	@Test 
 	public void testLoadRuptureSetForInversionRebuldingClusters() throws IOException, DocumentException, URISyntaxException {
 		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(new File(alpineVernonRupturesUrl.toURI()));
+		FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(new File(alpineVernonRupturesUrl.toURI()));
 		rupSetA.setClusterRuptures(null); //forces cluster rebuild
 		NZSHM22_InversionFaultSystemRuptSet ruptureSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
 		assertEquals(3101, ruptureSet.getClusterRuptures().size());		
@@ -99,7 +99,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         		.configure(); //do this last thing before runInversion!
         FaultSystemSolution solution = runner.runInversion();       
         System.out.println(runner.byFaultNameMetrics());
-        FaultSystemIO.writeSol(solution, solFile);
+       U3FaultSystemIO.writeSol(solution, solFile);
 
 	}
 	

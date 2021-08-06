@@ -23,10 +23,12 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.SlipEnabledSolution;
+import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
@@ -34,7 +36,7 @@ import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * @author chrisbc
@@ -156,8 +158,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet loadRupSet(File ruptureSetFile) throws DocumentException, IOException {
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
-		LogicTreeBranch branch = LogicTreeBranch.DEFAULT;
+		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
 
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
 	}

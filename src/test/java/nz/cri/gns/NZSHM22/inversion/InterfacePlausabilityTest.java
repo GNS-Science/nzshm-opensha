@@ -29,7 +29,7 @@ import scratch.UCERF3.inversion.coulomb.CoulombRates;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.inversion.SectionClusterList;
 import scratch.UCERF3.utils.DeformationModelFetcher;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 import scratch.kevin.ucerf3.downDipSubSectTestOld.DownDipSubSectBuilder;
 import scratch.kevin.ucerf3.downDipSubSectTestOld.DownDipTestPlausibilityConfig;
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;

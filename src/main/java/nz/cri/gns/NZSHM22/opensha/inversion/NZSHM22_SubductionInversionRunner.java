@@ -4,11 +4,14 @@ import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
-import scratch.UCERF3.utils.FaultSystemIO;
+
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
+import scratch.UCERF3.utils.U3FaultSystemIO;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Runs the standard NSHM inversion on a crustal rupture set.
@@ -35,9 +38,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	 * @param mfdTransitionMag magnitude to switch from MFD equality to MFD
 	 *                         inequality TODO: how to validate this number for NZ?
 	 *                         (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-	 * @param mfdNum
-	 * @param mfdMin
-	 * @param mfdMax
 	 * @return
 	 */
 	public NZSHM22_SubductionInversionRunner setGutenbergRichterMFD(double totalRateM5, double bValue,
@@ -49,14 +49,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	}
 
 	public NZSHM22_SubductionInversionRunner configure() {
-		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
+		U3LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,
 						bValue, mfdTransitionMag);
 
-		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
+		// FIXME it's the same data, but does it mean the same?
+		//solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
+		solutionMfds = List.of(inversionConfiguration.getInversionTargetMfds().getTotalOnFaultSupraSeisMFD());
 		
 		if (this.slipRateWeightingType != null) {
 			inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
@@ -91,8 +93,8 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}
-		
-		FaultSystemIO.writeSol(solution, solutionFile);
+
+		U3FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
 

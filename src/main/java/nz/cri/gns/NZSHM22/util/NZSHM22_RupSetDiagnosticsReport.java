@@ -24,7 +24,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.FilteredFaultSystemRuptureSet;
 import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 class FileMeta {
 	protected String filename;
@@ -135,7 +135,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 			outputDir = new File(outputRoot, metadata.folderName());
 			Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 			
-			inputRupSet = FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
+			inputRupSet =U3FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
 			inputSol = null;
 			inputName = "May 19th, 2021 #2 TMG_CRU_2017 " + metadata.folderName();
 		
@@ -191,7 +191,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 //			System.exit(2);
 //		}
 //			
-//		inputSol = FaultSystemIO.loadSol(new File(cmd.getOptionValue("rupture-set")));
+//		inputSol =U3FaultSystemIO.loadSol(new File(cmd.getOptionValue("rupture-set")));
 //		inputRupSet = inputSol.getRupSet();
 //		inputName = cmd.getOptionValue("name");
 //		outputDir = new File(cmd.getOptionValue("output-dir"));

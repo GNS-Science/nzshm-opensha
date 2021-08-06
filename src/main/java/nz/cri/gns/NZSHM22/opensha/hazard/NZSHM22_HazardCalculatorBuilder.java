@@ -21,7 +21,7 @@ import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
 
-import scratch.UCERF3.FaultSystemSolution;
+
 import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 /**
@@ -89,19 +89,19 @@ public class NZSHM22_HazardCalculatorBuilder {
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
-        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
-
-        FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
-        if (forecastTimespan != null) {
-            erf.getTimeSpan().setDuration(forecastTimespan); // 50 years
-        }
-        erf.getParameter(IncludeBackgroundParam.NAME).setValue(IncludeBackgroundOption.INCLUDE);
-        erf.updateForecast();
-//        System.out.println("ERF has " + erf.getNumSources() + " sources");
-        return erf;
-    }
+//    @SuppressWarnings("unchecked")
+//    protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
+//        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
+//
+//        FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
+//        if (forecastTimespan != null) {
+//            erf.getTimeSpan().setDuration(forecastTimespan); // 50 years
+//        }
+//        erf.getParameter(IncludeBackgroundParam.NAME).setValue(IncludeBackgroundOption.INCLUDE);
+//        erf.updateForecast();
+////        System.out.println("ERF has " + erf.getNumSources() + " sources");
+//        return erf;
+//    }
 
     protected ScalarIMR createGmpe() {
         ScalarIMR gmpe = AttenRelRef.ASK_2014.instance(null);
@@ -120,11 +120,11 @@ public class NZSHM22_HazardCalculatorBuilder {
      * @throws IOException
      * @throws DocumentException
      */
-    public NZSHM22_HazardCalculator build() throws IOException, DocumentException {
-        FaultSystemSolutionERF erf = loadERF();
-        ScalarIMR gmpe = createGmpe();
-        return new ConcreteNSHMHazardCalculator(erf, gmpe);
-    }
+//    public NZSHM22_HazardCalculator build() throws IOException, DocumentException {
+//        FaultSystemSolutionERF erf = loadERF();
+//        ScalarIMR gmpe = createGmpe();
+//        return new ConcreteNSHMHazardCalculator(erf, gmpe);
+//    }
 
     class ConcreteNSHMHazardCalculator extends NZSHM22_HazardCalculator {
 
@@ -193,15 +193,15 @@ public class NZSHM22_HazardCalculatorBuilder {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
-                .setLinear(true)
-                .setForecastTimespan(50);
-
-        NZSHM22_HazardCalculator calculator = builder.build();
-
-        System.out.println(calculator.calc(-41.288889, 174.777222));
-        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
+//        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
+//        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
+//                .setLinear(true)
+//                .setForecastTimespan(50);
+//
+//        NZSHM22_HazardCalculator calculator = builder.build();
+//
+//        System.out.println(calculator.calc(-41.288889, 174.777222));
+//        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
 
     }
 }

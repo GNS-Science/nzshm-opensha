@@ -5,10 +5,12 @@ import com.google.common.collect.Range;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.coulomb.NetRuptureCoulombFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.path.CumulativeProbPathEvaluator;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.path.PathPlausibilityFilter;
@@ -22,7 +24,7 @@ import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
 import scratch.UCERF3.enumTreeBranches.*;
-import scratch.UCERF3.inversion.laughTest.PlausibilityResult;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -38,9 +40,8 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Exhaustiv
 
 import com.google.common.base.Stopwatch;
 
-import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
@@ -173,7 +174,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 ////		RupDebugCriteria debugCriteria = new StartEndSectRupDebugCriteria(672, -1, true, false);
 //		boolean stopAfterDebug = true;
 
-//		FaultSystemRupSet compRupSet = FaultSystemIO.loadRupSet(new File(
+//		FaultSystemRupSet compRupSet =U3FaultSystemIO.loadRupSet(new File(
 ////				"/home/kevin/workspace/OpenSHA/dev/scratch/UCERF3/data/scratch/InversionSolutions/"
 ////				+ "2013_05_10-ucerf3p3-production-10runs_COMPOUND_SOL_FM3_1_MEAN_BRANCH_AVG_SOL.zip"));
 //				"/home/kevin/OpenSHA/UCERF4/rup_sets/fm3_1_plausibleMulti10km_direct_cmlRake360_jumpP0.001_slipP0.05incr"
@@ -711,6 +712,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         
         System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
+        U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
     }
 }

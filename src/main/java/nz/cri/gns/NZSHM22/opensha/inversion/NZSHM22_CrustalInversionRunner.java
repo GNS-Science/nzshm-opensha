@@ -9,6 +9,7 @@ import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.data.function.XY_DataSetList;
 import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
@@ -19,8 +20,7 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
-import scratch.UCERF3.utils.FaultSystemIO;
+
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
@@ -91,7 +91,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 	public NZSHM22_CrustalInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
+		InversionModels inversionModel = (InversionModels) logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
 		NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration
@@ -148,7 +148,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 //		File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
 //
-//		FaultSystemIO.writeSol(solution, solutionFile);
+//	U3FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
 
