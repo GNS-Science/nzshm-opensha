@@ -14,7 +14,6 @@ import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
-import scratch.UCERF3.utils.FaultSystemIO;
 
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -39,7 +38,11 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
     public NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet,
 			double[] rates, Map<String, Double> energies) {
     	this(rupSet, rates, null, energies);
-	}   
+	}
+
+	public NZSHM22_InversionFaultSystemRuptSet getNZRuptSet(){
+        return (NZSHM22_InversionFaultSystemRuptSet) getRupSet();
+    }
     
 	public static NZSHM22_InversionFaultSystemSolution fromSolution(InversionFaultSystemSolution solution) {
 

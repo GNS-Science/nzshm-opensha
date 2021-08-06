@@ -8,10 +8,12 @@ import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
+import java.util.concurrent.Callable;
+
 /**
  * This class provides specialisatations needed to override some UCERF3 defaults
  * in the base class.
- * 
+ *
  * @author chrisbc
  *
  */
@@ -25,30 +27,40 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	// overwrite isRupBelowMinMagsForSects from InversionFaultSystemRupSet
 	private boolean[] isRupBelowMinMagsForSects;
+	private double[] minMagForSectArray;
 	protected static double minMagForSeismogenicRups = 6.0;
 
 	/**
 	 * Constructor which relies on the super-class implementation
-	 * 
+	 *
 	 * @param rupSet
 	 * @param branch
 	 */
 	public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
 		super(rupSet, branch);
-	}		
-	
+
+		//overwrite behaviour of super class
+		removeModuleInstances(InversionTargetMFDs.class);
+		offerAvailableModule(new Callable<InversionTargetMFDs>() {
+			@Override
+			public InversionTargetMFDs call() throws Exception {
+				return NZSHM22_SubductionInversionTargetMFDs.create(NZSHM22_InversionFaultSystemRuptSet.this);
+			}
+		}, InversionTargetMFDs.class);
+	}
+
 	/**
 	 * This returns the final minimum mag for a given fault section. This uses a
 	 * generic version of computeMinSeismoMagForSections() instead of the UCERF3
 	 * implementation.
-	 * 
+	 *
 	 * @param sectIndex
 	 * @return
 	 */
 	@Override
 	public synchronized double getFinalMinMagForSection(int sectIndex) {
 		// FIXME
-		throw new IllegalStateException("kaboom!");
+		throw new IllegalStateException("net yet refactored!");
 //		if (minMagForSectArray == null) {
 //			minMagForSectArray = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,
 //					minMagForSeismogenicRups);
@@ -58,11 +70,17 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	@Override
 	public U3InversionTargetMFDs getInversionTargetMFDs() {
-		if (inversionMFDs == null)
-			inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(this);
-		return inversionMFDs;
+		// FIXME
+		throw new IllegalStateException("net yet refactored!");
+//		if (inversionMFDs == null)
+//			inversionMFDs =  NZSHM22_CrustalInversionTargetMFDs(this);
+//			return inversionMFDs;
 	}
-	
+
+	public InversionTargetMFDs getNZInversionTargetMFDs(){
+		return getModule(InversionTargetMFDs.class);
+	}
+
 	public NZSHM22_InversionFaultSystemRuptSet setInversionTargetMFDs(InversionTargetMFDs inversionMFDs) {
 		this.inversionMFDs = inversionMFDs;
 		return this;
@@ -72,26 +90,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		minMagForSeismogenicRups = minMag;
 	}
 
-    /**
-     * This tells whether the given rup is below any of the final minimum magnitudes
-     * of the sections utilized by the rup.  Actually, the test is really whether the
-     * mag falls below the lower bin edge implied by the section min mags; see doc for
-     * computeWhichRupsFallBelowSectionMinMags()).
-     *
-     * @param rupIndex
-     * @return
-     */
+	// this should override the calculation for the ModSectMinMags module
+	// TODO double check that this works
     @Override
-    public synchronized boolean isRuptureBelowSectMinMag(int rupIndex) {
-        // see if it needs to be computed
-        if (isRupBelowMinMagsForSects == null) {
-            if (minMagForSectArray == null) {
-                minMagForSectArray = FaultSystemRupSetCalc.computeMinSeismoMagForSections(this, minMagForSeismogenicRups);
-            }
-            isRupBelowMinMagsForSects = FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(this, minMagForSectArray);
-        }
+	protected double[] calcFinalMinMagForSections() {
+		return FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,minMagForSeismogenicRups);
+	}
 
-        return isRupBelowMinMagsForSects[rupIndex];
-    }
 
 }
