@@ -9,6 +9,7 @@ import java.util.Map;
 
 //import org.opensha.commons.eq.MagUtils;
 //import org.opensha.commons.util.IDPairing;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.APrioriInversionConstraint;
@@ -41,7 +42,7 @@ import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 //import cern.colt.list.tdouble.DoubleArrayList;
 //import cern.colt.list.tint.IntArrayList;
 //import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import scratch.UCERF3.FaultSystemRupSet;
+
 import scratch.UCERF3.SlipEnabledRupSet;
 import scratch.UCERF3.utils.SectionMFD_constraint;
 //import scratch.UCERF3.analysis.FaultSystemRupSetCalc;

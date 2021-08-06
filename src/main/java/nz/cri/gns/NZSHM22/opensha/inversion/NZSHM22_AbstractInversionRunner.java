@@ -21,13 +21,13 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
-import scratch.UCERF3.FaultSystemRupSet;
+
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
@@ -270,7 +270,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
-				inversionInputGenerator.getWaterLevelRates(), numThreads, subCompletionCriteria);
+				 numThreads, subCompletionCriteria);
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 
 		// From CLI metadata Analysis
@@ -305,10 +305,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		// Completion
 		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria) completionCriteria;
-		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
+//		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
 		int numRups = initialState.length;
 
-		metrics.put("total_perturbations", Long.toString(numPerturbs));
+//		metrics.put("total_perturbations", Long.toString(numPerturbs));
 		metrics.put("total_ruptures", Integer.toString(numRups));
 
 		int rupsPerturbed = 0;
@@ -322,10 +322,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 
 		metrics.put("perturbed_ruptures", Integer.toString(rupsPerturbed));
-		metrics.put("avg_perturbs_per_pertubed_rupture",
-				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
-		metrics.put("ruptures_above_water_level_ratio",
-				new Double((double) numAboveWaterlevel / (double) numRups).toString());
+//		metrics.put("avg_perturbs_per_pertubed_rupture",
+//				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
+//		metrics.put("ruptures_above_water_level_ratio",
+//				new Double((double) numAboveWaterlevel / (double) numRups).toString());
 
 		for (String range : finalEnergies.keySet()) {
 			String metric_name = "final_energy_" + range.replaceAll("\\s+", "_").toLowerCase();

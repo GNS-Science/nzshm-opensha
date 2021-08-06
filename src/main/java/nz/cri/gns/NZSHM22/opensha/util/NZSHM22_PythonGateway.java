@@ -12,7 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
-import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
+
 
 import org.dom4j.DocumentException;
 
@@ -22,7 +22,6 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import py4j.GatewayServer;
-import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
@@ -35,13 +34,8 @@ public class NZSHM22_PythonGateway {
     static CachedCrustalInversionRunner crustalInversionRunner;
     static CachedSubductionInversionRunner subductionInversionRunner;
     static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
-    static NZSHM22_InversionDiagnosticsReportBuilder inversionReportBuilder;
     static NZSHM22_GridHazardCalculator gridHazCalc;
 
-    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
-    	inversionReportBuilder = new NZSHM22_InversionDiagnosticsReportBuilder();
-    	return inversionReportBuilder;
-    }
 
     public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
         NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
@@ -90,10 +84,6 @@ public class NZSHM22_PythonGateway {
     public static NZSHM22_GridHazardCalculator getGridHazardCalculator(NZSHM22_HazardCalculator calculator){
         gridHazCalc = new NZSHM22_GridHazardCalculator(calculator);
         return gridHazCalc;
-    }
-
-    public static MFDPlotBuilder getMFDPlotBuilder(){
-        return new MFDPlotBuilder();
     }
 
     public static void main(String[] args) {

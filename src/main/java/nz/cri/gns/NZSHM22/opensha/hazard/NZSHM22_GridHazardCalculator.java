@@ -212,31 +212,31 @@ public class NZSHM22_GridHazardCalculator {
         public List<Double> hazardsAtPOfEts;
     }
 
-    public static void main(String[] args) throws DocumentException, IOException {
-
-        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("src\\test\\resources\\AlpineVernonInversionSolution.zip");
-        // builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
-        builder.setForecastTimespan(50);
-        builder.setLinear(true); // has to be linear to make pofet calc work
-        NZSHM22_GridHazardCalculator gridCalc = new NZSHM22_GridHazardCalculator(builder.build());
-        gridCalc.setRegion("NZ_TEST_GRIDDED");
-        gridCalc.setSpacing(0.1);
-
-        gridCalc.createGeoJson(0, "c:/tmp/hazard.json");
-
-        List<List<String>> result = gridCalc.getTabularGridHazards();
-
-        try (PrintWriter out = new PrintWriter(new FileWriter("c:/tmp/hazgrid2.csv"))) {
-            for (List<String> row : result) {
-                for (String value : row) {
-                    out.print(value + ", ");
-                }
-                out.print("\n");
-            }
-        }
-
-        System.out.println("done.");
-    }
+//    public static void main(String[] args) throws DocumentException, IOException {
+//
+//        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
+//        builder.setSolutionFile("src\\test\\resources\\AlpineVernonInversionSolution.zip");
+//        // builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
+//        builder.setForecastTimespan(50);
+//        builder.setLinear(true); // has to be linear to make pofet calc work
+//        NZSHM22_GridHazardCalculator gridCalc = new NZSHM22_GridHazardCalculator(builder.build());
+//        gridCalc.setRegion("NZ_TEST_GRIDDED");
+//        gridCalc.setSpacing(0.1);
+//
+//        gridCalc.createGeoJson(0, "c:/tmp/hazard.json");
+//
+//        List<List<String>> result = gridCalc.getTabularGridHazards();
+//
+//        try (PrintWriter out = new PrintWriter(new FileWriter("c:/tmp/hazgrid2.csv"))) {
+//            for (List<String> row : result) {
+//                for (String value : row) {
+//                    out.print(value + ", ");
+//                }
+//                out.print("\n");
+//            }
+//        }
+//
+//        System.out.println("done.");
+//    }
 
 }

@@ -23,18 +23,18 @@ public class HazardCalculatorScript {
     }
 
     public static void main(String[] args) throws ParseException, IOException, DocumentException {
-        CommandLine cmd = parseCommandLine(args);
-        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder()
-                .setForecastTimespan(Double.parseDouble(cmd.getOptionValue("t")))
-                .setSolutionFile(cmd.getOptionValue("f"))
-                .setLinear("true".equals(cmd.getOptionValue("linear", "false")));
-        if (cmd.hasOption("maxDistance")) {
-            builder.setMaxDistance(Double.parseDouble(cmd.getOptionValue("maxDistance")));
-        }
-
-        NZSHM22_HazardCalculator calculator = builder.build();
-        System.out.println(
-                calculator.calc(Double.parseDouble(cmd.getOptionValue("lat")),
-                        Double.parseDouble(cmd.getOptionValue("lon"))));
+//        CommandLine cmd = parseCommandLine(args);
+//        NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder()
+//                .setForecastTimespan(Double.parseDouble(cmd.getOptionValue("t")))
+//                .setSolutionFile(cmd.getOptionValue("f"))
+//                .setLinear("true".equals(cmd.getOptionValue("linear", "false")));
+//        if (cmd.hasOption("maxDistance")) {
+//            builder.setMaxDistance(Double.parseDouble(cmd.getOptionValue("maxDistance")));
+//        }
+//
+//        NZSHM22_HazardCalculator calculator = builder.build();
+//        System.out.println(
+//                calculator.calc(Double.parseDouble(cmd.getOptionValue("lat")),
+//                        Double.parseDouble(cmd.getOptionValue("lon"))));
     }
 }

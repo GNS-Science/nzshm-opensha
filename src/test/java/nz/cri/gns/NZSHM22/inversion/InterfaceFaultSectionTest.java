@@ -36,7 +36,7 @@ import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.inversion.SectionCluster;
 import scratch.UCERF3.inversion.SectionClusterList;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
@@ -219,7 +219,7 @@ public class InterfaceFaultSectionTest {
 
 		// build actual rupture set for magnitudes and such
 		FaultModels fm = null;
-		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, 
+		U3LogicTreeBranch branch = U3LogicTreeBranch.fromValues(fm,
 			DeformationModels.GEOLOGIC,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
 		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
