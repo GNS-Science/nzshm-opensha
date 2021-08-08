@@ -74,10 +74,10 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 	public static void main(String[] args) throws IOException, DocumentException {
 
-		File inputDir = new File("/home/chrisbc/Downloads");
-		File outputRoot = new File("/tmp/NZSHM");
+		File inputDir = new File("c:/Users/volkertj/Downloads/");
+		File outputRoot = new File("c:/tmp/");
 		File ruptureSet = new File(inputDir,
-				"RupSet_Sub_FM(SBD_0_1_HKR_KRM_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
+				"RupSet_Sub_FM(SBD_0_2A_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
@@ -87,14 +87,17 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
 
 		NZSHM22_InversionFaultSystemSolution solution = runner.runInversion();
-		File solutionFile = new File(outputDir, "SubductionInversionSolution.zip");
+		File solutionFile = new File(outputDir, "OldFormatSubductionInversionSolution.zip");
 		
 		System.out.println("Solution MFDS...");
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
 			System.out.println(row);
 		}
 
+		// old-fashioned format
 		U3FaultSystemIO.writeSol(solution, solutionFile);
+
+		solution.write(new File(outputDir, "NewFormatSubductionInversionSolution.zip"));
 
 	}
 
