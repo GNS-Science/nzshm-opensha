@@ -82,7 +82,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
-				.setInversionSeconds(10).setNumThreads(5).setRuptureSetFile(ruptureSet)
+				.setInversionSeconds(10).setNumThreads(1).setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0)) // end super-class methods
 				.setGutenbergRichterMFD(2.4, 1.3, 7.75).configure();
 

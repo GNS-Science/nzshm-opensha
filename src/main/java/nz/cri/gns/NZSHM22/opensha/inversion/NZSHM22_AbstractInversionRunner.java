@@ -2,11 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -36,6 +32,7 @@ import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
@@ -272,6 +269,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
 				 numThreads, subCompletionCriteria);
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+		tsa.setRandom(new Random(1));
+		tsa.setRuptureSampler(null);
+		tsa.setPerturbationFunc(GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE);
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
