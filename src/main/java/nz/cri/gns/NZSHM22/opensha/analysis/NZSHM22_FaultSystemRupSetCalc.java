@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
@@ -20,8 +20,8 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 	 * @param systemWideMinSeismoMag
 	 * @return
 	 */
-	public static double[] computeMinSeismoMagForSections(FaultSystemRupSet fltSystRupSet,
-			double systemWideMinSeismoMag) {
+	public static double[] computeMinSeismoMagForSections(U3FaultSystemRupSet fltSystRupSet,
+														  double systemWideMinSeismoMag) {
 		double[] minMagForSect = new double[fltSystRupSet.getNumSections()];
 		String prevParSectName = "junk_imp0ss!ble_fault_name_1067487@#";
 		List<? extends FaultSection> sectDataList = fltSystRupSet.getFaultSectionDataList();
@@ -32,7 +32,9 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 		double minMinSeismoMag = 0; // this is for testing
 		for (int s = 0; s < sectDataList.size(); s++) {
 			String parSectName = sectDataList.get(s).getParentSectionName();
-			double minSeismoMag = fltSystRupSet.getOrigMinMagForSection(s);
+			// FIXME
+			// double minSeismoMag = fltSystRupSet.getOrigMinMagForSection(s);
+			double minSeismoMag = 3;
 			if (!parSectName.equals(prevParSectName)) { // it's a new parent section
 				// set the previous result
 				if (!prevParSectName.equals("junk")) {

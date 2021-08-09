@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
-
-import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemRupSet;
 
 /**
  * @author chrisbc
@@ -28,7 +28,7 @@ public class FilteredFaultSystemRuptureSet {
 	 * @param selectedSubSects
 	 * @return
 	 */
-	public FaultSystemRupSet create(FaultSystemRupSet rupSet, List<FaultSection> selectedSubSects) {
+	public FaultSystemRupSet create(U3FaultSystemRupSet rupSet, List<FaultSection> selectedSubSects) {
 		
 		List<List<Integer>>	filterSectionIndicesForAllRups = new ArrayList<List<Integer>>();//rupSet.getSectionIndicesForAllRups()
 		
@@ -75,7 +75,7 @@ public class FilteredFaultSystemRuptureSet {
 		}
 	
 		// create the new ruptures set
-		FaultSystemRupSet filterRupSet = new FaultSystemRupSet(rupSet.getFaultSectionDataList(), 
+		U3FaultSystemRupSet filterRupSet = new U3FaultSystemRupSet(rupSet.getFaultSectionDataList(),
 				rupSet.getSlipRateForAllSections(),
 				rupSet.getSlipRateStdDevForAllSections(), rupSet.getAreaForAllSections(),
 				filterSectionIndicesForAllRups, mags, rakes, areas, lengths, rupSet.getInfoString());
