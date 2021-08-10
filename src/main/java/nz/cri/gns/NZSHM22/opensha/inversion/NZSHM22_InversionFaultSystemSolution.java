@@ -25,6 +25,8 @@ import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 
 public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSolution {
 
+    protected GridSourceProvider gridSourceProvider;
+
     private NZSHM22_InversionFaultSystemSolution(InversionFaultSystemRupSet rupSet, double[] rates,
                                                  UCERF3InversionConfiguration config, Map<String, Double> energies) {
         super(new NZSHM22_InversionFaultSystemRuptSet(rupSet, rupSet.getLogicTreeBranch()), rates, config, energies);
@@ -116,8 +118,14 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 	 * 
 	 * @return
 	 */
+	@Override
 	public GridSourceProvider getGridSourceProvider() {
 		return gridSourceProvider;
 	}    
-    
+
+	@Override
+    public void setGridSourceProvider(GridSourceProvider gridSourceProvider){
+	    this.gridSourceProvider = gridSourceProvider;
+    }
+
 }
