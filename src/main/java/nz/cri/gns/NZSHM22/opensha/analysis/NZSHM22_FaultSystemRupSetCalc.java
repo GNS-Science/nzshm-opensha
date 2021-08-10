@@ -32,9 +32,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 		double minMinSeismoMag = 0; // this is for testing
 		for (int s = 0; s < sectDataList.size(); s++) {
 			String parSectName = sectDataList.get(s).getParentSectionName();
-			// FIXME
-			// double minSeismoMag = fltSystRupSet.getOrigMinMagForSection(s);
-			double minSeismoMag = 3;
+            double minSeismoMag = fltSystRupSet.getMinMagForSection(s);
 			if (!parSectName.equals(prevParSectName)) { // it's a new parent section
 				// set the previous result
 				if (!prevParSectName.equals("junk")) {
