@@ -36,6 +36,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     Double maxDistance; // in km, default is 200
     boolean linear = false;
     double intensityMeasurePeriod = 1; //default is SA with 1 second
+    IncludeBackgroundOption backgroundOption = IncludeBackgroundOption.INCLUDE;
 
     /**
      * Sets the solution file.
@@ -106,6 +107,16 @@ public class NZSHM22_HazardCalculatorBuilder {
      */
     public NZSHM22_HazardCalculatorBuilder setIntensityMeasurePeriod(double seconds) {
         intensityMeasurePeriod = seconds;
+        return this;        
+    }
+    
+    /**
+     * Sets to background option. Legal values are INCLUDE, EXCLUDE, ONLY
+     * @param backgroundOption
+     * @return this builder
+     */
+    public NZSHM22_HazardCalculatorBuilder setBackgroundOption(String backgroundOption){
+        this.backgroundOption = IncludeBackgroundOption.valueOf(backgroundOption);
         return this;
     }
 
@@ -118,7 +129,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         if (forecastTimespan != null) {
             erf.getTimeSpan().setDuration(forecastTimespan); // 50 years
         }
-        erf.getParameter(IncludeBackgroundParam.NAME).setValue(IncludeBackgroundOption.INCLUDE);
+        erf.getParameter(IncludeBackgroundParam.NAME).setValue(backgroundOption);
         erf.updateForecast();
 //        System.out.println("ERF has " + erf.getNumSources() + " sources");
         return erf;
@@ -217,10 +228,14 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
+//        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
+//                .setLinear(true)
+//                .setForecastTimespan(50);
+        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjIzMzliekRWcw==.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
-                .setIntensityMeasurePeriod(10);
+                .setIntensityMeasurePeriod(10)
+                .setBackgroundOption("EXCLUDE");
 
         NZSHM22_HazardCalculator calculator = builder.build();
 
