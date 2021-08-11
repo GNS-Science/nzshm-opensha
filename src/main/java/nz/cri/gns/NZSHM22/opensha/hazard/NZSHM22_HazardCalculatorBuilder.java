@@ -19,6 +19,7 @@ import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
 import org.opensha.sha.gui.infoTools.IMT_Info;
 import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
+import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
 
 import scratch.UCERF3.FaultSystemSolution;
@@ -34,9 +35,11 @@ public class NZSHM22_HazardCalculatorBuilder {
     Double forecastTimespan;
     Double maxDistance; // in km, default is 200
     boolean linear = false;
+    double intensityMeasurePeriod = 1; //default is SA with 1 second
 
     /**
      * Sets the solution file.
+     *
      * @param solutionFile the solution file
      * @return this builder
      */
@@ -47,6 +50,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     /**
      * Sets the solution file by using the file name
+     *
      * @param solutionFileName the file name of the solution file
      * @return this builder
      */
@@ -56,6 +60,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     /**
      * Sets the forecast timespan in years
+     *
      * @param duration the duration in years
      * @return this builder
      */
@@ -66,6 +71,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     /**
      * Sets the maximum distance of the site to a rupture in km.
+     *
      * @param distance the distance in km
      * @return this builder.
      */
@@ -76,6 +82,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     /**
      * Sets whether the hazard is returned as a linear or log curve.
+     *
      * @param linear whether the result should be a linear curve
      * @return this builder.
      */
@@ -86,6 +93,19 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     public NZSHM22_HazardCalculatorBuilder setMinMagForSeismogenicRups(double minMag) {
         NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
+        return this;
+    }
+
+    /**
+     * Sets the period of the intensity measure. If 0, the intensity measure is set to PGA,
+     * otherwise to SA.
+     * Legal values are
+     * [0, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 10.0]
+     * @param seconds period in seconds.
+     * @return this builder.
+     */
+    public NZSHM22_HazardCalculatorBuilder setIntensityMeasurePeriod(double seconds) {
+        intensityMeasurePeriod = seconds;
         return this;
     }
 
@@ -106,16 +126,18 @@ public class NZSHM22_HazardCalculatorBuilder {
     protected ScalarIMR createGmpe() {
         ScalarIMR gmpe = AttenRelRef.ASK_2014.instance(null);
         gmpe.setParamDefaults();
-        // for PGA (units: g)
-//		gmpe.setIntensityMeasure(PGA_Param.NAME);
-        // for 1s SA (units: g)
-        gmpe.setIntensityMeasure(SA_Param.NAME);
-        SA_Param.setPeriodInSA_Param(gmpe.getIntensityMeasure(), 1d);
+        if (intensityMeasurePeriod == 0) {
+            gmpe.setIntensityMeasure(PGA_Param.NAME);
+        } else {
+            gmpe.setIntensityMeasure(SA_Param.NAME);
+            SA_Param.setPeriodInSA_Param(gmpe.getIntensityMeasure(), intensityMeasurePeriod);
+        }
         return gmpe;
     }
 
     /**
      * Builds and NZSHM22_HazardCalculator based on the settings.
+     *
      * @return the NZSHM22_HazardCalculator
      * @throws IOException
      * @throws DocumentException
@@ -196,7 +218,8 @@ public class NZSHM22_HazardCalculatorBuilder {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
         builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
                 .setLinear(true)
-                .setForecastTimespan(50);
+                .setForecastTimespan(50)
+                .setIntensityMeasurePeriod(10);
 
         NZSHM22_HazardCalculator calculator = builder.build();
 
