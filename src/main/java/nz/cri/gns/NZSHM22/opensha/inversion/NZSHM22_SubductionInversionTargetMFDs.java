@@ -67,7 +67,7 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionTargetMFDs {
+public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs{
 
 	static boolean MFD_STATS = true; //print some curves for analytics
 	
@@ -77,11 +77,13 @@ public class NZSHM22_SubductionInversionTargetMFDs {
 	public final static int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
 	public final static double DELTA_MAG = 0.1;
 
-	public static InversionTargetMFDs create(NZSHM22_InversionFaultSystemRuptSet invRupSet){
-		return create(invRupSet, 0.7, 1.1, 7.85);
+	protected List<MFD_InversionConstraint> mfdConstraints;
+
+	public  NZSHM22_SubductionInversionTargetMFDs (NZSHM22_InversionFaultSystemRuptSet invRupSet){
+		this(invRupSet, 0.7, 1.1, 7.85);
 	}
 
-	public static InversionTargetMFDs create(NZSHM22_InversionFaultSystemRuptSet invRupSet,
+	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
 									  double totalRateM5, double bValue, double mfdTransitionMag){
 		
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
@@ -154,10 +156,34 @@ public class NZSHM22_SubductionInversionTargetMFDs {
 //		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
 //		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
 
-		return new InversionTargetMFDs.Precomputed( invRupSet,
-				totalTargetGR, targetOnFaultSupraSeisMFD, null,
-				null, mfdConstraints, null);
+		setParent(invRupSet);
+		this.totalTargetGR = totalTargetGR;
+		this.targetOnFaultSupraSeisMFD = targetOnFaultSupraSeisMFD;
+		this.mfdConstraints = mfdConstraints;
+
+
+//		return new InversionTargetMFDs.Precomputed( invRupSet,
+//				totalTargetGR, targetOnFaultSupraSeisMFD, null,
+//				null, mfdConstraints, null);
 
 	}
+
+	@Override
+	public List<MFD_InversionConstraint> getMFD_Constraints(){
+		return mfdConstraints;
+	}
+
+	@Override
+	public String getName() {
+		return "NZSHM22 Subduction Inversion Target MFDs";
+	}
+
+	// only used for plots
+	@Override
+	public GutenbergRichterMagFreqDist getTotalTargetGR_NoCal() {throw new UnsupportedOperationException();}
+
+	// only used for plots
+	@Override
+	public GutenbergRichterMagFreqDist getTotalTargetGR_SoCal() {throw new UnsupportedOperationException();}
 
 }

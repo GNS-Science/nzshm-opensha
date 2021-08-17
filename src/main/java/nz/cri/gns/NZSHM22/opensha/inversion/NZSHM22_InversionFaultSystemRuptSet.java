@@ -18,10 +18,6 @@ import java.util.concurrent.Callable;
  *
  */
 public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRupSet {
-	// this holds the various MFDs implied by the inversion fault system rupture set
-	// (e.g., we need to know the sub-seismo on-fault moment rates to reduce slip
-	// rates accordingly)
-	private InversionTargetMFDs inversionMFDs;
 
 	private static final long serialVersionUID = 1091962054533163866L;
 
@@ -41,12 +37,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		//overwrite behaviour of super class
 		removeModuleInstances(InversionTargetMFDs.class);
-		offerAvailableModule(new Callable<InversionTargetMFDs>() {
+		offerAvailableModule(new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
 			@Override
-			public InversionTargetMFDs call() throws Exception {
-				return NZSHM22_SubductionInversionTargetMFDs.create(NZSHM22_InversionFaultSystemRuptSet.this);
+			public NZSHM22_SubductionInversionTargetMFDs call() throws Exception {
+				return new NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet.this);
 			}
-		}, InversionTargetMFDs.class);
+		}, NZSHM22_SubductionInversionTargetMFDs.class);
 	}
 
 	/**
@@ -70,19 +66,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	@Override
 	public U3InversionTargetMFDs getInversionTargetMFDs() {
-		// FIXME
-		throw new IllegalStateException("net yet refactored!");
-//		if (inversionMFDs == null)
-//			inversionMFDs =  NZSHM22_CrustalInversionTargetMFDs(this);
-//			return inversionMFDs;
-	}
-
-	public InversionTargetMFDs getNZInversionTargetMFDs(){
-		return getModule(InversionTargetMFDs.class);
+		return getModule(NZSHM22_SubductionInversionTargetMFDs.class);
 	}
 
 	public NZSHM22_InversionFaultSystemRuptSet setInversionTargetMFDs(InversionTargetMFDs inversionMFDs) {
-		this.inversionMFDs = inversionMFDs;
+		removeModuleInstances(InversionTargetMFDs.class);
+		addModule(inversionMFDs);
 		return this;
 	}
 
