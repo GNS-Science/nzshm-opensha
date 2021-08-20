@@ -283,6 +283,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		tsa.iterate(completionCriteria);
 
+		tsa.shutdown();
+
 		// now assemble the solution
 		double[] solution_raw = tsa.getBestSolution();
 
