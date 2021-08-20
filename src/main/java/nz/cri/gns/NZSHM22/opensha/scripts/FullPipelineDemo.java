@@ -71,7 +71,7 @@ class FullPipelineDemo {
 		
 		File markdownDirDir = new File("./TEST/kevin_markdown_inversions");
 		Preconditions.checkState(markdownDirDir.exists() || markdownDirDir.mkdir());
-		int threads = 4;
+
 		
 		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
 		branch.setValue(SlipAlongRuptureModels.UNIFORM);
@@ -92,7 +92,7 @@ class FullPipelineDemo {
 		String scaleStr = "perturb_exp_scale_1e-2_to_"+minScaleStr;
 //		dirName += "-"+scaleStr+"-avg_anneal_20m-noWL-zeroRates-1hr";
 		
-		dirName += "perturb(UNIFORM)_nonNeg(LIMIT)_noAveraging_water(NONE)_expOrd(10)_U3PERTURBHACK_time(10m)";
+		dirName += "perturb(EXP_SCA)_nonNeg(LIMIT)_Averaging(8)_water(1e-2)_expOrd(10)_U3PERTURBHACK(NA)_time(6h)";
 		
 		System.out.println(dirName);
 		CoulombRupSetConfig rsConfig = new RuptureSets.CoulombRupSetConfig(fm, scale);
@@ -108,24 +108,25 @@ class FullPipelineDemo {
 		String compName =  "UCERF3";
 		
 //		double wlFract = 1e-3;
-		double wlFract = 0d;
-		boolean wlAsStarting = false;
-//		double wlFract = 1e-2;
-//		boolean wlAsStarting = true;
+//		double wlFract = 0d;
+//		boolean wlAsStarting = false;
+		double wlFract = 1e-2;
+		boolean wlAsStarting = true;
 		
-//		GenerationFunctionType perturb = GenerationFunctionType.EXPONENTIAL_SCALE;
-		GenerationFunctionType perturb = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
+		GenerationFunctionType perturb = GenerationFunctionType.EXPONENTIAL_SCALE;
+//		GenerationFunctionType perturb = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
 		NonnegativityConstraintType nonNeg = NonnegativityConstraintType.LIMIT_ZERO_RATES; // default
 //		NonnegativityConstraintType nonNeg = NonnegativityConstraintType.TRY_ZERO_RATES_OFTEN;
 
-//		CompletionCriteria completion = TimeCompletionCriteria.getInHours(9);
-		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(10);
-//		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInMinutes(1); //getInSeconds(1200); 
+		CompletionCriteria completion = TimeCompletionCriteria.getInHours(6);
+//		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(60);
+		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInMinutes(10); //getInSeconds(1200); 
 //		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInSeconds(15);
-		CompletionCriteria avgSubCompletion = null;
+//		CompletionCriteria avgSubCompletion = null;
 //		int subCompletionSeconds = 1; //CBC added
 		int subCompletionSeconds = 30; //CBC added
-
+		
+		int threads = 32;
 		int threadsPerAvg = 4;
 		
 		int numRuns = 1;
@@ -210,7 +211,16 @@ class FullPipelineDemo {
 				NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 						.forModel(inversionModel, (NZSHM22_InversionFaultSystemRuptSet) rupSet, 1000, 10000, 29, 1.05, 7.85);
 
-
+				// CBC: Water level test
+				if (wlAsStarting && wlFract > 0) {
+					inversionConfiguration.setMinimumRuptureRateFraction(wlFract);
+					double[] initial = Arrays.copyOf(inversionConfiguration.getMinimumRuptureRateBasis(), rupSet.getNumRuptures());
+					for (int i=0; i<initial.length; i++)
+						initial[i] *= wlFract;
+					inversionConfiguration.setInitialRupModel(initial);
+					inversionConfiguration.setMinimumRuptureRateFraction(0d);				
+				}
+				
 				inversionConfiguration.setSlipRateWeightingType(SlipRateConstraintWeightingType.BOTH);
 				inversionConfiguration.setSlipRateConstraintWt_normalized(1000);
 				inversionConfiguration.setSlipRateConstraintWt_unnormalized(10000);
@@ -222,8 +232,7 @@ class FullPipelineDemo {
 				InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_SubductionInversionTargetMFDs.class);
 				
 				// CBC
-				// END configure
-				
+				// END configure		
 				
 				System.out.println("Generating inputs");
 				inputGen.generateInputs();

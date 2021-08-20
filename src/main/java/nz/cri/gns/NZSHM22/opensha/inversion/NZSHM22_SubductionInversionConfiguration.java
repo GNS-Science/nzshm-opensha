@@ -194,7 +194,8 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double[] minimumRuptureRateBasis = null;
 
 //		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
-
+		IncrementalMagFreqDist targetOnFaultMFD =  inversionMFDs.getTotalOnFaultSupraSeisMFD();
+		
 		if (model == InversionModels.CHAR_CONSTRAINED) {
 			nucleationMFDConstraintWt = 0.01;
 			// For water level
@@ -203,6 +204,8 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 //			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
 //					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints,
 //					rupSet, true);
+			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
+					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
 
 			initialRupModel = new double[rupSet.getNumRuptures()];
 		}
