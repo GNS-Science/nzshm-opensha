@@ -199,8 +199,7 @@ public class scriptCrustalInversionRunner {
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
         		.setGutenbergRichterMFDWeights(10d, 1000d))
-        		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2)
-        		.configure(); //do this last thing before runInversion!
+        		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2);
         FaultSystemSolution solution = runner.runInversion();
         System.out.println(runner.getSolutionMetrics());
         // FIXME

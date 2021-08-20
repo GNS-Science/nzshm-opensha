@@ -239,6 +239,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
 
+		configure();
+
 		// weight of entropy-maximization constraint (not used in UCERF3)
 		double smoothnessWt = 0;
 

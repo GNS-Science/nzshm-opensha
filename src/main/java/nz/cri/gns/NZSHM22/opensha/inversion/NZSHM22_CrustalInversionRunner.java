@@ -89,7 +89,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		return this;
 	}
 
-	public NZSHM22_CrustalInversionRunner configure() {
+	protected NZSHM22_CrustalInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = (InversionModels) logicTreeBranch.getValue(InversionModels.class);
 

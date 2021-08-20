@@ -48,7 +48,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
-	public NZSHM22_SubductionInversionRunner configure() {
+	protected NZSHM22_SubductionInversionRunner configure() {
 		U3LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
@@ -56,10 +56,8 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,
 						bValue, mfdTransitionMag);
 
-		// FIXME it's the same data, but does it mean the same?
-		//solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
-		solutionMfds = List.of(inversionConfiguration.getInversionTargetMfds().getTotalOnFaultSupraSeisMFD());
-		
+		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
+
 		if (this.slipRateWeightingType != null) {
 			inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
 			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
@@ -97,7 +95,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setGutenbergRichterMFDWeights(1000.0, 10000.0)
 				.setSlipRateConstraint("BOTH", 1000.0, 10000.0)
 				) // end super-class methods
-				.setGutenbergRichterMFD(29, 1.05, 9.15).configure();
+				.setGutenbergRichterMFD(29, 1.05, 9.15);
 
 		NZSHM22_InversionFaultSystemSolution solution = runner
 				.setInversionSeconds(30)
