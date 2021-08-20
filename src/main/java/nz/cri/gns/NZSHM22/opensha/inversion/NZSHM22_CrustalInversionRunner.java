@@ -11,6 +11,7 @@ import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalarValues;
@@ -138,7 +139,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
 		runner.configure();
     			
-		NZSHM22_InversionFaultSystemSolution solution = runner.configure().runInversion();
+		FaultSystemSolution solution = runner.configure().runInversion();
 		
 		System.out.println("Solution MFDS...");
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {

@@ -201,7 +201,7 @@ class FullPipelineDemo {
 //						rupSet, config, paleoRateConstraints, aveSlipConstraints, improbabilityConstraint, paleoProbabilityModel);
 
 
-						
+
 				// CBC: 
 				// BEGIN from NZSHM22_SubductionInversionRunner.configure
 				// U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
@@ -223,7 +223,7 @@ class FullPipelineDemo {
 				
 				// CBC
 				// END configure
-				
+				// XXX oakley
 				
 				System.out.println("Generating inputs");
 				inputGen.generateInputs();

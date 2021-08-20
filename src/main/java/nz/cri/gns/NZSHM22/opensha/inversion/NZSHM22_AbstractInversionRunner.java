@@ -9,6 +9,7 @@ import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
@@ -20,8 +21,10 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.U3FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
@@ -237,7 +240,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws IOException
 	 * @throws DocumentException
 	 */
-	public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+	public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
 
 		configure();
 
@@ -286,18 +289,17 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// adjust for minimum rates if applicable
 		double[] solution_adjusted = inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
 
-		Map<ConstraintRange, Double> energies = tsa.getEnergies();
-		if (energies != null) {
-			System.out.println("Final energies:");
-			for (ConstraintRange range : energies.keySet()) {
-				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
-				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
-			}
-		}
+//		Map<ConstraintRange, Double> energies = tsa.getEnergies();
+//		if (energies != null) {
+//			System.out.println("Final energies:");
+//			for (ConstraintRange range : energies.keySet()) {
+//				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
+//				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
+//			}
+//		}
 
 		// TODO, do we really do want to store the config and energies now?
-		solution = new NZSHM22_InversionFaultSystemSolution(rupSet, solution_adjusted, finalEnergies); // , null,
-																										// energies);
+		InversionFaultSystemSolution solution = new InversionFaultSystemSolution(rupSet, solution_adjusted, null, finalEnergies);
 		return solution;
 	}
 

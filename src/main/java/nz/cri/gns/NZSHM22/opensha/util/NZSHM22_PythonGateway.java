@@ -21,7 +21,9 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import py4j.GatewayServer;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
@@ -251,7 +253,7 @@ public class NZSHM22_PythonGateway {
      * Python helper that wraps NZSHM22_InversionRunner
      */
     static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
-        NZSHM22_InversionFaultSystemSolution solution = null;
+        InversionFaultSystemSolution solution = null;
 
         /**
          * like run(File ruptureSetFile), but caches the result
@@ -260,7 +262,7 @@ public class NZSHM22_PythonGateway {
          * @throws IOException
          * @throws DocumentException
          */
-        public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+        public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
             solution = super.runInversion();
             return solution;
         }
@@ -280,7 +282,7 @@ public class NZSHM22_PythonGateway {
      * Python helper that wraps NZSHM22_InversionRunner
      */
     static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
-        NZSHM22_InversionFaultSystemSolution solution = null;
+        InversionFaultSystemSolution solution = null;
 
         /**
          * like run(File ruptureSetFile), but caches the result
@@ -289,7 +291,7 @@ public class NZSHM22_PythonGateway {
          * @throws IOException
          * @throws DocumentException
          */
-        public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+        public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
             solution = super.runInversion();
             return solution;
         }

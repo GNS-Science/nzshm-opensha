@@ -3,8 +3,11 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
 
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
@@ -48,6 +51,15 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
+	@Override
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
+			throws IOException, DocumentException {
+		super.setRuptureSetFile(ruptureSetFile);
+		rupSet.removeModuleInstances(FaultGridAssociations.class);
+		return this;
+	}
+
+	@Override
 	protected NZSHM22_SubductionInversionRunner configure() {
 		U3LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
@@ -97,16 +109,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				) // end super-class methods
 				.setGutenbergRichterMFD(29, 1.05, 9.15);
 
-		NZSHM22_InversionFaultSystemSolution solution = runner
+		InversionFaultSystemSolution solution = runner
 				.setInversionSeconds(30)
 				.setNumThreads(4)
 				.runInversion();
 		File solutionFile = new File(outputDir, "OldFormatSubductionInversionSolution-RWcw.zip");
 		
-		System.out.println("Solution MFDS...");
-		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
-			System.out.println(row);
-		}
+//		System.out.println("Solution MFDS...");
+//		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+//			System.out.println(row);
+//		}
 
 		// old-fashioned format
 		U3FaultSystemIO.writeSol(solution, solutionFile);
