@@ -113,18 +113,15 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setInversionSeconds(30)
 				.setNumThreads(4)
 				.runInversion();
-		File solutionFile = new File(outputDir, "OldFormatSubductionInversionSolution-RWcw.zip");
 		
 //		System.out.println("Solution MFDS...");
 //		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
 //			System.out.println(row);
 //		}
 
-		// old-fashioned format
-		U3FaultSystemIO.writeSol(solution, solutionFile);
-
 		solution.write(new File(outputDir, "NewFormatSubductionInversionSolution-RWcw.zip"));
 
+		System.out.println("done");
 	}
 
 }
