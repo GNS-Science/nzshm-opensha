@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.text.DateFormatter;
 
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RuptureSets;
@@ -25,9 +26,13 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen.PlotLevel;
 import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionConfiguration;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionInputGenerator;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionInputGenerator;
@@ -60,12 +65,12 @@ import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 import scratch.UCERF3.utils.paleoRateConstraints.PaleoProbabilityModel;
 import scratch.UCERF3.utils.paleoRateConstraints.PaleoRateConstraint;
 
-class FullPipelineDemo {
+class FullPipelineCrustal {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Yawn...");
 		
-		File markdownDirDir = new File("./TEST/kevin_markdown_inversions");
+		File markdownDirDir = new File("./TEST/crustal_inversions");
 		Preconditions.checkState(markdownDirDir.exists() || markdownDirDir.mkdir());
 
 		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
@@ -74,9 +79,9 @@ class FullPipelineDemo {
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
 		
-		String dirName = "2021_08_21";
+		String dirName = "2021_08_22";
 		
-		String newName = "Subduction test, like SW52ZXJzaW9uU29sdXRpb246NjQ3NC41NGtBSFg= ";
+		String newName = "Crustal test, like SW52ZXJzaW9uU29sdXRpb246NjEwMC41UlhaTm8= ";
 		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
 		String minScaleStr = new DecimalFormat("0E0").format(
 				Math.pow(10, SerialSimulatedAnnealing.max_exp-SerialSimulatedAnnealing.exp_orders_of_mag)).toLowerCase();
@@ -127,21 +132,15 @@ class FullPipelineDemo {
 			File outputDir = new File(markdownDirDir, myDirName);
 			Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 			
-//			File rupSetFile = new File(outputDir, "rupture_set.zip");
-
 			File outputRoot = new File("./TEST");
 			File rupSetFile = new File(outputRoot,
-					"RupSet_Sub_FM(SBD_0_2A_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");		
-						
+					"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5).zip");
+							
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					// CBC: orginal rupSet = FaultSystemRupSet.load(rupSetFile);
-					// CBC: from Oakleys 
 					U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(rupSetFile);
-					rupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
-					// CBC: we can remove this as we don't need fault grid with subduction 
-					rupSet.removeModuleInstances(FaultGridAssociations.class);
-					
+					rupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch).configureCrustalMFDs();
+					InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_CrustalInversionTargetMFDs.class);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3
@@ -158,32 +157,35 @@ class FullPipelineDemo {
 			if (rerunInversion || !solFile.exists()) {
 					
 				// CBC: 
-				// BEGIN from NZSHM22_SubductionInversionRunner.configure
-				// U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
-				InversionModels inversionModel = branch.getValue(InversionModels.class);
+				// BEGIN from NZSHM22_CrustalInversionRunner.configure
+			
+				InversionModels inversionModel = (InversionModels) branch.getValue(InversionModels.class);
 
-				NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
-						.forModel(inversionModel, (NZSHM22_InversionFaultSystemRuptSet) rupSet, 1000, 10000, 29, 1.05, 9.15);
-
-				// CBC: Water level test
-				if (wlAsStarting && wlFract > 0) {
-					inversionConfiguration.setMinimumRuptureRateFraction(wlFract);
-					double[] initial = Arrays.copyOf(inversionConfiguration.getMinimumRuptureRateBasis(), rupSet.getNumRuptures());
-					for (int i=0; i<initial.length; i++)
-						initial[i] *= wlFract;
-					inversionConfiguration.setInitialRupModel(initial);
-					inversionConfiguration.setMinimumRuptureRateFraction(0d);				
-				}
+				// this contains all inversion weights
+				double mfdEqualityConstraintWt = 1000;
+				double mfdInequalityConstraintWt = 1000;
 				
+				NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration
+						.forModel(inversionModel, (NZSHM22_InversionFaultSystemRuptSet) rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
+
+//				List<IncrementalMagFreqDist> solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
+			
+				// set up slip rate config
 				inversionConfiguration.setSlipRateWeightingType(SlipRateConstraintWeightingType.BOTH);
-				inversionConfiguration.setSlipRateConstraintWt_normalized(1000);
-				inversionConfiguration.setSlipRateConstraintWt_unnormalized(10000);
+				double slipRateConstraintWt_normalized = 1000;
+				double slipRateConstraintWt_unnormalized = 1000;
 				
-				NZSHM22_SubductionInversionInputGenerator inputGen = new NZSHM22_SubductionInversionInputGenerator(
-						(NZSHM22_InversionFaultSystemRuptSet) rupSet, inversionConfiguration);
-						
-				//InversionTargetMFDs targetMFDs = inversionConfiguration.getInversionTargetMfds();
-				InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_SubductionInversionTargetMFDs.class);
+				inversionConfiguration.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized);
+				inversionConfiguration.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized);
+
+				/*
+				 * Build inversion inputs
+				 */
+				List<AveSlipConstraint> aveSlipConstraints = null;
+				NZSHM22_CrustalInversionInputGenerator inputGen = new NZSHM22_CrustalInversionInputGenerator(
+						(NZSHM22_InversionFaultSystemRuptSet) rupSet, inversionConfiguration, null, aveSlipConstraints, null, null);				
+				
+//				InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_CrustalInversionTargetMFDs.class);
 				
 				// CBC
 				// END configure		

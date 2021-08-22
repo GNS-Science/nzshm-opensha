@@ -45,6 +45,17 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		}, NZSHM22_SubductionInversionTargetMFDs.class);
 	}
 
+	public NZSHM22_InversionFaultSystemRuptSet configureCrustalMFDs() {
+		removeModuleInstances(InversionTargetMFDs.class);
+		offerAvailableModule(new Callable<NZSHM22_CrustalInversionTargetMFDs>() {
+			@Override
+			public NZSHM22_CrustalInversionTargetMFDs call() throws Exception {
+				return new NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet.this);
+			}
+		}, NZSHM22_CrustalInversionTargetMFDs.class);
+		return this;
+	}
+	
 	/**
 	 * This returns the final minimum mag for a given fault section. This uses a
 	 * generic version of computeMinSeismoMagForSections() instead of the UCERF3
