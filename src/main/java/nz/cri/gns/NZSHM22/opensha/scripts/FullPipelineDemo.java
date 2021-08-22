@@ -74,7 +74,7 @@ class FullPipelineDemo {
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
 		
-		String dirName = "2021_08_21";
+		String dirName = "2021_08_23_";
 		
 		String newName = "Subduction test, like SW52ZXJzaW9uU29sdXRpb246NjQ3NC41NGtBSFg= ";
 		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
@@ -104,7 +104,7 @@ class FullPipelineDemo {
 		
 
 //		CompletionCriteria completion = TimeCompletionCriteria.getInHours(6);
-		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(15);
+		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(1);
 		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInSeconds(15); //getInSeconds(1200); 
 //		CompletionCriteria avgSubCompletion = null;
 //		TimeCompletionCriteria subCompletion = new TimeCompletionCriteria(250);		
@@ -156,7 +156,6 @@ class FullPipelineDemo {
 			
 			FaultSystemSolution sol;
 			if (rerunInversion || !solFile.exists()) {
-					
 				// CBC: 
 				// BEGIN from NZSHM22_SubductionInversionRunner.configure
 				// U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
@@ -186,7 +185,8 @@ class FullPipelineDemo {
 				InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_SubductionInversionTargetMFDs.class);
 				
 				// CBC
-				// END configure		
+				// END configure
+				// XXX oakley
 				
 				System.out.println("Generating inputs");
 				inputGen.generateInputs();

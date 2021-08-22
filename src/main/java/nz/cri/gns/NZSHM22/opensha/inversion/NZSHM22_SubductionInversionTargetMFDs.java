@@ -78,6 +78,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	public final static double DELTA_MAG = 0.1;
 
 	protected List<MFD_InversionConstraint> mfdConstraints;
+	protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 
 	public  NZSHM22_SubductionInversionTargetMFDs (NZSHM22_InversionFaultSystemRuptSet invRupSet){
 		this(invRupSet, 0.7, 1.1, 7.85);
@@ -153,13 +154,14 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 		
 		// Now collect the target MFDS we might want for plots
 		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
-//		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
-//		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
+		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
+		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
 
 		setParent(invRupSet);
 		this.totalTargetGR = totalTargetGR;
 		this.targetOnFaultSupraSeisMFD = targetOnFaultSupraSeisMFD;
 		this.mfdConstraints = mfdConstraints;
+		this.mfdConstraintComponents = mfdConstraintComponents;
 
 
 //		return new InversionTargetMFDs.Precomputed( invRupSet,
@@ -171,6 +173,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	@Override
 	public List<MFD_InversionConstraint> getMFD_Constraints(){
 		return mfdConstraints;
+	}
+
+	public List<IncrementalMagFreqDist> getMFDConstraintComponents(){
+		return mfdConstraintComponents;
 	}
 
 	@Override
