@@ -116,7 +116,7 @@ class FullPipelineDemo {
 		
 		boolean rebuildRupSet = false;
 		boolean rerunInversion = true;
-		boolean doRupSetReport = true;
+		boolean doRupSetReport = false;
 		
 		FaultSystemRupSet rupSet = null;
 		

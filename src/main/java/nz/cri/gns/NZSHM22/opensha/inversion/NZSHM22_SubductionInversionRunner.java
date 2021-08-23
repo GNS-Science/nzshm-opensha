@@ -103,7 +103,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * mfd_transition_mag	9.15	
 		 */
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
-				.setInversionSeconds(10).setNumThreads(5).setRuptureSetFile(ruptureSet)
+				.setInversionSeconds(15).setNumThreads(5).setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000.0, 10000.0)
 				.setSlipRateConstraint("BOTH", 1000.0, 10000.0)
 				) // end super-class methods

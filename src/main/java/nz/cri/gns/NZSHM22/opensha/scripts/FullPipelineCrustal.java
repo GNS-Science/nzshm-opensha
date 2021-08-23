@@ -79,7 +79,7 @@ class FullPipelineCrustal {
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
 		
-		String dirName = "2021_08_22";
+		String dirName = "2021_08_23";
 		
 		String newName = "Crustal test, like SW52ZXJzaW9uU29sdXRpb246NjEwMC41UlhaTm8= ";
 		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
@@ -109,13 +109,13 @@ class FullPipelineCrustal {
 		
 
 //		CompletionCriteria completion = TimeCompletionCriteria.getInHours(6);
-		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(15);
+		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(1);
 		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInSeconds(15); //getInSeconds(1200); 
 //		CompletionCriteria avgSubCompletion = null;
 //		TimeCompletionCriteria subCompletion = new TimeCompletionCriteria(250);		
 		CompletionCriteria subCompletion = TimeCompletionCriteria.getInSeconds(15); //.getInMinutes(15);
 		
-		int threads = 16;
+		int threads = 4;
 		int threadsPerAvg = 1;	
 		int numRuns = 1;
 		
@@ -303,6 +303,5 @@ class FullPipelineCrustal {
 		System.out.println("DONE");
 		System.exit(0);
 	}
-	
-	
+		
 }
