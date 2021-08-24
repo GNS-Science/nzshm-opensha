@@ -55,7 +55,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
 		rupSet = loadSubductionRupSet(ruptureSetFile);
-		rupSet.removeModuleInstances(FaultGridAssociations.class);
 		return this;
 	}
 

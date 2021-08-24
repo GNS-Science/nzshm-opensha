@@ -85,12 +85,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 //		return minMagForSectArray[sectIndex];
 	}
 
-	@Override
-	public U3InversionTargetMFDs getInversionTargetMFDs() {
-		// return getModule(U3InversionTargetMFDs.class);
-		return getModule(NZSHM22_SubductionInversionTargetMFDs.class);
-	}
-
 	public NZSHM22_InversionFaultSystemRuptSet setInversionTargetMFDs(InversionTargetMFDs inversionMFDs) {
 		removeModuleInstances(InversionTargetMFDs.class);
 		addModule(inversionMFDs);
