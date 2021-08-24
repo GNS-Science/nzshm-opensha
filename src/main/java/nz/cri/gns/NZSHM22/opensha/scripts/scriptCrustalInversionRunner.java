@@ -21,12 +21,12 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.FaultIdFilter;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
 
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * Wrapper for building NSHM Rupture sets from CLI
@@ -136,7 +136,7 @@ public class scriptCrustalInversionRunner {
 ////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
 ////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
         SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
-        FaultSystemIO.writeRupSet(rupSet, rupSetFile);
+       U3FaultSystemIO.writeRupSet(rupSet, rupSetFile);
 
         plotRuptureFrequency(rupSet, new File("data/output/histogram" + (new Date()).getTime() + ".csv"));
     }
@@ -199,11 +199,10 @@ public class scriptCrustalInversionRunner {
                 .setSyncInterval(syncInterval)
         		.setRuptureSetFile(rupSetFile)
         		.setGutenbergRichterMFDWeights(10d, 1000d))
-        		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2)
-        		.configure(); //do this last thing before runInversion!
+        		.setSlipRateUncertaintyConstraint(weightingType , 1000, 2);
         FaultSystemSolution solution = runner.runInversion();
         System.out.println(runner.getSolutionMetrics());
-        FaultSystemIO.writeSol(solution, solFile);
+        solution.write(solFile);
     }
 
     public static void main(String[] args) throws DocumentException, IOException, ParseException {

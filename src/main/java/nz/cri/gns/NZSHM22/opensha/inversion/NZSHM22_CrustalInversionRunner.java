@@ -9,7 +9,9 @@ import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.data.function.XY_DataSetList;
 import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalarValues;
@@ -19,8 +21,7 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
-import scratch.UCERF3.utils.FaultSystemIO;
+
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
@@ -89,9 +90,16 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		return this;
 	}
 
-	public NZSHM22_CrustalInversionRunner configure() {
+	@Override
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
+		this.rupSet = loadCrustalRupSet(ruptureSetFile);
+		return this;
+	}
+
+	@Override
+	protected NZSHM22_CrustalInversionRunner configure() {
 		LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
+		InversionModels inversionModel = (InversionModels) logicTreeBranch.getValue(InversionModels.class);
 
 		// this contains all inversion weights
 		NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration
@@ -124,10 +132,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 	public static void main(String[] args) throws IOException, DocumentException {
 
-		File inputDir = new File("/home/chrisbc/Downloads");
-		File outputRoot = new File("/tmp/NZSHM");
+		File inputDir = new File("./TEST");
+		File outputRoot = new File("./TEST");
 		File ruptureSet = new File(inputDir,
-				"RupSet_Az_FM(CFM_0_3_SANSTVZ)_mxSbScLn(0.5)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.0)(1).zip");
+				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
@@ -136,19 +144,19 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0))
 				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
-		runner.configure();
-    			
-		NZSHM22_InversionFaultSystemSolution solution = runner.configure().runInversion();
+
+		FaultSystemSolution solution = runner.runInversion();
 		
-		System.out.println("Solution MFDS...");
-		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
-			System.out.println(row);
-		}
+//		System.out.println("Solution MFDS...");
+//		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+//			System.out.println(row);
+//		}
+
 //		System.out.println(solution.getEnergies().toString());
 
-//		File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
-//
-//		FaultSystemIO.writeSol(solution, solutionFile);
+		File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
+		solution.write(solutionFile);
+//	U3FaultSystemIO.writeSol(solution, solutionFile);
 
 	}
 

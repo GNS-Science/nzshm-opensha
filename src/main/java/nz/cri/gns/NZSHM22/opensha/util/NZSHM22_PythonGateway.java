@@ -12,7 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
-import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
+
 
 import org.dom4j.DocumentException;
 
@@ -21,10 +21,11 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import py4j.GatewayServer;
-import scratch.UCERF3.FaultSystemSolution;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * A py4j gateway for building ruptures and running inversions.
@@ -35,13 +36,8 @@ public class NZSHM22_PythonGateway {
     static CachedCrustalInversionRunner crustalInversionRunner;
     static CachedSubductionInversionRunner subductionInversionRunner;
     static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
-    static NZSHM22_InversionDiagnosticsReportBuilder inversionReportBuilder;
     static NZSHM22_GridHazardCalculator gridHazCalc;
 
-    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
-    	inversionReportBuilder = new NZSHM22_InversionDiagnosticsReportBuilder();
-    	return inversionReportBuilder;
-    }
 
     public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
         NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
@@ -90,10 +86,6 @@ public class NZSHM22_PythonGateway {
     public static NZSHM22_GridHazardCalculator getGridHazardCalculator(NZSHM22_HazardCalculator calculator){
         gridHazCalc = new NZSHM22_GridHazardCalculator(calculator);
         return gridHazCalc;
-    }
-
-    public static MFDPlotBuilder getMFDPlotBuilder(){
-        return new MFDPlotBuilder();
     }
 
     public static void main(String[] args) {
@@ -176,7 +168,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -225,7 +217,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -252,7 +244,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-            FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
         }
     }
 
@@ -261,7 +253,7 @@ public class NZSHM22_PythonGateway {
      * Python helper that wraps NZSHM22_InversionRunner
      */
     static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
-        NZSHM22_InversionFaultSystemSolution solution = null;
+        InversionFaultSystemSolution solution = null;
 
         /**
          * like run(File ruptureSetFile), but caches the result
@@ -270,7 +262,7 @@ public class NZSHM22_PythonGateway {
          * @throws IOException
          * @throws DocumentException
          */
-        public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+        public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
             solution = super.runInversion();
             return solution;
         }
@@ -283,14 +275,14 @@ public class NZSHM22_PythonGateway {
          */
         public void writeSolution(String solutionFileName) throws IOException {
             File solutionFile = new File(solutionFileName);
-            FaultSystemIO.writeSol(solution, solutionFile);
+           U3FaultSystemIO.writeSol(solution, solutionFile);
         }
     }
     /**
      * Python helper that wraps NZSHM22_InversionRunner
      */
     static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
-        NZSHM22_InversionFaultSystemSolution solution = null;
+        InversionFaultSystemSolution solution = null;
 
         /**
          * like run(File ruptureSetFile), but caches the result
@@ -299,7 +291,7 @@ public class NZSHM22_PythonGateway {
          * @throws IOException
          * @throws DocumentException
          */
-        public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+        public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
             solution = super.runInversion();
             return solution;
         }
@@ -312,7 +304,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeSolution(String solutionFileName) throws IOException {
             File solutionFile = new File(solutionFileName);
-            FaultSystemIO.writeSol(solution, solutionFile);
+           U3FaultSystemIO.writeSol(solution, solutionFile);
         }
     }
 

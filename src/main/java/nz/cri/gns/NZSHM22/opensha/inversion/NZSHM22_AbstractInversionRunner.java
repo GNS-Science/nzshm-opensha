@@ -2,17 +2,14 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
@@ -21,12 +18,16 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
-import scratch.UCERF3.FaultSystemRupSet;
+
 import scratch.UCERF3.SlipEnabledSolution;
+import scratch.UCERF3.U3FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.CommandLineInversionRunner;
+import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
@@ -34,7 +35,8 @@ import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * @author chrisbc
@@ -155,6 +157,20 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRupSet(File ruptureSetFile) throws DocumentException, IOException {
+		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+
+		return NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSetA, branch);
+	}
+
+	public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRupSet(File ruptureSetFile) throws DocumentException, IOException {
+		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+
+		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
+	}
+
 	/**
 	 * Sets the FaultModel file
 	 *
@@ -163,14 +179,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws DocumentException
 	 * @throws IOException
 	 */
-	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
-			throws IOException, DocumentException {
-		FaultSystemRupSet rupSetA = FaultSystemIO.loadRupSet(ruptureSetFile);
-		LogicTreeBranch branch = (LogicTreeBranch) LogicTreeBranch.DEFAULT;
-
-		this.rupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
-		return this;
-	}
+	public abstract NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException;
 
 	/**
 	 * @param mfdEqualityConstraintWt
@@ -234,7 +243,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws IOException
 	 * @throws DocumentException
 	 */
-	public NZSHM22_InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+	public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+
+		configure();
 
 		// weight of entropy-maximization constraint (not used in UCERF3)
 		double smoothnessWt = 0;
@@ -264,8 +275,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
-				inversionInputGenerator.getWaterLevelRates(), numThreads, subCompletionCriteria);
+				 numThreads, subCompletionCriteria);
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+		tsa.setRandom(new Random(1));
+		tsa.setRuptureSampler(null);
+		tsa.setPerturbationFunc(GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE);
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
@@ -278,18 +292,17 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// adjust for minimum rates if applicable
 		double[] solution_adjusted = inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
 
-		Map<ConstraintRange, Double> energies = tsa.getEnergies();
-		if (energies != null) {
-			System.out.println("Final energies:");
-			for (ConstraintRange range : energies.keySet()) {
-				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
-				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
-			}
-		}
+//		Map<ConstraintRange, Double> energies = tsa.getEnergies();
+//		if (energies != null) {
+//			System.out.println("Final energies:");
+//			for (ConstraintRange range : energies.keySet()) {
+//				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
+//				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
+//			}
+//		}
 
 		// TODO, do we really do want to store the config and energies now?
-		solution = new NZSHM22_InversionFaultSystemSolution(rupSet, solution_adjusted, finalEnergies); // , null,
-																										// energies);
+		InversionFaultSystemSolution solution = new InversionFaultSystemSolution(rupSet, solution_adjusted, null, finalEnergies);
 		return solution;
 	}
 
@@ -299,10 +312,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		// Completion
 		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria) completionCriteria;
-		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
+//		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
 		int numRups = initialState.length;
 
-		metrics.put("total_perturbations", Long.toString(numPerturbs));
+//		metrics.put("total_perturbations", Long.toString(numPerturbs));
 		metrics.put("total_ruptures", Integer.toString(numRups));
 
 		int rupsPerturbed = 0;
@@ -316,10 +329,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 
 		metrics.put("perturbed_ruptures", Integer.toString(rupsPerturbed));
-		metrics.put("avg_perturbs_per_pertubed_rupture",
-				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
-		metrics.put("ruptures_above_water_level_ratio",
-				new Double((double) numAboveWaterlevel / (double) numRups).toString());
+//		metrics.put("avg_perturbs_per_pertubed_rupture",
+//				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
+//		metrics.put("ruptures_above_water_level_ratio",
+//				new Double((double) numAboveWaterlevel / (double) numRups).toString());
 
 		for (String range : finalEnergies.keySet()) {
 			String metric_name = "final_energy_" + range.replaceAll("\\s+", "_").toLowerCase();

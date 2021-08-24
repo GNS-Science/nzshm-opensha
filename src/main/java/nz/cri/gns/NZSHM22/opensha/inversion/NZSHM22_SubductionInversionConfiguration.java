@@ -12,8 +12,8 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import com.google.common.collect.Lists;
 
-import scratch.UCERF3.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
@@ -172,11 +172,11 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 //		double momentConstraintWt = 0;
 
 		// setup MFD constraints
-		NZSHM22_SubductionInversionTargetMFDs inversionMFDs = new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag);
+		InversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
-		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFDConstraints();
+		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFD_Constraints();
 
-		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
+//		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
 
 		String metadata = "";
 
@@ -193,8 +193,9 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 
-		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
-
+//		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
+		IncrementalMagFreqDist targetOnFaultMFD =  inversionMFDs.getTotalOnFaultSupraSeisMFD();
+		
 		if (model == InversionModels.CHAR_CONSTRAINED) {
 			nucleationMFDConstraintWt = 0.01;
 			// For water level
@@ -203,6 +204,8 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 //			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
 //					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints,
 //					rupSet, true);
+//			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
+//					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
 
 			initialRupModel = new double[rupSet.getNumRuptures()];
 		}
@@ -230,7 +233,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 		// NSHM-style config using setter methods...
 		NZSHM22_SubductionInversionConfiguration newConfig = (NZSHM22_SubductionInversionConfiguration) new NZSHM22_SubductionInversionConfiguration()
-				.setInversionTargetMfds(inversionTargetMfds)
+				.setInversionTargetMfds(inversionMFDs)
 				// MFD config
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
 				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
