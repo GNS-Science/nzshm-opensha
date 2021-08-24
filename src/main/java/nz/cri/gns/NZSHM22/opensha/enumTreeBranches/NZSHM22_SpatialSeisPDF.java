@@ -76,6 +76,11 @@ public enum NZSHM22_SpatialSeisPDF implements LogicTreeBranchNode<SpatialSeisPDF
 		return "Spatial Seismicity PDF";
 	}
 
+	@Override
+	public String getShortBranchLevelName(){
+		return getBranchLevelName();
+	}
+
 	public abstract double[] getPDF();
 
 	/**

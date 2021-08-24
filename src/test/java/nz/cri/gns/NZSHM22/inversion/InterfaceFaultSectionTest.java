@@ -36,9 +36,9 @@ import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.laughTest.UCERF3PlausibilityConfig;
 import scratch.UCERF3.inversion.SectionCluster;
 import scratch.UCERF3.inversion.SectionClusterList;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.DeformationModelFetcher;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 
@@ -177,7 +177,7 @@ public class InterfaceFaultSectionTest {
 		// write subduction section data to file
 		File subductionSectDataFile = temp.newFile("subduction_sections.xml");
 		Document doc0 = XMLUtils.createDocumentWithRoot();
-		FaultSystemIO.fsDataToXML(doc0.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
+	U3FaultSystemIO.fsDataToXML(doc0.getRootElement(), FaultModels.XML_ELEMENT_NAME, null, null, subSections);
 		XMLUtils.writeDocumentToFile(subductionSectDataFile, doc0);
 
 		// calculate distances between each subsection
@@ -219,13 +219,13 @@ public class InterfaceFaultSectionTest {
 
 		// build actual rupture set for magnitudes and such
 		FaultModels fm = null;
-		LogicTreeBranch branch = LogicTreeBranch.fromValues(fm, 
+		U3LogicTreeBranch branch = U3LogicTreeBranch.fromValues(fm,
 			DeformationModels.GEOLOGIC,
 				ScalingRelationships.SHAW_2009_MOD, SlipAlongRuptureModels.TAPERED);
 		InversionFaultSystemRupSet rupSet = new InversionFaultSystemRupSet(branch, clusters, subSections);
 		
 		File zipFile = temp.newFile("rupSet.zip");
-		FaultSystemIO.writeRupSet(rupSet, zipFile);
+	U3FaultSystemIO.writeRupSet(rupSet, zipFile);
 
 
 	}

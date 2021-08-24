@@ -20,7 +20,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.*;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * Builds opensha SlipAlongRuptureModelRupSet rupture sets using NZ NSHM
@@ -369,7 +369,7 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 
     	System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+		U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
     }
 
 }

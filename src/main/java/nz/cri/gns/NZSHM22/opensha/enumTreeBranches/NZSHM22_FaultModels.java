@@ -148,6 +148,11 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
 	}
 
 	@Override
+	public String getShortBranchLevelName() {
+		return getBranchLevelName();
+	}
+
+	@Override
 	public String toString() {
 		return getName();
 	}

@@ -46,4 +46,9 @@ public enum NZSHM22_DeformationModels implements LogicTreeBranchNode<NZSHM22_Def
     public String getBranchLevelName() {
         return "Deformation Model";
     }
+
+    @Override
+    public String getShortBranchLevelName() {
+        return getBranchLevelName();
+    }
 }
