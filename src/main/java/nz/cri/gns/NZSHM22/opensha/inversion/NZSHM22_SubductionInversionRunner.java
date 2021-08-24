@@ -115,7 +115,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setNumThreadsPerSelector(2)
 				.setSelectionInterval(2)
 				.setInversionAveraging(2, 10)
-				.configure()
 				.runInversion();
 		
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {

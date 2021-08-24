@@ -145,7 +145,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 				.setGutenbergRichterMFDWeights(100.0, 1000.0))
 				.setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2);
 
-		FaultSystemSolution solution = runner.configure().runInversion();
+		FaultSystemSolution solution = runner.runInversion();
 		
 //		System.out.println("Solution MFDS...");
 //		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
