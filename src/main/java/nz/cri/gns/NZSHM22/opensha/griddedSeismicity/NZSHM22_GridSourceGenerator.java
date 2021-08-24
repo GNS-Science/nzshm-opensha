@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -19,9 +20,10 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.griddedSeismicity.AbstractGridSourceProvider;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
+import scratch.UCERF3.inversion.InversionTargetMFDs;
 
 import com.google.common.collect.Maps;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
 /**
  * This is copied from UCERF3_GridSourceGenerator and mostly only the
@@ -70,7 +72,11 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 *             sources should be generated
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
+		// FIMXE
+		throw new RuntimeException("not yet refactored");
+		/*
 		branch = ifss.getLogicTreeBranch();
+		InversionTargetMFDs mfDs = ifss.getNZRuptSet().getNZInversionTargetMFDs();
 		srcSpatialPDF = ((NZSHM22_CrustalInversionTargetMFDs) ifss.getRupSet().getInversionTargetMFDs()).getPDF();
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
@@ -80,7 +86,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		mfdNum = realOffFaultMFD.size();
 
 //		polyMgr = FaultPolyMgr.create(fss.getFaultSectionDataList(), 12d);
-		polyMgr = ifss.getRupSet().getInversionTargetMFDs().getGridSeisUtils().getPolyMgr();
+		// FIXME
+		throw new RuntimeException("not yet refactored");
+		//polyMgr = ifss.getNZRuptSet().getNZInversionTargetMFDs().getGridSeisUtils().getPolyMgr();
 
 		System.out.println("   initSectionMFDs() ...");
 		initSectionMFDs(ifss);
@@ -88,6 +96,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		initNodeMFDs(ifss);
 		System.out.println("   updateSpatialPDF() ...");
 		updateSpatialPDF();
+
+		 */
 	}
 
 	/*
@@ -95,7 +105,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 */
 	protected void initSectionMFDs(InversionFaultSystemSolution ifss) {
 
-		List<GutenbergRichterMagFreqDist> subSeisMFD_list = ifss.getFinalSubSeismoOnFaultMFD_List();
+		List<? extends IncrementalMagFreqDist> subSeisMFD_list = ifss.getFinalSubSeismoOnFaultMFD_List();
 
 		sectSubSeisMFDs = Maps.newHashMap();
 		List<? extends FaultSection> faults = ifss.getRupSet().getFaultSectionDataList();
