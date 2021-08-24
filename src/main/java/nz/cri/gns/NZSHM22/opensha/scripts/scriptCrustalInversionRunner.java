@@ -52,7 +52,7 @@ public class scriptCrustalInversionRunner {
                 .addOption("d", "maxFaultSections", true, "(for testing) set number fault ruptures to process, default 1000")
                 .addOption("k", "skipFaultSections", true, "(for testing) skip n fault ruptures, default 0")
                 .addOption("i", "inversionMins", true, "run inversions for this many minutes")
-                .addOption("y", "syncInterval", true, "seconds between inversion synchronisations")
+                .addOption("y", "selectionInterval", true, "seconds between inversion synchronisations")
                 .addOption("r", "runInversion", false, "run inversion stage (flag only)")
                 .addOption("p", "minSubSectsPerParent", true, "min number of subsections per parent fault, when building ruptures")
                 .addOption("s", "ruptureStrategy", true, "rupture permutation strategy - one of `DOWNDIP`, `UCERF3`, `POINTS`")
@@ -189,9 +189,9 @@ public class scriptCrustalInversionRunner {
             System.out.println("set inversionMins to " + cmd.getOptionValue("inversionMins"));
             inversionMins = Long.parseLong(cmd.getOptionValue("inversionMins"));
         }
-        if (cmd.hasOption("syncInterval")) {
-            System.out.println("set syncInterval to " + cmd.getOptionValue("syncInterval"));
-            syncInterval = Long.parseLong(cmd.getOptionValue("syncInterval"));
+        if (cmd.hasOption("selectionInterval")) {
+            System.out.println("set selectionInterval to " + cmd.getOptionValue("selectionInterval"));
+            syncInterval = Long.parseLong(cmd.getOptionValue("selectionInterval"));
         }
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()

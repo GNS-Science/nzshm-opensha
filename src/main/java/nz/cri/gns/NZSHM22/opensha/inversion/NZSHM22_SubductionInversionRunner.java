@@ -103,15 +103,23 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * mfd_transition_mag	9.15	
 		 */
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
-				.setInversionSeconds(10).setNumThreads(5).setRuptureSetFile(ruptureSet)
+				.setInversionSeconds(10)
+				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000.0, 10000.0)
 				.setSlipRateConstraint("BOTH", 1000.0, 10000.0)
 				) // end super-class methods
 				.setGutenbergRichterMFD(29, 1.05, 9.15);
 
-		InversionFaultSystemSolution solution = runner
-				.setInversionSeconds(30)
-				.setNumThreads(4)
+		FaultSystemSolution solution = runner
+				.setInversionSeconds(20)
+//				.setNumThreads(4)
+//				.setInversionAveraging(2, 10)
+//				.setInversionAveraging(true)
+//				.setInversionAveragingIntervalSecs(10)
+//				.setNumThreadsPerAverage(2)
+				.setSyncInterval(2)
+				.setSelectionInterval(2)
+				.setInversionAveraging(2, 1, 10)
 				.runInversion();
 		
 //		System.out.println("Solution MFDS...");
@@ -121,7 +129,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		solution.write(new File(outputDir, "NewFormatSubductionInversionSolution-RWcw.zip"));
 
-		System.out.println("done");
+		System.out.println("Done!");
 	}
 
 }

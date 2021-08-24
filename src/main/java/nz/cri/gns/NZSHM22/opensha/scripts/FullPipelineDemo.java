@@ -80,7 +80,7 @@ class FullPipelineDemo {
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
 		
 //		String dirName = new SimpleDateFormat("yyyy_MM_dd").format(new Date());
-		String dirName = "2021_08_20";
+		String dirName = "2021_08_24_";
 		
 		String newName = "Subduction test, like SW52ZXJzaW9uU29sdXRpb246NjQ3NC41NGtBSFg= ";
 //		dirName += "-SBD_0_2A_HKR_LR_30_";
@@ -108,10 +108,10 @@ class FullPipelineDemo {
 		String compName =  "UCERF3";
 		
 //		double wlFract = 1e-3;
-		double wlFract = 0d;
-		boolean wlAsStarting = false;
-//		double wlFract = 1e-2;
-//		boolean wlAsStarting = true;
+//		double wlFract = 0d;
+//		boolean wlAsStarting = false;
+		double wlFract = 1e-2;
+		boolean wlAsStarting = true;
 		
 //		GenerationFunctionType perturb = GenerationFunctionType.EXPONENTIAL_SCALE;
 		GenerationFunctionType perturb = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
@@ -119,12 +119,12 @@ class FullPipelineDemo {
 //		NonnegativityConstraintType nonNeg = NonnegativityConstraintType.TRY_ZERO_RATES_OFTEN;
 
 //		CompletionCriteria completion = TimeCompletionCriteria.getInHours(9);
-		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(10);
+		CompletionCriteria completion = TimeCompletionCriteria.getInMinutes(1);
 //		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInMinutes(1); //getInSeconds(1200); 
 //		CompletionCriteria avgSubCompletion = TimeCompletionCriteria.getInSeconds(15);
 		CompletionCriteria avgSubCompletion = null;
 //		int subCompletionSeconds = 1; //CBC added
-		int subCompletionSeconds = 30; //CBC added
+		int subCompletionSeconds = 10; //CBC added
 
 		int threadsPerAvg = 4;
 		
@@ -132,7 +132,7 @@ class FullPipelineDemo {
 		
 		boolean rebuildRupSet = false;
 		boolean rerunInversion = true;
-		boolean doRupSetReport = true;
+		boolean doRupSetReport = false;
 		
 		FaultSystemRupSet rupSet = null;
 		

@@ -29,6 +29,8 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintW
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
+import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
+import scratch.UCERF3.simulatedAnnealing.SimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
@@ -42,11 +44,20 @@ import scratch.UCERF3.utils.U3FaultSystemIO;
  * @author chrisbc
  *
  */
+/**
+ * @author chrisbc
+ *
+ */
 public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected long inversionSecs = 60;
-	protected long syncInterval = 10;
-	protected int numThreads = Runtime.getRuntime().availableProcessors();
+	protected long selectionInterval = 10;
+
+	private Integer inversionNumSolutionAverages = null;
+	private Integer inversionNumThreadsPerAvg = 1;
+	private Integer inversionAveragingIntervalSecs = null;
+	private boolean inversionAveragingEnabled = false;
+	
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
 	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
@@ -81,6 +92,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double mfdEqualityConstraintWt; // = 10;
 	protected double mfdInequalityConstraintWt;// = 1000;
 
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -93,7 +105,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Sets how many minutes the inversion runs for. Default is 60 seconds.
+	 * Sets how many seconds the inversion runs for. Default is 60 seconds.
 	 * 
 	 * @param inversionSeconds the duration of the inversion in seconds.
 	 * @return this runner.
@@ -102,7 +114,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		this.inversionSecs = inversionSeconds;
 		return this;
 	}
-
+	
 	/**
 	 * @param energyDelta        may be set to 0 to noop this method
 	 * @param energyPercentDelta
@@ -121,26 +133,87 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	/**
 	 * Sets the length of time between syncs in seconds. Default is 10 seconds.
 	 * 
-	 * @param syncInterval the interval in seconds.
+	 * @param selectionInterval the interval in seconds.
 	 * @return this runner.
 	 */
+	@Deprecated
 	public NZSHM22_AbstractInversionRunner setSyncInterval(long syncInterval) {
-		this.syncInterval = syncInterval;
+		return setSelectionInterval(syncInterval);
+	}
+	
+	/**
+	 * Sets the length of time between sub-solution selections. Default is 10 seconds.
+	 * 
+	 * @param selectionInterval the interval in seconds.
+	 * @return this runner.
+	 */	
+	public NZSHM22_AbstractInversionRunner setSelectionInterval(long interval) {
+		this.selectionInterval = interval;
 		return this;
 	}
 
 	/**
-	 * Sets how many threads the inversion will try to use. Default is all available
-	 * processors / cores.
-	 * 
-	 * @param numThreads the number of threads.
-	 * @return this runner.
+	 * @param numSolutionAverages the number of inversionNumSolutionAverages
+	 * @return
 	 */
-	public NZSHM22_AbstractInversionRunner setNumThreads(int numThreads) {
-		this.numThreads = numThreads;
+	public NZSHM22_AbstractInversionRunner setNumSolutionAverages(Integer numSolutionAverages) {
+		this.inversionNumSolutionAverages = numSolutionAverages;
 		return this;
 	}
 
+	/**
+	 * Sets the number of threads per averaging thread; 
+	 * 
+	 * NB total threads allocated  = (numSolutionAverages * numThreadsPerAvg)
+	 * 
+	 * @param numThreads the number of threads per solution averaging thread.
+	 * @return this runner.
+	 */
+	public NZSHM22_AbstractInversionRunner setNumThreadsPerAverage(Integer numThreads) {
+		this.inversionNumThreadsPerAvg = numThreads;
+		return this;
+	}
+
+	/**
+	 * Sets how long each averaging interval will be.
+	 * 
+	 * @param seconds the duration of the averaging period in seconds.
+	 * @return this runner.
+	 */
+	public NZSHM22_AbstractInversionRunner setInversionAveragingIntervalSecs(Integer seconds) {
+		this.inversionAveragingIntervalSecs = seconds;
+		return this;
+	}	
+
+	/**
+	 * Set up inversion averaging with one method call; 
+	 * 
+	 * This will also determine the total threads allocated = (numSolutionAverages * numThreadsPerAvg)
+	 * 
+	 * @param numSolutionAverages the number of inversionNumSolutionAverages
+	 * @param inversionNumThreadsPerAvg how many threads per averaging thread
+	 * @param averagingIntervalSecs 
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setInversionAveraging(Integer numSolutionAverages, Integer numThreadsPerAvg, Integer averagingIntervalSecs) {
+		this.inversionAveragingEnabled = true;
+		this.setNumSolutionAverages(numSolutionAverages);
+		this.setNumThreadsPerAverage(numThreadsPerAvg);
+		this.setInversionAveragingIntervalSecs(averagingIntervalSecs);
+		return this;
+	}
+	
+	/**
+	 * Enable/disable inversion averaging behaviour.
+	 * 
+	 * @param enabled
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setInversionAveraging(boolean enabled) {
+		this.inversionAveragingEnabled = enabled;
+		return this;
+	}	
+	
 	/**
 	 * @param inputGen
 	 * @return
@@ -240,12 +313,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws IOException
 	 * @throws DocumentException
 	 */
-	public InversionFaultSystemSolution runInversion() throws IOException, DocumentException {
+	public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
 		configure();
 
 		// weight of entropy-maximization constraint (not used in UCERF3)
-		double smoothnessWt = 0;
+//		double smoothnessWt = 0;
 
 		inversionInputGenerator.generateInputs(true);
 		// column compress it for fast annealing
@@ -265,14 +338,41 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
 
 		// this is the "sub completion criteria" - the amount of time (or iterations)
-		// between synchronization
-		CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
+		// between solution selection/synchronization
+		CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
 
 		initialState = inversionInputGenerator.getInitialSolution();
 
-		tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
-				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
-				 numThreads, subCompletionCriteria);
+		int numThreads = this.inversionNumSolutionAverages * this.inversionNumThreadsPerAvg;
+		
+		if (this.inversionAveragingEnabled) {
+			Preconditions.checkState(inversionNumThreadsPerAvg < numThreads);
+			
+			CompletionCriteria avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
+			
+			int threadsLeft = numThreads;
+			
+			// arrange lower-level (actual worker) SAs
+			List<SimulatedAnnealing> tsas = new ArrayList<>();
+			while (threadsLeft > 0) {
+				int myThreads = Integer.min(threadsLeft, inversionNumThreadsPerAvg);
+				if (myThreads > 1)
+					tsas.add(new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
+							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
+							myThreads, subCompletionCriteria));
+				else
+					tsas.add(new SerialSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
+							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq()));
+				threadsLeft -= myThreads;
+			}
+			tsa = new ThreadedSimulatedAnnealing(tsas, avgSubCompletionCriteria);
+			tsa.setAverage(true);
+		} else {
+			tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
+					inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
+					numThreads, subCompletionCriteria);
+		}			
+			
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setRandom(new Random(1));
 		tsa.setRuptureSampler(null);
@@ -300,8 +400,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 //			}
 //		}
 
-		// TODO, do we really do want to store the config and energies now?
-		InversionFaultSystemSolution solution = new InversionFaultSystemSolution(rupSet, solution_adjusted, null, finalEnergies);
+		FaultSystemSolution solution = new FaultSystemSolution(rupSet, solution_adjusted);		
 		return solution;
 	}
 
@@ -553,53 +652,3 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 	
 }
-
-/*
- * RATE weighted
- * 
-[4, solutionMFD_rateWeighted, 6.05, 0.035982715383508626]
-[4, solutionMFD_rateWeighted, 6.15, 0.029641386422769787]
-[4, solutionMFD_rateWeighted, 6.25, 0.030254034701153225]
-[4, solutionMFD_rateWeighted, 6.35, 0.0306043216243599]
-[4, solutionMFD_rateWeighted, 6.45, 0.024322684650372385]
-[4, solutionMFD_rateWeighted, 6.55, 0.022158879000868686]
-[4, solutionMFD_rateWeighted, 6.65, 0.021379133503583305]
-[4, solutionMFD_rateWeighted, 6.75, 0.018568259862133084]
-[4, solutionMFD_rateWeighted, 6.85, 0.014105723560756614]
-[4, solutionMFD_rateWeighted, 6.95, 0.011291153244683508]
-[4, solutionMFD_rateWeighted, 7.05, 0.008976383196834173]
-[4, solutionMFD_rateWeighted, 7.15, 0.005540971154343004]
-[4, solutionMFD_rateWeighted, 7.25, 0.00379557117014126]
-[4, solutionMFD_rateWeighted, 7.35, 0.0028662651520705035]
-[4, solutionMFD_rateWeighted, 7.45, 0.002246617621018292]
-[4, solutionMFD_rateWeighted, 7.55, 0.0017322019125362471]
-[4, solutionMFD_rateWeighted, 7.65, 0.0011151028046624063]
-[4, solutionMFD_rateWeighted, 7.75, 7.926473172138736E-4]
-[4, solutionMFD_rateWeighted, 7.85, 7.949262044675706E-4]
-[4, solutionMFD_rateWeighted, 7.95, 8.087707235396194E-4]
-[4, solutionMFD_rateWeighted, 8.05, 5.323763934074708E-4]
-
-[4, solutionMFD_rateWeighted, 6.05, 402.0]
-[4, solutionMFD_rateWeighted, 6.15, 352.0]
-[4, solutionMFD_rateWeighted, 6.25, 438.0]
-[4, solutionMFD_rateWeighted, 6.35, 536.0]
-[4, solutionMFD_rateWeighted, 6.45, 667.0]
-[4, solutionMFD_rateWeighted, 6.55, 839.0]
-[4, solutionMFD_rateWeighted, 6.65, 1068.0]
-[4, solutionMFD_rateWeighted, 6.75, 1345.0]
-[4, solutionMFD_rateWeighted, 6.85, 1758.0]
-[4, solutionMFD_rateWeighted, 6.95, 2352.0]
-[4, solutionMFD_rateWeighted, 7.05, 3167.0]
-[4, solutionMFD_rateWeighted, 7.15, 4347.0]
-[4, solutionMFD_rateWeighted, 7.25, 5794.0]
-[4, solutionMFD_rateWeighted, 7.35, 7122.0]
-[4, solutionMFD_rateWeighted, 7.45, 8605.0]
-[4, solutionMFD_rateWeighted, 7.55, 10163.0]
-[4, solutionMFD_rateWeighted, 7.65, 10703.0]
-[4, solutionMFD_rateWeighted, 7.75, 11386.0]
-[4, solutionMFD_rateWeighted, 7.85, 9986.0]
-[4, solutionMFD_rateWeighted, 7.95, 5470.0]
-[4, solutionMFD_rateWeighted, 8.05, 362.0]
-
-
- */
