@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -12,6 +13,7 @@ import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalarValues;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -19,16 +21,11 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import com.google.common.base.Preconditions;
 
 
-import scratch.UCERF3.SlipEnabledSolution;
 import scratch.UCERF3.U3FaultSystemRupSet;
-import scratch.UCERF3.U3FaultSystemSolution;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
-import scratch.UCERF3.inversion.CommandLineInversionRunner;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.SimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
@@ -44,17 +41,13 @@ import scratch.UCERF3.utils.U3FaultSystemIO;
  * @author chrisbc
  *
  */
-/**
- * @author chrisbc
- *
- */
 public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected long inversionSecs = 60;
 	protected long selectionInterval = 10;
 
-	private Integer inversionNumSolutionAverages = null;
-	private Integer inversionNumThreadsPerAvg = 1;
+	private Integer inversionNumSolutionAverages = 1; // 1 means no averaging
+	private Integer inversionThreadsPerSelector = 1;
 	private Integer inversionAveragingIntervalSecs = null;
 	private boolean inversionAveragingEnabled = false;
 	
@@ -66,31 +59,18 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private CompletionCriteria completionCriteria;
 	private ThreadedSimulatedAnnealing tsa;
 	private double[] initialState;
-	private NZSHM22_InversionFaultSystemSolution solution;
+	private FaultSystemSolution solution;
 
 	private Map<String, Double> finalEnergies = new HashMap<String, Double>();
 	private InversionInputGenerator inversionInputGenerator;
 
 	protected List<IncrementalMagFreqDist> solutionMfds;
-	/*
-	 * Sliprate constraint default settings
-	 */
-	// If normalized, slip rate misfit is % difference for each section (recommended
-	// since it helps fit slow-moving faults).
-	// If unnormalized, misfit is absolute difference.
-	// BOTH includes both normalized and unnormalized constraints.
-	protected SlipRateConstraintWeightingType slipRateWeightingType;// = SlipRateConstraintWeightingType.BOTH; //
-																	// (recommended:
-																	// BOTH)
-	// For SlipRateConstraintWeightingType.NORMALIZED (also used for
-	// SlipRateConstraintWeightingType.BOTH) -- NOT USED if UNNORMALIZED!
-	protected double slipRateConstraintWt_normalized;
-	// For SlipRateConstraintWeightingType.UNNORMALIZED (also used for
-	// SlipRateConstraintWeightingType.BOTH) -- NOT USED if NORMALIZED!
-	protected double slipRateConstraintWt_unnormalized;
 
-	protected double mfdEqualityConstraintWt; // = 10;
-	protected double mfdInequalityConstraintWt;// = 1000;
+	protected SlipRateConstraintWeightingType slipRateWeightingType;
+	protected double slipRateConstraintWt_normalized;
+	protected double slipRateConstraintWt_unnormalized;
+	protected double mfdEqualityConstraintWt;
+	protected double mfdInequalityConstraintWt;
 
 
 	/**
@@ -131,7 +111,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Sets the length of time between syncs in seconds. Default is 10 seconds.
+	 * Sets the length of time between inversion selections (syncs) in seconds. Default is 10 seconds.
 	 * 
 	 * @param selectionInterval the interval in seconds.
 	 * @return this runner.
@@ -140,6 +120,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public NZSHM22_AbstractInversionRunner setSyncInterval(long syncInterval) {
 		return setSelectionInterval(syncInterval);
 	}
+
+	/**
+	 * Sets the number of threads per selector; 
+	 * 
+	 * NB total threads allocated  = (numSolutionAverages * numThreadsPerAvg)
+	 * 
+	 * @param numThreads the number of threads per solution selector (which might also be an averaging thread).
+	 * @return this runner.
+	 */
+	public NZSHM22_AbstractInversionRunner setNumThreadsPerSelector(Integer numThreads) {
+		this.inversionThreadsPerSelector = numThreads;
+		return this;
+	}	
 	
 	/**
 	 * Sets the length of time between sub-solution selections. Default is 10 seconds.
@@ -162,19 +155,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Sets the number of threads per averaging thread; 
-	 * 
-	 * NB total threads allocated  = (numSolutionAverages * numThreadsPerAvg)
-	 * 
-	 * @param numThreads the number of threads per solution averaging thread.
-	 * @return this runner.
-	 */
-	public NZSHM22_AbstractInversionRunner setNumThreadsPerAverage(Integer numThreads) {
-		this.inversionNumThreadsPerAvg = numThreads;
-		return this;
-	}
-
-	/**
 	 * Sets how long each averaging interval will be.
 	 * 
 	 * @param seconds the duration of the averaging period in seconds.
@@ -190,15 +170,13 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * 
 	 * This will also determine the total threads allocated = (numSolutionAverages * numThreadsPerAvg)
 	 * 
-	 * @param numSolutionAverages the number of inversionNumSolutionAverages
-	 * @param inversionNumThreadsPerAvg how many threads per averaging thread
+	 * @param numSolutionAverages the number of parallel selectors to average over
 	 * @param averagingIntervalSecs 
 	 * @return
 	 */
-	public NZSHM22_AbstractInversionRunner setInversionAveraging(Integer numSolutionAverages, Integer numThreadsPerAvg, Integer averagingIntervalSecs) {
+	public NZSHM22_AbstractInversionRunner setInversionAveraging(Integer numSolutionAverages,  Integer averagingIntervalSecs) {
 		this.inversionAveragingEnabled = true;
 		this.setNumSolutionAverages(numSolutionAverages);
-		this.setNumThreadsPerAverage(numThreadsPerAvg);
 		this.setInversionAveragingIntervalSecs(averagingIntervalSecs);
 		return this;
 	}
@@ -343,10 +321,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		initialState = inversionInputGenerator.getInitialSolution();
 
-		int numThreads = this.inversionNumSolutionAverages * this.inversionNumThreadsPerAvg;
+		int numThreads = this.inversionNumSolutionAverages * this.inversionThreadsPerSelector;
 		
 		if (this.inversionAveragingEnabled) {
-			Preconditions.checkState(inversionNumThreadsPerAvg < numThreads);
+			Preconditions.checkState(inversionThreadsPerSelector < numThreads);
 			
 			CompletionCriteria avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
 			
@@ -355,7 +333,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			// arrange lower-level (actual worker) SAs
 			List<SimulatedAnnealing> tsas = new ArrayList<>();
 			while (threadsLeft > 0) {
-				int myThreads = Integer.min(threadsLeft, inversionNumThreadsPerAvg);
+				int myThreads = Integer.min(threadsLeft, inversionThreadsPerSelector);
 				if (myThreads > 1)
 					tsas.add(new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
@@ -400,7 +378,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 //			}
 //		}
 
-		FaultSystemSolution solution = new FaultSystemSolution(rupSet, solution_adjusted);		
+		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		return solution;
 	}
 
@@ -572,8 +550,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public HistogramFunction solutionMagFreqHistogram( boolean rateWeighted ) {
 	
+		ClusterRuptures cRups = solution.getRupSet().getModule(ClusterRuptures.class);
+		
 		HistScalarValues scalarVals = new HistScalarValues(HistScalar.MAG, 
-				solution.getRupSet(), solution, solution.getRupSet().getClusterRuptures(), null);
+				solution.getRupSet(), solution, cRups.getAll(), null);
 	
 		MinMaxAveTracker track = new MinMaxAveTracker();
 		List<Integer> includeIndexes = new ArrayList<>();
@@ -616,6 +596,31 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	
 	public ArrayList<ArrayList<String>> getTabularSolutionMfds() {
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+	
+//		// CBC: HACK ALERT 
+//		// stole this from ReportPageGen.attachDefaultModules method
+//		FaultSystemRupSet rupSet = solution.getRupSet();
+//		SectionDistanceAzimuthCalculator distAzCalc = rupSet.getModule(SectionDistanceAzimuthCalculator.class);
+////		PlausibilityConfiguration config = rupSet.getModule(PlausibilityConfiguration.class);
+//
+//		if (distAzCalc == null) {
+//			distAzCalc = new SectionDistanceAzimuthCalculator(rupSet.getFaultSectionDataList());
+//			rupSet.addModule(distAzCalc);
+//		}
+//		
+//		if (!rupSet.hasModule(RuptureConnectionSearch.class))
+//			rupSet.addModule(new RuptureConnectionSearch(rupSet, distAzCalc, 100d, false));
+//
+//		if (!rupSet.hasAvailableModule(ClusterRuptures.class)) {
+//			rupSet.addAvailableModule(new Callable<ClusterRuptures>() {
+//
+//				@Override
+//				public ClusterRuptures call() throws Exception {
+//					return ClusterRuptures.instance(rupSet, rupSet.requireModule(RuptureConnectionSearch.class));
+//				}
+//				
+//			}, ClusterRuptures.class);
+//		}		
 		
 		int series = 0;
 		for(IncrementalMagFreqDist mfd : getSolutionMfds()) {
