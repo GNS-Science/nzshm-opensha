@@ -195,7 +195,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 //		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
 		IncrementalMagFreqDist targetOnFaultMFD =  inversionMFDs.getTotalOnFaultSupraSeisMFD();
-		
+
 		if (model == InversionModels.CHAR_CONSTRAINED) {
 			nucleationMFDConstraintWt = 0.01;
 			// For water level

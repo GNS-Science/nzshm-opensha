@@ -74,15 +74,15 @@ class FullPipelineDemo {
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
 		
-		String dirName = "2021_08_23_";
-		
+		String dirName = "2021_08_24_";	
 		String newName = "Subduction test, like SW52ZXJzaW9uU29sdXRpb246NjQ3NC41NGtBSFg= ";
+
 		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
 		String minScaleStr = new DecimalFormat("0E0").format(
 				Math.pow(10, SerialSimulatedAnnealing.max_exp-SerialSimulatedAnnealing.exp_orders_of_mag)).toLowerCase();
 		
 		String scaleStr = "perturb_exp_scale_1e-2_to_"+minScaleStr;
-		dirName += "perturb(EXP_SCA)_nonNeg(RY_OFTEN)_Averaging(16,1)_water(1e-2)_expOrd(10)_U3PERTURBHACK(NA)_time(15m,15s,15s)";
+		dirName += "perturb(EXP_SCA)_nonNeg(TRY_OFTEN)_Averaging(16,1)_water(1e-2)_expOrd(10)_U3PERTURBHACK(NA)_time(15m,15s,15s)";
 		
 		System.out.println(dirName);
 		CoulombRupSetConfig rsConfig = new RuptureSets.CoulombRupSetConfig(fm, scale);
@@ -112,6 +112,7 @@ class FullPipelineDemo {
 		
 		int threads = 16;
 		int threadsPerAvg = 1;	
+
 		int numRuns = 1;
 		
 		boolean rebuildRupSet = false;
@@ -139,6 +140,7 @@ class FullPipelineDemo {
 					// CBC: from Oakleys 
 					U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(rupSetFile);
 					rupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
+
 					// CBC: we can remove this as we don't need fault grid with subduction 
 					rupSet.removeModuleInstances(FaultGridAssociations.class);
 					
@@ -156,6 +158,7 @@ class FullPipelineDemo {
 			
 			FaultSystemSolution sol;
 			if (rerunInversion || !solFile.exists()) {
+
 				// CBC: 
 				// BEGIN from NZSHM22_SubductionInversionRunner.configure
 				// U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
@@ -173,7 +176,7 @@ class FullPipelineDemo {
 					inversionConfiguration.setInitialRupModel(initial);
 					inversionConfiguration.setMinimumRuptureRateFraction(0d);				
 				}
-				
+
 				inversionConfiguration.setSlipRateWeightingType(SlipRateConstraintWeightingType.BOTH);
 				inversionConfiguration.setSlipRateConstraintWt_normalized(1000);
 				inversionConfiguration.setSlipRateConstraintWt_unnormalized(10000);
@@ -193,7 +196,7 @@ class FullPipelineDemo {
 				inputGen.columnCompress();
 				
 				ProgressTrackingCompletionCriteria progress = new ProgressTrackingCompletionCriteria(completion);
-				
+			
 				ThreadedSimulatedAnnealing tsa;
 				if (avgSubCompletion != null) {
 					Preconditions.checkState(threadsPerAvg < threads);
