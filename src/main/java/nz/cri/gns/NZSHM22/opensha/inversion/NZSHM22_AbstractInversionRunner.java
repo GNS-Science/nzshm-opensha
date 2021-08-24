@@ -208,20 +208,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRupSet(File ruptureSetFile) throws DocumentException, IOException {
-		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
-
-		return NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSetA, branch);
-	}
-
-	public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRupSet(File ruptureSetFile) throws DocumentException, IOException {
-		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
-
-		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
-	}
-
 	/**
 	 * Sets the FaultModel file
 	 *

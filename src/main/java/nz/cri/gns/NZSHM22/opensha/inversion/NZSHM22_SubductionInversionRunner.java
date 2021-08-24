@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
+import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
@@ -51,10 +52,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch)
+			throws DocumentException, IOException {
+		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
+	}
+
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
-		rupSet = loadSubductionRupSet(ruptureSetFile);
+		rupSet = loadRuptureSet(ruptureSetFile, U3LogicTreeBranch.DEFAULT);
 		return this;
 	}
 

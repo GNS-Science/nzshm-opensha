@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.text.DateFormatter;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.*;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -30,13 +31,6 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionConfiguration;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionInputGenerator;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionConfiguration;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionInputGenerator;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
@@ -138,9 +132,7 @@ class FullPipelineCrustal {
 							
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(rupSetFile);
-					rupSet =  NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSetA, branch);
-					InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_CrustalInversionTargetMFDs.class);
+					rupSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(rupSetFile, branch);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3

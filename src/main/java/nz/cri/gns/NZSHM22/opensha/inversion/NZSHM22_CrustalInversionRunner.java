@@ -19,10 +19,13 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
+import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
 import java.awt.Color;
@@ -90,9 +93,14 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		return this;
 	}
 
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch) throws DocumentException, IOException {
+		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		return NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSetA, branch);
+	}
+
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
-		this.rupSet = loadCrustalRupSet(ruptureSetFile);
+		this.rupSet = loadRuptureSet(ruptureSetFile, U3LogicTreeBranch.DEFAULT);
 		return this;
 	}
 

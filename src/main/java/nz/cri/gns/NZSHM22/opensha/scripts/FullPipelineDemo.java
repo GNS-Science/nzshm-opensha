@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.text.DateFormatter;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.*;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RuptureSets;
@@ -28,10 +29,6 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
 
 import com.google.common.base.Preconditions;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionConfiguration;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionInputGenerator;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
@@ -136,14 +133,7 @@ class FullPipelineDemo {
 						
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					// CBC: orginal rupSet = FaultSystemRupSet.load(rupSetFile);
-					// CBC: from Oakleys 
-					U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(rupSetFile);
-					rupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
-
-					// CBC: we can remove this as we don't need fault grid with subduction 
-					rupSet.removeModuleInstances(FaultGridAssociations.class);
-					
+					rupSet = NZSHM22_SubductionInversionRunner.loadRuptureSet(rupSetFile, branch);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3
