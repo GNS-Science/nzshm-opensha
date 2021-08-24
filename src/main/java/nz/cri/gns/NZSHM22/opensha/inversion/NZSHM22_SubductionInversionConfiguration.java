@@ -7,6 +7,7 @@ import org.apache.commons.cli.CommandLine;
 import org.dom4j.Element;
 import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
@@ -200,12 +201,10 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 			nucleationMFDConstraintWt = 0.01;
 			// For water level
 			minimumRuptureRateFraction = 0.0;
-
-//			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
-//					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints,
-//					rupSet, true);
-//			minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
-//					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
+			
+			// Made local copy of adjustStartingModel as it's private in UCERF3InversionConfiguration
+			minimumRuptureRateBasis = adjustStartingModel(
+					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
 
 			initialRupModel = new double[rupSet.getNumRuptures()];
 		}
@@ -252,4 +251,81 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		return newConfig;
 	}
 
+	
+	/**
+	 * CBC: cloned this from UCERF3InversionConfiguration just for testing with some water levels. It needs work to  
+	 *      decided a) if its wanted and b) how it should work!! @MCG
+	 *      
+	 * This method adjusts the starting model to ensure that for each MFD inequality constraint magnitude-bin, the starting model is below the MFD.
+	 * If adjustOnlyIfOverMFD = false, it will adjust the starting model so that it's MFD equals the MFD constraint.
+	 * It will uniformly reduce the rates of ruptures in any magnitude bins that need adjusting.
+	 */
+	private static double[] adjustStartingModel(double[] initialRupModel,
+			List<MFD_InversionConstraint> mfdInequalityConstraints, FaultSystemRupSet rupSet, boolean adjustOnlyIfOverMFD) {
+		
+		double[] rupMeanMag = rupSet.getMagForAllRups();
+		
+		
+		for (int i=0; i<mfdInequalityConstraints.size(); i++) {
+			double[] fractRupsInside = rupSet.getFractRupsInsideRegion(mfdInequalityConstraints.get(i).getRegion(), false);
+			IncrementalMagFreqDist targetMagFreqDist = mfdInequalityConstraints.get(i).getMagFreqDist();
+			IncrementalMagFreqDist startingModelMagFreqDist = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.size(), targetMagFreqDist.getDelta());
+			startingModelMagFreqDist.setTolerance(0.1);
+			
+			// Find the starting model MFD
+			for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
+				double mag = rupMeanMag[rup];
+				double fractRupInside = fractRupsInside[rup];
+				if (fractRupInside > 0) 
+					if (mag<8.5)  // b/c the mfdInequalityConstraints only go to M8.5!
+						startingModelMagFreqDist.add(mag, fractRupInside * initialRupModel[rup]);
+			}
+			
+			// Find the amount to adjust starting model MFD to be below or equal to Target MFD
+			IncrementalMagFreqDist adjustmentRatio = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.size(), targetMagFreqDist.getDelta());
+			for (double m=targetMagFreqDist.getMinX(); m<=targetMagFreqDist.getMaxX(); m+= targetMagFreqDist.getDelta()) {
+				if (adjustOnlyIfOverMFD == false)
+					adjustmentRatio.set(m, targetMagFreqDist.getClosestYtoX(m) / startingModelMagFreqDist.getClosestYtoX(m));
+				else {
+					if (startingModelMagFreqDist.getClosestYtoX(m) > targetMagFreqDist.getClosestYtoX(m))
+						adjustmentRatio.set(m, targetMagFreqDist.getClosestYtoX(m) / startingModelMagFreqDist.getClosestYtoX(m));
+					else
+						adjustmentRatio.set(m, 1.0);
+				}
+			}
+			
+			// Adjust initial model rates
+			for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
+				double mag = rupMeanMag[rup];
+				if (!Double.isNaN(adjustmentRatio.getClosestYtoX(mag)) && !Double.isInfinite(adjustmentRatio.getClosestYtoX(mag)))
+					initialRupModel[rup] = initialRupModel[rup] * adjustmentRatio.getClosestYtoX(mag);
+			}
+			
+		}
+		
+		
+/*		// OPTIONAL: Adjust rates of largest rups to equal global target MFD
+		IncrementalMagFreqDist targetMagFreqDist = UCERF3_MFD_ConstraintFetcher.getTargetMFDConstraint(TimeAndRegion.ALL_CA_1850).getMagFreqDist();
+		IncrementalMagFreqDist startingModelMagFreqDist = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.getNum(), targetMagFreqDist.getDelta());
+		startingModelMagFreqDist.setTolerance(0.1);
+		for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
+			double mag = rupMeanMag[rup];
+			if (mag<8.5)
+				startingModelMagFreqDist.add(mag, initialRupModel[rup]);
+		}	
+		IncrementalMagFreqDist adjustmentRatio = new IncrementalMagFreqDist(targetMagFreqDist.getMinX(), targetMagFreqDist.getNum(), targetMagFreqDist.getDelta());
+		for (double m=targetMagFreqDist.getMinX(); m<=targetMagFreqDist.getMaxX(); m+= targetMagFreqDist.getDelta()) {
+			if (m>8.0)	adjustmentRatio.set(m, targetMagFreqDist.getClosestY(m) / startingModelMagFreqDist.getClosestY(m));
+			else adjustmentRatio.set(m, 1.0);
+		}
+		for(int rup=0; rup<rupSet.getNumRuptures(); rup++) {
+			double mag = rupMeanMag[rup];
+			if (!Double.isNaN(adjustmentRatio.getClosestY(mag)) && !Double.isInfinite(adjustmentRatio.getClosestY(mag)))
+				initialRupModel[rup] = initialRupModel[rup] * adjustmentRatio.getClosestY(mag);
+		}	*/
+		
+		
+		return initialRupModel;
+	}
+	
 }
