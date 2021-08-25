@@ -17,8 +17,8 @@ jobs:
     - name: Clone opensha
       uses: actions/checkout@v2
       with:
-        repository: GNS-Science/opensha
-        ref: upstream/modular-fault-sys-rup-set2
+        repository: opensha/opensha
+        ref: modular-fault-sys-rup-set2
         path: opensha
     - uses: actions/checkout@v2
       with:
