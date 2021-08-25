@@ -14,6 +14,7 @@ import org.opensha.commons.geo.Location;
 import org.opensha.commons.param.Parameter;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.calc.params.MaxDistanceParam;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
 import org.opensha.sha.gui.infoTools.IMT_Info;
@@ -21,7 +22,6 @@ import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
 
-import scratch.UCERF3.FaultSystemSolution;
 import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 /**

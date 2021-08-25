@@ -64,7 +64,7 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
+public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetMFDs {
 
 	NZSHM22_SpatialSeisPDF spatialSeisPDF;
 	NZSHM22_SpatialSeisPDF spatialSeisPDFforOnFaultRates;

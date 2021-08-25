@@ -11,6 +11,7 @@ import java.util.Map;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
+import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -22,6 +23,7 @@ import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 
 import com.google.common.collect.Maps;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
 /**
  * This is copied from UCERF3_GridSourceGenerator and mostly only the
@@ -33,8 +35,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	protected final static GriddedRegion region = new NewZealandRegions.NZ_TEST_GRIDDED();
 
 	private static double[] fracStrikeSlip, fracNormal, fracReverse;
-	protected LogicTreeBranch branch;
-	protected FaultPolyMgr polyMgr;
+	protected U3LogicTreeBranch branch;
+	protected PolygonFaultGridAssociations polyMgr;
 
 	// spatial pdfs of seismicity, orginal and revised (reduced and
 	// renormalized) to avoid double counting with fault polygons
@@ -95,7 +97,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 */
 	protected void initSectionMFDs(InversionFaultSystemSolution ifss) {
 
-		List<GutenbergRichterMagFreqDist> subSeisMFD_list = ifss.getFinalSubSeismoOnFaultMFD_List();
+		List<? extends IncrementalMagFreqDist> subSeisMFD_list = ifss.getFinalSubSeismoOnFaultMFD_List();
 
 		sectSubSeisMFDs = Maps.newHashMap();
 		List<? extends FaultSection> faults = ifss.getRupSet().getFaultSectionDataList();
