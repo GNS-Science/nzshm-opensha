@@ -67,7 +67,7 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs{
+public class NZSHM22_SubductionInversionTargetMFDs extends NZSHM22_InversionTargetMFDs{
 
 	static boolean MFD_STATS = true; //print some curves for analytics
 	
@@ -191,5 +191,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	// only used for plots
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_SoCal() {throw new UnsupportedOperationException();}
+
+	@Override
+	public double[] getPDF(){
+		return spatialSeisPDF.getPDF();
+	}
 
 }

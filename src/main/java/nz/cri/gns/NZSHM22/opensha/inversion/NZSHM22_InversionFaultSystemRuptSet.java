@@ -34,7 +34,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @param rupSet
 	 * @param branch
 	 */
-	protected NZSHM22_InversionFaultSystemRuptSet (FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
+	private NZSHM22_InversionFaultSystemRuptSet (FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
 	    super(rupSet, branch);
 	}
 

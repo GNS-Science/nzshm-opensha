@@ -91,7 +91,8 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     @SuppressWarnings("unchecked")
     protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
-        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
+        // FIXME crustal is hard coded
+        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromCrustalFile(solutionFile);
 
         FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
         if (forecastTimespan != null) {

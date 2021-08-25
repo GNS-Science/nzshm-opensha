@@ -8,19 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionTargetMFDs;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import scratch.UCERF3.griddedSeismicity.AbstractGridSourceProvider;
-import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.logicTree.LogicTreeBranch;
 
 import com.google.common.collect.Maps;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
@@ -73,7 +71,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getLogicTreeBranch();
-		srcSpatialPDF = ((NZSHM22_CrustalInversionTargetMFDs) ifss.getRupSet().getInversionTargetMFDs()).getPDF();
+		srcSpatialPDF = ((NZSHM22_InversionTargetMFDs) ifss.getRupSet().getInversionTargetMFDs()).getPDF();
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
 

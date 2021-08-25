@@ -19,47 +19,72 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSolution {
 
-    private NZSHM22_InversionFaultSystemSolution(InversionFaultSystemRupSet rupSet, double[] rates,
+    private NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet, double[] rates,
                                                  UCERF3InversionConfiguration config, Map<String, Double> energies) {
-        super(new NZSHM22_InversionFaultSystemRuptSet(rupSet, rupSet.getLogicTreeBranch()), rates, config, energies);
+        super(rupSet, rates, config, energies);
+
+        removeAvailableModuleInstances(GridSourceProvider.class);
+        addAvailableModule(new Callable<NZSHM22_GridSourceGenerator>() {
+            @Override
+            public NZSHM22_GridSourceGenerator call() throws Exception {
+                return new NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution.this);
+            }
+        }, GridSourceProvider.class);
     }
 
-	/**
-	 * Can be used on the fly for when InversionConfiguration is not available/relevant/fit for use
+    /**
+     * Can be used on the fly for when InversionConfiguration is not available/relevant/fit for use
+     *
      * @param rupSet
      * @param rates
      * @param energies
      */
-    public NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet,
-			double[] rates, Map<String, Double> energies) {
-    	this(rupSet, rates, null, energies);
-	}
+    private NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet,
+                                                 double[] rates, Map<String, Double> energies) {
+        this(rupSet, rates, null, energies);
+    }
 
-	public NZSHM22_InversionFaultSystemRuptSet getNZRuptSet(){
+    public NZSHM22_InversionFaultSystemRuptSet getNZRuptSet() {
         return (NZSHM22_InversionFaultSystemRuptSet) getRupSet();
     }
-    
-	public static NZSHM22_InversionFaultSystemSolution fromSolution(InversionFaultSystemSolution solution) {
+
+    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(InversionFaultSystemSolution solution) {
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
-                solution.getRupSet(),
+                NZSHM22_InversionFaultSystemRuptSet.fromCrustal(solution.getRupSet(), solution.getLogicTreeBranch()),
                 solution.getRateForAllRups(),
                 solution.getInversionConfiguration(),
                 solution.getEnergies());
 
-        ifss.setGridSourceProvider(new NZSHM22_GridSourceGenerator(ifss));
         return ifss;
     }
 
-    public static NZSHM22_InversionFaultSystemSolution fromFile(File file) throws DocumentException, IOException {
-        // FIXME this can only load old ones
-        return fromSolution(U3FaultSystemIO.loadInvSol(file));
+    public static NZSHM22_InversionFaultSystemSolution fromSubductionSolution(InversionFaultSystemSolution solution) {
+
+        NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
+                NZSHM22_InversionFaultSystemRuptSet.fromSubduction(solution.getRupSet(), solution.getLogicTreeBranch()),
+                solution.getRateForAllRups(),
+                solution.getInversionConfiguration(),
+                solution.getEnergies());
+
+        return ifss;
+    }
+
+    public static NZSHM22_InversionFaultSystemSolution fromCrustalFile(File file) throws DocumentException, IOException {
+        // FIXME old style loading
+        return fromCrustalSolution(U3FaultSystemIO.loadInvSol(file));
+    }
+
+    public static NZSHM22_InversionFaultSystemSolution fromSubductionFile(File file) throws DocumentException, IOException {
+        // FIXME old style loading
+        return fromSubductionSolution(U3FaultSystemIO.loadInvSol(file));
     }
 
     public SummedMagFreqDist calcNucleationMFD_forParentSect(Set<Integer> parentSectionIDs, double minMag, double maxMag, int numMag) {
@@ -114,24 +139,5 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 //
 //        return mfd;
 //    }
-
-    GridSourceProvider gridSourceProvider = null;
-    
-	/**
-	 * Returns GridSourceProvider - unlike UCERf3 this does not create a provider if it's not set, 
-	 * as Subduction has no GridSource Provider
-	 * 
-	 * @return
-	 */
-	@Override
-	public GridSourceProvider getGridSourceProvider() {
-		return gridSourceProvider;
-	}
-
-	@Override
-    public void setGridSourceProvider(GridSourceProvider provider){
-	    gridSourceProvider = provider;
-    }
-
 
 }

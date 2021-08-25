@@ -474,9 +474,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 		return "NZSHM22 Crustal Inversion Target MFDs";
 	}
 
-
-//	public double[] getPDF(){
-//		return spatialSeisPDF.getPDF();
-//	}
+	@Override
+	public double[] getPDF(){
+		return spatialSeisPDF.getPDF();
+	}
 
 }
