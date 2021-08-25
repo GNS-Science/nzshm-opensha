@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
-        ref: chrisbc/make_gridSourceProvider_protected
+        ref: upstream/modular-fault-sys-rup-set2
         path: opensha
     - uses: actions/checkout@v2
       with:
