@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
 import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
+import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
@@ -315,4 +316,7 @@ public class NZSHM22_PythonGateway {
         return new MFDPlotBuilder();
     }
 
+    public static NZSHM22_ReportPageGen getReportPageGen(){
+        return new NZSHM22_ReportPageGen();
+    }
 }
