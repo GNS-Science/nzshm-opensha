@@ -311,4 +311,8 @@ public class NZSHM22_PythonGateway {
         return new NZSHM22_InversionDiagnosticsReportBuilder();
     }
 
+    public static MFDPlotBuilder getMFDPlotBuilder(){
+        return new MFDPlotBuilder();
+    }
+
 }
