@@ -2,11 +2,10 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.FilteredFaultSystemRuptureSet;
-import scratch.UCERF3.FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 
@@ -17,7 +16,7 @@ import scratch.UCERF3.inversion.InversionFaultSystemSolution;
  *
  */
 public class FilteredInversionFaultSystemSolution {
-	private FaultSystemRupSet filteredRupSet;
+	private U3FaultSystemRupSet filteredRupSet;
 		
 	public FilteredInversionFaultSystemSolution() {}
 
@@ -52,7 +51,7 @@ public class FilteredInversionFaultSystemSolution {
 				inputSol.getInversionConfiguration(), inputSol.getEnergies());
 	}
 
-	public FaultSystemRupSet getFilteredRupSet() {
+	public U3FaultSystemRupSet getFilteredRupSet() {
 		return filteredRupSet;
 	}
 		

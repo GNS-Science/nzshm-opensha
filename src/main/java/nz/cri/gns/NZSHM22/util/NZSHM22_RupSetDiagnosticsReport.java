@@ -14,17 +14,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.ClassUtils;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.*;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import com.google.common.base.Preconditions;
-
-import nz.cri.gns.NZSHM22.opensha.inversion.FilteredInversionFaultSystemSolution;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FilteredFaultSystemRuptureSet;
-import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.FaultSystemSolution;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.U3FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemSolution;
+import scratch.UCERF3.utils.U3FaultSystemIO;
+
 
 class FileMeta {
 	protected String filename;
@@ -62,8 +61,8 @@ class FaultMeta {
 
 public class NZSHM22_RupSetDiagnosticsReport {
 	
-	private static FaultSystemRupSet inputRupSet, filtRupSet;
-	private static FaultSystemSolution inputSol, filtSol;
+	private static U3FaultSystemRupSet inputRupSet, filtRupSet;
+	private static U3FaultSystemSolution inputSol, filtSol;
 	private static String inputName;
 	private static File outputDir;
 	private static File inputDir;
@@ -135,7 +134,7 @@ public class NZSHM22_RupSetDiagnosticsReport {
 			outputDir = new File(outputRoot, metadata.folderName());
 			Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 			
-			inputRupSet = FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
+			inputRupSet = U3FaultSystemIO.loadRupSet(new File(inputDir, metadata.filename));
 			inputSol = null;
 			inputName = "May 19th, 2021 #2 TMG_CRU_2017 " + metadata.folderName();
 		

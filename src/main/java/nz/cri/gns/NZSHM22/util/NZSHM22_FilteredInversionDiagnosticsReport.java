@@ -20,15 +20,15 @@ import org.opensha.sha.faultSurface.FaultSection;
 import com.google.common.base.Preconditions;
 
 import nz.cri.gns.NZSHM22.opensha.inversion.FilteredInversionFaultSystemSolution;
-import scratch.UCERF3.FaultSystemRupSet;
-import scratch.UCERF3.FaultSystemSolution;
+import scratch.UCERF3.U3FaultSystemRupSet;
+import scratch.UCERF3.U3FaultSystemSolution;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.utils.FaultSystemIO;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_FilteredInversionDiagnosticsReport {
 
-    private static FaultSystemRupSet inputRupSet, filtRupSet;
-	private static FaultSystemSolution inputSol, filtSol;
+    private static U3FaultSystemRupSet inputRupSet, filtRupSet;
+	private static U3FaultSystemSolution inputSol, filtSol;
     private static String inputName;
     private static File outputDir;
     private static String filterExpression;
@@ -96,7 +96,7 @@ public class NZSHM22_FilteredInversionDiagnosticsReport {
             throw new IllegalArgumentException("faultModel is required for namedFault argument");
         }
 
-		inputSol = FaultSystemIO.loadSol(new File(cmd.getOptionValue("rupture-set")));
+		inputSol = U3FaultSystemIO.loadSol(new File(cmd.getOptionValue("rupture-set")));
         inputRupSet = inputSol.getRupSet();
         inputName = cmd.getOptionValue("name");
         outputDir = new File(cmd.getOptionValue("output-dir"));

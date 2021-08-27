@@ -28,7 +28,7 @@ public class FilteredFaultSystemRuptureSet {
 	 * @param selectedSubSects
 	 * @return
 	 */
-	public FaultSystemRupSet create(U3FaultSystemRupSet rupSet, List<FaultSection> selectedSubSects) {
+	public U3FaultSystemRupSet create(U3FaultSystemRupSet rupSet, List<FaultSection> selectedSubSects) {
 		
 		List<List<Integer>>	filterSectionIndicesForAllRups = new ArrayList<List<Integer>>();//rupSet.getSectionIndicesForAllRups()
 		

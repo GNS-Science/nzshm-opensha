@@ -9,10 +9,7 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
 import scratch.UCERF3.griddedSeismicity.UCERF3_GridSourceGenerator;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
-import scratch.UCERF3.inversion.InversionTargetMFDs;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
+import scratch.UCERF3.inversion.*;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 
 import java.awt.geom.Point2D;
@@ -124,20 +121,20 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         return mfd;
     }
 
-//    public SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(Set<Integer> parentSectionIDs) {
-//
-//        SummedMagFreqDist mfd = new SummedMagFreqDist(InversionTargetMFDs.MIN_MAG, InversionTargetMFDs.NUM_MAG, InversionTargetMFDs.DELTA_MAG);
-//        InversionFaultSystemRupSet rupSet = getRupSet();
-//
-//        List<GutenbergRichterMagFreqDist> subSeismoMFDs = getFinalSubSeismoOnFaultMFD_List();
-//
-//        for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
-//            if (parentSectionIDs.contains(rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
-//                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(sectIndex));
-//            }
-//        }
-//
-//        return mfd;
-//    }
+    public SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(Set<Integer> parentSectionIDs) {
+
+        SummedMagFreqDist mfd = new SummedMagFreqDist(U3InversionTargetMFDs.MIN_MAG, U3InversionTargetMFDs.NUM_MAG, U3InversionTargetMFDs.DELTA_MAG);
+        InversionFaultSystemRupSet rupSet = getRupSet();
+
+        List<? extends IncrementalMagFreqDist> subSeismoMFDs = getFinalSubSeismoOnFaultMFD_List();
+
+        for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
+            if (parentSectionIDs.contains(rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
+                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(sectIndex));
+            }
+        }
+
+        return mfd;
+    }
 
 }

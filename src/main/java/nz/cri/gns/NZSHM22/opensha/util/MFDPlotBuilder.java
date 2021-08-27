@@ -6,7 +6,6 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.utils.FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,8 +20,13 @@ public class MFDPlotBuilder {
     public MFDPlotBuilder() {
     }
 
-    public MFDPlotBuilder setSolution(String fileName) throws DocumentException, IOException {
-        solution = NZSHM22_InversionFaultSystemSolution.fromFile(new File(fileName));
+    public MFDPlotBuilder setCrustalSolution(String fileName) throws DocumentException, IOException {
+        solution = NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(fileName));
+        return this;
+    }
+
+    public MFDPlotBuilder setSubductionSolution(String fileName) throws DocumentException, IOException {
+        solution = NZSHM22_InversionFaultSystemSolution.fromSubductionFile(new File(fileName));
         return this;
     }
 
@@ -69,7 +73,7 @@ public class MFDPlotBuilder {
         new MFDPlotBuilder()
                 .setOutputDir("/tmp/mfd")
                 .setFaultModel("CFM_0_3_SANSTVZ") // optional, set if you only want to plot named faults
-                .setSolution(solution)
+                .setCrustalSolution(solution)
                 .plot();
         
         System.out.println("Done!");
