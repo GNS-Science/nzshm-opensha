@@ -138,6 +138,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		return this;
 	}
 
+	@Override
+	public FaultSystemSolution runInversion() throws IOException, DocumentException {
+		FaultSystemSolution solution = super.runInversion();
+		solution.addModule(rupSet.getInversionTargetMFDs().getOnFaultSubSeisMFDs());
+		return solution;
+	}
+
 	public static void main(String[] args) throws IOException, DocumentException {
 
 		File inputDir = new File("./TEST");

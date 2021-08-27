@@ -113,7 +113,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	/**
 	 * Sets the length of time between inversion selections (syncs) in seconds. Default is 10 seconds.
 	 * 
-	 * @param selectionInterval the interval in seconds.
+	 * @param syncInterval the interval in seconds.
 	 * @return this runner.
 	 */
 	@Deprecated
@@ -137,7 +137,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	/**
 	 * Sets the length of time between sub-solution selections. Default is 10 seconds.
 	 * 
-	 * @param selectionInterval the interval in seconds.
+	 * @param interval the interval in seconds.
 	 * @return this runner.
 	 */	
 	public NZSHM22_AbstractInversionRunner setSelectionInterval(long interval) {
@@ -273,8 +273,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Runs the inversion on the specified rupture set. make sure to call
-	 * .configure() first.
+	 * Runs the inversion on the specified rupture set.
 	 * 
 	 * @return the FaultSystemSolution.
 	 * @throws IOException
