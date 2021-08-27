@@ -12,8 +12,8 @@ public class NZSHM22_ReportPageGen {
 
     String name;
     String solutionPath;
-    String outputPath;
-    ReportPageGen.PlotLevel plotLevel;
+    String outputPath = "./TEST/reportPage";
+    ReportPageGen.PlotLevel plotLevel = ReportPageGen.PlotLevel.LIGHT;
 
     public NZSHM22_ReportPageGen() {
     }
@@ -42,7 +42,7 @@ public class NZSHM22_ReportPageGen {
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
         ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath),
-                ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.LIGHT));
+                ReportPageGen.getDefaultSolutionPlots(plotLevel));
         solReport.generatePage();
     }
 }
