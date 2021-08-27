@@ -13,6 +13,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
+import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
@@ -306,10 +307,8 @@ public class NZSHM22_PythonGateway {
         }
     }
 
-    // TODO: restore this with the required upstream changes in opensha-ucerf3
-//    public static NZSHM22_InversionDiagnosticsReportBuilder createReportBuilder() {
-//        return new NZSHM22_InversionDiagnosticsReportBuilder();
-//    }
-
+    public static NZSHM22_InversionDiagnosticsReportBuilder createReportBuilder() {
+        return new NZSHM22_InversionDiagnosticsReportBuilder();
+    }
 
 }
