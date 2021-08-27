@@ -307,7 +307,7 @@ public class NZSHM22_PythonGateway {
         }
     }
 
-    public static NZSHM22_InversionDiagnosticsReportBuilder createReportBuilder() {
+    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
         return new NZSHM22_InversionDiagnosticsReportBuilder();
     }
 
