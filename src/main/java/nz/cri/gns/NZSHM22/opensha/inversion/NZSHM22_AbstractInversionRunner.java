@@ -34,6 +34,7 @@ import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriter
 import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
+import scratch.UCERF3.simulatedAnnealing.params.NonnegativityConstraintType;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
@@ -49,6 +50,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private Integer inversionThreadsPerSelector = 1;
 	private Integer inversionAveragingIntervalSecs = null;
 	private boolean inversionAveragingEnabled = false;
+	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
+	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
 	
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
@@ -193,6 +196,44 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}	
 	
 	/**
+	 * @param perturbationFunction
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setPerturbationFunction(String perturbationFunction) {
+		return setPerturbationFunction(GenerationFunctionType.valueOf(perturbationFunction));
+	}
+	
+	/**
+	 * configure the perturbation function
+	 * 
+	 * @param perturbationFunction
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setPerturbationFunction(GenerationFunctionType perturbationFunction) {
+		this.perturbationFunction = perturbationFunction;
+		return this;
+	}
+
+	/**
+	 * configure how Inversion treats values when they perturb < 0
+	 * 
+	 * @param nonNegAlgorithm
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setNonnegativityConstraintType(String nonNegAlgorithm) {
+		return this.setNonnegativityConstraintType(NonnegativityConstraintType.valueOf(nonNegAlgorithm));
+	}
+	
+	/**
+	 * @param nonNegAlgorithm
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setNonnegativityConstraintType(NonnegativityConstraintType nonNegAlgorithm) {
+		this.nonNegAlgorithm = nonNegAlgorithm;
+		return this;
+	}
+
+	/**
 	 * @param inputGen
 	 * @return
 	 */
@@ -312,7 +353,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		int numThreads = this.inversionNumSolutionAverages * this.inversionThreadsPerSelector;
 		
 		if (this.inversionAveragingEnabled) {
-			Preconditions.checkState(inversionThreadsPerSelector < numThreads);
+			Preconditions.checkState(inversionThreadsPerSelector <= numThreads);
 			
 			CompletionCriteria avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
 			
@@ -342,7 +383,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setRandom(new Random(1));
 		tsa.setRuptureSampler(null);
-		tsa.setPerturbationFunc(GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE);
+//		tsa.setPerturbationFunc(GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE);
+
+		tsa.setPerturbationFunc(perturbationFunction);
+//		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);		
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
