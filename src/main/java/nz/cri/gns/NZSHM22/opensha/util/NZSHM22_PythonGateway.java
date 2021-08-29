@@ -87,6 +87,29 @@ public class NZSHM22_PythonGateway {
         return gridHazCalc;
     }
 
+    // move these up and add comments
+
+    @Deprecated
+    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
+        return new NZSHM22_InversionDiagnosticsReportBuilder();
+    }
+
+    /**
+     * Returns a new MFDPlotBuilder to create MFD plots
+     * @return
+     */
+    public static MFDPlotBuilder getMFDPlotBuilder(){
+        return new MFDPlotBuilder();
+    }
+
+    /**
+     * Returns a wrapper around the new (modular) ReportPageGen
+     * @return
+     */
+    public static NZSHM22_ReportPageGen getReportPageGen(){
+        return new NZSHM22_ReportPageGen();
+    }
+
     public static void main(String[] args) {
         NZSHM22_PythonGateway app = new NZSHM22_PythonGateway();
 
@@ -306,17 +329,5 @@ public class NZSHM22_PythonGateway {
             solution.write(solutionFile);
 
         }
-    }
-
-    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
-        return new NZSHM22_InversionDiagnosticsReportBuilder();
-    }
-
-    public static MFDPlotBuilder getMFDPlotBuilder(){
-        return new MFDPlotBuilder();
-    }
-
-    public static NZSHM22_ReportPageGen getReportPageGen(){
-        return new NZSHM22_ReportPageGen();
     }
 }
