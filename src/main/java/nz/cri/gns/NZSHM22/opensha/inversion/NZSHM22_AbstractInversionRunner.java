@@ -383,10 +383,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setRandom(new Random(1));
 		tsa.setRuptureSampler(null);
-//		tsa.setPerturbationFunc(GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE);
-
 		tsa.setPerturbationFunc(perturbationFunction);
-//		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);		
+		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);		
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
