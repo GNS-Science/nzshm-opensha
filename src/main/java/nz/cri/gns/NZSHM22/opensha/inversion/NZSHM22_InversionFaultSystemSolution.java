@@ -2,6 +2,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.magdist.ArbIncrementalMagFreqDist;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -10,6 +12,7 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
 import scratch.UCERF3.griddedSeismicity.UCERF3_GridSourceGenerator;
 import scratch.UCERF3.inversion.*;
+import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 
 import java.awt.geom.Point2D;
@@ -48,40 +51,42 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         this(rupSet, rates, null, energies);
     }
 
-    public NZSHM22_InversionFaultSystemRuptSet getNZRuptSet() {
-        return (NZSHM22_InversionFaultSystemRuptSet) getRupSet();
-    }
+    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
 
-    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(InversionFaultSystemSolution solution) {
+        FaultSystemRupSet rupSet = solution.getRupSet();
+        U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
-                NZSHM22_InversionFaultSystemRuptSet.fromCrustal(solution.getRupSet(), solution.getLogicTreeBranch()),
+                nzRupSet,
                 solution.getRateForAllRups(),
-                solution.getInversionConfiguration(),
-                solution.getEnergies());
+                null,
+                null);
 
         return ifss;
     }
 
-    public static NZSHM22_InversionFaultSystemSolution fromSubductionSolution(InversionFaultSystemSolution solution) {
+    public static NZSHM22_InversionFaultSystemSolution fromSubductionSolution(FaultSystemSolution solution) {
+
+        FaultSystemRupSet rupSet = solution.getRupSet();
+        U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
-                NZSHM22_InversionFaultSystemRuptSet.fromSubduction(solution.getRupSet(), solution.getLogicTreeBranch()),
+                nzRupSet,
                 solution.getRateForAllRups(),
-                solution.getInversionConfiguration(),
-                solution.getEnergies());
+                null,
+                null);
 
         return ifss;
     }
 
     public static NZSHM22_InversionFaultSystemSolution fromCrustalFile(File file) throws DocumentException, IOException {
-        // FIXME old style loading
-        return fromCrustalSolution(U3FaultSystemIO.loadInvSol(file));
+        return fromCrustalSolution(FaultSystemSolution.load(file));
     }
 
     public static NZSHM22_InversionFaultSystemSolution fromSubductionFile(File file) throws DocumentException, IOException {
-        // FIXME old style loading
-        return fromSubductionSolution(U3FaultSystemIO.loadInvSol(file));
+        return fromSubductionSolution(FaultSystemSolution.load(file));
     }
 
     public SummedMagFreqDist calcNucleationMFD_forParentSect(Set<Integer> parentSectionIDs, double minMag, double maxMag, int numMag) {
