@@ -1,10 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 
-import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
+import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
@@ -23,9 +25,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	private static final long serialVersionUID = 1091962054533163866L;
 
-	// overwrite isRupBelowMinMagsForSects from InversionFaultSystemRupSet
-	private boolean[] isRupBelowMinMagsForSects;
-	private double[] minMagForSectArray;
 	protected static double minMagForSeismogenicRups = 6.0;
 
 	/**
@@ -36,6 +35,13 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 */
 	private NZSHM22_InversionFaultSystemRuptSet (FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
 	    super(rupSet, branch);
+	    removeModuleInstances(PolygonFaultGridAssociations.class);
+		offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
+			@Override
+			public PolygonFaultGridAssociations call() throws Exception {
+				return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_TEST_GRIDDED());
+			}
+		}, PolygonFaultGridAssociations.class);
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
