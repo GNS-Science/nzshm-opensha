@@ -1,5 +1,7 @@
-Akatore	4
-Alpine	17	18	19
+﻿Akatore	4
+Alpine: George to Jacksons	17
+Alpine: Jacksons to Kaniere	18
+Alpine: Kaniere to Springs Junction	19
 Awatere	39
 Awanui	35
 Cape Egmont	70	69	71
@@ -25,6 +27,7 @@ Waihi	630	629
 Wairarapa	650	651	652
 Wairau	655
 Wairoa North	658
-Wellington	673	674	675	676	677	678
+Wellington: Wellington-Hutt Valley	673	674	675	676	677
+Wellington: Pahiatua	678
 Whangamoa	690
 White Creek	697

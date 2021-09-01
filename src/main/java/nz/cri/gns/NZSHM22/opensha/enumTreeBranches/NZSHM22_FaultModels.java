@@ -73,7 +73,7 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
 		this.weight = 1.0;
 	}
 
-	protected InputStream getStream(String fileName) {
+	public InputStream getStream(String fileName) {
 		return getClass().getResourceAsStream(resourcePath + fileName);
 	}
 
@@ -157,43 +157,7 @@ public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultMode
 		return getName();
 	}
 
-	/**
-	 * Generate named faults file from a faultmodel
-	 * 
-	 * @param args
-	 * @throws DocumentException
-	 * @throws IOException
-	 */
-	public static void main(String[] args) throws DocumentException, IOException {
-
-		NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010;
-
-		FaultSectionList sections = new FaultSectionList();
-		faultModel.fetchFaultSections(sections);
-		Map<String, Integer> ids = new HashMap<>();
-		for (FaultSection section : sections) {
-			String name = section.getSectionName().toLowerCase();
-			name = name.replaceAll("[\\W_]", "");
-			ids.put(name, section.getSectionId());
-		}
-
-		try (PrintWriter out = new PrintWriter(
-				new FileWriter(new File(faultModel.fileName + ".FaultsByNameAlt.txt")))) {
-			CSVFile<String> csv = CSVFile.readStream(faultModel.getStream("namedFaultDefinitionsByRuss.csv"), false);
-			for (List<String> row : csv) {
-				if (row.get(0) != null && row.get(0).length() > 0) {
-					out.print("\n");
-					out.print(row.get(0));
-				}
-				out.print("\t");
-				String name = row.get(1).toLowerCase().replaceAll("[\\W_]", "");
-				if (!ids.containsKey(name)) {
-					System.out.println("Fault \"" + row.get(1) + "\" cannot be found in model");
-				} else {
-					out.print(ids.get(name));
-				}
-			}
-
-		}
+	public String getFileName(){
+		return fileName;
 	}
 }
