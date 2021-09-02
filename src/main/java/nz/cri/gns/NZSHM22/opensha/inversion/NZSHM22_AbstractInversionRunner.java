@@ -342,7 +342,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
 		// 0.1d);
 		// ....
-		completionCriteria = new ProgressTrackingCompletionCriteria(completionCriteria);
+		ProgressTrackingCompletionCriteria progress = new ProgressTrackingCompletionCriteria(completionCriteria);
 
 		// this is the "sub completion criteria" - the amount of time (or iterations)
 		// between solution selection/synchronization
@@ -378,18 +378,18 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 					inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(), 
 					numThreads, subCompletionCriteria);
-		}			
-			
+		}
+		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
-		tsa.setRandom(new Random(1));
-		tsa.setRuptureSampler(null);
+		tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
+//		tsa.setRuptureSampler(null);
 		tsa.setPerturbationFunc(perturbationFunction);
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);		
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
 
-		tsa.iterate(completionCriteria);
+		tsa.iterate(progress);
 
 		tsa.shutdown();
 
@@ -409,6 +409,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 //		}
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
+		solution.addModule(progress.getProgress());
 		return solution;
 	}
 

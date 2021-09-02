@@ -70,7 +70,7 @@ public class NewZealandRegions {
 	public static final class NZ_RECTANGLE_SANS_TVZ_GRIDDED extends GriddedRegion {
 		public NZ_RECTANGLE_SANS_TVZ_GRIDDED() {
 			super((Region) new NZ_RECTANGLE_SANS_TVZ(), 0.1, ANCHOR_0_0);
-			this.setName("NZ RECTANEL SANS TVZ Gridded Region");
+			this.setName("NZ RECTANGLE SANS TVZ Gridded Region");
 		}
 	}
 
