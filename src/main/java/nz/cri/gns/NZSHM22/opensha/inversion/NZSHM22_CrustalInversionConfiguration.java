@@ -244,7 +244,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		// get MFD constraints
 		List<MFD_InversionConstraint> mfdConstraints = ((NZSHM22_CrustalInversionTargetMFDs) rupSet.getInversionTargetMFDs())
-				.getMFDConstraints();
+				.getMFD_Constraints();
 
 		double MFDTransitionMag = 7.85; // magnitude to switch from MFD equality to MFD inequality
 

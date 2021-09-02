@@ -122,8 +122,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 	public List<IncrementalMagFreqDist> getMFDConstraintComponents() {
     	return mfdConstraintComponents;
     }
-	
-    public List<MFD_InversionConstraint> getMFDConstraints() {
+
+	@Override
+    public List<MFD_InversionConstraint> getMFD_Constraints() {
     	return mfdConstraints;
     }
     
