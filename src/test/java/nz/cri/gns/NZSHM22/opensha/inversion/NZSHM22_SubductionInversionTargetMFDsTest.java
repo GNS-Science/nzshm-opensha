@@ -39,7 +39,7 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
         NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
         NZSHM22_SubductionInversionTargetMFDs mfds = new NZSHM22_SubductionInversionTargetMFDs(ruptSet);
 
-        List<MFD_InversionConstraint> actual = mfds.getMFD_Constraints();
+        List<MFD_InversionConstraint> actual = (List<MFD_InversionConstraint>) mfds.getMFD_Constraints();
 
         assertEquals(1, actual.size());
         MFD_InversionConstraint actualConstraint = actual.get(0);

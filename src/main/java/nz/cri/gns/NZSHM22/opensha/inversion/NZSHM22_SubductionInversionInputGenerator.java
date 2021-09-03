@@ -16,6 +16,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Inversi
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDSubSectNuclInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDUncertaintyWeightedInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDLaplacianSmoothingInversionConstraint;
 //import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDParticipationSmoothnessInversionConstraint;
@@ -147,17 +148,26 @@ public class NZSHM22_SubductionInversionInputGenerator extends InversionInputGen
 		// encoded into the A_ineq matrix instead since they are nonlinear
 		if (config.getMagnitudeEqualityConstraintWt() > 0.0) {
 			HashSet<Integer> excludeRupIndexes = null;
-			constraints.add(new MFDEqualityInversionConstraint(rupSet, config.getMagnitudeEqualityConstraintWt(),
+			constraints.add(new MFDEqualityInversionConstraint(rupSet,
+					config.getMagnitudeEqualityConstraintWt(),
 					config.getMfdEqualityConstraints(), excludeRupIndexes));
 		}
 
 		// Prepare MFD Inequality Constraint (not added to A matrix directly since it's
 		// nonlinear)
 		if (config.getMagnitudeInequalityConstraintWt() > 0.0)
-			constraints.add(new MFDInequalityInversionConstraint(rupSet, config.getMagnitudeInequalityConstraintWt(),
+			// constraints.add(new MFDUncertaintyWeightedInversionConstraint(rupSet, 1000, mfdConstraints, null)
+			constraints.add(new MFDInequalityInversionConstraint(rupSet,
+					config.getMagnitudeInequalityConstraintWt(),
 					config.getMfdInequalityConstraints()));
 
-//		// MFD Subsection nucleation MFD constraint
+		// Prepare MFD Uncertainty Weighted Constraint 
+		if (config.getMagnitudeUncertaintyWeightedConstraintWt() > 0.0)
+			constraints.add(new MFDUncertaintyWeightedInversionConstraint(rupSet, 
+					config.getMagnitudeUncertaintyWeightedConstraintWt(),
+					config.getMfdUncertaintyWeightedConstraints()));
+
+		//		// MFD Subsection nucleation MFD constraint
 //		ArrayList<SectionMFD_constraint> MFDConstraints = null;
 //		if (config.getNucleationMFDConstraintWt() > 0.0) {
 //			MFDConstraints = NZSHM22_FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);

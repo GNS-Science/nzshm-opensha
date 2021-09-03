@@ -72,6 +72,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double slipRateConstraintWt_unnormalized;
 	protected double mfdEqualityConstraintWt;
 	protected double mfdInequalityConstraintWt;
+	protected double mfdUncertaintyWeightedConstraintWt;
+	protected double mfdUncertaintyWeightedConstraintPower; //typically 0.5
 
 	protected abstract NZSHM22_AbstractInversionRunner configure();
 
@@ -275,6 +277,13 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public NZSHM22_AbstractInversionRunner setUncertaintyWeightedMFDWeights(double mfdUncertaintyWeightedConstraintWt,
+			double mfdUncertaintyWeightedConstraintPower) {
+		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
+		this.mfdUncertaintyWeightedConstraintPower = mfdUncertaintyWeightedConstraintPower;
+		return this;
+	}	
+	
 	/**
 	 * UCERF3-style Slip rate constraint
 	 * 

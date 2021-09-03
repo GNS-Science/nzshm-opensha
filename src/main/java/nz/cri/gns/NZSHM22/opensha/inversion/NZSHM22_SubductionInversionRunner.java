@@ -60,16 +60,19 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		rupSet = loadRuptureSet(ruptureSetFile, U3LogicTreeBranch.DEFAULT);
 		return this;
 	}
-
+	
 	@Override
 	protected NZSHM22_SubductionInversionRunner configure() {
 		U3LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
-				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,
+				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 
+						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, 
+						totalRateM5,
 						bValue, mfdTransitionMag);
-
+		
+		// CBC This may not be needed long term 
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
 
 		if (this.slipRateWeightingType != null) {
@@ -107,16 +110,17 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 */
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
 				.setRuptureSetFile(ruptureSet)
-				.setGutenbergRichterMFDWeights(1000.0, 10000.0)
-				.setSlipRateConstraint("BOTH", 1000.0, 10000.0)
+				.setGutenbergRichterMFDWeights(1000, 1000.0)
+				.setUncertaintyWeightedMFDWeights(1000, 0.1)
+				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
-				.setGutenbergRichterMFD(29, 1.05, 9.15);
+				.setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
 
 		FaultSystemSolution solution = runner
 				.setInversionSeconds(20)
-				.setNumThreadsPerSelector(2)
+				.setNumThreadsPerSelector(1)
 				.setSelectionInterval(2)
-				.setInversionAveraging(2, 10)
+//				.setInversionAveraging(2, 10)
 				.runInversion();
 
 		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {

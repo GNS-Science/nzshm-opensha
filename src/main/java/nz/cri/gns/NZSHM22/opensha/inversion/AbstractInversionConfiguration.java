@@ -11,12 +11,14 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
+import scratch.UCERF3.utils.MFD_WeightedInversionConstraint;
 
 public class AbstractInversionConfiguration implements XMLSaveable  {
 
 	private InversionTargetMFDs inversionTargetMfds;
 	private double magnitudeEqualityConstraintWt;
 	private double magnitudeInequalityConstraintWt;
+	private double mfdUncertaintyWeightedConstraintWt;
 
 	private double slipRateConstraintWt_normalized;
 	private double slipRateConstraintWt_unnormalized;
@@ -27,7 +29,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	//New NZSHM scaling 
 	private int slipRateUncertaintyConstraintWt;
 	private int slipRateUncertaintyConstraintScalingFactor;
-
 //	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
 
@@ -50,6 +51,7 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	private double MFDTransitionMag;
 	private List<MFD_InversionConstraint> mfdEqualityConstraints;
 	private List<MFD_InversionConstraint> mfdInequalityConstraints;
+	private List<MFD_WeightedInversionConstraint> mfdUncertaintyWeightedConstraints;
 	private double minimumRuptureRateFraction;	
 	
 	
@@ -85,6 +87,15 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		return this;
 	}	
 	
+	public double getMagnitudeUncertaintyWeightedConstraintWt() {
+		return mfdUncertaintyWeightedConstraintWt;
+	}
+
+	public AbstractInversionConfiguration setMagnitudeUncertaintyWeightedConstraintWt(double mfdUncertaintyWeightedConstraintWt) {
+		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
+		return this;
+	}
+
 	public double getSlipRateConstraintWt_normalized() {
 		return slipRateConstraintWt_normalized;
 	}
@@ -182,6 +193,15 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	public AbstractInversionConfiguration setMfdInequalityConstraints(
 			List<MFD_InversionConstraint> mfdInequalityConstraints) {
 		this.mfdInequalityConstraints = mfdInequalityConstraints;
+		return this;
+	}
+
+	public List<MFD_WeightedInversionConstraint> getMfdUncertaintyWeightedConstraints() {
+		return mfdUncertaintyWeightedConstraints;
+	}
+
+	public AbstractInversionConfiguration setMfdUncertaintyWeightedConstraints(List<MFD_WeightedInversionConstraint> mfdUncertaintyWeightedConstraints) {
+		this.mfdUncertaintyWeightedConstraints = mfdUncertaintyWeightedConstraints;
 		return this;
 	}
 

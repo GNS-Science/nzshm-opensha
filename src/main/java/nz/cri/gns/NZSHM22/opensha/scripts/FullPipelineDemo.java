@@ -155,7 +155,7 @@ class FullPipelineDemo {
 				InversionModels inversionModel = branch.getValue(InversionModels.class);
 
 				NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
-						.forModel(inversionModel, (NZSHM22_InversionFaultSystemRuptSet) rupSet, 1000, 10000, 29, 1.05, 9.15);
+						.forModel(inversionModel, (NZSHM22_InversionFaultSystemRuptSet) rupSet, 1000, 10000, 29, 1.05, 9.15, 1000, 0.0);
 
 				// CBC: Water level test
 				if (wlAsStarting && wlFract > 0) {

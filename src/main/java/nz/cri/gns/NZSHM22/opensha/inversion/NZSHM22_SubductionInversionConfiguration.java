@@ -18,6 +18,7 @@ import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
+import scratch.UCERF3.utils.MFD_WeightedInversionConstraint;
 
 /**
  * This represents all of the inversion configuration parameters specific to an
@@ -100,7 +101,8 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double totalRateM5 = 5; 
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
-		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5,bValue, mfdTransitionMag);
+		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0,
+				totalRateM5,bValue, mfdTransitionMag);
 	}
 	
 	
@@ -123,6 +125,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 	 */
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
+			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
 			double totalRateM5, double bValue, double mfdTransitionMag) {
 
 		double MFDTransitionMag = mfdTransitionMag; // magnitude to switch from MFD equality to MFD inequality
@@ -173,9 +176,9 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 //		double momentConstraintWt = 0;
 
 		// setup MFD constraints
-		NZSHM22_SubductionInversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag);
+		NZSHM22_SubductionInversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag,
+				mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
-		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFD_Constraints();
 
 //		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
 
@@ -194,6 +197,11 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 
+		@SuppressWarnings("unchecked")
+		List<MFD_InversionConstraint> mfdConstraints = new ArrayList<MFD_InversionConstraint>();
+		mfdConstraints.addAll(inversionMFDs.getMfdEqIneqConstraints());
+		mfdConstraints.addAll(inversionMFDs.getMfdUncertaintyConstraints());
+
 //		SummedMagFreqDist targetOnFaultMFD = rupSet.getInversionTargetMFDs().getOnFaultSupraSeisMFD();
 		IncrementalMagFreqDist targetOnFaultMFD =  inversionMFDs.getTotalOnFaultSupraSeisMFD();
 
@@ -211,33 +219,10 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 		/* end MODIFIERS */
 
-		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
-		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
-
-		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
-			// we have both MFD constraints, apply a transition mag from equality to
-			// inequality
-			metadata += "\nMFDTransitionMag: " + MFDTransitionMag;
-			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints,
-					mfdConstraints.get(0).getMagFreqDist().getMinX(), MFDTransitionMag);
-			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
-					mfdConstraints.get(0).getMagFreqDist().getMaxX());
-		} else if (mfdEqualityConstraintWt > 0.0) { // no ineq wt
-			mfdEqualityConstraints = mfdConstraints;
-		} else if (mfdInequalityConstraintWt > 0.0) { // no eq wt
-			mfdInequalityConstraints = mfdConstraints;
-		} else {
-			// no MFD constraints, do nothing
-		}
-
 		// NSHM-style config using setter methods...
 		NZSHM22_SubductionInversionConfiguration newConfig = (NZSHM22_SubductionInversionConfiguration) new NZSHM22_SubductionInversionConfiguration()
 				.setInversionTargetMfds(inversionMFDs)
-				// MFD config
-				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
-				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
-				.setMfdEqualityConstraints(mfdEqualityConstraints)
-				.setMfdInequalityConstraints(mfdInequalityConstraints)
+				// MFD config is now below
 				// Slip Rate config
 				.setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
 				.setSlipRateConstraintWt_unnormalized(slipRateConstraintWt_unnormalized)
@@ -247,6 +232,45 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
 				.setMinimumRuptureRateBasis(minimumRuptureRateBasis)
 				.setInitialRupModel(initialRupModel);
+
+
+		//MFD constraint configuration
+		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
+		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
+		List<MFD_WeightedInversionConstraint> mfdUncertaintyWeightedConstraints = new ArrayList<MFD_WeightedInversionConstraint>();
+
+		mfdConstraints = inversionMFDs.getMfdEqIneqConstraints();
+		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
+			// we have both MFD constraints, apply a transition mag from equality to
+			// inequality
+			metadata += "\nMFDTransitionMag: " + MFDTransitionMag;
+			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints,
+					mfdConstraints.get(0).getMagFreqDist().getMinX(), MFDTransitionMag);
+			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
+					mfdConstraints.get(0).getMagFreqDist().getMaxX());
+			newConfig
+				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+				.setMfdEqualityConstraints(mfdEqualityConstraints)
+				.setMfdInequalityConstraints(mfdInequalityConstraints);
+		} else if (mfdEqualityConstraintWt > 0.0) { // no ineq wt
+			mfdEqualityConstraints = mfdConstraints;
+			newConfig
+				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
+				.setMfdEqualityConstraints(mfdEqualityConstraints);
+		} else if (mfdInequalityConstraintWt > 0.0) { // no eq wt
+			mfdInequalityConstraints = mfdConstraints;
+			newConfig
+				.setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
+				.setMfdInequalityConstraints(mfdInequalityConstraints);
+		}
+
+		if (mfdUncertaintyWeightedConstraintWt > 0.0 ) {
+			mfdUncertaintyWeightedConstraints = inversionMFDs.getMfdUncertaintyConstraints();
+			newConfig
+				.setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt) //NEW constraint
+				.setMfdUncertaintyWeightedConstraints(mfdUncertaintyWeightedConstraints);
+		}
 
 		return newConfig;
 	}
