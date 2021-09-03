@@ -58,7 +58,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
 	private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
 
-	private CompletionCriteria completionCriteria;
 	private ThreadedSimulatedAnnealing tsa;
 	private double[] initialState;
 	private FaultSystemSolution solution;
@@ -336,7 +335,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		if (!(this.energyChangeCompletionCriteria == null))
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
 
-		completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+		CompletionCriteria completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
 
 		// Bring up window to track progress
 		// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
@@ -418,7 +417,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		Map<String, String> metrics = new HashMap<String, String>();
 
 		// Completion
-		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria) completionCriteria;
 //		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
 		int numRups = initialState.length;
 
