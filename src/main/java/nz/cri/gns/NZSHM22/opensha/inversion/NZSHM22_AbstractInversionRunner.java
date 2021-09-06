@@ -2,11 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -29,11 +25,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintW
 import scratch.UCERF3.logicTree.LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
+import scratch.UCERF3.simulatedAnnealing.completion.*;
 import scratch.UCERF3.utils.FaultSystemIO;
 
 /**
@@ -42,6 +34,7 @@ import scratch.UCERF3.utils.FaultSystemIO;
  */
 public abstract class NZSHM22_AbstractInversionRunner {
 
+	protected boolean repeatable = false;
 	protected long inversionSecs = 60;
 	protected long syncInterval = 10;
 	protected int numThreads = Runtime.getRuntime().availableProcessors();
@@ -233,6 +226,16 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
+	 * sets up the runner to produce repeatable results for testing.
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner makeRepeatable(){
+		this.repeatable = true;
+		setNumThreads(1);
+		return this;
+	}
+
+	/**
 	 * Runs the inversion on the specified rupture set. make sure to call
 	 * .configure() first.
 	 * 
@@ -266,12 +269,20 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// between synchronization
 		CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(syncInterval); // 1 second;
 
+		if(repeatable){
+			subCompletionCriteria = new IterationCompletionCriteria(5);
+		}
+
 		initialState = inversionInputGenerator.getInitialSolution();
 
 		tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
 				inversionInputGenerator.getWaterLevelRates(), numThreads, subCompletionCriteria);
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+
+		if(repeatable){
+			tsa.setRandom(new Random(1));
+		}
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
