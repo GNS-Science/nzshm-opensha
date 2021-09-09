@@ -1,10 +1,7 @@
 package nz.cri.gns.NZSHM22.util;
 
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.reports.AbstractRupSetPlot;
-import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
-import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen;
-import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
+import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
 
 import java.io.File;
@@ -17,7 +14,9 @@ public class NZSHM22_ReportPageGen {
     String name;
     String solutionPath;
     String outputPath = "./TEST/reportPage";
-    List<AbstractRupSetPlot> plots;
+    ReportPageGen.PlotLevel plotLevel = ReportPageGen.PlotLevel.FULL;
+    List<AbstractRupSetPlot> plots = null;
+    boolean fillSurfaces = false;
 
     public NZSHM22_ReportPageGen() {
     }
@@ -96,20 +95,35 @@ public class NZSHM22_ReportPageGen {
         return this;
     }
 
+    public NZSHM22_ReportPageGen setFillSurfaces(boolean fillSurfaces) {
+        this.fillSurfaces = fillSurfaces;
+        return this;
+    }
+
     public void generatePage() throws IOException {
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
         if (plots == null) {
-            setPlotLevel("LIGHT");
+            plots = ReportPageGen.getDefaultSolutionPlots(plotLevel);
         }
-        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath), plots);
+        if (fillSurfaces) {
+            for (AbstractRupSetPlot plot : plots) {
+                if (plot instanceof SolidFillPlot) {
+                    ((SolidFillPlot) plot).setFillSurfaces(true);
+                }
+            }
+        }
+        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath),
+                plots);
         solReport.generatePage();
     }
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
         reportPageGen.setName("hello!").setOutputPath("TEST/REPORTPAGEGEN")
-                //.addPlot("SlipRatePlots")
+                .setFillSurfaces(true)
+                .addPlot("SlipRatePlots")
+                .addPlot("ParticipationRatePlot")
 //                .setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI1NjZkWUxtYQ==.zip");
                 //.setSolution("TEST/inversions/CrustalInversionSolution.zip");
                 .setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MzA2MFk2M3du.zip");
