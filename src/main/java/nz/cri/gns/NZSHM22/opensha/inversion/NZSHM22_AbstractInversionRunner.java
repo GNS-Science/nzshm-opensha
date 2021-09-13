@@ -49,7 +49,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private NZSHM22_InversionFaultSystemSolution solution;
 
 	private Map<String, Double> finalEnergies = new HashMap<String, Double>();
-	private InversionInputGenerator inversionInputGenerator;
+	public InversionInputGenerator inversionInputGenerator;
 
 	protected List<IncrementalMagFreqDist> solutionMfds;
 	/*
@@ -279,10 +279,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 				initialState, smoothnessWt, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
 				inversionInputGenerator.getWaterLevelRates(), numThreads, subCompletionCriteria);
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
-
-		if(repeatable){
-			tsa.setRandom(new Random(1));
-		}
+//
+//		if(repeatable){
+//			tsa.setRandom(new Random(1));
+//		}
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
