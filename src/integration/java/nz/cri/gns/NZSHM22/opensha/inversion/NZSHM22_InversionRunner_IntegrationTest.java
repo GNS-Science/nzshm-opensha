@@ -88,10 +88,40 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         long syncInterval = 1; // seconds between inversion synchronisations
 
         NZSHM22_CrustalInversionRunner runner = (NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .makeRepeatable()
-                .setSyncInterval(syncInterval)
+//                .makeRepeatable()
+//                .setSyncInterval(syncInterval)
                 .setRuptureSetFile(new File(alpineVernonRupturesUrl.toURI()))
-                .setGutenbergRichterMFDWeights(10d, 1000d);
+//                .setGutenbergRichterMFDWeights(10d, 1000d);
+                .setGutenbergRichterMFDWeights(1e3, 1e3);
+
+        runner.setMinMagForSeismogenicRups(7);
+        runner.setGutenbergRichterMFD(3.6, 0.36,
+                1.05, 1.25, 7.85);
+
+
+        /**
+         * completion_energy	0.0
+         * max_inversion_time	1
+         *
+         +         * mfd_equality_weight	1e3
+         +         * mfd_inequality_weight	1e3
+         *
+         * slip_rate_normalized_weight	1e3
+         * slip_rate_unnormalized_weight	1e3
+         *
+         +         * seismogenic_min_mag	7.0
+         *
+         +         * mfd_mag_gt_5_sans	3.6
+         +         * mfd_mag_gt_5_tvz	0.36
+         +         * mfd_b_value_sans	1.05
+         +         * mfd_b_value_tvz	1.25
+         +         * mfd_transition_mag	7.85
+         *
+         * selection_interval_secs	5
+         * threads_per_selector	2
+         * averaging_threads	2
+         * averaging_interval_secs	15
+         */
 
         runner.configure(); //do this last thing before runInversion!
 
@@ -99,8 +129,8 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         // column compress it for fast annealing
         runner.inversionInputGenerator.columnCompress();
 
+        writeMatrix(runner.inversionInputGenerator.getA());
         assertMatrixEquals(new File("amatrix.csv"), runner.inversionInputGenerator.getA());
-        //  writeMatrix(runner.inversionInputGenerator.getA());
 
         //  FaultSystemSolution solution = runner.runInversion();
 
@@ -117,7 +147,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         CSVFile expected = CSVFile.readFileNumeric(expectedCsv, true, 0);
         for (int r = 0; r < expected.getNumRows(); r++) {
             for (int c = 0; c < expected.getNumCols(); c++) {
-                assertEquals("matrix[" + r + ", " + c + "] ", expected.getDouble(r, c), actual.get(r,c), 0.00000001);
+                assertEquals("matrix[" + r + ", " + c + "] ", expected.getDouble(r, c), actual.get(r, c), 0.00000001);
             }
         }
     }
