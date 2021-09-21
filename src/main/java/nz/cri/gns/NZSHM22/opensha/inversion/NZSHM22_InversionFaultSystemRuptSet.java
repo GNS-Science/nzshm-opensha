@@ -6,6 +6,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SlipAlongRuptureModel;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
+import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
@@ -45,6 +48,11 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
+		branch.clearValue(ScalingRelationships.class);
+		branch.setValue(ScalingRelationships.TMG_SUB_2017);
+		branch.clearValue(SlipAlongRuptureModels.class);
+		branch.setValue(SlipAlongRuptureModels.UNIFORM);
+
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
 		//overwrite behaviour of super class
@@ -60,6 +68,11 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromCrustal(FaultSystemRupSet rupSet, U3LogicTreeBranch branch){
+		branch.clearValue(ScalingRelationships.class);
+		branch.setValue(ScalingRelationships.TMG_CRU_2017);
+		branch.clearValue(SlipAlongRuptureModels.class);
+		branch.setValue(SlipAlongRuptureModels.UNIFORM);
+
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
 		result.removeModuleInstances(InversionTargetMFDs.class);
