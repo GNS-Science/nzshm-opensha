@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
@@ -81,6 +82,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double bValue; // = 1d;
 	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
 	// // USGS/UCERF3) [KKS, CBC]
+
+	protected ScalingRelationships scalingRelationship;
+	protected boolean recalcMags = false;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -307,6 +311,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		this.slipRateWeightingType = weightingType;
 		this.slipRateConstraintWt_normalized = normalizedWt;
 		this.slipRateConstraintWt_unnormalized = unnormalizedWt;
+		return this;
+	}
+
+	public NZSHM22_AbstractInversionRunner setScalingRelationship(String scalingRelationship, boolean recalcMags){
+		this.scalingRelationship = ScalingRelationships.valueOf(scalingRelationship);
+		this.recalcMags = recalcMags;
 		return this;
 	}
 

@@ -2,11 +2,16 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import org.opensha.commons.calc.magScalingRelations.magScalingRelImpl.Shaw_2007_MagAreaRel;
+import org.opensha.commons.util.FaultUtils;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SlipAlongRuptureModel;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
@@ -15,6 +20,8 @@ import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -48,8 +55,10 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
-		branch.clearValue(ScalingRelationships.class);
-		branch.setValue(ScalingRelationships.TMG_SUB_2017);
+		if(ScalingRelationships.SHAW_2009_MOD == branch.getValue(ScalingRelationships.class)) {
+			branch.clearValue(ScalingRelationships.class);
+			branch.setValue(ScalingRelationships.TMG_SUB_2017);
+		}
 		branch.clearValue(SlipAlongRuptureModels.class);
 		branch.setValue(SlipAlongRuptureModels.UNIFORM);
 
@@ -68,8 +77,10 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromCrustal(FaultSystemRupSet rupSet, U3LogicTreeBranch branch){
-		branch.clearValue(ScalingRelationships.class);
-		branch.setValue(ScalingRelationships.TMG_CRU_2017);
+		if(ScalingRelationships.SHAW_2009_MOD == branch.getValue(ScalingRelationships.class)) {
+			branch.clearValue(ScalingRelationships.class);
+			branch.setValue(ScalingRelationships.TMG_CRU_2017);
+		}
 		branch.clearValue(SlipAlongRuptureModels.class);
 		branch.setValue(SlipAlongRuptureModels.UNIFORM);
 
@@ -96,7 +107,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	@Override
 	public synchronized double getFinalMinMagForSection(int sectIndex) {
 		// FIXME
-		throw new IllegalStateException("net yet refactored!");
+		throw new IllegalStateException("not yet refactored!");
 //		if (minMagForSectArray == null) {
 //			minMagForSectArray = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,
 //					minMagForSeismogenicRups);
@@ -120,5 +131,30 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,minMagForSeismogenicRups);
 	}
 
+	/**
+	 * Recalculate the magnitudes based on the specified ScalingRelationship
+	 * @param scale
+	 */
+	public void recalcMags(ScalingRelationships scale){
+
+		double[] mags = getMagForAllRups();
+
+		double[] areas = getAreaForAllRups();
+		double[] lengths = getLengthForAllRups();
+
+		double[] sectAreasOrig = new double[getFaultSectionDataList().size()];
+		for(int i = 0; i < sectAreasOrig.length; i++) {
+			sectAreasOrig[i] = getFaultSectionData(i).getArea(false);
+		}
+
+		for(int i =0; i < mags.length; i++) {
+			double totOrigArea = 0d; // not reduced for aseismicity
+			for (FaultSection sect : getFaultSectionDataForRupture(i)) {
+				totOrigArea += sectAreasOrig[sect.getSectionId()]; // sq-m
+			}
+			double origDDW = totOrigArea / lengths[i];
+			mags[i] =  scale.getMag(areas[i], origDDW);
+		}
+	}
 
 }

@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
@@ -124,7 +125,15 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
-		this.rupSet = loadRuptureSet(ruptureSetFile, U3LogicTreeBranch.DEFAULT);
+		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+		if(scalingRelationship != null){
+			branch.clearValue(ScalingRelationships.class);
+			branch.setValue(scalingRelationship);
+		}
+		this.rupSet = loadRuptureSet(ruptureSetFile, branch);
+		if(recalcMags){
+			rupSet.recalcMags(scalingRelationship);
+		}
 		return this;
 	}
 
@@ -175,13 +184,14 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		File inputDir = new File("./TEST");
 		File outputRoot = new File("./TEST");
 		File ruptureSet = new File(inputDir,
-			"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5).zip");
+			"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2)_.zip");
 //				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
 		NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
 				.setInversionSeconds(1)
+				.setScalingRelationship("SMPL_NZ_CRU_LW", true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0)
 				.setSlipRateConstraint("BOTH", 1000, 1000))

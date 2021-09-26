@@ -8,6 +8,7 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.U3FaultSystemIO;
@@ -57,7 +58,15 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
-		rupSet = loadRuptureSet(ruptureSetFile, U3LogicTreeBranch.DEFAULT);
+		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+		if(scalingRelationship != null){
+			branch.clearValue(ScalingRelationships.class);
+			branch.setValue(scalingRelationship);
+		}
+		rupSet = loadRuptureSet(ruptureSetFile, branch);
+		if(recalcMags){
+			rupSet.recalcMags(scalingRelationship);
+		}
 		return this;
 	}
 	
@@ -109,6 +118,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * mfd_transition_mag	9.15
 		 */
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
+				.setScalingRelationship("SMPL_NZ_INT_LW", true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
 				.setUncertaintyWeightedMFDWeights(1000, 0.1)
