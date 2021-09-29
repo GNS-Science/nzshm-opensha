@@ -160,95 +160,36 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 
 	protected void init(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
 
-		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
-		// equivalent
 		U3LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
 		this.inversionModel = logicTreeBranch.getValue(InversionModels.class);
-		// this.totalRegionRateMgt5 =
-		// logicTreeBranch.getValue(TotalMag5Rate.class).getRateMag5();
-
-		//this.totalRegionRateMgt5 = this.totalRateM5;
-		//this.mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault(); //TODO: set this to 8.05 (more NZ ish)
-		this.mMaxOffFault = 8.05d;
-		this.applyImpliedCouplingCoeff = logicTreeBranch.getValue(MomentRateFixes.class).isApplyCC();	// true if MomentRateFixes = APPLY_IMPLIED_CC or APPLY_CC_AND_RELAX_MFD
-//		this.spatialSeisPDF = logicTreeBranch.getValue(SpatialSeisPDF.class);
-//		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1246;
+		this.mMaxOffFault = 8.05d; // NZ-ish
 		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.NZSHM22_1346;
 
 		// convert mMaxOffFault to bin center
-		mMaxOffFault -= DELTA_MAG / 2;
-
-		boolean noMoRateFix = (logicTreeBranch.getValue(MomentRateFixes.class) == MomentRateFixes.NONE);
+		mMaxOffFault -= DELTA_MAG / 2;  // TODO is 8.05 already a bin centre?
 
 		List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 
-		GriddedRegion regionNzGridded = new NewZealandRegions.NZ_TEST_GRIDDED(); //CSEP_TEST
-		//TVZ Refactor
 		GriddedRegion regionSansTVZGridded = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 		GriddedRegion regionTVZGridded = new NewZealandRegions.NZ_TVZ_GRIDDED();
 
 		gridSeisUtils = new GriddedSeisUtils(faultSectionData,
-				spatialSeisPDF.getPDF(), invRupSet.requireModule(PolygonFaultGridAssociations.class));
-		//TODO: split this for TVZ
-		fractionSeisOnFault = gridSeisUtils.pdfInPolys();
+				spatialSeisPDF.getPDF(), invRupSet.requireModule(PolygonFaultGridAssociations.class)); // TODO: OAKLEY: check this is ours already
+		fractionSeisOnFault = gridSeisUtils.pdfInPolys(); 		//TODO: split this for TVZ? Matt says yes
 
-		if ( 1==1 ) {
-			/*
-			 * OPTION A seems wrong but need some polygon analysis to check approach (w Matt)
-			 */
-			//TODO: check this uses grid weights. are we losing any spatial variability inside the polygons??
-			double fractSeisInSansTVZ = this.spatialSeisPDF.getFractionInRegion(regionSansTVZGridded);
-			double fractSeisInTVZ = this.spatialSeisPDF.getFractionInRegion(regionTVZGridded);
+		onFaultRegionRateMgt5_SansTVZ = totalRateM5_SansTVZ * fractionSeisOnFault;
+		onFaultRegionRateMgt5_TVZ = totalRateM5_TVZ * fractionSeisOnFault;
 
-			//TVZ Refactor
-	//		onFaultRegionRateMgt5 = totalRegionRateMgt5*fractionSeisOnFault; //WE want this as MFD
-	//		offFaultRegionRateMgt5 = totalRegionRateMgt5-onFaultRegionRateMgt5;
-
-			onFaultRegionRateMgt5_SansTVZ = totalRateM5_SansTVZ * fractionSeisOnFault; // * fractSeisInSansTVZ;
-			onFaultRegionRateMgt5_TVZ = totalRateM5_TVZ * fractionSeisOnFault;// * fractSeisInTVZ;
-//		} else {
-			/*
-			 * OPTION B doesn;t work because faultSectionData is outside region bounds....
-			 */
-//			GriddedSeisUtils gridSeisUtils_SansTVZ = new GriddedSeisUtils(faultSectionData,
-//					spatialSeisPDF.getPDF(), FAULT_BUFFER, regionSansTVZGridded);
-			// SPLAT //
-//			GriddedSeisUtils gridSeisUtils_TVZ = new GriddedSeisUtils(faultSectionData,
-//					spatialSeisPDF.getPDF(), FAULT_BUFFER, regionTVZGridded);
-//			double fractionSeisOnFault_SansTVZ = gridSeisUtils_SansTVZ.pdfInPolys();
-//			double fractionSeisOnFault_TVZ = gridSeisUtils_TVZ.pdfInPolys();
-//			onFaultRegionRateMgt5_SansTVZ = totalRateM5_SansTVZ * fractionSeisOnFault_SansTVZ;
-//			onFaultRegionRateMgt5_TVZ = totalRateM5_TVZ * fractionSeisOnFault_TVZ;
-//			double fractSeisInSansTVZ = this.spatialSeisPDF.getFractionInRegion(regionSansTVZGridded);
-//			double fractSeisInTVZ = this.spatialSeisPDF.getFractionInRegion(regionTVZGridded);
-//			fractionSeisOnFault = DeformationModelsCalc.getFractSpatialPDF_InsideSectionPolygons(faultSectionData, spatialSeisPDFforOnFaultRates);
-			fractionSeisOnFault = gridSeisUtils.pdfInPolys();
-		}
-
-//		offFaultRegionRateMgt5_SansTVZ = totalRateM5_SansTVZ - onFaultRegionRateMgt5_SansTVZ;
-//		offFaultRegionRateMgt5_TVZ = totalRateM5_TVZ - onFaultRegionRateMgt5_TVZ;
-
-		//TODO Are these actually used for anything we need in NZSHM22
-		origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
-		offFltDefModMoRate = DeformationModelsCalc.calcMoRateOffFaultsForDefModel(invRupSet.getFaultModel(), invRupSet.getDeformationModel());
-
-		// make the total target GR MFD
-		// TODO: why MIN_MAG = 0 ??
-		//** SPLIT TVZ....
+		// make the total target GR MFD with empty bins
 		totalTargetGR_SansTVZ = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		totalTargetGR_TVZ = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 
-//		tempOffFaultGR.setAllButMagUpper(0.005, offFltDefModMoRate, offFaultRegionRateMgt5*1e5, 1.0, true);
-//		maxOffMagWithFullMoment = tempOffFaultGR.getMagUpper();
-//		totalTargetGR = new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
-
-
-		//TODO we can use one as they're identical (REALLY??
-		// consider if we must do this for each regionally
-		roundedMmaxOnFault = totalTargetGR_SansTVZ.getX(totalTargetGR_SansTVZ.getClosestXIndex(invRupSet.getMaxMag()));
-		totalTargetGR_SansTVZ.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5_SansTVZ, bValue_SansTVZ); //TODO: no more scaling
-		totalTargetGR_TVZ.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5_TVZ, bValue_TVZ); //TODO: as above (1e5 to get to MMin = 0.05)
+		// populate the MFD bins
+		double roundedMmaxOnFault_SansTVZ = totalTargetGR_SansTVZ.getX(totalTargetGR_SansTVZ.getClosestXIndex(invRupSet.getMaxMag()));
+		double roundedMmaxOnFault_TVZ = totalTargetGR_TVZ.getX(totalTargetGR_TVZ.getClosestXIndex(invRupSet.getMaxMag()));
+		totalTargetGR_SansTVZ.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault_SansTVZ, totalRateM5_SansTVZ, bValue_SansTVZ);
+		totalTargetGR_TVZ.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault_TVZ, totalRateM5_TVZ, bValue_TVZ);
 
 		if (MFD_STATS) {
 			System.out.println("totalTargetGR_SansTVZ after setAllButTotMoRate");
