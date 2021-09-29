@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.text.DateFormatter;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.*;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -67,8 +68,7 @@ class FullPipelineCrustal {
 		File markdownDirDir = new File("./TEST/crustal_inversions");
 		Preconditions.checkState(markdownDirDir.exists() || markdownDirDir.mkdir());
 
-		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
-		branch.setValue(SlipAlongRuptureModels.UNIFORM);
+		U3LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
 		
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
