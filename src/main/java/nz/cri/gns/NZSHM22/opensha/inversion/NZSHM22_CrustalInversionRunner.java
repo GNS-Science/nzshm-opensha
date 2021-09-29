@@ -1,21 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import org.apache.commons.math3.util.Precision;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
-import org.opensha.commons.data.function.DiscretizedFunc;
-import org.opensha.commons.data.function.HistogramFunction;
-import org.opensha.commons.data.function.XY_DataSetList;
-import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
-import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.commons.logicTree.LogicTreeBranch;
-import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalar;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetDiagnosticsPageGen.HistScalarValues;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
@@ -25,18 +13,12 @@ import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
 
-import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -125,7 +107,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
-		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+		U3LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
 		if(scalingRelationship != null){
 			branch.clearValue(ScalingRelationships.class);
 			branch.setValue(scalingRelationship);

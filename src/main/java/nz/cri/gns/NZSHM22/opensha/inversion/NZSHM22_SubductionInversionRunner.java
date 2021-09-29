@@ -1,22 +1,20 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
 
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Runs the standard NSHM inversion on a subduction rupture set.
@@ -58,7 +56,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
-		U3LogicTreeBranch branch = U3LogicTreeBranch.DEFAULT;
+		U3LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
 		if(scalingRelationship != null){
 			branch.clearValue(ScalingRelationships.class);
 			branch.setValue(scalingRelationship);

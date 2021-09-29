@@ -55,13 +55,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
-		if(ScalingRelationships.SHAW_2009_MOD == branch.getValue(ScalingRelationships.class)) {
-			branch.clearValue(ScalingRelationships.class);
-			branch.setValue(ScalingRelationships.TMG_SUB_2017);
-		}
-		branch.clearValue(SlipAlongRuptureModels.class);
-		branch.setValue(SlipAlongRuptureModels.UNIFORM);
-
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
 		//overwrite behaviour of super class
@@ -77,12 +70,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromCrustal(FaultSystemRupSet rupSet, U3LogicTreeBranch branch){
-		if(ScalingRelationships.SHAW_2009_MOD == branch.getValue(ScalingRelationships.class)) {
-			branch.clearValue(ScalingRelationships.class);
-			branch.setValue(ScalingRelationships.TMG_CRU_2017);
-		}
-		branch.clearValue(SlipAlongRuptureModels.class);
-		branch.setValue(SlipAlongRuptureModels.UNIFORM);
 
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 

@@ -8,6 +8,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -16,7 +17,6 @@ import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
 public class NZSHM22_InversionRunner_IntegrationTest {
 	
@@ -48,7 +48,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 	 */
 	@Test 
 	public void testLoadRuptureSetForInversion() throws IOException, DocumentException, URISyntaxException {
-		NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), U3LogicTreeBranch.DEFAULT);
+		NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustal());
 		assertEquals(3101, ruptureSet.getModule(ClusterRuptures.class).getAll().size());
 	}
 
