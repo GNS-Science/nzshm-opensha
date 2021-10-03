@@ -2,9 +2,9 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.logicTree.LogicTreeBranchNode;
+import scratch.UCERF3.logicTree.U3LogicTreeBranchNode;
 
-public enum NZSHM22_DeformationModels implements LogicTreeBranchNode<NZSHM22_DeformationModels> {
+public enum NZSHM22_DeformationModels implements U3LogicTreeBranchNode<NZSHM22_DeformationModels> {
 
     GLOBAL_SLIP_RATE_10MM(10);
 

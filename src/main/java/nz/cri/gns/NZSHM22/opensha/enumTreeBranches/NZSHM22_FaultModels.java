@@ -9,7 +9,7 @@ import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.logicTree.LogicTreeBranchNode;
+import scratch.UCERF3.logicTree.U3LogicTreeBranchNode;
 import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 import java.io.*;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public enum NZSHM22_FaultModels implements LogicTreeBranchNode<NZSHM22_FaultModels> {
+public enum NZSHM22_FaultModels implements U3LogicTreeBranchNode<NZSHM22_FaultModels> {
 
 	CFM_0_9_ALL_2010("CFM 0.9 all NZ faults, 2010 Stirling depth", "cfm_0_9_d90_all_stirling_depths.xml"),
 	CFM_0_9_SANSTVZ_2010("CFM 0.9 sans TVZ, 2010 Stirling depth", "cfm_0_9_d90_no_tvz_stirling_depths.xml"),

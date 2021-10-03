@@ -6,9 +6,9 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_SmoothSeismicitySpatialPDF_Fetcher;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.enumTreeBranches.SpatialSeisPDF;
-import scratch.UCERF3.logicTree.LogicTreeBranchNode;
+import scratch.UCERF3.logicTree.U3LogicTreeBranchNode;
 
-public enum NZSHM22_SpatialSeisPDF implements LogicTreeBranchNode<SpatialSeisPDF> {
+public enum NZSHM22_SpatialSeisPDF implements U3LogicTreeBranchNode<SpatialSeisPDF> {
 
 	NZSHM22_1246("NZSHM22_1246", "1246", 0.5d, 0.25d) {
 		@Override
