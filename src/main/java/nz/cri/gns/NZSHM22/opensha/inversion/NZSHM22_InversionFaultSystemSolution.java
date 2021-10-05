@@ -55,7 +55,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 
         FaultSystemRupSet rupSet = solution.getRupSet();
         U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSet, branch);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSet, branch, null);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 nzRupSet,
@@ -70,7 +70,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 
         FaultSystemRupSet rupSet = solution.getRupSet();
         U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSet, branch);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSet, branch, null);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 nzRupSet,

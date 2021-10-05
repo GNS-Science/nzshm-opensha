@@ -132,7 +132,7 @@ class FullPipelineCrustal {
 							
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					rupSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(rupSetFile, branch);
+					rupSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(rupSetFile, branch, null);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3

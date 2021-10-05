@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
@@ -47,10 +48,10 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch)
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch, NZSHM22_DeformationModel deformationModel)
 			throws DocumentException, IOException {
 		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch);
+		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch, deformationModel);
 	}
 
 	@Override
@@ -61,7 +62,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			branch.clearValue(ScalingRelationships.class);
 			branch.setValue(scalingRelationship);
 		}
-		rupSet = loadRuptureSet(ruptureSetFile, branch);
+		rupSet = loadRuptureSet(ruptureSetFile, branch, deformationModel);
 		if(recalcMags){
 			rupSet.recalcMags(scalingRelationship);
 		}

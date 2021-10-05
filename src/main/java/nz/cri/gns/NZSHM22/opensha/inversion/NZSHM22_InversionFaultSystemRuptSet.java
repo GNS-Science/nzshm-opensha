@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.commons.calc.magScalingRelations.magScalingRelImpl.Shaw_2007_MagAreaRel;
 import org.opensha.commons.util.FaultUtils;
@@ -45,16 +46,15 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 */
 	private NZSHM22_InversionFaultSystemRuptSet (FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
 	    super(rupSet, branch);
-	    removeModuleInstances(PolygonFaultGridAssociations.class);
-		offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
-			@Override
-			public PolygonFaultGridAssociations call() throws Exception {
-				return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_TEST_GRIDDED());
-			}
-		}, PolygonFaultGridAssociations.class);
-	}
+    }
 
-	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch) {
+	public static NZSHM22_InversionFaultSystemRuptSet fromSubduction(FaultSystemRupSet rupSet, U3LogicTreeBranch branch,
+																	 NZSHM22_DeformationModel deformationModel) {
+
+		if(deformationModel != null){
+			deformationModel.applyTo(rupSet);
+		}
+
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
 		//overwrite behaviour of super class
@@ -69,10 +69,21 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return result;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet fromCrustal(FaultSystemRupSet rupSet, U3LogicTreeBranch branch){
+	public static NZSHM22_InversionFaultSystemRuptSet fromCrustal(FaultSystemRupSet rupSet, U3LogicTreeBranch branch,
+																  NZSHM22_DeformationModel deformationModel){
+
+		if(deformationModel != null){
+		    deformationModel.applyTo(rupSet);
+        }
 
 		NZSHM22_InversionFaultSystemRuptSet result = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
-
+		result.removeModuleInstances(PolygonFaultGridAssociations.class);
+		result.offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
+			@Override
+			public PolygonFaultGridAssociations call() throws Exception {
+				return FaultPolyMgr.create(result.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_TEST_GRIDDED());
+			}
+		}, PolygonFaultGridAssociations.class);
 		result.removeModuleInstances(InversionTargetMFDs.class);
 		result.offerAvailableModule(new Callable<NZSHM22_CrustalInversionTargetMFDs>() {
 			@Override
