@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -20,12 +21,10 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import com.google.common.base.Preconditions;
 
 
-import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.SimulatedAnnealing;
 import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
@@ -36,7 +35,6 @@ import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCr
 import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
 import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
 import scratch.UCERF3.simulatedAnnealing.params.NonnegativityConstraintType;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * @author chrisbc
@@ -55,6 +53,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
 
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
+	protected NZSHM22_DeformationModel deformationModel = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
 	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
 	private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
@@ -268,6 +267,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws IOException
 	 */
 	public abstract NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException;
+
+	public NZSHM22_AbstractInversionRunner setDeformationModel(String modelName){
+		Preconditions.checkArgument(rupSet == null, "rupture set must be set after deformation model.");
+		this.deformationModel = NZSHM22_DeformationModel.fromString(modelName);
+		return this;
+	}
 
 	/**
 	 * @param mfdEqualityConstraintWt

@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -100,9 +101,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		return this;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch) throws DocumentException, IOException {
-		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		return NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSetA, branch);
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch, NZSHM22_DeformationModel deformationModel) throws DocumentException, IOException {
+		U3FaultSystemRupSet rupSet = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+		return NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSet, branch, deformationModel);
 	}
 
 	@Override
@@ -112,7 +113,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 			branch.clearValue(ScalingRelationships.class);
 			branch.setValue(scalingRelationship);
 		}
-		this.rupSet = loadRuptureSet(ruptureSetFile, branch);
+		this.rupSet = loadRuptureSet(ruptureSetFile, branch, deformationModel);
 		if(recalcMags){
 			rupSet.recalcMags(scalingRelationship);
 		}
@@ -166,7 +167,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		File inputDir = new File("./TEST");
 		File outputRoot = new File("./TEST");
 		File ruptureSet = new File(inputDir,
-			"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2)_.zip");
+			"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2)-1.zip");
 //				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
@@ -174,6 +175,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 		NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
 				.setInversionSeconds(1)
 				.setScalingRelationship("SMPL_NZ_CRU_LW", true)
+				.setDeformationModel("NP_2010_RmlsZTo4NTkuMDM2Z2Rw")
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(100.0, 1000.0)
 				.setSlipRateConstraint("BOTH", 1000, 1000))

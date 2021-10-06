@@ -133,7 +133,7 @@ class FullPipelineDemo {
 						
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					rupSet = NZSHM22_SubductionInversionRunner.loadRuptureSet(rupSetFile, branch);
+					rupSet = NZSHM22_SubductionInversionRunner.loadRuptureSet(rupSetFile, branch, null);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3

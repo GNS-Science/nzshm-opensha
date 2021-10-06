@@ -1,0 +1,96 @@
+package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
+
+import static org.junit.Assert.*;
+
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
+import org.dom4j.DocumentException;
+import org.junit.Test;
+import org.opensha.sha.faultSurface.FaultSection;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+public class NZSHM22_DeformationModelsTest {
+
+    protected NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, DocumentException, IOException {
+        URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
+        System.out.println(alpineVernonRupturesUrl);
+        return (NZSHM22_InversionFaultSystemRuptSet) NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(alpineVernonRupturesUrl.toURI())).getRupSet();
+    }
+
+    @Test
+    public void testApplyTo() throws DocumentException, URISyntaxException, IOException {
+        NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
+        FaultSection s = ruptSet.getFaultSectionData(0);
+        assertEquals(0, s.getSectionId());
+        assertEquals(27, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(0), 0.0000001);
+        assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(1), 0.0000001);
+
+        NZSHM22_DeformationModel model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
+            public InputStream getStream(String fileName) {
+                try {
+                    URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+                    return new FileInputStream(new File(url.toURI()));
+                } catch (Exception x) {
+                    throw new RuntimeException(x);
+                }
+            }
+        };
+
+        // set slip to be equal section ID
+        model.applyTo(ruptSet);
+
+        assertEquals(0.0, ruptSet.getSlipRateForSection(0), 0.0000001);
+        assertEquals(0.001, ruptSet.getSlipRateForSection(1), 0.0000001);
+
+        for (FaultSection section : ruptSet.getFaultSectionDataList()) {
+            assertEquals(section.getSectionId(), section.getOrigAveSlipRate(), 0.000000001);
+            assertEquals(section.getSectionId(), section.getOrigSlipRateStdDev(), 0.000000001);
+        }
+
+        // Testing that we check the length
+        model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
+            public List<SlipDeformation> getDeformations() {
+                List<SlipDeformation> result = new ArrayList<>();
+                for (int i = 0; i < ruptSet.getNumSections() + 1; i++) {
+                    result.add(new SlipDeformation());
+                }
+                return result;
+            }
+        };
+
+        String message = null;
+        try {
+            model.applyTo(ruptSet);
+        } catch (IllegalArgumentException x) {
+            message = x.getMessage();
+        }
+        assertEquals("Deformation model length does not match number of sections.", message);
+
+        // Testing that we check the length
+        model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
+            public List<SlipDeformation> getDeformations() {
+                List<SlipDeformation> result = new ArrayList<>();
+                for (int i = 0; i < ruptSet.getNumSections(); i++) {
+                    result.add(new SlipDeformation());
+                }
+                return result;
+            }
+        };
+
+        message = null;
+        try {
+            model.applyTo(ruptSet);
+        } catch (IllegalArgumentException x) {
+            message = x.getMessage();
+        }
+        assertEquals("Deformation parent id does not match section parent id.", message);
+
+    }
+
+}
