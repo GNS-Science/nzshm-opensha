@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -11,6 +13,7 @@ import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
@@ -22,7 +25,6 @@ import com.google.common.base.Preconditions;
 
 
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
-import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
@@ -82,7 +84,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double mfdTransitionMag = 7.85; // TODO: how to validate this number for NZ? (ref Morgan Page in
 	// // USGS/UCERF3) [KKS, CBC]
 
-	protected ScalingRelationships scalingRelationship;
+	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected boolean recalcMags = false;
 
 	/**
@@ -268,9 +270,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public abstract NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException;
 
+	protected void setupLTB(NZSHM22_LogicTreeBranch branch){
+		if (scalingRelationship != null) {
+			branch.clearValue(NZSHM22_ScalingRelationshipNode.class);
+			branch.setValue(scalingRelationship);
+		}
+		if (deformationModel != null) {
+			branch.setValue(deformationModel);
+		}
+	}
+
 	public NZSHM22_AbstractInversionRunner setDeformationModel(String modelName){
 		Preconditions.checkArgument(rupSet == null, "rupture set must be set after deformation model.");
-		this.deformationModel = NZSHM22_DeformationModel.fromString(modelName);
+		this.deformationModel = NZSHM22_DeformationModel.valueOf(modelName);
 		return this;
 	}
 
@@ -320,7 +332,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	public NZSHM22_AbstractInversionRunner setScalingRelationship(String scalingRelationship, boolean recalcMags){
-		this.scalingRelationship = ScalingRelationships.valueOf(scalingRelationship);
+		return setScalingRelationship(NZSHM22_ScalingRelationshipNode.createRelationShip(scalingRelationship), recalcMags);
+	}
+
+	public NZSHM22_AbstractInversionRunner setScalingRelationship(RupSetScalingRelationship scalingRelationship, boolean recalcMags){
+		this.scalingRelationship = new NZSHM22_ScalingRelationshipNode();
+		this.scalingRelationship.setScalingRelationship(scalingRelationship);
 		this.recalcMags = recalcMags;
 		return this;
 	}

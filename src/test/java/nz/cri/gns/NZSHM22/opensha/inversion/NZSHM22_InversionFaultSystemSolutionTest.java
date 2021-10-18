@@ -21,7 +21,6 @@ public class NZSHM22_InversionFaultSystemSolutionTest {
 
     public static NZSHM22_InversionFaultSystemSolution loadSolution() throws URISyntaxException, DocumentException, IOException {
         URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
-        System.out.println(alpineVernonRupturesUrl);
         return NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(alpineVernonRupturesUrl.toURI()));
     }
 

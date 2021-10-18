@@ -1,7 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.magdist.ArbIncrementalMagFreqDist;
@@ -54,8 +56,8 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
     public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
 
         FaultSystemRupSet rupSet = solution.getRupSet();
-        U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromCrustal(rupSet, branch, null);
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalFromModuleContainer(rupSet);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 nzRupSet,
@@ -69,8 +71,8 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
     public static NZSHM22_InversionFaultSystemSolution fromSubductionSolution(FaultSystemSolution solution) {
 
         FaultSystemRupSet rupSet = solution.getRupSet();
-        U3LogicTreeBranch branch = rupSet.getModule(U3LogicTreeBranch.class);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSet, branch, null);
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionFromModuleContainer(rupSet);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 nzRupSet,

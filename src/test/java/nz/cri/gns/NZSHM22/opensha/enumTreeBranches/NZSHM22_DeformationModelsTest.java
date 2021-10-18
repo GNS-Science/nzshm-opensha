@@ -31,8 +31,8 @@ public class NZSHM22_DeformationModelsTest {
         assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(0), 0.0000001);
         assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(1), 0.0000001);
 
-        NZSHM22_DeformationModel model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
-            public InputStream getStream(String fileName) {
+        NZSHM22_DeformationModel.DeformationHelper helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
+            public InputStream getStream() {
                 try {
                     URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
                     return new FileInputStream(new File(url.toURI()));
@@ -43,7 +43,7 @@ public class NZSHM22_DeformationModelsTest {
         };
 
         // set slip to be equal section ID
-        model.applyTo(ruptSet);
+        helper.applyTo(ruptSet);
 
         assertEquals(0.0, ruptSet.getSlipRateForSection(0), 0.0000001);
         assertEquals(0.001, ruptSet.getSlipRateForSection(1), 0.0000001);
@@ -54,7 +54,7 @@ public class NZSHM22_DeformationModelsTest {
         }
 
         // Testing that we check the length
-        model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
+        helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
             public List<SlipDeformation> getDeformations() {
                 List<SlipDeformation> result = new ArrayList<>();
                 for (int i = 0; i < ruptSet.getNumSections() + 1; i++) {
@@ -66,14 +66,14 @@ public class NZSHM22_DeformationModelsTest {
 
         String message = null;
         try {
-            model.applyTo(ruptSet);
+            helper.applyTo(ruptSet);
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }
         assertEquals("Deformation model length does not match number of sections.", message);
 
         // Testing that we check the length
-        model = new NZSHM22_DeformationModel("Vernon test model", "AlpineVernonInversionSolution", "vernonDeformation.dat") {
+        helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
             public List<SlipDeformation> getDeformations() {
                 List<SlipDeformation> result = new ArrayList<>();
                 for (int i = 0; i < ruptSet.getNumSections(); i++) {
@@ -85,7 +85,7 @@ public class NZSHM22_DeformationModelsTest {
 
         message = null;
         try {
-            model.applyTo(ruptSet);
+            helper.applyTo(ruptSet);
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }

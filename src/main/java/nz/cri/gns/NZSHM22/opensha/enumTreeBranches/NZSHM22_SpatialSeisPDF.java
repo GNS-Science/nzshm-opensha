@@ -4,11 +4,11 @@ import org.opensha.commons.geo.GriddedRegion;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_SmoothSeismicitySpatialPDF_Fetcher;
-import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.enumTreeBranches.SpatialSeisPDF;
-import scratch.UCERF3.logicTree.U3LogicTreeBranchNode;
+import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.commons.logicTree.LogicTreeLevel;
+import org.opensha.commons.logicTree.LogicTreeNode;
 
-public enum NZSHM22_SpatialSeisPDF implements U3LogicTreeBranchNode<SpatialSeisPDF> {
+public enum NZSHM22_SpatialSeisPDF implements LogicTreeNode {
 
 	NZSHM22_1246("NZSHM22_1246", "1246", 0.5d, 0.25d) {
 		@Override
@@ -66,26 +66,13 @@ public enum NZSHM22_SpatialSeisPDF implements U3LogicTreeBranchNode<SpatialSeisP
 	}
 
 	@Override
-	public double getRelativeWeight(InversionModels im) {
-		if (im.isCharacteristic())
-			return charWeight;
-		else
-			return grWeight;
+	public double getNodeWeight(LogicTreeBranch<?> fullBranch){
+		return 0;
 	}
 
 	@Override
-	public String encodeChoiceString() {
-		return "SpatSeis" + getShortName();
-	}
-
-	@Override
-	public String getBranchLevelName() {
-		return "Spatial Seismicity PDF";
-	}
-
-	@Override
-	public String getShortBranchLevelName(){
-		return getBranchLevelName();
+	public String getFilePrefix(){
+		return "";
 	}
 
 	public abstract double[] getPDF();
@@ -106,6 +93,10 @@ public enum NZSHM22_SpatialSeisPDF implements U3LogicTreeBranchNode<SpatialSeisP
 				sum += vals[iLoc];
 		}
 		return sum;
+	}
+
+	public static LogicTreeLevel<LogicTreeNode> level(){
+		return LogicTreeLevel.forEnumUnchecked(NZSHM22_SpatialSeisPDF.class, "NZSHM22_SpatialSeisPDF", "NZSHM22_SpatialSeisPDF");
 	}
 
 }
