@@ -48,7 +48,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 	 */
 	@Test 
 	public void testLoadRuptureSetForInversion() throws IOException, DocumentException, URISyntaxException {
-		NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustal(), null);
+		NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustal());
 		assertEquals(3101, ruptureSet.getModule(ClusterRuptures.class).getAll().size());
 	}
 

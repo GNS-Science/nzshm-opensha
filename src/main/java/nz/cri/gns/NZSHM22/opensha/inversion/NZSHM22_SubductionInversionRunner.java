@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
 
@@ -9,7 +9,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
-import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
@@ -31,7 +30,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 	/**
 	 * Sets GutenbergRichterMFD arguments
-	 * 
+	 *
 	 * @param totalRateM5      the number of M>=5's per year. TODO: ref David
 	 *                         Rhodes/Chris Roland? [KKS, CBC]
 	 * @param bValue
@@ -48,39 +47,42 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, U3LogicTreeBranch branch, NZSHM22_DeformationModel deformationModel)
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch)
 			throws DocumentException, IOException {
 		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		return NZSHM22_InversionFaultSystemRuptSet.fromSubduction(rupSetA, branch, deformationModel);
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
 	}
 
 	@Override
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
 			throws IOException, DocumentException {
-		U3LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
+		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
 		if(scalingRelationship != null){
-			branch.clearValue(ScalingRelationships.class);
+			branch.clearValue(NZSHM22_ScalingRelationshipNode.class);
 			branch.setValue(scalingRelationship);
 		}
-		rupSet = loadRuptureSet(ruptureSetFile, branch, deformationModel);
+		if (deformationModel != null) {
+			branch.setValue(deformationModel);
+		}
+		rupSet = loadRuptureSet(ruptureSetFile, branch);
 		if(recalcMags){
 			rupSet.recalcMags(scalingRelationship);
 		}
 		return this;
 	}
-	
+
 	@Override
 	protected NZSHM22_SubductionInversionRunner configure() {
-		U3LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
+		U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
 		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
-				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 
-						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, 
+				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
+						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower,
 						totalRateM5,
 						bValue, mfdTransitionMag);
-		
-		// CBC This may not be needed long term 
+
+		// CBC This may not be needed long term
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
 
 		if (this.slipRateWeightingType != null) {

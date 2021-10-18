@@ -66,7 +66,7 @@ class FullPipelineDemo {
 		File markdownDirDir = new File("./TEST/kevin_markdown_inversions");
 		Preconditions.checkState(markdownDirDir.exists() || markdownDirDir.mkdir());
 
-		U3LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
+		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
 		
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
@@ -133,11 +133,11 @@ class FullPipelineDemo {
 						
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					rupSet = NZSHM22_SubductionInversionRunner.loadRuptureSet(rupSetFile, branch, null);
+					rupSet = NZSHM22_SubductionInversionRunner.loadRuptureSet(rupSetFile, branch);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3
-					rupSet = FaultSystemRupSet.buildFromExisting(rupSet).forU3Branch(branch).build();
+					rupSet = FaultSystemRupSet.buildFromExisting(rupSet).forU3Branch(branch.getU3Branch()).build();
 				}
 			}
 			// write it out

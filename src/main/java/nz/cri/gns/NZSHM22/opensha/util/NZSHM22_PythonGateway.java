@@ -6,6 +6,7 @@ import java.util.Optional;
 
 //import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -22,6 +23,7 @@ import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import py4j.GatewayServer;
 
 import scratch.UCERF3.utils.U3FaultSystemIO;
@@ -329,5 +331,14 @@ public class NZSHM22_PythonGateway {
             solution.write(solutionFile);
 
         }
+    }
+
+    /**
+     * Returns a RupSetScalingRelationship that can be configured and passed on to the inversion runner.
+     * @param name
+     * @return
+     */
+    public static RupSetScalingRelationship getScalingRelationship(String name){
+        return NZSHM22_ScalingRelationshipNode.createRelationShip(name);
     }
 }

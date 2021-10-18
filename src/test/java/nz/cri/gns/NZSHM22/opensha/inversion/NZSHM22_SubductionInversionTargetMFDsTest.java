@@ -20,7 +20,7 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
 
     public static NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, DocumentException, IOException {
         URL first100 = Thread.currentThread().getContextClassLoader().getResource("RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(100)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.2).zip");
-        return NZSHM22_SubductionInversionRunner.loadRuptureSet(new File(first100.toURI()), NZSHM22_LogicTreeBranch.subduction(), null);
+        return NZSHM22_SubductionInversionRunner.loadRuptureSet(new File(first100.toURI()), NZSHM22_LogicTreeBranch.subduction());
     }
 
     public static List<Double> getPoints(EvenlyDiscretizedFunc func) {
@@ -31,7 +31,6 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
         }
         return result;
     }
-
 
     @Test
     public void testMFDConstraints() throws DocumentException, URISyntaxException, IOException {
