@@ -252,6 +252,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public InversionInputGenerator getInversionInputGenerator(){
+		return inversionInputGenerator;
+	}
+
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(String ruptureSetFileName)
 			throws IOException, DocumentException {
 		File rupSetFile = new File(ruptureSetFileName);
