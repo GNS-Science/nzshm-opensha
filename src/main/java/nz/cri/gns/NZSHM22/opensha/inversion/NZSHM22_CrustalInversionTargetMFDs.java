@@ -378,6 +378,25 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 			trulyOffFaultMFD.set(point);
 		}
 
+		if (MFD_STATS) {
+			System.out.println("*********");
+			System.out.println("trulyOffFaultMFD");
+			System.out.println(trulyOffFaultMFD.toString());
+			System.out.println("");
+
+			System.out.println("trulyOffFaultMFD_SansTVZ");
+			System.out.println(trulyOffFaultMFD_SansTVZ.toString());
+			System.out.println("");
+
+			System.out.println("trulyOffFaultMFD_TVZ");
+			System.out.println(trulyOffFaultMFD_TVZ.toString());
+			System.out.println("");
+
+			System.out.println("*********");
+
+
+		}
+
 
 		//TODO: review this (if really needed) should add the SansTVZ and TVZ
 		List<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(invRupSet, gridSeisUtils, totalTargetGR);

@@ -122,11 +122,11 @@ public class NZSHM22_ReportPageGen {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
         reportPageGen.setName("hello!").setOutputPath("TEST/REPORTPAGEGEN")
                 .setFillSurfaces(true)
-                .addPlot("SlipRatePlots")
-                .addPlot("ParticipationRatePlot")
+                //.addPlot("SolMFDPlot")
+                //.addPlot("ParticipationRatePlot")
 //                .setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI1NjZkWUxtYQ==.zip");
                 //.setSolution("TEST/inversions/CrustalInversionSolution.zip");
-                .setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MzA2MFk2M3du.zip");
+                .setSolution("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\CrustalInversionSolution.zip");
         reportPageGen.generatePage();
     }
 }
