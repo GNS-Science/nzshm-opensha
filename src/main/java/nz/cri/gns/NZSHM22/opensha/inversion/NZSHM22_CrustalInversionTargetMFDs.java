@@ -107,6 +107,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 	private double aveMinSeismoMag_TVZ;
 	private IncrementalMagFreqDist trulyOffFaultMFD_SansTVZ;
 	private IncrementalMagFreqDist trulyOffFaultMFD_TVZ;
+	private ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
 	private ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List_SansTVZ;
 	private ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List_TVZ;
 	private SummedMagFreqDist totalSubSeismoOnFaultMFD_SansTVZ;
@@ -394,24 +395,28 @@ public class NZSHM22_CrustalInversionTargetMFDs extends NZSHM22_InversionTargetM
 
 			System.out.println("*********");
 
-
 		}
-
 
 		//TODO: review this (if really needed) should add the SansTVZ and TVZ
-		List<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(invRupSet, gridSeisUtils, totalTargetGR);
+		//CHECK: New MFD addition approach....
 		totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-		for(int m=0; m<subSeismoOnFaultMFD_List.size(); m++) {
-			GutenbergRichterMagFreqDist mfd = subSeismoOnFaultMFD_List.get(m);
-			if(mfd.getMagUpper() <= 5.05 & D) {
-				debugString += "\tWARNING: "+faultSectionData.get(m).getName()+" has a max subSeism mag of "+mfd.getMagUpper()+" so no contribution above M5!\n";
-			}
-			totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(mfd);
-		}
-
-		// TODO is this correct? It's just a guess by Oakley
+		totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(totalSubSeismoOnFaultMFD_SansTVZ);
+		totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(totalSubSeismoOnFaultMFD_TVZ);
+				
+		// TODO is this correct? It's just a guess by Oakley (and now Chris)
+		subSeismoOnFaultMFD_List = new ArrayList<GutenbergRichterMagFreqDist>();
+		subSeismoOnFaultMFD_List.addAll(subSeismoOnFaultMFD_List_SansTVZ);
+		subSeismoOnFaultMFD_List.addAll(subSeismoOnFaultMFD_List_TVZ);
 		subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
-
+		
+		if (MFD_STATS) {
+			System.out.println("*********");
+			System.out.println("totalSubSeismoOnFaultMFD");
+			System.out.println(totalSubSeismoOnFaultMFD.toString());
+			System.out.println("");
+			System.out.println("*********");
+		}
+		
 		setParent(invRupSet);
 
 //		totalTargetGR.setName("totalTargetGR");
