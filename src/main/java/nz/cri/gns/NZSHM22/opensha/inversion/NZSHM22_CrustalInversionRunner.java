@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -127,7 +126,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag);
 
         solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
-                .getMFDConstraintComponents();
+                .getReportingMFDConstraintComponents();
 
         // set up slip rate config
         inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);

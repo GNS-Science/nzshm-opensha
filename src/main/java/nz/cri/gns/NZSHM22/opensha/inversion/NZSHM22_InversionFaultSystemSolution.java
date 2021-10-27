@@ -3,19 +3,16 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.DiscretizedFunc;
-import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.magdist.ArbIncrementalMagFreqDist;
-import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
-import scratch.UCERF3.griddedSeismicity.UCERF3_GridSourceGenerator;
 import scratch.UCERF3.inversion.*;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
 
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -24,13 +21,16 @@ import java.util.*;
 import java.util.concurrent.Callable;
 
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSolution {
 
-    private NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet, double[] rates,
+    private NZSHM22_InversionFaultSystemSolution(FaultSystemSolution solution,
+                                                 NZSHM22_InversionFaultSystemRuptSet rupSet,
                                                  UCERF3InversionConfiguration config, Map<String, Double> energies) {
-        super(rupSet, rates, config, energies);
+        super(rupSet, solution.getRateForAllRups(), config, energies);
+
+        for (OpenSHA_Module module : solution.getModules(true))
+            addModule(module);
 
         removeAvailableModuleInstances(GridSourceProvider.class);
         addAvailableModule(new Callable<NZSHM22_GridSourceGenerator>() {
@@ -39,18 +39,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
                 return new NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution.this);
             }
         }, GridSourceProvider.class);
-    }
 
-    /**
-     * Can be used on the fly for when InversionConfiguration is not available/relevant/fit for use
-     *
-     * @param rupSet
-     * @param rates
-     * @param energies
-     */
-    private NZSHM22_InversionFaultSystemSolution(NZSHM22_InversionFaultSystemRuptSet rupSet,
-                                                 double[] rates, Map<String, Double> energies) {
-        this(rupSet, rates, null, energies);
     }
 
     public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
@@ -60,8 +49,8 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
+                solution,
                 nzRupSet,
-                solution.getRateForAllRups(),
                 null,
                 null);
 
@@ -75,8 +64,8 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
+                solution,
                 nzRupSet,
-                solution.getRateForAllRups(),
                 null,
                 null);
 

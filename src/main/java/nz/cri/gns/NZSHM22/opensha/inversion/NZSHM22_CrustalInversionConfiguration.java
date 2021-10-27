@@ -138,7 +138,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
-				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag);
+				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFD_Constraints();
 

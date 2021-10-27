@@ -57,7 +57,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		setLogicTreeBranch(branch);
 
 		//overwrite behaviour of super class
-		removeModuleInstances(InversionTargetMFDs.class);
 		removeModuleInstances(FaultGridAssociations.class);
 
 		if (branch.hasValue(NZSHM22_ScalingRelationshipNode.class)) {
@@ -82,12 +81,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 					return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_TEST_GRIDDED());
 				}
 			}, PolygonFaultGridAssociations.class);
-			offerAvailableModule(new Callable<NZSHM22_CrustalInversionTargetMFDs>() {
-				@Override
-				public NZSHM22_CrustalInversionTargetMFDs call() throws Exception {
-					return new NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet.this);
-				}
-			}, NZSHM22_CrustalInversionTargetMFDs.class);
 		}
 
 
