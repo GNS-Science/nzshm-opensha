@@ -7,6 +7,7 @@ import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -53,6 +54,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private boolean inversionAveragingEnabled = false;
 	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
+	private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected NZSHM22_DeformationModel deformationModel = null;
@@ -244,6 +246,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public NZSHM22_AbstractInversionRunner setSpatialSeisPDF(NZSHM22_SpatialSeisPDF spatialSeisPDF){
+		this.spatialSeisPDF = spatialSeisPDF;
+		return this;
+	}
+
 	/**
 	 * @param inputGen
 	 * @return
@@ -281,6 +288,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		if (deformationModel != null) {
 			branch.setValue(deformationModel);
+		}
+		if(spatialSeisPDF != null){
+			branch.clearValue(NZSHM22_SpatialSeisPDF.class);
+			branch.setValue(spatialSeisPDF);
 		}
 	}
 

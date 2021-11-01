@@ -1,14 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionTargetMFDs;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
@@ -66,12 +65,12 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 * 2) focal mechanism options, and finite vs point sources (cross hair, random
 	 * strike, etc)?
 	 *
-	 * @param ifss {@code InversionFaultSystemSolution} for which grided/background
+	 * @param ifss {@code InversionFaultSystemSolution} for which gridded/background
 	 *             sources should be generated
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getLogicTreeBranch();
-		srcSpatialPDF = ((NZSHM22_InversionTargetMFDs) ifss.getRupSet().getInversionTargetMFDs()).getPDF();
+		srcSpatialPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class).getPDF();
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
 

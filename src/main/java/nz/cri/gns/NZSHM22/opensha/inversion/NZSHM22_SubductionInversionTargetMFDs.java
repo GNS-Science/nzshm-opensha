@@ -79,7 +79,7 @@ import scratch.UCERF3.utils.RELM_RegionUtils;
  * @author chrisbc
  *
  */
-public class NZSHM22_SubductionInversionTargetMFDs extends NZSHM22_InversionTargetMFDs{
+public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs{
 
 	static boolean MFD_STATS = true; //print some curves for analytics
 	
@@ -227,11 +227,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends NZSHM22_InversionTarg
 	// only used for plots
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_SoCal() {throw new UnsupportedOperationException();}
-
-	@Override
-	public double[] getPDF(){
-		return spatialSeisPDF.getPDF();
-	}
 
 	// TODO CBC decide if this pattern is OK, could also be inheriting from InversionTargetMFDs.Precomputed ??
 	public static class SubductionPrecomputed extends NZSHM22_SubductionInversionTargetMFDs implements ArchivableModule {
