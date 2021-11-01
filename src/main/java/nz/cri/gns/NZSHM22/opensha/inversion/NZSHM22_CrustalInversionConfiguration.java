@@ -78,7 +78,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
 		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5, totalRateM5,
-				bValue, bValue, mfdTransitionMag);
+				bValue, bValue, mfdTransitionMag, 7.0, 7.0);
 	}
 
 	/**
@@ -103,7 +103,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	public static NZSHM22_CrustalInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt, double totalRateM5_Sans, double totalRateM5_TVZ, double bValue_Sans,
-			double bValue_TVZ, double mfdTransitionMag) {
+			double bValue_TVZ, double mfdTransitionMag, double mMin_Sans, double mMin_TVZ) {
 		/*
 		 * ******************************************* COMMON TO ALL MODELS
 		 * *******************************************
@@ -138,7 +138,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
-				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ);
+				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFD_Constraints();
 

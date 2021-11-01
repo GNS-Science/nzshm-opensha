@@ -32,6 +32,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double totalRateM5_TVZ = 0.4;
     private double bValue_Sans = 1.05;
     private double bValue_TVZ = 1.25;
+    private double minMag_Sans = 7.0;
+    private double minMag_TVZ = 7.0;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -80,6 +82,18 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     }
 
     /**
+     * Sets the minimum magnitude for targetOnFaultSupraSeisMFDs
+     * @param minMagSans
+     * @param minMagTvz
+     * @return this runner
+     */
+    public NZSHM22_AbstractInversionRunner setMinMagForTargetOnFaultSupraSeisMFDs(double minMagSans, double minMagTvz){
+        this.minMag_Sans = minMagSans;
+        this.minMag_TVZ = minMagTvz;
+        return this;
+    }
+
+    /**
      * Sets GutenbergRichterMFD arguments
      *
      * @param totalRateM5_Sans
@@ -123,7 +137,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                 inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
-                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag);
+                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ);
 
         solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
                 .getReportingMFDConstraintComponents();

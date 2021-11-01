@@ -83,8 +83,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
     }
 
 	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,double totalRateM5_Sans,
-											  double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ) {
-		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ);
+											  double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ,
+											  double minMag_Sans, double minMag_TVZ ) {
+		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMag_Sans, minMag_TVZ);
 	}
 
 	public static class RegionalTargetMFDs {
@@ -93,6 +94,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		public double totalRateM5;
 		public double bValue;
+		public double minMag;
 
 		public GutenbergRichterMagFreqDist totalTargetGR;
 		public IncrementalMagFreqDist trulyOffFaultMFD;
@@ -102,10 +104,11 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
-		public RegionalTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet, GriddedRegion region, double totalRateM5, double bValue) {
+		public RegionalTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet, GriddedRegion region, double totalRateM5, double bValue, double minMag) {
 			this.region = region;
 			this.totalRateM5 = totalRateM5;
 			this.bValue = bValue;
+			this.minMag = minMag;
 			if (region.getName().contains("SANS TVZ")) {
 				suffix = "SansTVZ";
 			} else if (region.getName().contains("TVZ")) {
@@ -127,6 +130,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 			out.name("bValue");
 			out.value(bValue);
+
+			out.name("minMag");
+			out.value(minMag);
 
 			out.name("totalTargetGR");
 			mfdAdapter.write(out, totalTargetGR);
@@ -206,7 +212,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
-			targetOnFaultSupraSeisMFDs = fillBelowMag(tempTargetOnFaultSupraSeisMFD, 7,  1.0e-20);
+			targetOnFaultSupraSeisMFDs = fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag,  1.0e-20);
 
 			if (MFD_STATS) {
 				System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
@@ -245,12 +251,14 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 						double totalRateM5_SansTVZ,
 						double totalRateM5_TVZ,
 						double bValue_SansTVZ,
-						double bValue_TVZ) {
+						double bValue_TVZ,
+						double minMag_Sans,
+						double minMag_TVZ) {
 
 		setParent(invRupSet);
 
-		sansTvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), totalRateM5_SansTVZ, bValue_SansTVZ);
-		tvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_TVZ_GRIDDED(), totalRateM5_TVZ, bValue_TVZ);
+		sansTvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
+		tvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_TVZ_GRIDDED(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ);
 
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<>();
