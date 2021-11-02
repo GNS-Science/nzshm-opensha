@@ -4,6 +4,7 @@ import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import com.google.common.base.Preconditions;
@@ -32,6 +33,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double totalRateM5_TVZ = 0.4;
     private double bValue_Sans = 1.05;
     private double bValue_TVZ = 1.25;
+
+    private boolean filterZeroSlipRuptures = false;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -79,6 +82,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         return this;
     }
 
+    public NZSHM22_CrustalInversionRunner setRemoveZeroSlipRuptures(boolean filter){
+        this.filterZeroSlipRuptures = filter;
+        return this;
+    }
+
     /**
      * Sets GutenbergRichterMFD arguments
      *
@@ -100,7 +108,14 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     }
 
     public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws DocumentException, IOException {
-        U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+        return loadRuptureSet(ruptureSetFile, branch, false);
+    }
+
+    public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, boolean filter) throws DocumentException, IOException {
+        FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
+        if(filter){
+            rupSetA = FaultSystemRupSetFilter.filter0Slip(rupSetA);
+        }
         return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
     }
 
@@ -108,7 +123,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
         setupLTB(branch);
-        this.rupSet = loadRuptureSet(ruptureSetFile, branch);
+        this.rupSet = loadRuptureSet(ruptureSetFile, branch, filterZeroSlipRuptures);
         if (recalcMags) {
             rupSet.recalcMags(scalingRelationship);
         }
@@ -162,7 +177,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         File inputDir = new File("./TEST");
         File outputRoot = new File("./TEST");
         File ruptureSet = new File(
-                "C:\\Code\\NZSHM\\nzshm-opensha\\src\\test\\resources\\AlpineVernonInversionSolution.zip");
+                "C:\\Users\\volkertj\\Downloads\\RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5)(4).zip");
 //				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2).zip");
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
@@ -173,6 +188,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setRake(0);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
+                .setRemoveZeroSlipRuptures(true)
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
