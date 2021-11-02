@@ -113,10 +113,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
     public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, boolean filter) throws DocumentException, IOException {
         FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-        if(filter){
-            rupSetA = FaultSystemRupSetFilter.filter0Slip(rupSetA);
-        }
-        return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+        return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch, filter);
     }
 
     @Override
@@ -191,7 +188,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setRemoveZeroSlipRuptures(true)
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
-             //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
+              //  .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
                 .setSlipRateConstraint("BOTH", 1000, 1000))

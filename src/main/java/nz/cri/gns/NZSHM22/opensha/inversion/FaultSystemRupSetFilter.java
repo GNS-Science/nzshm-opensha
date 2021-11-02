@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import org.opensha.commons.util.modules.SubModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
@@ -55,6 +56,10 @@ public class FaultSystemRupSetFilter {
                 rupLengths.stream().mapToDouble(Double::doubleValue).toArray());
 
         result.addModule(ClusterRuptures.instance(result,clusterRuptures));
+
+        result.removeModuleInstances(SectSlipRates.class);
+        SectSlipRates rates = SectSlipRates.fromFaultSectData(result);
+        result.addModule(SectSlipRates.precomputed(result, rates.getSlipRates(), rates.getSlipRateStdDevs()));
 
         System.out.println("Original rupture count " + original.getMagForAllRups().length);
         System.out.println("New rupture count: " + result.getMagForAllRups().length);

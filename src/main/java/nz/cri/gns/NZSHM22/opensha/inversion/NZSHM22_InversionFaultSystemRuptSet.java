@@ -35,11 +35,15 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	protected NZSHM22_LogicTreeBranch branch;
 
     public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
-        super(applyDeformationModel(rupSet, branch), branch.getU3Branch());
-        init(branch);
+    	this(rupSet, branch, false);
     }
 
-    protected static FaultSystemRupSet applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
+	public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch, boolean filter) {
+		super(filter ? FaultSystemRupSetFilter.filter0Slip(applyDeformationModel(rupSet, branch)) : applyDeformationModel(rupSet, branch), branch.getU3Branch());
+		init(branch);
+	}
+
+	protected static FaultSystemRupSet applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
         if (model != null) {
             model.applyTo(rupSet);
