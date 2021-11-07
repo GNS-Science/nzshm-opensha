@@ -10,7 +10,6 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.inversion.CrustalMFDRunner;
-import nz.cri.gns.NZSHM22.opensha.reports.NZSHM22_MFDPlot;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
@@ -18,6 +17,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
 import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
+import nz.cri.gns.NZSHM22.util.GitVersion;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
@@ -118,7 +118,16 @@ public class NZSHM22_PythonGateway {
         return new CrustalMFDRunner();
     }
 
+    public static GitVersion getGitVersion() {
+        return new GitVersion();
+    }
+
     public static void main(String[] args) {
+
+        GitVersion version = new GitVersion();
+        System.out.println("NZSHM22_PythonGateway tagged version: " + version.getVersion());
+        System.out.println("opensha git ref: " + version.getOpenshaGitRef());
+
         NZSHM22_PythonGateway app = new NZSHM22_PythonGateway();
 
         String DEFAULT_PORT = "25333";

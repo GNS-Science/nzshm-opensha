@@ -38,6 +38,17 @@ Test reports are found at  `./build/reports/tests/localTests/index.html`
  .\gradlew test
 ```
 
+### Releases on github
 
+Github can build release fatjars and push them to S3.
+
+- In order to trigger a build, tag a commit as `release/<my release version string>`.
+- `<my release version string>` will be added to the jar's file name.
+- It will also be available inside the jar through `nz.cri.gns.NZSHM22.util.GitVersion`.
+- Release jars will only be created if all tests pass.
+- Release jars will be uploaded to a specific S3 bucket.
+- To verify that it's working, check that the github action for the tag has succeeded. Specifically the "Upload to S3" task should
+  end with "upload: main/build/libs/nzshm-opensha-all-1.0.jar to s3://***/nzshm-opensha-all-1.0.jar" (if "1.0" is your
+  release version string).
 
 

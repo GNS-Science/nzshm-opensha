@@ -14,23 +14,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Clone opensha
       uses: actions/checkout@v2
       with:
         repository: opensha/opensha
         ref: master
         path: opensha
+
     - uses: actions/checkout@v2
       with:
         path: main
+
     - name: Set up JDK 11
       uses: actions/setup-java@v2
       with:
         java-version: '11'
         distribution: 'adopt'
+
     - name: Build with Gradle
       run: |
         cd main
         chmod +x gradlew
         ./gradlew check -x test
         ./gradlew localTests integrationTest
+
+    - name: Set version env var
+      if: startsWith(github.ref, 'refs/tags/release')
+      run: echo "TAG_VERSION=$(echo ${{github.ref}} | cut -d'/' -f 4)" >> $GITHUB_ENV
+
+    - name: Set fatjar name
+      if: startsWith(github.ref, 'refs/tags/release')
+      run: echo "JAR_NAME=nzshm-opensha-all-${{env.TAG_VERSION}}.jar" >> $GITHUB_ENV
+
+    - name: Build FatJar with Gradle
+      if: startsWith(github.ref, 'refs/tags/release')
+      run: |
+        cd opensha
+        git rev-parse HEAD > ../main/src/main/resources/opensha-ref.txt
+        cd ../main
+        echo "${{env.TAG_VERSION}}" > src/main/resources/tagged-version.txt
+        chmod +x gradlew
+        ./gradlew fatjar
+        mv build/libs/nzshm-opensha-all.jar build/libs/${{env.JAR_NAME}}
+
+    - uses: jakejarvis/s3-sync-action@master
+      if: startsWith(github.ref, 'refs/tags/release')
+      name: Upload to S3
+      id: S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.RELEASE_AWS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.RELEASE_AWS_SECRET_ACCESS_KEY}}
+        AWS_S3_BUCKET: ${{ secrets.RELEASE_AWS_BUCKET }}
+        AWS_REGION: 'ap-southeast-2'
+        SOURCE_DIR: main/build/libs/
+        destination_dir: ''
