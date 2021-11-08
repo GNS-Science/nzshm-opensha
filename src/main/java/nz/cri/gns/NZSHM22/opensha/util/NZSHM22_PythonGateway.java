@@ -9,6 +9,8 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
+import nz.cri.gns.NZSHM22.opensha.inversion.CrustalMFDRunner;
+import nz.cri.gns.NZSHM22.opensha.reports.NZSHM22_MFDPlot;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
@@ -110,6 +112,10 @@ public class NZSHM22_PythonGateway {
      */
     public static NZSHM22_ReportPageGen getReportPageGen(){
         return new NZSHM22_ReportPageGen();
+    }
+
+    public static CrustalMFDRunner getCrustalMFDRunner() {
+        return new CrustalMFDRunner();
     }
 
     public static void main(String[] args) {

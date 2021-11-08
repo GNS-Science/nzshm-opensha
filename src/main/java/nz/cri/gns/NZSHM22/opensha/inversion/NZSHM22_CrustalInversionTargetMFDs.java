@@ -88,17 +88,17 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	}
 
 	public static class RegionalTargetMFDs {
-		GriddedRegion region;
-		String suffix;
+		public GriddedRegion region;
+		public String suffix;
 
-		double totalRateM5;
-		double bValue;
+		public double totalRateM5;
+		public double bValue;
 
-		GutenbergRichterMagFreqDist totalTargetGR;
-		IncrementalMagFreqDist trulyOffFaultMFD;
-		SummedMagFreqDist totalSubSeismoOnFaultMFD;
-		IncrementalMagFreqDist targetOnFaultSupraSeisMFDs;
-		List<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
+		public GutenbergRichterMagFreqDist totalTargetGR;
+		public IncrementalMagFreqDist trulyOffFaultMFD;
+		public SummedMagFreqDist totalSubSeismoOnFaultMFD;
+		public IncrementalMagFreqDist targetOnFaultSupraSeisMFDs;
+		public List<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
@@ -317,7 +317,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		}
 	}
-	
+
+	public RegionalTargetMFDs getSansTvz(){
+		return sansTvz;
+	}
+
+	public RegionalTargetMFDs getTvz(){
+		return tvz;
+	}
+
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_NoCal() {
 		throw new UnsupportedOperationException();
