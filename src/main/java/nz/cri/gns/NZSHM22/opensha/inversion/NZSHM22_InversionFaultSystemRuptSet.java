@@ -2,22 +2,26 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.geo.Region;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
+import scratch.UCERF3.utils.UCERF3_Observed_MFD_Fetcher;
 
+import java.awt.geom.Area;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.IntPredicate;
 
 /**
  * This class provides specialisatations needed to override some UCERF3 defaults
@@ -78,12 +82,20 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
 				@Override
 				public PolygonFaultGridAssociations call() throws Exception {
-					return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_TEST_GRIDDED());
+					return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 				}
 			}, PolygonFaultGridAssociations.class);
+
+			if (hasAvailableModule(ModSectMinMags.class))
+				removeModuleInstances(ModSectMinMags.class);
+			addAvailableModule(new Callable<ModSectMinMags>() {
+				@Override
+				public ModSectMinMags call() throws Exception {
+					return ModSectMinMags.instance(NZSHM22_InversionFaultSystemRuptSet.this,
+							NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(NZSHM22_InversionFaultSystemRuptSet.this, minMagForSeismogenicRups)); // FIXME should this be per region?
+				}
+			}, ModSectMinMags.class);
 		}
-
-
 	}
 
 	/**
@@ -113,12 +125,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	public static void setMinMagForSeismogenicRups(double minMag){
 		minMagForSeismogenicRups = minMag;
-	}
-
-	// this overrides the calculation for the ModSectMinMags module
-    @Override
-	protected double[] calcFinalMinMagForSections() {
-		return NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,minMagForSeismogenicRups);
 	}
 
 	/**

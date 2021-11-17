@@ -1,8 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.geom.Point2D;
@@ -15,7 +13,6 @@ import com.google.gson.stream.JsonWriter;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
-import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
@@ -91,6 +88,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	public static class RegionalTargetMFDs {
 		public GriddedRegion region;
 		public String suffix;
+		public RegionalRupSetData regionalRupSet;
 
 		public double totalRateM5;
 		public double bValue;
@@ -116,7 +114,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			} else {
 				suffix = "";
 			}
-			init(invRupSet);
+			regionalRupSet = new RegionalRupSetData(invRupSet, region);
+			init();
 		}
 
 		void writeToJson(JsonWriter out) throws IOException {
@@ -162,19 +161,29 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			return result;
 		}
 
-		protected void init(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
+		protected void init() {
 
 			double mMaxOffFault = 8.05d; // NZ-ish
-			NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
+			NZSHM22_SpatialSeisPDF spatialSeisPDF = regionalRupSet.getSpatialSeisPDF();
 
 			// convert mMaxOffFault to bin center
 			mMaxOffFault -= DELTA_MAG / 2;  // TODO is 8.05 already a bin centre?
 
-			List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
+			List<? extends FaultSection> faultSectionData = regionalRupSet.getFaultSectionDataList();
 
 			GriddedSeisUtils gridSeisUtils = new GriddedSeisUtils(faultSectionData,
-					spatialSeisPDF.getPDF(), invRupSet.requireModule(PolygonFaultGridAssociations.class)); // TODO: OAKLEY: check this is ours already
-			double fractionSeisOnFault = gridSeisUtils.pdfInPolys();        //TODO: split this for TVZ? Matt says yes
+					spatialSeisPDF.getPDF(region), regionalRupSet.getPolygonFaultGridAssociations());
+			double fractionSeisOnFault = gridSeisUtils.pdfInPolys();
+
+			double fractionPDFInRegion = spatialSeisPDF.getFractionInRegion(region);
+			
+			System.out.println("fractionPDFInRegion: " + fractionPDFInRegion);
+			System.out.println("faultSectionData.size() " + faultSectionData.size());
+			System.out.println("fractionSeisOnFault " + fractionSeisOnFault);
+			
+			fractionSeisOnFault /= fractionPDFInRegion;
+			
+			System.out.println("normalised fractionSeisOnFault: " + fractionSeisOnFault);
 
 			double onFaultRegionRateMgt5 = totalRateM5 * fractionSeisOnFault;
 
@@ -182,14 +191,14 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 
 			// populate the MFD bins
-			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(invRupSet.getMaxMag()));
+			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(regionalRupSet.getMaxMag()));
 			totalTargetGR.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue);
 
 			// get ave min seismo mag for region
 			// TODO: this is weighted by moment, so exponentially biased to larger ruptures (WHY?)
 			// Kevin weighted by moment (which comes from slip rate) so higher momentrate faults WILL predominate
 			// NZ many tiny faults will not really contribute much
-			double tempMag = NZSHM22_FaultSystemRupSetCalc.getMeanMinMag(invRupSet, true);
+			double tempMag = NZSHM22_FaultSystemRupSetCalc.getMeanMinMag(regionalRupSet, true);
 
 			//TODO: why derive this from the rupt set and not use mMaxOffFault??
 			double aveMinSeismoMag = totalTargetGR.getX(totalTargetGR.getClosestXIndex(tempMag));    // round to nearest MFD value
@@ -198,7 +207,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			// seems to calculate our corner magnitude for tapered GR
 			trulyOffFaultMFD = NZSHM22_FaultSystemRupSetCalc.getTriLinearCharOffFaultTargetMFD(totalTargetGR, onFaultRegionRateMgt5, aveMinSeismoMag, mMaxOffFault);
 
-			subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(invRupSet, gridSeisUtils, totalTargetGR);
+			subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(regionalRupSet, gridSeisUtils, totalTargetGR, minMag, fractionPDFInRegion);
 
 			// TODO: use computeMinSeismoMagForSections to find NZ values and explain 7.4
 			// histogram to look for min values > 7.X
@@ -257,8 +266,13 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		setParent(invRupSet);
 
-		sansTvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
 		tvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_TVZ_GRIDDED(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ);
+		sansTvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
+
+		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
+		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));
+		System.out.println("sans tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED()));
+		System.out.println("combined: " + (spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()) + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED())));
 
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<>();
