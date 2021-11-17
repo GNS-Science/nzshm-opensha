@@ -25,6 +25,8 @@ public class CrustalMFDRunner {
     private double totalRateM5_TVZ = 0.4;
     private double bValue_Sans = 1.05;
     private double bValue_TVZ = 1.25;
+    double minMagSans = 7.0;
+    double minMagTvz = 7.0;
 
     protected NZSHM22_ScalingRelationshipNode scalingRelationship;
     protected boolean recalcMags = false;
@@ -59,6 +61,12 @@ public class CrustalMFDRunner {
 
     public CrustalMFDRunner setMinMagForSeismogenicRups(double minMag) {
         NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
+        return this;
+    }
+
+    public CrustalMFDRunner setMinMagForTargetOnFaultSupraSeisMFDs(double minMagSans, double minMagTvz){
+        this.minMagSans = minMagSans;
+        this.minMagTvz = minMagTvz;
         return this;
     }
 
@@ -111,7 +119,7 @@ public class CrustalMFDRunner {
     }
 
     public void run() throws IOException {
-        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ);
+        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMagSans, minMagTvz);
         rupSet.addModule(targetMfds);
 
         //rupSet.write(new File(outputPath, "rupSet.zip"));
@@ -132,7 +140,8 @@ public class CrustalMFDRunner {
                 .setScalingRelationship("SMPL_NZ_INT_UP", false)
                 .setRuptureSetFile(new File("C:\\Users\\volkertj\\Downloads\\RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5)(4).zip"))
                 .setGutenbergRichterMFD(4.3, 0.8, 0.89, 0.89)
-                .setMinMagForSeismogenicRups(7);
+                .setMinMagForSeismogenicRups(7)
+                .setMinMagForTargetOnFaultSupraSeisMFDs(6.95, 6.95);
 
         runner.run();
     }

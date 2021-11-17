@@ -122,7 +122,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         SummedMagFreqDist mfd = new SummedMagFreqDist(U3InversionTargetMFDs.MIN_MAG, U3InversionTargetMFDs.NUM_MAG, U3InversionTargetMFDs.DELTA_MAG);
         InversionFaultSystemRupSet rupSet = getRupSet();
 
-        List<? extends IncrementalMagFreqDist> subSeismoMFDs = getFinalSubSeismoOnFaultMFD_List();
+        List<? extends IncrementalMagFreqDist> subSeismoMFDs = rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().getAll();
 
         for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
             if (parentSectionIDs.contains(rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
