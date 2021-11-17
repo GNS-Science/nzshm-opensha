@@ -180,7 +180,7 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
             return epistemicBound == other.epistemicBound &&
                     faultRegime == other.faultRegime &&
                     faultType == other.faultType &&
-                    rake == other.rake;
+                    (rake == other.rake || (Double.isNaN(rake) && Double.isNaN(other.rake)));
         }
         return false;
     }
@@ -196,8 +196,10 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
             out.value(value.faultRegime.name());
             out.name("epistemicBound");
             out.value(value.epistemicBound.name());
-            out.name("rake");
-            out.value(value.rake);
+            if(!Double.isNaN(value.rake)) {
+                out.name("rake");
+                out.value(value.rake);
+            }
             out.endObject();
         }
 
