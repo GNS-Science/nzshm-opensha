@@ -70,7 +70,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getLogicTreeBranch();
-		srcSpatialPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class).getPDF();
+		srcSpatialPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class).getPDF(new NewZealandRegions.NZ_TEST_GRIDDED()); // FIXME later
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
 

@@ -63,7 +63,7 @@ public class NewZealandRegions {
 			super(readCoords("nz_rectangle.coords"), BorderType.MERCATOR_LINEAR);
 			Region regionTVZ = new NZ_TVZ();
 			this.addInterior(regionTVZ);
-			this.setName("nz_rectangle Gridded Region");
+			this.setName("nz_rectangle SANS TVZ Gridded Region");
 		}
 	}
 
