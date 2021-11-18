@@ -32,8 +32,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double totalRateM5_TVZ = 0.4;
     private double bValue_Sans = 1.05;
     private double bValue_TVZ = 1.25;
-    private double minMag_Sans = 7.0;
-    private double minMag_TVZ = 7.0;
+    private double minMag_Sans = 6.95;
+    private double minMag_TVZ = 6.95;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -175,9 +175,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         File inputDir = new File("./TEST");
         File outputRoot = new File("./TEST");
-        File ruptureSet = new File(
-                "C:\\Code\\NZSHM\\nzshm-opensha\\src\\test\\resources\\AlpineVernonInversionSolution.zip");
+        File ruptureSet = new File(inputDir,
+//                "C:\\Code\\NZSHM\\nzshm-opensha\\src\\test\\resources\\AlpineVernonInversionSolution.zip");
 //				"RupSet_Cl_FM(CFM_0_9_SANSTVZ_2010)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(2000)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0.2).zip");
+        		"RupSet_Cl_FM(CFM_0_9_SANSTVZ_D90)_noInP(T)_slRtP(0.05)_slInL(F)_cfFr(0.75)_cfRN(2)_cfRTh(0.5)_cfRP(0.01)_fvJm(T)_jmPTh(0.001)_cmRkTh(360)_mxJmD(15)_plCn(T)_adMnD(6)_adScFr(0)_bi(F)_stGrSp(2)_coFr(0.5).zip");
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
@@ -187,14 +188,14 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setRake(0);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .setInversionSeconds(1)
+                .setInversionSeconds(60)
                 .setScalingRelationship(scaling, true)
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
                 .setSlipRateConstraint("BOTH", 1000, 1000))
                 .setSlipRateUncertaintyConstraint("UNCERTAINTY_ADJUSTED", 1000, 2)
-                .setGutenbergRichterMFD(5, 0.5, 1.2, 1.5, 7.85);
+                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85);
 
         FaultSystemSolution solution = runner.runInversion();
 

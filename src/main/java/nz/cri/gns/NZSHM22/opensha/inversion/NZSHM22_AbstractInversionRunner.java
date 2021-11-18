@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -26,6 +24,7 @@ import com.google.common.base.Preconditions;
 
 
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
@@ -374,6 +373,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
 				unnormalizedWt);
 	}
 
+	public void validateConfig(){
+		boolean crustal = rupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(FaultRegime.class) == FaultRegime.CRUSTAL;
+
+		boolean crustalScaling;
+		if(scalingRelationship.getScalingRelationship() instanceof Stirling2021SimplifiedScalingRelationship){
+			Stirling2021SimplifiedScalingRelationship scale = (Stirling2021SimplifiedScalingRelationship) scalingRelationship.getScalingRelationship();
+			crustalScaling = scale.getRegime().equals("CRUSTAL");
+		}else{
+			crustalScaling = scalingRelationship.getScalingRelationship() != ScalingRelationships.TMG_SUB_2017;
+		}
+		Preconditions.checkState(crustal == crustalScaling, "Regime type of rupture set and scaling relationship do not match.");
+	}
+
 	/**
 	 * Runs the inversion on the specified rupture set.
 	 * 
@@ -384,6 +396,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
 		configure();
+		validateConfig();
 
 		// weight of entropy-maximization constraint (not used in UCERF3)
 //		double smoothnessWt = 0;

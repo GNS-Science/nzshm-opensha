@@ -35,6 +35,10 @@ public class Stirling2021SimplifiedScalingRelationship implements RupSetScalingR
         magAreaRel.setRegime(regime);
     }
 
+    public String getRegime(){
+        return magAreaRel.getRegime();
+    }
+
     public void setEpistemicBound(String bound) {
         magAreaRel.setEpistemicBound(bound);
     }
