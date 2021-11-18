@@ -3,19 +3,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.cli.CommandLine;
-import org.dom4j.Element;
-import org.opensha.commons.metadata.XMLSaveable;
-import org.opensha.commons.util.XMLUtils;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
-import org.opensha.sha.magdist.SummedMagFreqDist;
-
-import com.google.common.collect.Lists;
-
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
 
 /**
  * This represents all of the inversion configuration parameters specific to an
@@ -29,8 +18,6 @@ import scratch.UCERF3.utils.MFD_InversionConstraint;
 public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConfiguration {
 
 	protected final static boolean D = true; // for debugging
-
-	private String metadata;
 
 	/**
 	 * 
@@ -120,7 +107,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		// since it helps fit slow-moving faults). If unnormalized, misfit is absolute
 		// difference.
 		// BOTH includes both normalized and unnormalized constraints.
-		SlipRateConstraintWeightingType slipRateWeighting = SlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
+		NZSlipRateConstraintWeightingType slipRateWeighting = NZSlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
 
 		// weight of rupture-rate minimization constraint weights relative to slip-rate
 		// constraint (recommended: 10,000)
@@ -140,7 +127,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
 				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
-		List<MFD_InversionConstraint> mfdConstraints = inversionMFDs.getMFD_Constraints();
+		List<IncrementalMagFreqDist> mfdConstraints = inversionMFDs.getMFD_Constraints();
 
 		if (model.isConstrained()) {
 			// CONSTRAINED BRANCHES
@@ -163,17 +150,17 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		/* end MODIFIERS */
 
-		List<MFD_InversionConstraint> mfdInequalityConstraints = new ArrayList<MFD_InversionConstraint>();
-		List<MFD_InversionConstraint> mfdEqualityConstraints = new ArrayList<MFD_InversionConstraint>();
+		List<IncrementalMagFreqDist> mfdInequalityConstraints = new ArrayList<>();
+		List<IncrementalMagFreqDist> mfdEqualityConstraints = new ArrayList<>();
 
 		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
 			// we have both MFD constraints, apply a transition mag from equality to
 			// inequality
 
 			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints,
-					mfdConstraints.get(0).getMagFreqDist().getMinX(), mfdTransitionMag);
+					mfdConstraints.get(0).getMinX(), mfdTransitionMag);
 			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, mfdTransitionMag,
-					mfdConstraints.get(0).getMagFreqDist().getMaxX());
+					mfdConstraints.get(0).getMaxX());
 		} else if (mfdEqualityConstraintWt > 0.0) {
 			mfdEqualityConstraints = mfdConstraints;
 		} else if (mfdInequalityConstraintWt > 0.0) {
@@ -200,10 +187,6 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 				.setMinimumRuptureRateBasis(minimumRuptureRateBasis).setInitialRupModel(initialRupModel);
 
 		return newConfig;
-	}
-
-	public String getMetadata() {
-		return metadata;
 	}
 
 }

@@ -3,26 +3,18 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.dom4j.DocumentException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.opensha.commons.data.CSVFile;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 public class NZSHM22_InversionRunner_IntegrationTest {
 
@@ -65,13 +57,13 @@ public class NZSHM22_InversionRunner_IntegrationTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSetSlipRateConstraintThrowsWithInvalidArgument() {
         NZSHM22_CrustalInversionRunner runner = (NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .setSlipRateConstraint(SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED, 1, 2);
+                .setSlipRateConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, 1, 2);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetSlipRateUncertaintyConstraintThrowsWithInvalidArgument() {
         NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner()
-                .setSlipRateUncertaintyConstraint(SlipRateConstraintWeightingType.BOTH, 1, 2);
+                .setSlipRateUncertaintyConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH, 1, 2);
     }
 
 }

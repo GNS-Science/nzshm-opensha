@@ -14,14 +14,12 @@ import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
+import org.opensha.sha.earthquake.faultSysSolution.modules.GridSourceProvider;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.reports.AbstractRupSetPlot;
-import org.opensha.sha.earthquake.faultSysSolution.reports.AbstractSolutionPlot;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
-import scratch.UCERF3.griddedSeismicity.GridSourceProvider;
-import scratch.UCERF3.inversion.InversionTargetMFDs;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -94,8 +92,8 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
 				plotNZSHM22_MFDs(plots, (NZSHM22_CrustalInversionTargetMFDs) targetMFDs);
 			}
 			
-			List<? extends MFD_InversionConstraint> constraints = targetMFDs.getMFD_Constraints();
-			for (MFD_InversionConstraint constraint : constraints) {
+			List<? extends IncrementalMagFreqDist> constraints = targetMFDs.getMFD_Constraints();
+			for (IncrementalMagFreqDist constraint : constraints) {
 				Region region = constraint.getRegion();
 				String name;
 				if (region == null || region.getName() == null || region.getName().isBlank()) {
@@ -106,19 +104,19 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
 				} else {
 					name = region.getName();
 				}
-				if (constraint.getMagFreqDist().equals(targetMFDs.getTotalOnFaultSupraSeisMFD())) {
+				if (constraint.equals(targetMFDs.getTotalOnFaultSupraSeisMFD())) {
 					// skip it, but set region if applicable
 					totalPlot.region = region;
 				} else {
 					MFD_Plot plot = new MFD_Plot(name, region);
-					plot.addComp(constraint.getMagFreqDist(), SUPRA_SEIS_TARGET_COLOR, "Target");
+					plot.addComp(constraint, SUPRA_SEIS_TARGET_COLOR, "Target");
 					plots.add(plot);
 				}
 				// make sure to include the whole constraint in the plot
-				for (Point2D pt : constraint.getMagFreqDist())
+				for (Point2D pt : constraint)
 					if (pt.getY() > 1e-10)
 						minY = Math.min(minY, Math.pow(10, Math.floor(Math.log10(pt.getY())+0.1)));
-				for (Point2D pt : constraint.getMagFreqDist().getCumRateDistWithOffset())
+				for (Point2D pt : constraint.getCumRateDistWithOffset())
 					maxY = Math.max(maxY, Math.pow(10, Math.ceil(Math.log10(pt.getY())-0.1)));
 			}
 		} else {

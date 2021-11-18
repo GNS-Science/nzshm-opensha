@@ -68,11 +68,11 @@ public class MFDPlotBuilder {
 //    			"InversionSolution-RmlsZToz-rnd0-t1380_RmlsZTo1MTYuMGQ3WlVz.zip"; //LONG CFM 3
 //    	String solution = "/home/chrisbc/DEV/GNS/opensha-new/DATA/2021-06-01-01/UnVwdHVyZUdlbmVyYXRpb25UYXNrOjE4MFJFWXF4" + 
 //    			"/" + "InversionSolution-RmlsZTo5-rnd0-t1380_RmlsZTo1MjIuMDN2ZktR.zip"; //LONG CFM 9
-    	String solution = "src/python/automation/tmp/downloads/RmlsZToxMTA3LjBYNzNpMw==/NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjQ4Nk16REF5_RmlsZToxMTA3LjBYNzNpMw==.zip";
+    	String solution = "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTA3MHRBZ3dG.zip";
     	  				
         new MFDPlotBuilder()
                 .setOutputDir("/tmp/mfd")
-                .setFaultModel("CFM_0_3_SANSTVZ") // optional, set if you only want to plot named faults
+                .setFaultModel("CFM_0_9_SANSTVZ_D90") // optional, set if you only want to plot named faults
                 .setCrustalSolution(solution)
                 .plot();
         

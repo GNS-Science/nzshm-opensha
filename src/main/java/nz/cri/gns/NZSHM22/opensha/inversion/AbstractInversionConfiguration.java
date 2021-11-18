@@ -4,16 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dom4j.Element;
+import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
-import scratch.UCERF3.inversion.InversionTargetMFDs;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
-import scratch.UCERF3.utils.MFD_WeightedInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 
 public class AbstractInversionConfiguration implements XMLSaveable  {
+
+	public static enum NZSlipRateConstraintWeightingType {
+		NORMALIZED,
+		UNNORMALIZED,
+		BOTH,
+		NORMALIZED_BY_UNCERTAINTY
+	}
 
 	private InversionTargetMFDs inversionTargetMfds;
 	private double magnitudeEqualityConstraintWt;
@@ -22,7 +27,7 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 
 	private double slipRateConstraintWt_normalized;
 	private double slipRateConstraintWt_unnormalized;
-	private SlipRateConstraintWeightingType slipRateWeighting;	
+	private NZSlipRateConstraintWeightingType slipRateWeighting;
 
 	public static final String XML_METADATA_NAME = "InversionConfiguration";
 	
@@ -49,9 +54,9 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	// often be set equal to initial rup model or a priori rup constraint
 	private double[] minimumRuptureRateBasis;
 	private double MFDTransitionMag;
-	private List<MFD_InversionConstraint> mfdEqualityConstraints;
-	private List<MFD_InversionConstraint> mfdInequalityConstraints;
-	private List<MFD_WeightedInversionConstraint> mfdUncertaintyWeightedConstraints;
+	private List<IncrementalMagFreqDist> mfdEqualityConstraints;
+	private List<IncrementalMagFreqDist> mfdInequalityConstraints;
+	private List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
 	private double minimumRuptureRateFraction;	
 	
 	
@@ -114,11 +119,11 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		return this;
 	}
 
-	public SlipRateConstraintWeightingType getSlipRateWeightingType() {
+	public NZSlipRateConstraintWeightingType getSlipRateWeightingType() {
 		return slipRateWeighting;
 	}
 
-	public AbstractInversionConfiguration setSlipRateWeightingType(SlipRateConstraintWeightingType slipRateWeighting) {
+	public AbstractInversionConfiguration setSlipRateWeightingType(NZSlipRateConstraintWeightingType slipRateWeighting) {
 		this.slipRateWeighting = slipRateWeighting;
 		return this;
 	}	
@@ -177,30 +182,30 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		return this;
 	}	
 	
-	public List<MFD_InversionConstraint> getMfdEqualityConstraints() {
+	public List<IncrementalMagFreqDist> getMfdEqualityConstraints() {
 		return mfdEqualityConstraints;
 	}
 
-	public AbstractInversionConfiguration setMfdEqualityConstraints(List<MFD_InversionConstraint> mfdEqualityConstraints) {
+	public AbstractInversionConfiguration setMfdEqualityConstraints(List<IncrementalMagFreqDist> mfdEqualityConstraints) {
 		this.mfdEqualityConstraints = mfdEqualityConstraints;
 		return this;
 	}
 
-	public List<MFD_InversionConstraint> getMfdInequalityConstraints() {
+	public List<IncrementalMagFreqDist> getMfdInequalityConstraints() {
 		return mfdInequalityConstraints;
 	}
 
 	public AbstractInversionConfiguration setMfdInequalityConstraints(
-			List<MFD_InversionConstraint> mfdInequalityConstraints) {
+			List<IncrementalMagFreqDist> mfdInequalityConstraints) {
 		this.mfdInequalityConstraints = mfdInequalityConstraints;
 		return this;
 	}
 
-	public List<MFD_WeightedInversionConstraint> getMfdUncertaintyWeightedConstraints() {
+	public List<UncertainIncrMagFreqDist> getMfdUncertaintyWeightedConstraints() {
 		return mfdUncertaintyWeightedConstraints;
 	}
 
-	public AbstractInversionConfiguration setMfdUncertaintyWeightedConstraints(List<MFD_WeightedInversionConstraint> mfdUncertaintyWeightedConstraints) {
+	public AbstractInversionConfiguration setMfdUncertaintyWeightedConstraints(List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints) {
 		this.mfdUncertaintyWeightedConstraints = mfdUncertaintyWeightedConstraints;
 		return this;
 	}
@@ -230,28 +235,29 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	 * best results, set minMag & maxMag to points along original MFD constraint
 	 * (i.e. 7.05, 7.15, etc)
 	 * 
-	 * @param mfConstraints
+	 * @param mfdConstraints
 	 * @param minMag
 	 * @param maxMag
 	 * @return newMFDConstraints
 	 */
-	protected static List<MFD_InversionConstraint> restrictMFDConstraintMagRange(
-			List<MFD_InversionConstraint> mfdConstraints, double minMag, double maxMag) {
+	protected static List<IncrementalMagFreqDist> restrictMFDConstraintMagRange(
+			List<IncrementalMagFreqDist> mfdConstraints, double minMag, double maxMag) {
 
-		List<MFD_InversionConstraint> newMFDConstraints = new ArrayList<MFD_InversionConstraint>();
+		List<IncrementalMagFreqDist> newMFDConstraints = new ArrayList<>();
 
 		for (int i = 0; i < mfdConstraints.size(); i++) {
-			IncrementalMagFreqDist originalMFD = mfdConstraints.get(i).getMagFreqDist();
+			IncrementalMagFreqDist originalMFD = mfdConstraints.get(i);
 			double delta = originalMFD.getDelta();
 			IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag,
 					(int) Math.round((maxMag - minMag) / delta + 1.0));
 			newMFD.setTolerance(delta / 2.0);
+			newMFD.setRegion(originalMFD.getRegion());
 			for (double m = minMag; m <= maxMag; m += delta) {
 				// WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
 				// points along original MFD constraint (i.e. 7.05, 7.15, etc)
 				newMFD.set(m, originalMFD.getClosestYtoX(m));
 			}
-			newMFDConstraints.add(i, new MFD_InversionConstraint(newMFD, mfdConstraints.get(i).getRegion()));
+			newMFDConstraints.add(i, newMFD);
 		}
 
 		return newMFDConstraints;
@@ -294,9 +300,9 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		return null;
 	}
 
-	private static void mfdsToXML(Element el, List<MFD_InversionConstraint> constraints) {
+	private static void mfdsToXML(Element el, List<IncrementalMagFreqDist> constraints) {
 		for (int i = 0; i < constraints.size(); i++) {
-			MFD_InversionConstraint constr = constraints.get(i);
+			IncrementalMagFreqDist constr = constraints.get(i);
 			constr.toXMLMetadata(el);
 		}
 		// now set indexes

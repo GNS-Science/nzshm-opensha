@@ -58,7 +58,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	RegionalTargetMFDs sansTvz;
 	RegionalTargetMFDs tvz;
 
-	protected List<MFD_InversionConstraint> mfdConstraints;
+	protected List<IncrementalMagFreqDist> mfdConstraints;
 
 	/**
 	 * For NZ reporting only
@@ -75,7 +75,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	}
 
 	@Override
-    public List<MFD_InversionConstraint> getMFD_Constraints() {
+    public List<IncrementalMagFreqDist> getMFD_Constraints() {
     	return mfdConstraints;
     }
 
@@ -176,13 +176,13 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			double fractionSeisOnFault = gridSeisUtils.pdfInPolys();
 
 			double fractionPDFInRegion = spatialSeisPDF.getFractionInRegion(region);
-			
+
 			System.out.println("fractionPDFInRegion: " + fractionPDFInRegion);
 			System.out.println("faultSectionData.size() " + faultSectionData.size());
 			System.out.println("fractionSeisOnFault " + fractionSeisOnFault);
-			
+
 			fractionSeisOnFault /= fractionPDFInRegion;
-			
+
 			System.out.println("normalised fractionSeisOnFault: " + fractionSeisOnFault);
 
 			double onFaultRegionRateMgt5 = totalRateM5 * fractionSeisOnFault;
@@ -222,6 +222,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
 			targetOnFaultSupraSeisMFDs = fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag,  1.0e-20);
+			targetOnFaultSupraSeisMFDs.setRegion(region);
 
 			if (MFD_STATS) {
 				System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
@@ -276,8 +277,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<>();
-		mfdConstraints.add(new MFD_InversionConstraint(sansTvz.targetOnFaultSupraSeisMFDs, sansTvz.region));
-		mfdConstraints.add(new MFD_InversionConstraint(tvz.targetOnFaultSupraSeisMFDs, tvz.region));
+		mfdConstraints.add(sansTvz.targetOnFaultSupraSeisMFDs);
+		mfdConstraints.add(tvz.targetOnFaultSupraSeisMFDs);
 
 		/*
 		 * TODO CBC the following block sets up base class var required later to save the solution,

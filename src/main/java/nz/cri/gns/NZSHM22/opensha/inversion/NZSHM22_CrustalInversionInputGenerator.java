@@ -2,61 +2,24 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-//import org.opensha.commons.eq.MagUtils;
-//import org.opensha.commons.util.IDPairing;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.APrioriInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDSubSectNuclInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDLaplacianSmoothingInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDParticipationSmoothnessInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDSubSectNuclInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoRateInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoSlipInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoVisibleEventRateSmoothnessInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.ParkfieldInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateSmoothingInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateUncertaintyInversionConstraint;
-//import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.TotalMomentInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.*;
 import org.opensha.sha.faultSurface.FaultSection;
-//import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
-//import com.google.common.base.Stopwatch;
-//import com.google.common.collect.Lists;
-//import com.google.common.collect.Maps;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
-//import cern.colt.function.tdouble.IntIntDoubleFunction;
-//import cern.colt.list.tdouble.DoubleArrayList;
-//import cern.colt.list.tint.IntArrayList;
-//import cern.colt.matrix.tdouble.DoubleMatrix2D;
 
-import scratch.UCERF3.SlipEnabledRupSet;
-import scratch.UCERF3.utils.SectionMFD_constraint;
-//import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
-//import scratch.UCERF3.enumTreeBranches.InversionModels;
-//
-//import scratch.UCERF3.logicTree.LogicTreeBranch;
-//import scratch.UCERF3.simulatedAnnealing.ConstraintRange;
-//import scratch.UCERF3.utils.MFD_InversionConstraint;
-//import scratch.UCERF3.utils.SectionMFD_constraint;
-import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
-import scratch.UCERF3.utils.paleoRateConstraints.PaleoProbabilityModel;
-import scratch.UCERF3.utils.paleoRateConstraints.PaleoRateConstraint;
+import scratch.UCERF3.utils.U3SectionMFD_constraint;
+import scratch.UCERF3.utils.aveSlip.U3AveSlipConstraint;
+import scratch.UCERF3.utils.paleoRateConstraints.U3PaleoRateConstraint;
 import scratch.UCERF3.utils.paleoRateConstraints.UCERF3_PaleoProbabilityModel;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
 /**
  * This class is used to generate inversion inputs (A/A_ineq matrices, d/d_ineq
@@ -79,13 +42,13 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 	// inputs
 	private NZSHM22_InversionFaultSystemRuptSet rupSet;
 	private AbstractInversionConfiguration config;
-	private List<PaleoRateConstraint> paleoRateConstraints;
-	private List<AveSlipConstraint> aveSlipConstraints;
+	private List<U3PaleoRateConstraint> paleoRateConstraints;
+	private List<U3AveSlipConstraint> aveSlipConstraints;
 	private double[] improbabilityConstraint;
 	private PaleoProbabilityModel paleoProbabilityModel;
 
 	public NZSHM22_CrustalInversionInputGenerator(NZSHM22_InversionFaultSystemRuptSet rupSet, NZSHM22_CrustalInversionConfiguration config,
-			List<PaleoRateConstraint> paleoRateConstraints, List<AveSlipConstraint> aveSlipConstraints,
+			List<U3PaleoRateConstraint> paleoRateConstraints, List<U3AveSlipConstraint> aveSlipConstraints,
 			double[] improbabilityConstraint, // may become an object in the future
 			PaleoProbabilityModel paleoProbabilityModel) {
 		super(rupSet, buildConstraints(rupSet, config, paleoRateConstraints, aveSlipConstraints, paleoProbabilityModel),
@@ -114,14 +77,14 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 	}
 
 	private static List<InversionConstraint> buildConstraints(NZSHM22_InversionFaultSystemRuptSet rupSet,
-			NZSHM22_CrustalInversionConfiguration config, List<PaleoRateConstraint> paleoRateConstraints,
-			List<AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
+			NZSHM22_CrustalInversionConfiguration config, List<U3PaleoRateConstraint> paleoRateConstraints,
+			List<U3AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
 
 		System.out.println("buildConstraints");
 		System.out.println("================");
 		
 		System.out.println("config.getSlipRateWeightingType(): " + config.getSlipRateWeightingType());
-		if (config.getSlipRateWeightingType() == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
+		if (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY) {
 			System.out.println("config.getSlipRateUncertaintyConstraintWt() :" +  config.getSlipRateUncertaintyConstraintWt());
 			System.out.println("config.getSlipRateUncertaintyConstraintScalingFactor() :" +  config.getSlipRateUncertaintyConstraintScalingFactor());
 		} else {
@@ -136,23 +99,29 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		// builds constraint instances
 		List<InversionConstraint> constraints = new ArrayList<>();
 
-		if (config.getSlipRateWeightingType() == SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED) {
+		if (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY) {
 			//NZSHM22 new slip-rate constraint
 			double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
 			double[] stdDevReduced = rupSet.getSlipRateStdDevForAllSections();
-			constraints.add(new SlipRateUncertaintyInversionConstraint(config.getSlipRateUncertaintyConstraintWt(),
+			constraints.add(new NZ_SlipRateUncertaintyInversionConstraint(config.getSlipRateUncertaintyConstraintWt(),
 					config.getSlipRateUncertaintyConstraintScalingFactor(), rupSet, sectSlipRateReduced, stdDevReduced));
-		} else {
-			//UCERF3 style slip rate constraints...
-			if (config.getSlipRateConstraintWt_normalized() > 0d || config.getSlipRateConstraintWt_unnormalized() > 0d) {
-				// add slip rate constraint
-				double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
-				constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(),
-						config.getSlipRateConstraintWt_unnormalized(), config.getSlipRateWeightingType(), rupSet,
-						sectSlipRateReduced));
-			}
 		}
-		
+
+		if (config.getSlipRateConstraintWt_normalized() > 0d
+				&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED
+				|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH))
+		{
+			constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(), ConstraintWeightingType.NORMALIZED, rupSet));
+		}
+
+		if (config.getSlipRateConstraintWt_unnormalized() > 0d
+				&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.UNNORMALIZED
+				|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH))
+		{
+			constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_unnormalized(), ConstraintWeightingType.UNNORMALIZED, rupSet));
+		}
+
+
 //		if (config.getPaleoRateConstraintWt() > 0d)
 //			constraints.add(new PaleoRateInversionConstraint(rupSet, config.getPaleoRateConstraintWt(),
 //					paleoRateConstraints, paleoProbabilityModel));
@@ -189,15 +158,14 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		// This is for equality constraints only -- inequality constraints must be
 		// encoded into the A_ineq matrix instead since they are nonlinear
 		if (config.getMagnitudeEqualityConstraintWt() > 0.0) {
-			HashSet<Integer> excludeRupIndexes = null;
-			constraints.add(new MFDEqualityInversionConstraint(rupSet, config.getMagnitudeEqualityConstraintWt(),
-					config.getMfdEqualityConstraints(), excludeRupIndexes));
+			constraints.add(new MFDInversionConstraint(rupSet, config.getMagnitudeEqualityConstraintWt(), false,
+					config.getMfdEqualityConstraints()));
 		}
 
 		// Prepare MFD Inequality Constraint (not added to A matrix directly since it's
 		// nonlinear)
 		if (config.getMagnitudeInequalityConstraintWt() > 0.0)
-			constraints.add(new MFDInequalityInversionConstraint(rupSet, config.getMagnitudeInequalityConstraintWt(),
+			constraints.add(new MFDInversionConstraint(rupSet, config.getMagnitudeInequalityConstraintWt(), true,
 					config.getMfdInequalityConstraints()));
 
 //		// MFD Smoothness Constraint - Constrain participation MFD to be uniform for each fault subsection
@@ -206,10 +174,10 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 //					config.getParticipationSmoothnessConstraintWt(), config.getParticipationConstraintMagBinSize()));
 
 		// MFD Subsection nucleation MFD constraint
-		ArrayList<SectionMFD_constraint> MFDConstraints = null;
+		ArrayList<U3SectionMFD_constraint> MFDConstraints = null;
 		if (config.getNucleationMFDConstraintWt() > 0.0) {
 			MFDConstraints = NZSHM22_FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
-			constraints.add(new MFDSubSectNuclInversionConstraint(rupSet, config.getNucleationMFDConstraintWt(),
+			constraints.add(new U3MFDSubSectNuclInversionConstraint(rupSet, config.getNucleationMFDConstraintWt(),
 					MFDConstraints));
 		}
 
@@ -343,7 +311,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		return config;
 	}
 
-	public List<PaleoRateConstraint> getPaleoRateConstraints() {
+	public List<U3PaleoRateConstraint> getPaleoRateConstraints() {
 		return paleoRateConstraints;
 	}
 

@@ -14,7 +14,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
-import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 import scratch.UCERF3.utils.UCERF3_Observed_MFD_Fetcher;
 

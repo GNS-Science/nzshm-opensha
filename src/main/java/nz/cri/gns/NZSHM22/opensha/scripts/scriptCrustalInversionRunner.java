@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -25,7 +26,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import scratch.UCERF3.SlipAlongRuptureModelRupSet;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
@@ -33,7 +33,7 @@ import scratch.UCERF3.utils.U3FaultSystemIO;
  */
 public class scriptCrustalInversionRunner {
 
-    private static SlipRateConstraintWeightingType weightingType = SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED;
+    private static AbstractInversionConfiguration.NZSlipRateConstraintWeightingType weightingType = AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY;
 
 	public static CommandLine parseCommandLine(String[] args) throws ParseException {
 

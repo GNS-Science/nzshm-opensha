@@ -25,18 +25,17 @@ import com.google.common.base.Preconditions;
 
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
 
-import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.SimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.CompoundCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.EnergyChangeCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
-import scratch.UCERF3.simulatedAnnealing.params.NonnegativityConstraintType;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SerialSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompoundCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.EnergyChangeCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.ProgressTrackingCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.TimeCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
 
 /**
  * @author chrisbc
@@ -51,7 +50,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private Integer inversionThreadsPerSelector = 1;
 	private Integer inversionAveragingIntervalSecs = null;
 	private boolean inversionAveragingEnabled = false;
-	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_NO_TEMP_DEPENDENCE;
+	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001; // FIXME: we should choose a better one
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
 	private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
@@ -70,7 +69,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected List<IncrementalMagFreqDist> solutionMfds;
 
-	protected SlipRateConstraintWeightingType slipRateWeightingType;
+	protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType;
 	protected double slipRateConstraintWt_normalized;
 	protected double slipRateConstraintWt_unnormalized;
 	protected double mfdEqualityConstraintWt;
@@ -334,9 +333,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 *                                  this constraint
 	 * @return
 	 */
-	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(SlipRateConstraintWeightingType weightingType,
-			double normalizedWt, double unnormalizedWt) {
-		Preconditions.checkArgument(weightingType != SlipRateConstraintWeightingType.UNCERTAINTY_ADJUSTED,
+	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType weightingType,
+																 double normalizedWt, double unnormalizedWt) {
+		Preconditions.checkArgument(weightingType != AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
 				"setSlipRateConstraint() using  %s is not supported. Use setSlipRateUncertaintyConstraint() instead.",
 				weightingType);
 		this.slipRateWeightingType = weightingType;
@@ -369,7 +368,13 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setSlipRateConstraint(String weightingType, double normalizedWt,
 			double unnormalizedWt) {
-		return setSlipRateConstraint(SlipRateConstraintWeightingType.valueOf(weightingType), normalizedWt,
+		AbstractInversionConfiguration.NZSlipRateConstraintWeightingType weighting;
+		if(weightingType.equalsIgnoreCase("UNCERTAINTY_ADJUSTED")){ // backwards compatibility
+			weighting = AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY;
+		} else {
+			weighting = AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.valueOf(weightingType);
+		}
+		return setSlipRateConstraint(weighting, normalizedWt,
 				unnormalizedWt);
 	}
 

@@ -9,53 +9,31 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
-import org.opensha.commons.data.function.HistogramFunction;
-import org.opensha.commons.geo.GriddedRegion;
-import org.opensha.commons.geo.Location;
-import org.opensha.commons.geo.Region;
+import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.util.modules.ArchivableModule;
 import org.opensha.commons.util.modules.SubModule;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDEqualityInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInequalityInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
 
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
-import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
-import scratch.UCERF3.SlipEnabledRupSet;
 import scratch.UCERF3.analysis.DeformationModelsCalc;
 
-import scratch.UCERF3.enumTreeBranches.DeformationModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.enumTreeBranches.MaxMagOffFault;
-import scratch.UCERF3.enumTreeBranches.MomentRateFixes;
-import scratch.UCERF3.enumTreeBranches.SpatialSeisPDF;
-import scratch.UCERF3.enumTreeBranches.TotalMag5Rate;
-import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
-import scratch.UCERF3.inversion.InversionTargetMFDs;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
-import scratch.UCERF3.inversion.InversionTargetMFDs.Precomputed;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 import scratch.UCERF3.utils.MFD_InversionConstraint;
 import scratch.UCERF3.utils.MFD_WeightedInversionConstraint;
-import scratch.UCERF3.utils.RELM_RegionUtils;
 
 /**
  * This class constructs and stores the various pre-inversion MFD Targets.
@@ -93,8 +71,8 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	public final static double MINIMIZE_RATE_BELOW_MAG = 7.05;
 	public final static double MINIMIZE_RATE_TARGET = 1.0e-20d;
 	
-	protected List<MFD_InversionConstraint> mfdEqIneqConstraints  = new ArrayList<>();
-	protected List<MFD_WeightedInversionConstraint> mfdUncertaintyConstraints = new ArrayList<>();;
+	protected List<IncrementalMagFreqDist> mfdEqIneqConstraints  = new ArrayList<>();
+	protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints = new ArrayList<>();;
 
 	protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 	
@@ -165,12 +143,12 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 				double rate = targetOnFaultSupraSeisMFD.getClosestYtoX(mag);
 				return Math.pow(rate, mfdUncertaintyWeightedConstraintPower)/firstWeightPower;
 			});
-			mfdUncertaintyConstraints.add(new MFD_WeightedInversionConstraint(targetOnFaultSupraSeisMFD, null, weight));
+			mfdUncertaintyConstraints.add(new UncertainIncrMagFreqDist(targetOnFaultSupraSeisMFD, weight));
 		} 
 		
 		// original for Eq/InEq constraints
 //			List<MFD_InversionConstraint> mfdEqIneqConstraints = new ArrayList<>();
-		mfdEqIneqConstraints.add(new MFD_InversionConstraint(targetOnFaultSupraSeisMFD, null));	
+		mfdEqIneqConstraints.add(targetOnFaultSupraSeisMFD);
 		
 		// Now collect the target MFDS we might want for plots
 		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
@@ -190,17 +168,17 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 
 	}
 
-	public List<MFD_InversionConstraint> getMfdEqIneqConstraints() {
+	public List<IncrementalMagFreqDist> getMfdEqIneqConstraints() {
 		return mfdEqIneqConstraints;
 	}
 
-	public List<MFD_WeightedInversionConstraint> getMfdUncertaintyConstraints() {
+	public List<UncertainIncrMagFreqDist> getMfdUncertaintyConstraints() {
 		return mfdUncertaintyConstraints;
 	}
 
 	@Override
-	public List<MFD_InversionConstraint> getMFD_Constraints(){
-		List<MFD_InversionConstraint> mfdConstraints = new ArrayList<MFD_InversionConstraint>();
+	public List<IncrementalMagFreqDist> getMFD_Constraints(){
+		List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
 		mfdConstraints.addAll(getMfdEqIneqConstraints());
 		mfdConstraints.addAll(getMfdUncertaintyConstraints());
 		return mfdConstraints;
@@ -231,22 +209,21 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	// TODO CBC decide if this pattern is OK, could also be inheriting from InversionTargetMFDs.Precomputed ??
 	public static class SubductionPrecomputed extends NZSHM22_SubductionInversionTargetMFDs implements ArchivableModule {
 		private static TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
-		private static TypeAdapter<MFD_InversionConstraint> mfdConstraintAdapter = new MFD_InversionConstraint.Adapter();
-		private static TypeAdapter<MFD_InversionConstraint> mfdWeightedConstraintAdapter = new MFD_WeightedInversionConstraint.Adapter();
+		private static TypeAdapter<UncertainIncrMagFreqDist> mfdWeightedConstraintAdapter = new UncertainIncrMagFreqDist.Adapter();
 		
 		private IncrementalMagFreqDist totalRegionalMFD;
 		private IncrementalMagFreqDist onFaultSupraSeisMFD;
-		private ImmutableList<MFD_InversionConstraint> mfdConstraints;
+		private ImmutableList<IncrementalMagFreqDist> mfdConstraints;
 			
 		public SubductionPrecomputed(NZSHM22_SubductionInversionTargetMFDs targetMFDs) {
 			this((NZSHM22_InversionFaultSystemRuptSet) targetMFDs.getParent(),
 					targetMFDs.getTotalRegionalMFD(),
 					targetMFDs.getTotalOnFaultSupraSeisMFD(),
-					(List<MFD_InversionConstraint>) targetMFDs.getMFD_Constraints());
+					(List<IncrementalMagFreqDist>) targetMFDs.getMFD_Constraints());
 		}
 
 		public SubductionPrecomputed(NZSHM22_InversionFaultSystemRuptSet rupSet, IncrementalMagFreqDist totalRegionalMFD,
-				IncrementalMagFreqDist onFaultSupraSeisMFD, List<MFD_InversionConstraint> mfdConstraints) {
+				IncrementalMagFreqDist onFaultSupraSeisMFD, List<IncrementalMagFreqDist> mfdConstraints) {
 			super(rupSet);
 			this.totalRegionalMFD = totalRegionalMFD;
 			this.onFaultSupraSeisMFD = onFaultSupraSeisMFD;
@@ -291,11 +268,11 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 				out.nullValue();
 			} else {
 				out.beginArray();
-				for (MFD_InversionConstraint constraint : mfdConstraints)
-					if (constraint.getClass().getSimpleName().contentEquals("MFD_WeightedInversionConstraint")) {
-						mfdWeightedConstraintAdapter.write(out, (MFD_WeightedInversionConstraint) constraint);
+				for (IncrementalMagFreqDist constraint : mfdConstraints)
+					if (constraint.getClass().getSimpleName().contentEquals("UncertainIncrMagFreqDist")) {
+						mfdWeightedConstraintAdapter.write(out, (UncertainIncrMagFreqDist) constraint);
 					} else {
-						mfdConstraintAdapter.write(out, constraint);
+						mfdAdapter.write(out, constraint);
 					}
 				out.endArray();
 			}
@@ -322,7 +299,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 		}
 
 		@Override
-		public List<MFD_InversionConstraint> getMFD_Constraints() {
+		public List<IncrementalMagFreqDist> getMFD_Constraints() {
 			// TODO Auto-generated method stub
 			return mfdConstraints;
 		}

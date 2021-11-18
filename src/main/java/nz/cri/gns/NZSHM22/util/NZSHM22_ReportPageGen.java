@@ -7,7 +7,9 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NZSHM22_ReportPageGen {
 
@@ -46,6 +48,16 @@ public class NZSHM22_ReportPageGen {
         return this;
     }
 
+    static Map<String, AbstractRupSetPlot> possiblePlots;
+
+    static{
+        possiblePlots = new HashMap<>();
+        List<AbstractRupSetPlot> choices = ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
+        for(AbstractRupSetPlot plot : choices){
+            possiblePlots.put(choices.getClass().getSimpleName(), plot);
+        }
+    }
+
     /**
      * Adds a specific plot to the report.
      * @param plotName
@@ -55,42 +67,11 @@ public class NZSHM22_ReportPageGen {
         if (plots == null) {
             plots = new ArrayList<>();
         }
-        switch (plotName) {
-            case "SolMFDPlot":
-                plots.add(new SolMFDPlot());
-                break;
-            case "InversionProgressPlot":
-                plots.add(new InversionProgressPlot());
-                break;
-            case "RateVsRateScatter":
-                plots.add(new RateVsRateScatter());
-                break;
-            case "ParticipationRatePlot":
-                plots.add(new ParticipationRatePlot());
-                break;
-            case "PlausibilityConfigurationReport":
-                plots.add(new PlausibilityConfigurationReport());
-                break;
-            case "RupHistogramPlots":
-                plots.add(new RupHistogramPlots());
-                break;
-            case "FaultSectionConnectionsPlot":
-                plots.add(new FaultSectionConnectionsPlot());
-                break;
-            case "SlipRatePlots":
-                plots.add(new SlipRatePlots());
-                break;
-            case "JumpCountsOverDistancePlot":
-                plots.add(new JumpCountsOverDistancePlot());
-                break;
-            case "SegmentationPlot":
-                plots.add(new SegmentationPlot());
-                break;
-            case "SectBySectDetailPlots":
-                plots.add(new SectBySectDetailPlots());
-                break;
-            default:
-                throw new IllegalArgumentException("not a valid plot: " + plotName);
+        AbstractRupSetPlot plot = possiblePlots.get(plotName);
+        if (plot != null) {
+            plots.add(plot);
+        } else {
+            throw new IllegalArgumentException("not a valid plot: " + plotName);
         }
         return this;
     }

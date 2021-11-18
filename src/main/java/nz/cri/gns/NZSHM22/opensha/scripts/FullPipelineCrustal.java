@@ -2,63 +2,34 @@ package nz.cri.gns.NZSHM22.opensha.scripts;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.text.DateFormatter;
-
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.*;
-import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RuptureSets;
 import org.opensha.sha.earthquake.faultSysSolution.RuptureSets.CoulombRupSetConfig;
-import org.opensha.sha.earthquake.faultSysSolution.RuptureSets.RupSetConfig;
-import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InitialSolution;
-import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.WaterLevelRates;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen.PlotLevel;
 import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
 
-import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.enumTreeBranches.MaxMagOffFault;
-import scratch.UCERF3.enumTreeBranches.MomentRateFixes;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-import scratch.UCERF3.enumTreeBranches.SpatialSeisPDF;
-import scratch.UCERF3.griddedSeismicity.UCERF3_GridSourceGenerator;
-import scratch.UCERF3.inversion.CommandLineInversionRunner;
-import scratch.UCERF3.inversion.InversionTargetMFDs;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
-import scratch.UCERF3.inversion.UCERF3InversionInputGenerator;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration.SlipRateConstraintWeightingType;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.simulatedAnnealing.SerialSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.SimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.ThreadedSimulatedAnnealing;
-import scratch.UCERF3.simulatedAnnealing.completion.CompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.ProgressTrackingCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.completion.TimeCompletionCriteria;
-import scratch.UCERF3.simulatedAnnealing.params.GenerationFunctionType;
-import scratch.UCERF3.simulatedAnnealing.params.NonnegativityConstraintType;
-import scratch.UCERF3.utils.U3FaultSystemIO;
-import scratch.UCERF3.utils.aveSlip.AveSlipConstraint;
-import scratch.UCERF3.utils.paleoRateConstraints.PaleoProbabilityModel;
-import scratch.UCERF3.utils.paleoRateConstraints.PaleoRateConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SerialSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.ProgressTrackingCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.TimeCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
 
 class FullPipelineCrustal {
 
@@ -76,12 +47,12 @@ class FullPipelineCrustal {
 		String dirName = "2021_08_23";
 		
 		String newName = "Crustal test, like SW52ZXJzaW9uU29sdXRpb246NjEwMC41UlhaTm8= ";
-		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
-		String minScaleStr = new DecimalFormat("0E0").format(
-				Math.pow(10, SerialSimulatedAnnealing.max_exp-SerialSimulatedAnnealing.exp_orders_of_mag)).toLowerCase();
-		
-		String scaleStr = "perturb_exp_scale_1e-2_to_"+minScaleStr;
-		dirName += "perturb(EXP_SCA)_nonNeg(RY_OFTEN)_Averaging(16,1)_water(1e-2)_expOrd(10)_U3PERTURBHACK(NA)_time(15m,15s,15s)";
+//		SerialSimulatedAnnealing.exp_orders_of_mag = 10;
+//		String minScaleStr = new DecimalFormat("0E0").format(
+//				Math.pow(10, SerialSimulatedAnnealing.max_exp-SerialSimulatedAnnealing.exp_orders_of_mag)).toLowerCase();
+//
+//		String scaleStr = "perturb_exp_scale_1e-2_to_"+minScaleStr;
+//		dirName += "perturb(EXP_SCA)_nonNeg(RY_OFTEN)_Averaging(16,1)_water(1e-2)_expOrd(10)_U3PERTURBHACK(NA)_time(15m,15s,15s)";
 		
 		System.out.println(dirName);
 		CoulombRupSetConfig rsConfig = new RuptureSets.CoulombRupSetConfig(fm, scale);
@@ -163,7 +134,7 @@ class FullPipelineCrustal {
 //				List<IncrementalMagFreqDist> solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
 			
 				// set up slip rate config
-				inversionConfiguration.setSlipRateWeightingType(SlipRateConstraintWeightingType.BOTH);
+				inversionConfiguration.setSlipRateWeightingType(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH);
 				double slipRateConstraintWt_normalized = 1000;
 				double slipRateConstraintWt_unnormalized = 1000;
 				
@@ -173,9 +144,9 @@ class FullPipelineCrustal {
 				/*
 				 * Build inversion inputs
 				 */
-				List<AveSlipConstraint> aveSlipConstraints = null;
+
 				NZSHM22_CrustalInversionInputGenerator inputGen = new NZSHM22_CrustalInversionInputGenerator(
-						(NZSHM22_InversionFaultSystemRuptSet) rupSet, inversionConfiguration, null, aveSlipConstraints, null, null);				
+						(NZSHM22_InversionFaultSystemRuptSet) rupSet, inversionConfiguration, null, null, null, null);
 				
 //				InversionTargetMFDs targetMFDs = rupSet.requireModule(NZSHM22_CrustalInversionTargetMFDs.class);
 				
