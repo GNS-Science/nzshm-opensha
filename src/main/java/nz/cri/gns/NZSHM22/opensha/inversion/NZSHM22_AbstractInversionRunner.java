@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -382,8 +382,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		boolean crustal = rupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(FaultRegime.class) == FaultRegime.CRUSTAL;
 
 		boolean crustalScaling;
-		if(scalingRelationship.getScalingRelationship() instanceof Stirling2021SimplifiedScalingRelationship){
-			Stirling2021SimplifiedScalingRelationship scale = (Stirling2021SimplifiedScalingRelationship) scalingRelationship.getScalingRelationship();
+		if(scalingRelationship.getScalingRelationship() instanceof SimplifiedScalingRelationship){
+			SimplifiedScalingRelationship scale = (SimplifiedScalingRelationship) scalingRelationship.getScalingRelationship();
 			crustalScaling = scale.getRegime().equals("CRUSTAL");
 		}else{
 			crustalScaling = scalingRelationship.getScalingRelationship() != ScalingRelationships.TMG_SUB_2017;

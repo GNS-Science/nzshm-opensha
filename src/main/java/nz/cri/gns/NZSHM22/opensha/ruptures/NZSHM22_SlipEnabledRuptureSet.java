@@ -126,11 +126,12 @@ public class NZSHM22_SlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 
 			rupAreas[r] = totArea;
 			rupLengths[r] = totLength;
-			rupRakes[r] = FaultUtils.getInRakeRange(FaultUtils.getScaledAngleAverage(sectAreas, sectRakes));
+			double rake = FaultUtils.getInRakeRange(FaultUtils.getScaledAngleAverage(sectAreas, sectRakes));
+			rupRakes[r] = rake;
 			double origDDW = totOrigArea / totLength;
-			rupMags[r] = scale.getMag(totArea, origDDW);
+			rupMags[r] = scale.getMag(totArea, origDDW, rake);
 			rupsIDsList.add(sectIDs);
-			rupAveSlips[r] = scale.getAveSlip(totArea, totLength, origDDW);
+			rupAveSlips[r] = scale.getAveSlip(totArea, totLength, origDDW, rake);
 		}
 
 		String info = "Test down-dip subsectioning rup set";

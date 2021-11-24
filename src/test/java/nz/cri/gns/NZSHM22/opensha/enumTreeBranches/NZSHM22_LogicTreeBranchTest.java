@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import static org.junit.Assert.*;
 
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -31,7 +32,9 @@ public class NZSHM22_LogicTreeBranchTest {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
 
         branch.setValue(SlipAlongRuptureModels.UNIFORM);
-        branch.setValue(new NZSHM22_ScalingRelationshipNode(NZSHM22_ScalingRelationshipNode.createRelationShip("SMPL_NZ_CRU_MN")));
+        SimplifiedScalingRelationship scale = new SimplifiedScalingRelationship();
+        scale.setupCrustal(4.0, 4.1);
+        branch.setValue(new NZSHM22_ScalingRelationshipNode(scale));
         branch.setValue(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
         branch.setValue(FaultRegime.SUBDUCTION);
         branch.setValue(NZSHM22_DeformationModel.GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw);
@@ -76,8 +79,10 @@ public class NZSHM22_LogicTreeBranchTest {
         assertEquals(FaultRegime.CRUSTAL, branch.getValue(FaultRegime.class));
         assertEquals(NZSHM22_SpatialSeisPDF.NZSHM22_1346, branch.getValue(NZSHM22_SpatialSeisPDF.class));
         assertEquals(SlipAlongRuptureModels.UNIFORM, branch.getValue(SlipAlongRuptureModels.class));
+        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
+        scaling.setupCrustal(4, 4.1);
         assertEquals(
-                NZSHM22_ScalingRelationshipNode.createRelationShip("SMPL_NZ_CRU_MN"),
+                scaling,
                 branch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship());
     }
 }

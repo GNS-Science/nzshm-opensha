@@ -44,15 +44,15 @@ public class Stirling2021SimplifiedScalingRelationship implements RupSetScalingR
     }
 
     @Override
-    public double getAveSlip(double area, double length, double origWidth) {
-        double mag = magAreaRel.getMedianMag(area * 1e-6);
+    public double getAveSlip(double area, double length, double origWidth, double aveRake) {
+        double mag = magAreaRel.getMedianMag(area * 1e-6, aveRake);
         double moment = MagUtils.magToMoment(mag);
         return FaultMomentCalc.getSlip(area, moment);
     }
 
     @Override
-    public double getMag(double area, double origWidth) {
-        return magAreaRel.getMedianMag(area * 1e-6);
+    public double getMag(double area, double origWidth, double aveRake) {
+        return magAreaRel.getMedianMag(area * 1e-6, aveRake);
     }
 
     @Override

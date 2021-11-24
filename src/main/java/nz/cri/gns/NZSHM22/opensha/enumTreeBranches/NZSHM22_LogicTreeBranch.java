@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
@@ -41,7 +42,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(FaultRegime.CRUSTAL);
         NZSHM22_ScalingRelationshipNode scalingRelationship = new NZSHM22_ScalingRelationshipNode();
-        scalingRelationship.setScalingRelationship(NZSHM22_ScalingRelationshipNode.createRelationShip("SMPL_NZ_CRU_MN"));
+        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
+        scaling.setupCrustal(4.0, 4.0);
+        scalingRelationship.setScalingRelationship(scaling);
         branch.setValue(scalingRelationship);
         return branch;
     }
@@ -55,7 +58,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(FaultRegime.SUBDUCTION);
         NZSHM22_ScalingRelationshipNode scalingRelationship = new NZSHM22_ScalingRelationshipNode();
-        scalingRelationship.setScalingRelationship(ScalingRelationships.TMG_SUB_2017);
+        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
+        scaling.setupSubduction(4.0);
+        scalingRelationship.setScalingRelationship(scaling);
         branch.setValue(scalingRelationship);
         return branch;
     }

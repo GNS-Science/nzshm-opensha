@@ -130,25 +130,25 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * Recalculate the magnitudes based on the specified ScalingRelationship
 	 * @param scale
 	 */
-	public void recalcMags(RupSetScalingRelationship scale){
+	public void recalcMags(RupSetScalingRelationship scale) {
 
 		double[] mags = getMagForAllRups();
-
+		double[] rakes = getAveRakeForAllRups();
 		double[] areas = getAreaForAllRups();
 		double[] lengths = getLengthForAllRups();
 
 		double[] sectAreasOrig = new double[getFaultSectionDataList().size()];
-		for(int i = 0; i < sectAreasOrig.length; i++) {
+		for (int i = 0; i < sectAreasOrig.length; i++) {
 			sectAreasOrig[i] = getFaultSectionData(i).getArea(false);
 		}
 
-		for(int i =0; i < mags.length; i++) {
+		for (int i = 0; i < mags.length; i++) {
 			double totOrigArea = 0d; // not reduced for aseismicity
 			for (FaultSection sect : getFaultSectionDataForRupture(i)) {
 				totOrigArea += sectAreasOrig[sect.getSectionId()]; // sq-m
 			}
 			double origDDW = totOrigArea / lengths[i];
-			mags[i] =  scale.getMag(areas[i], origDDW);
+			mags[i] = scale.getMag(areas[i], origDDW, rakes[i]);
 		}
 	}
 

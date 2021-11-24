@@ -2,7 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import org.junit.Test;
 import org.opensha.commons.logicTree.JsonAdapterHelper;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
@@ -45,10 +45,8 @@ public class NZSHM22_ScalingRelationshipNodeTest {
 
     @Test
     public void testGenericJson() throws IOException {
-        Stirling2021SimplifiedScalingRelationship scaling = new Stirling2021SimplifiedScalingRelationship();
-        scaling.setRegime("CRUSTAL");
-        scaling.setEpistemicBound("UPPER");
-        scaling.setRake(0);
+        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
+        scaling.setupCrustal(4.0, 5.0);
 
         NZSHM22_ScalingRelationshipNode node = new NZSHM22_ScalingRelationshipNode();
         node.setScalingRelationship(scaling);
