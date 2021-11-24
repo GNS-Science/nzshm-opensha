@@ -33,9 +33,9 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	private static final long serialVersionUID = 1091962054533163866L;
 
-	protected static double minMagForSeismogenicRups = 6.0;
-
 	protected NZSHM22_LogicTreeBranch branch;
+	protected RegionalRupSetData sansTvz;
+	protected RegionalRupSetData tvz;
 
     public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         super(applyDeformationModel(rupSet, branch), branch.getU3Branch());
@@ -85,35 +85,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 				}
 			}, PolygonFaultGridAssociations.class);
 
-			if (hasAvailableModule(ModSectMinMags.class))
-				removeModuleInstances(ModSectMinMags.class);
-			addAvailableModule(new Callable<ModSectMinMags>() {
-				@Override
-				public ModSectMinMags call() throws Exception {
-					return ModSectMinMags.instance(NZSHM22_InversionFaultSystemRuptSet.this,
-							NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(NZSHM22_InversionFaultSystemRuptSet.this, minMagForSeismogenicRups)); // FIXME should this be per region?
-				}
-			}, ModSectMinMags.class);
 		}
-	}
-
-	/**
-	 * This returns the final minimum mag for a given fault section. This uses a
-	 * generic version of computeMinSeismoMagForSections() instead of the UCERF3
-	 * implementation.
-	 *
-	 * @param sectIndex
-	 * @return
-	 */
-	@Override
-	public synchronized double getFinalMinMagForSection(int sectIndex) {
-		// FIXME
-		throw new IllegalStateException("not yet refactored!");
-//		if (minMagForSectArray == null) {
-//			minMagForSectArray = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(this,
-//					minMagForSeismogenicRups);
-//		}
-//		return minMagForSectArray[sectIndex];
 	}
 
 	public NZSHM22_InversionFaultSystemRuptSet setInversionTargetMFDs(InversionTargetMFDs inversionMFDs) {
@@ -122,8 +94,18 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return this;
 	}
 
-	public static void setMinMagForSeismogenicRups(double minMag){
-		minMagForSeismogenicRups = minMag;
+	public NZSHM22_InversionFaultSystemRuptSet setRegionalData(RegionalRupSetData tvz, RegionalRupSetData sansTvz){
+		this.tvz = tvz;
+		this.sansTvz = sansTvz;
+		return this;
+	}
+
+	public RegionalRupSetData getTvzRegionalData(){
+		return tvz;
+	}
+
+	public RegionalRupSetData getSansTvzRegionalData(){
+		return sansTvz;
 	}
 
 	/**

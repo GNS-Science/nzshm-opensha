@@ -54,6 +54,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
 	private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
+	protected File rupSetFile;
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected NZSHM22_DeformationModel deformationModel = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
@@ -77,7 +78,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double mfdUncertaintyWeightedConstraintWt;
 	protected double mfdUncertaintyWeightedConstraintPower; //typically 0.5
 
-	protected abstract NZSHM22_AbstractInversionRunner configure();
+	protected abstract NZSHM22_AbstractInversionRunner configure() throws DocumentException, IOException;
 
 	protected double totalRateM5; // = 5d;
 	protected double bValue; // = 1d;
@@ -274,10 +275,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 *
 	 * @param ruptureSetFile the rupture file
 	 * @return this builder
-	 * @throws DocumentException
-	 * @throws IOException
 	 */
-	public abstract NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException;
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) {
+		this.rupSetFile = ruptureSetFile;
+		return this;
+	}
 
 	protected void setupLTB(NZSHM22_LogicTreeBranch branch){
 		if (scalingRelationship != null) {
@@ -294,7 +296,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	public NZSHM22_AbstractInversionRunner setDeformationModel(String modelName){
-		Preconditions.checkArgument(rupSet == null, "rupture set must be set after deformation model.");
 		this.deformationModel = NZSHM22_DeformationModel.valueOf(modelName);
 		return this;
 	}

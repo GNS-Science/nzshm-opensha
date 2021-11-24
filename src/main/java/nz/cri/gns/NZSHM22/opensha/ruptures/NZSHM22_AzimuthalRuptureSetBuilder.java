@@ -348,9 +348,10 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
     public static void main(String[] args) throws DocumentException, IOException {
     	NZSHM22_AzimuthalRuptureSetBuilder builder = new NZSHM22_AzimuthalRuptureSetBuilder();
         //builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
-        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
-        builder.setMaxFaultSections(100);
+        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_ALL_D90);
+       // builder.setMaxFaultSections(100);
         builder
+				//.setFaultIdFilter(FaultIdFilter.FilterType.EXACT, Set.of(583))
 //        	.setMinSubSectsPerParent(2)
 //        	.setMaxAzimuthChange(560)
 //        	.setMaxJumpDistance(5d)
@@ -369,7 +370,8 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 
     	System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-		U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+        ruptureSet.write(new File("TEST/ruptures/"+ builder.getDescriptiveName() + ".zip"));
+		//U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
     }
 
 }

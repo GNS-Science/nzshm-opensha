@@ -92,11 +92,6 @@ public class NZSHM22_HazardCalculatorBuilder {
         return this;
     }
 
-    public NZSHM22_HazardCalculatorBuilder setMinMagForSeismogenicRups(double minMag) {
-        NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
-        return this;
-    }
-
     /**
      * Sets the period of the intensity measure. If 0, the intensity measure is set to PGA,
      * otherwise to SA.

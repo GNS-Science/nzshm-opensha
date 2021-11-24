@@ -111,12 +111,12 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
             paleoRateConstraints.add(new UncertainDataConstraint.SectMappedUncertainDataConstraint(siteName, closestFaultSectionIndex, sectionName, loc, meanRate, uncertainties));
         }
 
-        geoJson.toJSON("paleoRates.geojson");
-        for(String section : doubleUps.keySet()){
-            if(doubleUps.get(section) > 1){
-                System.out.println("subsection " + section + " has " + doubleUps.get(section) + " paleo sites.");
-            }
-        }
+//        geoJson.toJSON("paleoRates.geojson");
+//        for(String section : doubleUps.keySet()){
+//            if(doubleUps.get(section) > 1){
+//                System.out.println("subsection " + section + " has " + doubleUps.get(section) + " paleo sites.");
+//            }
+//        }
 
         return paleoRateConstraints;
     }

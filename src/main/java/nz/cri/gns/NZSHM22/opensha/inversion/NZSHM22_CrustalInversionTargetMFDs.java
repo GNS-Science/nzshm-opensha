@@ -102,8 +102,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
-		public RegionalTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet, GriddedRegion region, double totalRateM5, double bValue, double minMag) {
-			this.region = region;
+		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag) {
+			this.region = regionalRupSet.getRegion();
 			this.totalRateM5 = totalRateM5;
 			this.bValue = bValue;
 			this.minMag = minMag;
@@ -114,7 +114,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			} else {
 				suffix = "";
 			}
-			regionalRupSet = new RegionalRupSetData(invRupSet, region);
+			this.regionalRupSet = regionalRupSet;
 			init();
 		}
 
@@ -267,8 +267,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		setParent(invRupSet);
 
-		tvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_TVZ_GRIDDED(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ);
-		sansTvz = new RegionalTargetMFDs(invRupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
+		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ);
+		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
 
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
 		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));

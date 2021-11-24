@@ -82,18 +82,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 uncertaintyWeight, scalingFactor);
     }
 
-    public NZSHM22_CrustalInversionRunner setMinMagForSeismogenicRups(double minMag) {
-        NZSHM22_InversionFaultSystemRuptSet.setMinMagForSeismogenicRups(minMag);
-        return this;
-    }
-
     /**
      * Sets the minimum magnitude for targetOnFaultSupraSeisMFDs
      * @param minMagSans
      * @param minMagTvz
      * @return this runner
      */
-    public NZSHM22_AbstractInversionRunner setMinMagForTargetOnFaultSupraSeisMFDs(double minMagSans, double minMagTvz){
+    public NZSHM22_CrustalInversionRunner setMinMags(double minMagSans, double minMagTvz){
         this.minMag_Sans = minMagSans;
         this.minMag_TVZ = minMagTvz;
         return this;
@@ -124,17 +119,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
     }
 
-    @Override
-    public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
-        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
-        setupLTB(branch);
-        this.rupSet = loadRuptureSet(ruptureSetFile, branch);
-        if (recalcMags) {
-            rupSet.recalcMags(scalingRelationship);
-        }
-        return this;
-    }
-
     public NZSHM22_CrustalInversionRunner setPaleoRateConstraintWt(double paleoRateConstraintWt){
         this.paleoRateConstraintWt = paleoRateConstraintWt;
         return this;
@@ -159,9 +143,16 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     }
 
     @Override
-    protected NZSHM22_CrustalInversionRunner configure() {
-        LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
-        InversionModels inversionModel = (InversionModels) logicTreeBranch.getValue(InversionModels.class);
+    protected NZSHM22_CrustalInversionRunner configure() throws DocumentException, IOException {
+
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
+        setupLTB(branch);
+        this.rupSet = loadRuptureSet(rupSetFile, branch);
+        if (recalcMags) {
+            rupSet.recalcMags(scalingRelationship);
+        }
+
+        InversionModels inversionModel = branch.getValue(InversionModels.class);
 
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(

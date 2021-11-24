@@ -54,21 +54,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	}
 
 	@Override
-	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile)
-			throws IOException, DocumentException {
+	protected NZSHM22_SubductionInversionRunner configure() throws DocumentException, IOException {
+
 		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
 		setupLTB(branch);
-		rupSet = loadRuptureSet(ruptureSetFile, branch);
+		rupSet = loadRuptureSet(rupSetFile, branch);
 		if(recalcMags){
 			rupSet.recalcMags(scalingRelationship);
 		}
-		return this;
-	}
 
-	@Override
-	protected NZSHM22_SubductionInversionRunner configure() {
-		U3LogicTreeBranch logicTreeBranch = rupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
+		InversionModels inversionModel = branch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt,

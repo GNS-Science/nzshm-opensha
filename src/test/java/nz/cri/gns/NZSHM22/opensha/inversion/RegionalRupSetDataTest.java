@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntPredicate;
 
 import static org.junit.Assert.*;
 
@@ -40,7 +41,9 @@ public class RegionalRupSetDataTest {
                 new Location(-41.186922422902946, 174.781494140625),
                 0.1, 0.1, new Location(0, 0));
 
-        RegionalRupSetData actual = new RegionalRupSetData(original, region);
+        IntPredicate filter = RegionalRupSetData.createRegionFilter(original, region);
+
+        RegionalRupSetData actual = new RegionalRupSetData(original, region, filter,7.0);
 
         assertEquals(86, original.getNumSections());
         assertEquals(34, actual.getFaultSectionDataList().size());
@@ -51,12 +54,6 @@ public class RegionalRupSetDataTest {
             assertNotNull(actual.getPolygonFaultGridAssociations().getPoly(i));
         }
 
-        // verifying that the minMags have carried over
-        ModSectMinMags minMags = original.getModule(ModSectMinMags.class);
-        for (FaultSection section : actual.getFaultSectionDataList()) {
-            double originalMinMag = minMags.getMinMagForSection(originalIds.get(section.getSectionName()));
-            assertEquals(originalMinMag, actual.getMinMagForSection(section.getSectionId()), 0.000000000001);
-        }
     }
 
 }

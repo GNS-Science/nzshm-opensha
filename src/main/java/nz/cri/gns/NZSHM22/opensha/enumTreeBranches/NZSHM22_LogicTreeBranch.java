@@ -6,6 +6,7 @@ import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.commons.util.modules.ModuleContainer;
+import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.logicTree.U3LogicTreeBranch;
@@ -22,6 +23,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         levels.add(FaultRegime.level());
         levels.add(NZSHM22_SpatialSeisPDF.level());
         levels.add(LogicTreeLevel.forEnumUnchecked(SlipAlongRuptureModels.class, SlipAlongRuptureModels.UNIFORM.getBranchLevelName(), SlipAlongRuptureModels.UNIFORM.getShortBranchLevelName()));
+        levels.add(LogicTreeLevel.forEnumUnchecked(InversionModels.class, InversionModels.CHAR_CONSTRAINED.getBranchLevelName(), InversionModels.CHAR_CONSTRAINED.getShortBranchLevelName()));
         levels.add(new NZSHM22_ScalingRelationshipNode.Level());
         levels.add(NZSHM22_DeformationModel.level());
         return levels;
@@ -29,6 +31,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
 
     protected NZSHM22_LogicTreeBranch() {
         super(createLevels());
+        setValue(InversionModels.CHAR_CONSTRAINED);
         setValue(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
         setValue(SlipAlongRuptureModels.UNIFORM);
     }

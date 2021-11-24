@@ -2,7 +2,12 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.IntPredicate;
 
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
@@ -29,6 +34,37 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
+
+	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ){
+
+		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
+		IntPredicate tvzFilter = RegionalRupSetData.createRegionFilter(rupSet, tvzRegion);
+
+		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
+		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), tvzFilter.negate(), mMin_Sans);
+
+		rupSet.setRegionalData(tvz, sansTvz);
+
+		double[] minMags = new double[rupSet.getNumSections()];
+
+		for(int s = 0; s < minMags.length; s++){
+			if(tvz.isInRegion(s)){
+				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
+			} else {
+				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
+			}
+		}
+
+		if (rupSet.hasAvailableModule(ModSectMinMags.class)) {
+			rupSet.removeModuleInstances(ModSectMinMags.class);
+		}
+		rupSet.addAvailableModule(new Callable<ModSectMinMags>() {
+			@Override
+			public ModSectMinMags call() throws Exception {
+				return ModSectMinMags.instance(rupSet, minMags);
+			}
+		}, ModSectMinMags.class);
+	}
 
 	/**
 	 * This generates an inversion configuration for the given inversion model and
@@ -124,6 +160,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
+
+		setRegionalData(rupSet, mMin_Sans, mMin_TVZ);
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
