@@ -18,6 +18,8 @@ import scratch.UCERF3.enumTreeBranches.InversionModels;
 public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConfiguration {
 
 	protected final static boolean D = true; // for debugging
+	private double paleoRateConstraintWt;
+	private double mfdSmoothnessConstraintWtForPaleoParents;
 
 	/**
 	 * 
@@ -187,6 +189,24 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 				.setMinimumRuptureRateBasis(minimumRuptureRateBasis).setInitialRupModel(initialRupModel);
 
 		return newConfig;
+	}
+
+	public NZSHM22_CrustalInversionConfiguration setPaleoRateConstraintWt(double paleoRateConstraintWt){
+		this.paleoRateConstraintWt = paleoRateConstraintWt;
+		return this;
+	}
+
+	public double getPaleoRateConstraintWt() {
+		return paleoRateConstraintWt;
+	}
+
+	public NZSHM22_CrustalInversionConfiguration setpaleoParentRateSmoothnessConstraintWeight(double paleoParentRateSmoothnessConstraintWeight){
+		this.mfdSmoothnessConstraintWtForPaleoParents = paleoParentRateSmoothnessConstraintWeight;
+		return this;
+	}
+
+	public double getpaleoParentRateSmoothnessConstraintWeight(){
+		return mfdSmoothnessConstraintWtForPaleoParents;
 	}
 
 }

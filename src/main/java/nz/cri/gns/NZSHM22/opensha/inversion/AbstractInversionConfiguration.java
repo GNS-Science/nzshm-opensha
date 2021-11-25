@@ -34,7 +34,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	//New NZSHM scaling 
 	private int slipRateUncertaintyConstraintWt;
 	private int slipRateUncertaintyConstraintScalingFactor;
-//	private double paleoRateConstraintWt; 
 //	private double paleoSlipConstraintWt;
 
 //	private double rupRateConstraintWt;
@@ -42,7 +41,7 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 //	private double participationConstraintMagBinSize;
 	private double nucleationMFDConstraintWt;
 //	private double mfdSmoothnessConstraintWt;
-//	private double mfdSmoothnessConstraintWtForPaleoParents;
+
 //	private double rupRateSmoothingConstraintWt;
 	private double minimizationConstraintWt;
 //	private double momentConstraintWt;
@@ -218,7 +217,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		this.minimumRuptureRateFraction = minimumRuptureRateFraction;
 		return this;
 	}
-	
 
 	public double getMFDTransitionMag() {
 		return MFDTransitionMag;
@@ -272,8 +270,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		el.addAttribute("slipRateWeighting", slipRateWeighting.name() + "");		
 		el.addAttribute("slipRateUncertaintyConstraintWt", slipRateUncertaintyConstraintWt + "");
 		el.addAttribute("slipRateUncertaintyConstraintScalingFactor", slipRateUncertaintyConstraintScalingFactor + "");
-//		el.addAttribute("paleoRateConstraintWt", paleoRateConstraintWt+"");
-//		el.addAttribute("paleoSlipConstraintWt", paleoSlipConstraintWt+"");
 		el.addAttribute("magnitudeEqualityConstraintWt", getMagnitudeEqualityConstraintWt() + "");
 		el.addAttribute("magnitudeInequalityConstraintWt", getMagnitudeInequalityConstraintWt() + "");
 //		el.addAttribute("rupRateConstraintWt", rupRateConstraintWt+"");

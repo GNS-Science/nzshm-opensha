@@ -2,12 +2,16 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import com.google.common.base.Preconditions;
 
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 import scratch.UCERF3.utils.U3FaultSystemIO;
@@ -15,6 +19,7 @@ import scratch.UCERF3.utils.U3FaultSystemIO;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Runs the standard NSHM inversion on a crustal rupture set.
@@ -30,6 +35,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double bValue_TVZ = 1.25;
     private double minMag_Sans = 6.95;
     private double minMag_TVZ = 6.95;
+
+    private double paleoRateConstraintWt = 0;
+    private double paleoParentRateSmoothnessConstraintWeight = 0;
+    private NZSHM22_PaleoRates paleoRates;
+    private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -125,6 +135,29 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         return this;
     }
 
+    public NZSHM22_CrustalInversionRunner setPaleoRateConstraintWt(double paleoRateConstraintWt){
+        this.paleoRateConstraintWt = paleoRateConstraintWt;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setPaleoRates(NZSHM22_PaleoRates paleoRates){
+        this.paleoRates = paleoRates;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setPaleoProbabilityModel(NZSHM22_PaleoProbabilityModel probabilityModel){
+        this.paleoProbabilityModel = probabilityModel;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setPaleoRateConstraints(double weight, double smoothingWeight, String paleoRateConstraints, String paleoProbabilityModel){
+        paleoRateConstraintWt = weight;
+        paleoParentRateSmoothnessConstraintWeight = smoothingWeight;
+        setPaleoRates(NZSHM22_PaleoRates.valueOf(paleoRateConstraints));
+        setPaleoProbabilityModel(NZSHM22_PaleoProbabilityModel.valueOf(paleoProbabilityModel));
+        return this;
+    }
+
     @Override
     protected NZSHM22_CrustalInversionRunner configure() {
         LogicTreeBranch logicTreeBranch = this.rupSet.getLogicTreeBranch();
@@ -134,6 +167,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                 inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
                 totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ);
+
+       inversionConfiguration
+               .setPaleoRateConstraintWt(paleoRateConstraintWt)
+               .setpaleoParentRateSmoothnessConstraintWeight(paleoParentRateSmoothnessConstraintWeight);
 
         solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
                 .getReportingMFDConstraintComponents();
@@ -153,8 +190,18 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         /*
          * Build inversion inputs
          */
+        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints = null;
+        if (paleoRates != null){
+            paleoRateConstraints = paleoRates.fetchConstraints(rupSet.getFaultSectionDataList());
+        }
+
+        PaleoProbabilityModel paleoProbabilityModel = null;
+        if(this.paleoProbabilityModel != null){
+            paleoProbabilityModel = this.paleoProbabilityModel.fetchModel();
+        }
+
         NZSHM22_CrustalInversionInputGenerator inversionInputGenerator = new NZSHM22_CrustalInversionInputGenerator(
-                rupSet, inversionConfiguration, null, null, null, null);
+                rupSet, inversionConfiguration, paleoRateConstraints, null, null, paleoProbabilityModel);
         setInversionInputGenerator(inversionInputGenerator);
         return this;
     }
@@ -188,7 +235,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
                 .setSlipRateConstraint("BOTH", 1000, 1000))
                 .setSlipRateUncertaintyConstraint("NORMALIZED_BY_UNCERTAINTY", 1000, 2)
-                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85);
+                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
+                .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
 
         FaultSystemSolution solution = runner.runInversion();
 

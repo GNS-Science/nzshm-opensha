@@ -1,10 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
+import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 
+import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import scratch.UCERF3.utils.U3SectionMFD_constraint;
 import scratch.UCERF3.utils.aveSlip.U3AveSlipConstraint;
 import scratch.UCERF3.utils.paleoRateConstraints.U3PaleoRateConstraint;
@@ -42,15 +43,15 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 	// inputs
 	private NZSHM22_InversionFaultSystemRuptSet rupSet;
 	private AbstractInversionConfiguration config;
-	private List<U3PaleoRateConstraint> paleoRateConstraints;
+	private List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints;
 	private List<U3AveSlipConstraint> aveSlipConstraints;
 	private double[] improbabilityConstraint;
 	private PaleoProbabilityModel paleoProbabilityModel;
 
 	public NZSHM22_CrustalInversionInputGenerator(NZSHM22_InversionFaultSystemRuptSet rupSet, NZSHM22_CrustalInversionConfiguration config,
-			List<U3PaleoRateConstraint> paleoRateConstraints, List<U3AveSlipConstraint> aveSlipConstraints,
-			double[] improbabilityConstraint, // may become an object in the future
-			PaleoProbabilityModel paleoProbabilityModel) {
+												  List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints, List<U3AveSlipConstraint> aveSlipConstraints,
+												  double[] improbabilityConstraint, // may become an object in the future
+												  PaleoProbabilityModel paleoProbabilityModel) {
 		super(rupSet, buildConstraints(rupSet, config, paleoRateConstraints, aveSlipConstraints, paleoProbabilityModel),
 				config.getInitialRupModel(), buildWaterLevel(config, rupSet));
 		this.rupSet = rupSet;
@@ -77,7 +78,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 	}
 
 	private static List<InversionConstraint> buildConstraints(NZSHM22_InversionFaultSystemRuptSet rupSet,
-			NZSHM22_CrustalInversionConfiguration config, List<U3PaleoRateConstraint> paleoRateConstraints,
+			NZSHM22_CrustalInversionConfiguration config, List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints,
 			List<U3AveSlipConstraint> aveSlipConstraints, PaleoProbabilityModel paleoProbabilityModel) {
 
 		System.out.println("buildConstraints");
@@ -122,14 +123,23 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		}
 
 
-//		if (config.getPaleoRateConstraintWt() > 0d)
-//			constraints.add(new PaleoRateInversionConstraint(rupSet, config.getPaleoRateConstraintWt(),
-//					paleoRateConstraints, paleoProbabilityModel));
-//
+		if (config.getPaleoRateConstraintWt() > 0) {
+			constraints.add(new PaleoRateInversionConstraint(rupSet, config.getPaleoRateConstraintWt(),
+					paleoRateConstraints, paleoProbabilityModel));
+
+			if (config.getpaleoParentRateSmoothnessConstraintWeight() > 0) {
+				HashSet<Integer> paleoParentIDs = new HashSet();
+				for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint : paleoRateConstraints) {
+					paleoParentIDs.add(rupSet.getFaultSectionDataList().get(constraint.sectionIndex).getParentSectionId());
+				}
+				constraints.add(new LaplacianSmoothingInversionConstraint(rupSet, config.getpaleoParentRateSmoothnessConstraintWeight(), paleoParentIDs));
+			}
+		}
+
 //		if (config.getPaleoSlipConstraintWt() > 0d)
 //			constraints.add(new PaleoSlipInversionConstraint(rupSet, config.getPaleoSlipConstraintWt(),
 //					aveSlipConstraints, sectSlipRateReduced));
-//
+////
 //		if (config.getRupRateConstraintWt() > 0d) {
 //			// This is the RupRateConstraintWt for ruptures not in UCERF2
 //			double zeroRupRateConstraintWt = 0;
@@ -311,7 +321,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 		return config;
 	}
 
-	public List<U3PaleoRateConstraint> getPaleoRateConstraints() {
+	public List<UncertainDataConstraint.SectMappedUncertainDataConstraint> getPaleoRateConstraints() {
 		return paleoRateConstraints;
 	}
 
