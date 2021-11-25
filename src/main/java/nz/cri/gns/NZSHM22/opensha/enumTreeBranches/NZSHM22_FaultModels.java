@@ -3,21 +3,17 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
-import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.commons.util.ExceptionUtils;
 import org.opensha.commons.util.XMLUtils;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
-import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.logicTree.U3LogicTreeBranchNode;
-import scratch.UCERF3.utils.UCERF3_DataUtils;
 
 import java.io.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public enum NZSHM22_FaultModels implements U3LogicTreeBranchNode<NZSHM22_FaultModels> {
+public enum NZSHM22_FaultModels implements LogicTreeNode {
 
 	CFM_0_9_ALL_2010("CFM 0.9 all NZ faults, 2010 Stirling depth", "cfm_0_9_d90_all_stirling_depths.xml"),
 	CFM_0_9_SANSTVZ_2010("CFM 0.9 sans TVZ, 2010 Stirling depth", "cfm_0_9_d90_no_tvz_stirling_depths.xml"),
@@ -53,9 +49,8 @@ public enum NZSHM22_FaultModels implements U3LogicTreeBranchNode<NZSHM22_FaultMo
 	SBD_0_4_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
 			"hk_tile_parameters_highkermsliprate_v2.csv", 100000);
 
-	private final static String resourcePath = "/faultModels/";
+	private final static String RESOURCE_PATH = "/faultModels/";
 
-	private final double weight;
 	private final String modelName;
 	private final String fileName;
 	private final boolean crustal;
@@ -63,24 +58,22 @@ public enum NZSHM22_FaultModels implements U3LogicTreeBranchNode<NZSHM22_FaultMo
 
 	private Map<String, List<Integer>> namedFaultsMapAlt;
 
-	private NZSHM22_FaultModels(String modelName, String fileName) {
+	NZSHM22_FaultModels(String modelName, String fileName) {
 		this.modelName = modelName;
 		this.fileName = fileName;
 		this.crustal = true;
 		this.id = -1;
-		this.weight = 1.0;
 	}
 
-	private NZSHM22_FaultModels(String modelName, String fileName, int subductionId) {
+	NZSHM22_FaultModels(String modelName, String fileName, int subductionId) {
 		this.modelName = modelName;
 		this.fileName = fileName;
 		this.crustal = false;
 		this.id = subductionId;
-		this.weight = 1.0;
 	}
 
 	public InputStream getStream(String fileName) {
-		return getClass().getResourceAsStream(resourcePath + fileName);
+		return getClass().getResourceAsStream(RESOURCE_PATH + fileName);
 	}
 
 	/**
@@ -139,31 +132,21 @@ public enum NZSHM22_FaultModels implements U3LogicTreeBranchNode<NZSHM22_FaultMo
 	}
 
 	@Override
-	public double getRelativeWeight(InversionModels im) {
-		return weight;
-	}
-
-	@Override
-	public String encodeChoiceString() {
-		return getShortName();
-	}
-
-	@Override
-	public String getBranchLevelName() {
-		return "Fault Model";
-	}
-
-	@Override
-	public String getShortBranchLevelName() {
-		return getBranchLevelName();
-	}
-
-	@Override
 	public String toString() {
 		return getName();
 	}
 
 	public String getFileName(){
 		return fileName;
+	}
+
+	@Override
+	public double getNodeWeight(LogicTreeBranch<?> fullBranch) {
+		return 0;
+	}
+
+	@Override
+	public String getFilePrefix() {
+		return null;
 	}
 }

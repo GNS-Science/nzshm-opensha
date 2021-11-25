@@ -68,8 +68,8 @@ public class NZSHM22_GridReader extends GridReader {
                 val = FN_STR_TO_DBL.apply(dat.next());
                 //Guards
                 Location loc = new Location(Double.parseDouble(lat), Double.parseDouble(lon));
-                if (!region.contains(loc))
-                    System.out.println("location " + loc + " is not within bounds of expected region");
+//                if (!region.contains(loc))
+//                    System.out.println("location " + loc + " is not within bounds of expected region");
                 if (table.contains(latkey, lonkey))
                     System.out.println("location " + loc + " is already defined in table, input data duplication!!");
                 totalValue += val;
