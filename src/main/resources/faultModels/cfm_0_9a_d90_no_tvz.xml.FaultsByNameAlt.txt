@@ -1,0 +1,33 @@
+﻿Akatore	3
+Alpine: George to Jacksons	12
+Alpine: Jacksons to Kaniere	13
+Alpine: Kaniere to Springs Junction	14
+Awatere	29
+Awanui	28
+Cape Egmont	55	54	56
+Dunstan	104
+Edgecumbe	106	107
+Flaxmore - Waimea - Tahunanui	121
+Fox Peak	123
+Greendale	136
+Hope	155
+Kaiapo	184
+Kekerengu	199
+Kerepehi	202	203	205	206	207
+Lees Valley	228
+Needles	297
+Ohariu	317
+Ostler	338	339
+Paeroa	354
+Porters Pass	373
+Poutu	375
+Te Tatua o Wairere	454
+Titri	463	462	464
+Waihi	494	493
+Wairarapa	513	514	515
+Wairau	518
+Wairoa North	521
+Wellington: Wellington-Hutt Valley	535	536	537	538	539
+Wellington: Pahiatua	540
+Whangamoa	551
+White Creek	557
