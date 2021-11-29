@@ -82,6 +82,12 @@ public class NZSHM22_ReportPageGen {
     }
 
     public void generatePage() throws IOException {
+    	
+    	int available = Runtime.getRuntime().availableProcessors();
+    	if (available <= 1) {
+    		System.err.println("Warning: Execution environment has only " + available + " processors allocated. Report threading is disabled.");
+    	}
+    	
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
         if (plots == null) {
@@ -101,13 +107,13 @@ public class NZSHM22_ReportPageGen {
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-        reportPageGen.setName("hello!").setOutputPath("TEST/REPORTPAGEGEN")
-                .setFillSurfaces(true)
-                //.addPlot("SolMFDPlot")
-                //.addPlot("ParticipationRatePlot")
-//                .setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI1NjZkWUxtYQ==.zip");
-                //.setSolution("TEST/inversions/CrustalInversionSolution.zip");
-                .setSolution("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\CrustalInversionSolution.zip");
+        reportPageGen.setName("SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw")
+        	.setOutputPath("TEST/REPORTPAGEGEN5")
+            .setFillSurfaces(true)
+            .setPlotLevel("FULL")
+//                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
+    		.setSolution("./TEST/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy.zip");
         reportPageGen.generatePage();
+        System.out.println("DONE!");
     }
 }
