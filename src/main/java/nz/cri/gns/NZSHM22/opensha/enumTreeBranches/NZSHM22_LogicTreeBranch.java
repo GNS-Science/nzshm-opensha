@@ -17,7 +17,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
 
     U3LogicTreeBranch u3Branch = null;
 
-    protected static List<LogicTreeLevel<? extends LogicTreeNode>> getLevels() {
+    protected static List<LogicTreeLevel<? extends LogicTreeNode>> createLevels() {
         List<LogicTreeLevel<? extends LogicTreeNode>> levels = new ArrayList<>();
         levels.add(FaultRegime.level());
         levels.add(NZSHM22_SpatialSeisPDF.level());
@@ -28,7 +28,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
     }
 
     protected NZSHM22_LogicTreeBranch() {
-        super(getLevels());
+        super(createLevels());
         setValue(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
         setValue(SlipAlongRuptureModels.UNIFORM);
     }
