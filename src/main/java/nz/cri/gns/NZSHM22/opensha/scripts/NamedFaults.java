@@ -59,5 +59,7 @@ public class NamedFaults {
         createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
         createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
         createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9_ALL_2010);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9A_ALL_D90);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9A_SANSTVZ_D90);
     }
 }
