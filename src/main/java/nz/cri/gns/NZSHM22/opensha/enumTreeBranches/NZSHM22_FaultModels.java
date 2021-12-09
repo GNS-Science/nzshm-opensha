@@ -51,7 +51,18 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 					  "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv", 10000),
 
 	SBD_0_4_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
-			"hk_tile_parameters_highkermsliprate_v2.csv", 100000);
+			"hk_tile_parameters_highkermsliprate_v2.csv", 100000),
+
+
+	SBD_0_5_HKR_LR_30_CTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
+			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED.csv", 100000),
+	SBD_0_5_HKR_LR_30_CTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
+			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_2.csv", 100000),
+	SBD_0_5_HKR_LR_30_LTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+			"hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED.csv", 100000),
+	SBD_0_5_HKR_LR_30_LTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+			"hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_2.csv", 100000);
+
 
 	private final static String RESOURCE_PATH = "/faultModels/";
 
