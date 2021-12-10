@@ -77,24 +77,12 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 	
 	public  NZSHM22_SubductionInversionTargetMFDs (NZSHM22_InversionFaultSystemRuptSet invRupSet){
-		this(invRupSet, 0.7, 1.1, 7.85, 0, 0);
+		this(invRupSet, 0.7, 1.1, 0, 0);
 	}
 
 	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
-									  double totalRateM5, double bValue, double mfdTransitionMag,
+									  double totalRateM5, double bValue,
 									  double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower){
-		
-		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
-		// equivalent
-		U3LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
-		//this.totalRegionRateMgt5 = this.totalRateM5;
-		double mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault(); //TODO: set this to 8.05 (more NZ ish)
-
-		// convert mMaxOffFault to bin center
-		List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
-		
-		double origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
 		
 		// make the total target GR MFD
 		// TODO: why MIN_MAG = 0 ??
