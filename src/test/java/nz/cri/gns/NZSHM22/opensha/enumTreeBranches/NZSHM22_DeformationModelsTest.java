@@ -93,4 +93,12 @@ public class NZSHM22_DeformationModelsTest {
 
     }
 
+    @Test
+    public void testLoad() throws DocumentException, IOException {
+        for(NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()){
+            System.out.println(model.name());
+            model.load();
+        }
+    }
+
 }

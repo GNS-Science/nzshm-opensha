@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import org.dom4j.DocumentException;
@@ -90,8 +91,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		File inputDir = new File("./TEST");
 		File outputRoot = new File("./TEST");
-		File ruptureSet = new File(inputDir,
-				"RupSet_Sub_FM(SBD_0_2A_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
+		File ruptureSet = new File("C:\\tmp\\NZSHM\\RupSet_Sub_FM(SBD_0_2_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(0.5)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 		Preconditions.checkState(ruptureSet.exists());
@@ -107,8 +107,12 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * mfd_b_value	1.05
 		 * mfd_transition_mag	9.15
 		 */
+
+		SimplifiedScalingRelationship scale = new SimplifiedScalingRelationship();
+		scale.setupSubduction(3.0);
+
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
-				.setScalingRelationship("SMPL_NZ_INT_LW", true)
+				.setScalingRelationship(scale, true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
 				.setUncertaintyWeightedMFDWeights(1000, 0.1)
@@ -117,9 +121,10 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
 
 		FaultSystemSolution solution = runner
-				.setInversionSeconds(20)
+				.setInversionSeconds(1)
 				.setNumThreadsPerSelector(1)
 				.setSelectionInterval(2)
+				.setDeformationModel("SBD_0_2_HKR_LR_30_CTP1")
 //				.setInversionAveraging(2, 10)
 				.runInversion();
 

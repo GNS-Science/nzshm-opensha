@@ -5,17 +5,17 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
+import scratch.UCERF3.enumTreeBranches.FaultModels;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,35 +24,61 @@ import java.util.Map;
 public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
     FAULT_MODEL(
-            "Fault Model",
             "Use deformation model as provided by the fault model",
-            null,
+            "any",
             null),
 
     GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw(
-            "GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw",
             "geodetic, no geological prior constraint, uniform std-dev 2010",
-            "RmlsZTo4NTkuMDM2Z2Rw",
+            "rupture set RmlsZTo4NTkuMDM2Z2Rw",
             "slip_deficit_rates_no_prior_uniform-stddev_2010_RmlsZTo4NTkuMDM2Z2Rw.dat"),
 
     GEOD_NO_PRIOR_UNISTD_D90_RmlsZTozMDMuMEJCOVVY(
-            "GEOD_NO_PRIOR_UNISTD_D90_RmlsZTozMDMuMEJCOVVY",
             "geodetic, no geological prior constraint, uniform std-dev D90",
-            "RmlsZTozMDMuMEJCOVVY",
-            "slip_deficit_rates_no_prior_uniform-stddev_D90_RmlsZTozMDMuMEJCOVVY.dat");
+            "rupture set RmlsZTozMDMuMEJCOVVY",
+            "slip_deficit_rates_no_prior_uniform-stddev_D90_RmlsZTozMDMuMEJCOVVY.dat"),
 
-    String name;
-    String rupSet;
+    SBD_0_2_HKR_LR_30_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED.csv"),
+    SBD_0_2_HKR_LR_30_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
+    SBD_0_2_HKR_LR_30_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED.csv"),
+    SBD_0_2_HKR_LR_30_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
+
+    SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv"),
+
+    SBD_0_2A_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv"),
+
+    SBD_0_3_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv"),
+
+    SBD_0_4_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_highkermsliprate_v2.csv");
+
     String description;
     String fileName;
     DeformationHelper helper;
 
     private final static String resourcePath = "/deformationModels/";
 
-    NZSHM22_DeformationModel(String name, String description, String rupSet, String fileName) {
-        this.name = name;
+    NZSHM22_DeformationModel(String description, String compatibility, String fileName) {
         this.description = description;
-        this.rupSet = rupSet;
         this.fileName = fileName;
         this.helper = new DeformationHelper(fileName);
     }
@@ -135,6 +161,15 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
     }
 
+    /**
+     * Used for testing only
+     */
+    public void load(){
+        if (fileName != null) {
+            helper.getDeformations();
+        }
+    }
+
     public void applyTo(FaultSystemRupSet rupSet) {
         if (fileName != null) {
             helper.applyTo(rupSet);
@@ -143,7 +178,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
     @Override
     public String getName() {
-        return name;
+        return name();
     }
 
     @Override
@@ -163,6 +198,30 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
     public static LogicTreeLevel<LogicTreeNode> level() {
         return LogicTreeLevel.forEnumUnchecked(NZSHM22_DeformationModel.class, "NZSHM22_DeformationModel", "NZSHM22_DeformationModel");
+    }
+
+    public static void subductionFmToDm(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
+        Preconditions.checkArgument(!faultModel.isCrustal());
+
+        FaultSectionList sections = new FaultSectionList();
+        faultModel.fetchFaultSections(sections);
+
+        try (PrintWriter out = new PrintWriter(new FileWriter("dm_" + faultModel.getFileName()))) {
+            out.println("% generated from faultmodel file " + faultModel.getFileName());
+            for (FaultSection section : sections) {
+                out.println("" + section.getSectionId() + ", " + section.getParentSectionId() + ", " + section.getOrigAveSlipRate() + ", " + section.getOrigSlipRateStdDev());
+            }
+
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws DocumentException, IOException {
+        subductionFmToDm(NZSHM22_FaultModels.SBD_0_2_HKR_LR_30);
+        subductionFmToDm(NZSHM22_FaultModels.SBD_0_2A_HKR_LR_30);
+        subductionFmToDm(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30);
+        subductionFmToDm(NZSHM22_FaultModels.SBD_0_4_HKR_LR_30);
     }
 
 }
