@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import java.io.*;
 
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
@@ -234,6 +235,9 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
     public static void main(String[] args) throws DocumentException, IOException {
     	NZSHM22_SubductionRuptureSetBuilder builder = new NZSHM22_SubductionRuptureSetBuilder();
 
+    	SimplifiedScalingRelationship scale = new SimplifiedScalingRelationship();
+    	scale.setupSubduction(4.0);
+
 // builds  26430 ruptures....
 //    	Built 39813 total ruptures
 //    	builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_30)
@@ -251,12 +255,14 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 		.setDownDipMinFill(0.5);    	
     	
     	builder
-    		.setScalingRelationship(ScalingRelationships.TMG_SUB_2017)
+    		.setScalingRelationship(scale)
     		.setSlipAlongRuptureModel(SlipAlongRuptureModels.UNIFORM);
     	
     	System.out.println(builder.getDescriptiveName());
         NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
         U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+
+        ruptureSet.write(new File("/tmp/NZSHM/modularsubductionruptures.zip"));
     }
 	
 }

@@ -5,6 +5,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
@@ -40,7 +41,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
     int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 
-	protected ScalingRelationships scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
+	protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
 	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
 
     protected static String fmt(float d) {
@@ -105,12 +106,12 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     }
 
     
-	public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(ScalingRelationships scalingRelationship) {
+	public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(RupSetScalingRelationship scalingRelationship) {
 		this.scalingRelationship = scalingRelationship;
 		return this;
 	}
 	
-	public ScalingRelationships getScalingRelationship() {
+	public RupSetScalingRelationship getScalingRelationship() {
 		return this.scalingRelationship;
 	}
 	

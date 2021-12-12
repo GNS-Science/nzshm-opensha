@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.opensha.commons.util.FaultUtils;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
@@ -26,7 +27,7 @@ public class NZSHM22_SlipEnabledRuptureSet extends SlipAlongRuptureModelRupSet {
 	private static final long serialVersionUID = -4984738430816137976L;
 
 	public NZSHM22_SlipEnabledRuptureSet(List<ClusterRupture> ruptures, List<FaultSection> subSections,
-			ScalingRelationships scale, SlipAlongRuptureModels slipAlongModel) {
+										 RupSetScalingRelationship scale, SlipAlongRuptureModels slipAlongModel) {
 		super(slipAlongModel);
 
 		// build a rupture set (doing this manually instead of creating an inversion
