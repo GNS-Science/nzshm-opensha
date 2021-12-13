@@ -38,8 +38,9 @@ public class SmokeTest {
         File solutionFile = new File(dir, "solution.zip");
 
         testAzimuthalRuptures(ruptureSetFile);
+        testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
-        testSolutionReportPageGen(solutionFile, dir);
+        testSolutionReportPageGen(solutionFile);
     }
 
     @Test
@@ -50,8 +51,9 @@ public class SmokeTest {
         File solutionFile = new File(dir, "solution.zip");
 
         testCoulombRuptures(ruptureSetFile);
+        testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
-        testSolutionReportPageGen(solutionFile, dir);
+        testSolutionReportPageGen(solutionFile);
     }
 
     @Test
@@ -62,8 +64,9 @@ public class SmokeTest {
         File solutionFile = new File(dir, "solution.zip");
 
         testSubductionRuptures(ruptureSetFile);
+        testRupSetReportPageGen(ruptureSetFile);
         testSubductionInversionRunner(ruptureSetFile, solutionFile);
-        testSolutionReportPageGen(solutionFile, dir);
+        testSolutionReportPageGen(solutionFile);
     }
 
     public void sanityCheckAzimuthalRuptureSet(FaultSystemRupSet rupSet) {
@@ -236,7 +239,9 @@ public class SmokeTest {
 
     }
 
-    public void testSolutionReportPageGen(File solutionFile, File outputDir) throws IOException {
+    public void testSolutionReportPageGen(File solutionFile) throws IOException {
+        File outputDir = new File(solutionFile.getParentFile(), "solutionReport");
+        outputDir.mkdir();
 
         NZSHM22_PythonGateway.getReportPageGen()
                 .setSolution(solutionFile.getAbsolutePath())
@@ -246,6 +251,20 @@ public class SmokeTest {
                 .generatePage();
 
         assertTrue(new File(outputDir, "resources/sol_partic_m7.png").exists());
-
     }
+
+    public void testRupSetReportPageGen(File rupSetFile) throws IOException {
+        File outputDir = new File(rupSetFile.getParentFile(), "ruptureReport");
+        outputDir.mkdir();
+
+        NZSHM22_PythonGateway.getReportPageGen()
+                .setRuptureSet(rupSetFile.getAbsolutePath())
+                .setOutputPath(outputDir.getAbsolutePath())
+                .addPlot("FaultSectionConnectionsPlot")
+                .setFillSurfaces(true)
+                .generateRupSetPage();
+
+        assertTrue(new File(outputDir, "resources/sect_connectivity.png").exists());
+    }
+
 }
