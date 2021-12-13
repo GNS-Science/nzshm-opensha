@@ -12,13 +12,13 @@ import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.inversion.CrustalMFDRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SlipEnabledRuptureSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
 import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import nz.cri.gns.NZSHM22.util.GitVersion;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
@@ -42,20 +42,20 @@ public class NZSHM22_PythonGateway {
     static NZSHM22_GridHazardCalculator gridHazCalc;
 
 
-    public static NZSHM22_AzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
-        NZSHM22_AzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
+    public static NZSHM22_CachedAzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
+        NZSHM22_CachedAzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
         builder = azBuilder;
         return azBuilder;
     }
 
-    public static NZSHM22_CoulombRuptureSetBuilder getCoulombRuptureSetBuilder(){
-        NZSHM22_CoulombRuptureSetBuilder coulBuilder = new NZSHM22_CachedCoulombRuptureSetBuilder();
+    public static NZSHM22_CachedCoulombRuptureSetBuilder getCoulombRuptureSetBuilder(){
+        NZSHM22_CachedCoulombRuptureSetBuilder coulBuilder = new NZSHM22_CachedCoulombRuptureSetBuilder();
         builder = coulBuilder;
         return coulBuilder;
     }
 
-    public static NZSHM22_SubductionRuptureSetBuilder getSubductionRuptureSetBuilder(){
-    	NZSHM22_SubductionRuptureSetBuilder subBuilder = new NZSHM22_CachedSubductionRuptureSetBuilder();
+    public static NZSHM22_CachedSubductionRuptureSetBuilder getSubductionRuptureSetBuilder(){
+    	NZSHM22_CachedSubductionRuptureSetBuilder subBuilder = new NZSHM22_CachedSubductionRuptureSetBuilder();
         builder = subBuilder;
         return subBuilder;
     }
@@ -142,8 +142,8 @@ public class NZSHM22_PythonGateway {
     /**
      * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
      */
-    static class NZSHM22_CachedAzimuthalRuptureSetBuilder extends NZSHM22_AzimuthalRuptureSetBuilder {
-        NZSHM22_SlipEnabledRuptureSet ruptureSet;
+    public static class NZSHM22_CachedAzimuthalRuptureSetBuilder extends NZSHM22_AzimuthalRuptureSetBuilder {
+        FaultSystemRupSet ruptureSet;
 
         /**
          * Chooses a known fault model.
@@ -194,7 +194,7 @@ public class NZSHM22_PythonGateway {
          * Caches the results of the build
          */
         @Override
-        public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+        public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
             ruptureSet = super.buildRuptureSet();
             return ruptureSet;
         }
@@ -207,15 +207,15 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+            ruptureSet.write(rupSetFile);
         }
     }
 
     /**
      * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
      */
-    static class NZSHM22_CachedCoulombRuptureSetBuilder extends NZSHM22_CoulombRuptureSetBuilder {
-        NZSHM22_SlipEnabledRuptureSet ruptureSet;
+    public static class NZSHM22_CachedCoulombRuptureSetBuilder extends NZSHM22_CoulombRuptureSetBuilder {
+        FaultSystemRupSet ruptureSet;
 
         /**
          * Chooses a known fault model.
@@ -243,7 +243,7 @@ public class NZSHM22_PythonGateway {
          * Caches the results of the build
          */
         @Override
-        public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+        public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
             ruptureSet = super.buildRuptureSet();
             return ruptureSet;
         }
@@ -256,21 +256,21 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+            ruptureSet.write(rupSetFile);
         }
     }
 
     /**
      * Provide a little help for python clients using NZSHM22_SubductionRuptureSetBuilder
      */
-    static class NZSHM22_CachedSubductionRuptureSetBuilder extends NZSHM22_SubductionRuptureSetBuilder {
-        NZSHM22_SlipEnabledRuptureSet ruptureSet;
+    public static class NZSHM22_CachedSubductionRuptureSetBuilder extends NZSHM22_SubductionRuptureSetBuilder {
+        FaultSystemRupSet ruptureSet;
 
         /**
          * Caches the results of the build
          */
         @Override
-        public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+        public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
             ruptureSet = super.buildRuptureSet();
             return ruptureSet;
         }
@@ -283,7 +283,7 @@ public class NZSHM22_PythonGateway {
          */
         public void writeRuptureSet(String rupSetFileName) throws IOException {
             File rupSetFile = new File(rupSetFileName);
-           U3FaultSystemIO.writeRupSet(ruptureSet, rupSetFile);
+            ruptureSet.write(rupSetFile);
         }
     }
 
@@ -291,7 +291,7 @@ public class NZSHM22_PythonGateway {
     /**
      * Python helper that wraps NZSHM22_InversionRunner
      */
-    static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
+    public static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
         private FaultSystemSolution solution;
 
         /**
@@ -320,7 +320,7 @@ public class NZSHM22_PythonGateway {
     /**
      * Python helper that wraps NZSHM22_InversionRunner
      */
-    static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
+    public static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
         FaultSystemSolution solution = null;
 
         /**

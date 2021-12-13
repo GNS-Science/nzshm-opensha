@@ -3,10 +3,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import static org.junit.Assert.*;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +20,7 @@ public class NZSHM22_CrustalInversionConfigurationTest {
     public NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, IOException {
         URL url = Thread.currentThread().getContextClassLoader().getResource("RupSetWaiohauNorth.zip");
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(url.toURI()));
-        return new NZSHM22_InversionFaultSystemRuptSet(rupSet, NZSHM22_LogicTreeBranch.crustal());
+        return new NZSHM22_InversionFaultSystemRuptSet(rupSet, NZSHM22_LogicTreeBranch.crustalInversion());
     }
 
 

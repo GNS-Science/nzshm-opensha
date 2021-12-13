@@ -1,9 +1,14 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import java.io.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
@@ -14,6 +19,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistance
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.*;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import scratch.UCERF3.utils.U3FaultSystemIO;
@@ -36,6 +42,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 	double downDipMinFill = 1; // 1 means only allow complete rectangles
 	double downDipPositionCoarseness = 0; // 0 means no coarseness
 	double downDipSizeCoarseness = 0; // 0 means no coarseness
+
+	int maxRuptures = Integer.MAX_VALUE;
 	
 	/**
 	 * Constructs a new NZSHM22_RuptureSetBuilder with the default NSHM configuration.
@@ -76,6 +84,11 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      */
 	public NZSHM22_SubductionRuptureSetBuilder setSlipAlongRuptureModel(String slipAlongRuptureModel) {
 		setSlipAlongRuptureModel(SlipAlongRuptureModels.valueOf(slipAlongRuptureModel));
+		return this;
+	}
+
+	public NZSHM22_SubductionRuptureSetBuilder setMaxRuptures(int maxRuptures){
+		this.maxRuptures = maxRuptures;
 		return this;
 	}
 	
@@ -170,7 +183,34 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 				.builder(connectionStrategy, distAzCalc).maxSplays(maxNumSplays);
 
 		plausibilityConfig = configBuilder.build();
-	}	
+	}
+
+	private double[] buildLengths() {
+
+		double[] result = new double[ruptures.size()];
+
+		for (int r = 0; r < ruptures.size(); r++) {
+			ClusterRupture rup = ruptures.get(r);
+			int currentMin = Integer.MAX_VALUE;
+
+			List<FaultSection> rupSects = rup.buildOrderedSectionList();
+			// get min row of downdip (assumes there's just one of these)
+			for (FaultSection sect : rupSects) {
+				currentMin = Math.min(currentMin, ((DownDipFaultSection) sect).getRowIndex());
+			}
+
+			double length = 0d;
+			// iterate sections adding lengths from those in the minimum row
+			for (FaultSection sect : rupSects) {
+				if (((DownDipFaultSection) sect).getRowIndex() == currentMin) {
+					length += sect.getTraceLength();
+				}
+			}
+
+			result[r] = length * 1e3;
+		}
+		return result;
+	}
 	
 	
 	/**
@@ -182,7 +222,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 	 * @throws IOException
 	 */
 	@Override
-	public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+	public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
 
 	    loadFaults();
 
@@ -217,17 +257,20 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 			System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
 		}
 
-		// TODO: consider overloading this for Hikurangi to provide
-		// Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
-		NZSHM22_SlipEnabledRuptureSet rupSet = null;
-		try {
-			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-					this.getScalingRelationship(), this.getSlipAlongRuptureModel());
-			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(maxRuptures != Integer.MAX_VALUE){
+			ruptures = ruptures.stream().limit(maxRuptures).collect(Collectors.toList());
 		}
+
+		FaultSystemRupSet rupSet =
+				FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+						.rupLengths(buildLengths())
+						.forScalingRelationship(getScalingRelationship())
+						.slipAlongRupture(getSlipAlongRuptureModel())
+						.addModule(getPlausibilityConfig().getDistAzCalc())
+						.addModule(getPlausibilityConfig())
+						.addModule(getLogicTreeBranch(FaultRegime.SUBDUCTION))
+						.build();
+
 		return rupSet;
 	}
 
@@ -255,8 +298,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
     		.setSlipAlongRuptureModel(SlipAlongRuptureModels.UNIFORM);
     	
     	System.out.println(builder.getDescriptiveName());
-        NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+        FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
+        ruptureSet.write(new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
     }
 	
 }

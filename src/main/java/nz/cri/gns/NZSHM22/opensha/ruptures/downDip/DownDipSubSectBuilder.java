@@ -79,6 +79,7 @@ public class DownDipSubSectBuilder {
 		fsd.setAveUpperDepth(upper);
 		fsd.setAveLowerDepth(lower);
 		fsd.setAveDip(dip);
+		fsd.setAveRake(90);
 		fsd.setDipDirection((float) trace.getDipDirection());
 		return fsd.clone();
 	}

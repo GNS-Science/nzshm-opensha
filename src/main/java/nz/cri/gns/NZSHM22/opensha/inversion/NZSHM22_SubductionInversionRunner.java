@@ -1,16 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import org.dom4j.DocumentException;
 import com.google.common.base.Preconditions;
 
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,21 +42,12 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		return this;
 	}
 
-	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch)
-			throws DocumentException, IOException {
-		U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
-	}
-
 	@Override
 	protected NZSHM22_SubductionInversionRunner configure() throws DocumentException, IOException {
 
-		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subduction();
+		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
 		setupLTB(branch);
-		rupSet = loadRuptureSet(rupSetFile, branch);
-		if(recalcMags){
-			rupSet.recalcMags(scalingRelationship);
-		}
+		rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch);
 
 		InversionModels inversionModel = branch.getValue(InversionModels.class);
 
