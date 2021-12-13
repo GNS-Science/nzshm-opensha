@@ -39,7 +39,7 @@ class FullPipelineCrustal {
 		File markdownDirDir = new File("./TEST/crustal_inversions");
 		Preconditions.checkState(markdownDirDir.exists() || markdownDirDir.mkdir());
 
-		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
+		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
 		
 		FaultModels fm = branch.getValue(FaultModels.class);
 		ScalingRelationships scale = branch.getValue(ScalingRelationships.class);
@@ -103,7 +103,7 @@ class FullPipelineCrustal {
 							
 			if (rupSet == null) {
 				if (!rebuildRupSet && rupSetFile.exists()) {
-					rupSet = NZSHM22_CrustalInversionRunner.loadRuptureSet(rupSetFile, branch);
+					rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch);
 				} else {
 					rupSet = rsConfig.build(threads);
 					// configure as UCERF3

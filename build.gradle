@@ -46,16 +46,27 @@ sourceSets {
             srcDirs = ['src/integration/resources', 'src/main/java']
         }
     }
+
+    smokeTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+        java {
+            srcDirs = ['src/smokeTest/java']
+        }
+    }
 }
 
 configurations {
     intTestImplementation.extendsFrom implementation
     intTestRuntimeOnly.extendsFrom runtimeOnly
+    smokeTestImplementation.extendsFrom implementation
+    smokeTestRuntimeOnly.extendsFrom runtimeOnly
 }
 
 dependencies {
     intTestImplementation 'junit:junit:4.12'
     intTestImplementation 'com.google.jimfs:jimfs:1.1'
+    smokeTestImplementation 'junit:junit:4.12'
 }
 
 task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
@@ -88,6 +99,16 @@ task integrationTest(type: Test) {
 }
 
 check.dependsOn integrationTest
+
+task smokeTest(type: Test) {
+    description = 'Runs Smoke Tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.smokeTest.output.classesDirs
+    classpath = sourceSets.smokeTest.runtimeClasspath
+
+    shouldRunAfter test
+}
 
 test {
     exclude 'org/opensha/**'

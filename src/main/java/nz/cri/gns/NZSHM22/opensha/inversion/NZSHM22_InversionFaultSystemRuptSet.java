@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
@@ -18,6 +19,8 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 import scratch.UCERF3.utils.UCERF3_Observed_MFD_Fetcher;
 
 import java.awt.geom.Area;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
@@ -41,6 +44,37 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
         super(applyDeformationModel(rupSet, branch), branch.getU3Branch());
         init(branch);
     }
+
+	/**
+	 * Loads a RuptureSet from file.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Recalculates magnitudes if specified by the LTB.
+	 * @param ruptureSetFile
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
+		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
+
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		if(scaling != null && scaling.getReCalc()){
+			rupSetA = recalcMags(rupSetA, scaling);
+		}
+
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
+	/**
+	 * Returns a new RuptureSet with recalculated magnitudes.
+	 * @param rupSet
+	 * @param scale
+	 * @return
+	 */
+	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, RupSetScalingRelationship scale){
+		return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scale).build();
+	}
+
 
     protected static FaultSystemRupSet applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
@@ -106,32 +140,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	public RegionalRupSetData getSansTvzRegionalData(){
 		return sansTvz;
-	}
-
-	/**
-	 * Recalculate the magnitudes based on the specified ScalingRelationship
-	 * @param scale
-	 */
-	public void recalcMags(RupSetScalingRelationship scale) {
-
-		double[] mags = getMagForAllRups();
-		double[] rakes = getAveRakeForAllRups();
-		double[] areas = getAreaForAllRups();
-		double[] lengths = getLengthForAllRups();
-
-		double[] sectAreasOrig = new double[getFaultSectionDataList().size()];
-		for (int i = 0; i < sectAreasOrig.length; i++) {
-			sectAreasOrig[i] = getFaultSectionData(i).getArea(false);
-		}
-
-		for (int i = 0; i < mags.length; i++) {
-			double totOrigArea = 0d; // not reduced for aseismicity
-			for (FaultSection sect : getFaultSectionDataForRupture(i)) {
-				totOrigArea += sectAreasOrig[sect.getSectionId()]; // sq-m
-			}
-			double origDDW = totOrigArea / lengths[i];
-			mags[i] = scale.getMag(areas[i], origDDW, rakes[i]);
-		}
 	}
 
 }

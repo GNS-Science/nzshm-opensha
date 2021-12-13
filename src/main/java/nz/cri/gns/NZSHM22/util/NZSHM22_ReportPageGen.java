@@ -54,7 +54,7 @@ public class NZSHM22_ReportPageGen {
         possiblePlots = new HashMap<>();
         List<AbstractRupSetPlot> choices = ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
         for(AbstractRupSetPlot plot : choices){
-            possiblePlots.put(choices.getClass().getSimpleName(), plot);
+            possiblePlots.put(plot.getClass().getSimpleName(), plot);
         }
     }
 

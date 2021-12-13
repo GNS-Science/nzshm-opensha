@@ -19,6 +19,7 @@ import java.io.IOException;
 public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationship, LogicTreeNode {
 
     RupSetScalingRelationship scale;
+    boolean recalc = false;
 
     public NZSHM22_ScalingRelationshipNode() {
     }
@@ -33,6 +34,14 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
 
     public RupSetScalingRelationship getScalingRelationship(){
         return scale;
+    }
+
+    public void setRecalc(boolean recalc){
+        this.recalc = recalc;
+    }
+
+    public boolean getReCalc(){
+        return recalc;
     }
 
     public static RupSetScalingRelationship createRelationShip(String name) {
@@ -133,6 +142,8 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
                 out.name("scale");
                 JsonAdapterHelper.writeAdapterValue(out, value.scale);
             }
+            out.name("recalc");
+            out.value(value.recalc);
             out.endObject();
         }
 
@@ -147,6 +158,9 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
                         break;
                     case "scale":
                         result.setScalingRelationship((RupSetScalingRelationship) JsonAdapterHelper.readAdapterValue(in));
+                        break;
+                    case "recalc":
+                        result.setRecalc(in.nextBoolean());
                         break;
                 }
             }

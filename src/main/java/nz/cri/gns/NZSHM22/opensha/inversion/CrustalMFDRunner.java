@@ -11,8 +11,6 @@ import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen;
 import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
-import scratch.UCERF3.U3FaultSystemRupSet;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +26,6 @@ public class CrustalMFDRunner {
     double minMagTvz = 7.0;
 
     protected NZSHM22_ScalingRelationshipNode scalingRelationship;
-    protected boolean recalcMags = false;
     protected NZSHM22_DeformationModel deformationModel = null;
     private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
     protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
@@ -43,7 +40,7 @@ public class CrustalMFDRunner {
     public CrustalMFDRunner setScalingRelationship(RupSetScalingRelationship scalingRelationship, boolean recalcMags) {
         this.scalingRelationship = new NZSHM22_ScalingRelationshipNode();
         this.scalingRelationship.setScalingRelationship(scalingRelationship);
-        this.recalcMags = recalcMags;
+        this.scalingRelationship.setRecalc(recalcMags);
         return this;
     }
 
@@ -92,18 +89,11 @@ public class CrustalMFDRunner {
         }
     }
 
-    public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws DocumentException, IOException {
-        U3FaultSystemRupSet rupSetA = U3FaultSystemIO.loadRupSet(ruptureSetFile);
-        return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
-    }
-
     public CrustalMFDRunner setRuptureSetFile(File ruptureSetFile) throws DocumentException, IOException {
-        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustal();
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
-        this.rupSet = loadRuptureSet(ruptureSetFile, branch);
-        if (recalcMags) {
-            rupSet.recalcMags(scalingRelationship);
-        }
+        this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(ruptureSetFile, branch);
+
         return this;
     }
 

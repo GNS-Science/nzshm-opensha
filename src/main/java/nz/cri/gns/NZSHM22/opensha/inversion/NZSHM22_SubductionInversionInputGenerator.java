@@ -80,6 +80,7 @@ public class NZSHM22_SubductionInversionInputGenerator extends InversionInputGen
 		// builds constraint instances
 		List<InversionConstraint> constraints = new ArrayList<>();
 
+		// WARNING: pre-modular rupture sets have stdev 1000 times too large
 		if (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY) {
 			//NZSHM22 new slip-rate constraint
 			double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
