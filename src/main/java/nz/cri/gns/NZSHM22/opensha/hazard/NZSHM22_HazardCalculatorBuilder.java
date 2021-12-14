@@ -118,7 +118,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     @SuppressWarnings("unchecked")
     protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
         // FIXME crustal is hard coded
-        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromCrustalFile(solutionFile);
+        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
 
         FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
         if (forecastTimespan != null) {
@@ -226,11 +226,11 @@ public class NZSHM22_HazardCalculatorBuilder {
 //        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
 //                .setLinear(true)
 //                .setForecastTimespan(50);
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjIzMzliekRWcw==.zip")
+        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy(1).zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
-                .setBackgroundOption("EXCLUDE");
+                .setBackgroundOption("INCLUDE");
 
         NZSHM22_HazardCalculator calculator = builder.build();
 

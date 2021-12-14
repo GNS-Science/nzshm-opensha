@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 
@@ -11,12 +12,14 @@ import java.util.Map;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import scratch.UCERF3.griddedSeismicity.AbstractGridSourceProvider;
+import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 
 import com.google.common.collect.Maps;
@@ -32,7 +35,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	protected final static GriddedRegion region = new NewZealandRegions.NZ_TEST_GRIDDED();
 
 	private static double[] fracStrikeSlip, fracNormal, fracReverse;
-	protected U3LogicTreeBranch branch;
+	protected NZSHM22_LogicTreeBranch branch;
 	protected PolygonFaultGridAssociations polyMgr;
 
 	// spatial pdfs of seismicity, orginal and revised (reduced and
@@ -69,7 +72,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 *             sources should be generated
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
-		branch = ifss.getLogicTreeBranch();
+		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		srcSpatialPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class).getPDF(new NewZealandRegions.NZ_TEST_GRIDDED()); // FIXME later
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
@@ -79,7 +82,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		mfdNum = realOffFaultMFD.size();
 
 //		polyMgr = FaultPolyMgr.create(fss.getFaultSectionDataList(), 12d);
-		polyMgr = ifss.getRupSet().getInversionTargetMFDs().getGridSeisUtils().getPolyMgr();
+		GriddedSeisUtils gridSeisUtils = new GriddedSeisUtils(ifss.getRupSet().getFaultSectionDataList(),
+				srcSpatialPDF, ifss.getRupSet().getModule(PolygonFaultGridAssociations.class));
+		polyMgr = gridSeisUtils.getPolyMgr();
 
 		System.out.println("   initSectionMFDs() ...");
 		initSectionMFDs(ifss);

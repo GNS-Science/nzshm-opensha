@@ -4,6 +4,8 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
+import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
+import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway;
 import org.dom4j.DocumentException;
@@ -41,6 +43,7 @@ public class SmokeTest {
         testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
+        testHazard(solutionFile, "INCLUDE");
     }
 
     @Test
@@ -54,6 +57,7 @@ public class SmokeTest {
         testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
+        testHazard(solutionFile, "INCLUDE");
     }
 
     @Test
@@ -67,6 +71,7 @@ public class SmokeTest {
         testRupSetReportPageGen(ruptureSetFile);
         testSubductionInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
+        testHazard(solutionFile, "EXCLUDE");
     }
 
     public void sanityCheckAzimuthalRuptureSet(FaultSystemRupSet rupSet) {
@@ -265,6 +270,19 @@ public class SmokeTest {
                 .generateRupSetPage();
 
         assertTrue(new File(outputDir, "resources/sect_connectivity.png").exists());
+    }
+
+    public void testHazard(File solutionFile, String backgroundOption) throws DocumentException, IOException {
+        NZSHM22_HazardCalculatorBuilder builder = NZSHM22_PythonGateway.getHazardCalculatorBuilder();
+        builder.setSolutionFile(solutionFile.getAbsolutePath())
+                .setLinear(true)
+                .setForecastTimespan(50)
+                .setIntensityMeasurePeriod(10)
+                .setBackgroundOption(backgroundOption);
+
+        NZSHM22_HazardCalculator calculator = builder.build();
+
+        System.out.println(calculator.calc(-41.288889, 174.777222));
     }
 
 }

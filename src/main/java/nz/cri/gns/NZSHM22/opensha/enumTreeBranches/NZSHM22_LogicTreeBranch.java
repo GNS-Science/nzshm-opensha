@@ -120,7 +120,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
 
     public void copyValuesFrom(LogicTreeBranch<LogicTreeNode> branch) {
         for (LogicTreeNode node : branch) {
-            setValue(node);
+            if(node != null) {
+                setValue(node);
+            }
         }
     }
 
