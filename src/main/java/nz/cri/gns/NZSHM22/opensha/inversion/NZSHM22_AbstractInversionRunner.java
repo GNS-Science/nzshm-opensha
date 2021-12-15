@@ -379,17 +379,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 				unnormalizedWt);
 	}
 
-	public void validateConfig(){
-		boolean crustal = rupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(FaultRegime.class) == FaultRegime.CRUSTAL;
+	public void validateConfig() {
+		Preconditions.checkState(scalingRelationship.getScalingRelationship() != null, "ScalingRelationship must be set");
 
-		boolean crustalScaling;
-		if(scalingRelationship.getScalingRelationship() instanceof SimplifiedScalingRelationship){
-			SimplifiedScalingRelationship scale = (SimplifiedScalingRelationship) scalingRelationship.getScalingRelationship();
-			crustalScaling = scale.getRegime().equals("CRUSTAL");
-		}else{
-			crustalScaling = scalingRelationship.getScalingRelationship() != ScalingRelationships.TMG_SUB_2017;
-		}
-		Preconditions.checkState(crustal == crustalScaling, "Regime type of rupture set and scaling relationship do not match.");
+		FaultRegime regime = rupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(FaultRegime.class);
+		FaultRegime scalingRegime = scalingRelationship.getRegime();
+		Preconditions.checkState(regime == scalingRegime, "Regime of rupture set and scaling relationship do not match.");
 	}
 
 	/**

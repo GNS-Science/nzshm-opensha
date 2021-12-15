@@ -61,6 +61,26 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
         throw new IllegalArgumentException("Unknown scaling relationship " + name);
     }
 
+    public FaultRegime getRegime() {
+        if (scale instanceof SimplifiedScalingRelationship) {
+            if (((SimplifiedScalingRelationship) scale).getRegime().equals("CRUSTAL")) {
+                return FaultRegime.CRUSTAL;
+            } else {
+                return FaultRegime.SUBDUCTION;
+            }
+        } else if (scale instanceof Stirling2021SimplifiedScalingRelationship) {
+            if (((Stirling2021SimplifiedScalingRelationship) scale).getRegime().equals("CRUSTAL")) {
+                return FaultRegime.CRUSTAL;
+            } else {
+                return FaultRegime.SUBDUCTION;
+            }
+        } else if (scale == ScalingRelationships.TMG_SUB_2017) {
+            return FaultRegime.SUBDUCTION;
+        } else {
+            return FaultRegime.CRUSTAL;
+        }
+    }
+
     @Override
     public String getName() {
         return "NZSHM22_ScalingRelationship";
