@@ -12,7 +12,6 @@ import java.util.Map;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
-import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -23,7 +22,6 @@ import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 
 import com.google.common.collect.Maps;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
 /**
  * This is copied from UCERF3_GridSourceGenerator and mostly only the
@@ -73,7 +71,10 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 */
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
-		srcSpatialPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class).getPDF(new NewZealandRegions.NZ_TEST_GRIDDED()); // FIXME later
+		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
+		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_TVZ_GRIDDED());
+		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED());
+		srcSpatialPDF = spatialSeisPDF.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
 
@@ -263,11 +264,11 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
 	private synchronized static void checkInitFocalMechGrids() {
 		if (fracStrikeSlip == null)
-			fracStrikeSlip = new NZSHM22_GridReader("strikeFocalHazMech.grid").getValues();
+			fracStrikeSlip = new NZSHM22_GriddedData("strikeFocalHazMech.grid").getValues();
 		if (fracReverse == null)
-			fracReverse = new NZSHM22_GridReader("reverseFocalMech.grid").getValues();
+			fracReverse = new NZSHM22_GriddedData("reverseFocalMech.grid").getValues();
 		if (fracNormal == null)
-			fracNormal = new NZSHM22_GridReader("normalFocalMech.grid").getValues();
+			fracNormal = new NZSHM22_GriddedData("normalFocalMech.grid").getValues();
 	}
 
 }

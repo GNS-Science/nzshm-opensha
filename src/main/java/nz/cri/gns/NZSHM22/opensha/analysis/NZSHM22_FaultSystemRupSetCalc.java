@@ -106,14 +106,12 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 			RegionalRupSetData rupSet,
 			GriddedSeisUtils gridSeisUtils,
 			GutenbergRichterMagFreqDist totalTargetGR,
-			double minMag,
-			double fractionPDFInRegion
-			) {
+			double minMag) {
 		ArrayList<GutenbergRichterMagFreqDist> mfds = new ArrayList<GutenbergRichterMagFreqDist>();
 		double totMgt5_rate = totalTargetGR.getCumRate(0);
 		for(int s=0; s<rupSet.getFaultSectionDataList().size(); s++) {
 
-			double sectRate = gridSeisUtils.pdfValForSection(s)*totMgt5_rate/fractionPDFInRegion;
+			double sectRate = gridSeisUtils.pdfValForSection(s)*totMgt5_rate;
 //			int mMaxIndex = totalTargetGR.getClosestXIndex(fltSysRupSet.getMinMagForSection(s))-1;	// subtract 1 to avoid overlap
 			double upperMag = InversionFaultSystemRupSet.getUpperMagForSubseismoRuptures(rupSet.getMinMagForSection(s));
 			int mMaxIndex = totalTargetGR.getXIndex(Math.max(upperMag, minMag));

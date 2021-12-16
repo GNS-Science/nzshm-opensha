@@ -56,6 +56,7 @@ public class RegionalRupSetData {
             }
         }
         polygonFaultGridAssociations = FaultPolyMgr.create(sections, U3InversionTargetMFDs.FAULT_BUFFER, region);
+        spatialSeisPDF.normaliseRegion(region);
     }
 
     protected static IntPredicate createRegionFilter(FaultSystemRupSet original, GriddedRegion region) {

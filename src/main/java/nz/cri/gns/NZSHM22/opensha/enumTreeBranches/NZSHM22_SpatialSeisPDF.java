@@ -1,55 +1,31 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
 import org.opensha.commons.geo.GriddedRegion;
 
-import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
-import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_SmoothSeismicitySpatialPDF_Fetcher;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 
 public enum NZSHM22_SpatialSeisPDF implements LogicTreeNode {
 
-    NZSHM22_1246("NZSHM22_1246", "1246") {
-        @Override
-        public double[] getPDF(GriddedRegion region) {
-            return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1246(region);
-        }
-    },
+    NZSHM22_1246("NZSHM22_1246", "1246", "BEST2FLTOLDNC1246.txt"),
+    NZSHM22_1246R("NZSHM22_1246R", "1246R", "BEST2FLTOLDNC1246r.txt"),
+    NZSHM22_1456("NZSHM22_1456", "1456", "BESTFLTOLDNC1456.txt"),
+    NZSHM22_1456R("NZSHM22_1456R", "1456R", "BESTFLTOLDNC1456r.txt"),
+    NZSHM22_1346("NZSHM22_1346", "1346", "Gruenthalmod1346ConfDSMsss.txt");
 
-    NZSHM22_1246R("NZSHM22_1246R", "1246R") {
-        @Override
-        public double[] getPDF(GriddedRegion region) {
-            return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1246R(region);
-        }
-    },
+    String name;
+    String shortName;
+    String fileName;
 
-    NZSHM22_1456("NZSHM22_1456", "1456") {
-        @Override
-        public double[] getPDF(GriddedRegion region) {
-            return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1456(region);
-        }
-    },
+    NZSHM22_GriddedData pdf;
 
-    NZSHM22_1456R("NZSHM22_1456R", "1456R") {
-        @Override
-        public double[] getPDF(GriddedRegion region) {
-            return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1456R(region);
-        }
-    },
-
-    NZSHM22_1346("NZSHM22_1346", "1346") {
-        @Override
-        public double[] getPDF(GriddedRegion region) {
-            return NZSHM22_SmoothSeismicitySpatialPDF_Fetcher.get1346(region);
-        }
-    };
-
-    private String name, shortName;
-
-    NZSHM22_SpatialSeisPDF(String name, String shortName) {
+    NZSHM22_SpatialSeisPDF(String name, String shortName, String filename) {
         this.name = name;
         this.shortName = shortName;
+        this.fileName = filename;
+        pdf = new NZSHM22_GriddedData(fileName);
     }
 
     @Override
@@ -72,23 +48,16 @@ public enum NZSHM22_SpatialSeisPDF implements LogicTreeNode {
         return "";
     }
 
-    public abstract double[] getPDF(GriddedRegion region);
+    public double[] getPDF(GriddedRegion region) {
+        return pdf.getValues(region);
+    }
 
-    /**
-     * This returns the total sum of values inside the given gridded region
-     *
-     * @param region
-     * @return
-     */
     public double getFractionInRegion(GriddedRegion region) {
-        double[] vals = this.getPDF(region);
-        double sum = 0;
-        for (int i = 0; i < region.getNumLocations(); i++) {
-            int iLoc = region.indexForLocation(region.getLocation(i));
-            if (iLoc != -1)
-                sum += vals[iLoc];
-        }
-        return sum;
+        return pdf.getFractionInRegion(region);
+    }
+
+    public void normaliseRegion(GriddedRegion region){
+        pdf.normaliseRegion(region);
     }
 
     public static LogicTreeLevel<LogicTreeNode> level() {

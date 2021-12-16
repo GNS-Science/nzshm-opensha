@@ -18,7 +18,7 @@ jobs:
     - name: Clone opensha
       uses: actions/checkout@v2
       with:
-        repository: opensha/opensha
+        repository: GNS-Science/opensha
         ref: master
         path: opensha
 

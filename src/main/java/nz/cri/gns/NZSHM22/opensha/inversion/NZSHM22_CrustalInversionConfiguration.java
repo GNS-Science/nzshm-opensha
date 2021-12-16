@@ -6,6 +6,8 @@ import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -38,10 +40,12 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ){
 
 		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
+		GriddedRegion sansTvzRegion = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
+
 		IntPredicate tvzFilter = RegionalRupSetData.createRegionFilter(rupSet, tvzRegion);
 
 		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
-		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), tvzFilter.negate(), mMin_Sans);
+		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
 
 		rupSet.setRegionalData(tvz, sansTvz);
 
