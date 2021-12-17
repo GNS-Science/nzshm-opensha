@@ -14,7 +14,6 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
-import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import nz.cri.gns.NZSHM22.util.GitVersion;
 import org.dom4j.DocumentException;
@@ -92,11 +91,6 @@ public class NZSHM22_PythonGateway {
     }
 
     // move these up and add comments
-
-    @Deprecated
-    public static NZSHM22_InversionDiagnosticsReportBuilder getInversionDiagnosticsReportBuilder() {
-        return new NZSHM22_InversionDiagnosticsReportBuilder();
-    }
 
     /**
      * Returns a new MFDPlotBuilder to create MFD plots
