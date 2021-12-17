@@ -86,7 +86,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	// // USGS/UCERF3) [KKS, CBC]
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
-	protected boolean recalcMags = false;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -352,7 +351,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public NZSHM22_AbstractInversionRunner setScalingRelationship(RupSetScalingRelationship scalingRelationship, boolean recalcMags){
 		this.scalingRelationship = new NZSHM22_ScalingRelationshipNode();
 		this.scalingRelationship.setScalingRelationship(scalingRelationship);
-		this.recalcMags = recalcMags;
+		this.scalingRelationship.setRecalc(recalcMags);
 		return this;
 	}
 

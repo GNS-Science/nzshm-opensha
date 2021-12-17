@@ -3,8 +3,11 @@ package nz.cri.gns.NZSHM22.opensha.ruptures;
 import java.io.*;
 import java.util.Set;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
@@ -287,7 +290,7 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 	 * @throws IOException
 	 */
 	@Override
-	public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+	public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
 
 	    loadFaults();
 
@@ -323,17 +326,15 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 			System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
 		}
 
-		// TODO: consider overloading this for Hikurangi to provide
-		// Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
-		NZSHM22_SlipEnabledRuptureSet rupSet = null;
-		try {
-			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-					this.getScalingRelationship(), this.getSlipAlongRuptureModel());
-			rupSet.setPlausibilityConfiguration(getPlausibilityConfig());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		FaultSystemRupSet rupSet =
+				FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+						.forScalingRelationship(getScalingRelationship())
+						.slipAlongRupture(getSlipAlongRuptureModel())
+						.addModule(getPlausibilityConfig().getDistAzCalc())
+						.addModule(getPlausibilityConfig())
+						.addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+						.build();
+
 		return rupSet;
 	}
 
@@ -348,16 +349,15 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
     public static void main(String[] args) throws DocumentException, IOException {
     	NZSHM22_AzimuthalRuptureSetBuilder builder = new NZSHM22_AzimuthalRuptureSetBuilder();
         //builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
-        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_ALL_D90);
+        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90);
        // builder.setMaxFaultSections(100);
         builder
 				//.setFaultIdFilter(FaultIdFilter.FilterType.EXACT, Set.of(583))
 //        	.setMinSubSectsPerParent(2)
 //        	.setMaxAzimuthChange(560)
 //        	.setMaxJumpDistance(5d)
-        	.setThinningFactor(0.2);
-        
-    	builder
+        	.setThinningFactor(0.2)
+					.setMaxFaultSections(100)
 		.setScalingRelationship(ScalingRelationships.TMG_CRU_2017)
 		.setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED);
     	
@@ -369,7 +369,7 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 //    	
 
     	System.out.println(builder.getDescriptiveName());
-        NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
+        FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
         ruptureSet.write(new File("TEST/ruptures/"+ builder.getDescriptiveName() + ".zip"));
 		//U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
     }

@@ -68,7 +68,7 @@ public class MFDPlotBuilder {
 //    			"InversionSolution-RmlsZToz-rnd0-t1380_RmlsZTo1MTYuMGQ3WlVz.zip"; //LONG CFM 3
 //    	String solution = "/home/chrisbc/DEV/GNS/opensha-new/DATA/2021-06-01-01/UnVwdHVyZUdlbmVyYXRpb25UYXNrOjE4MFJFWXF4" + 
 //    			"/" + "InversionSolution-RmlsZTo5-rnd0-t1380_RmlsZTo1MjIuMDN2ZktR.zip"; //LONG CFM 9
-    	String solution = "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTA3MHRBZ3dG.zip";
+    	String solution = "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjU0MjJKaFdxVg==(3).zip";
     	  				
         new MFDPlotBuilder()
                 .setOutputDir("/tmp/mfd")

@@ -4,49 +4,67 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Splitter;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
-import org.opensha.commons.util.DataUtils;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
-import scratch.UCERF3.griddedSeismicity.GridReader;
 
-public class NZSHM22_GridReader extends GridReader {
+/**
+ * Gridded data. Copied and modifed from UCERF3's GridReader
+ */
 
-    protected GriddedRegion region;
+public class NZSHM22_GriddedData {
+
+    protected static final Splitter SPLIT;
+
+    protected static final Function<String, Double> FN_STR_TO_DBL;
+    protected static final Function<Double, Integer> FN_DBL_TO_KEY;
+    protected static final Function<String, Integer> FN_STR_TO_KEY;
+
+    protected Table<Integer, Integer, Double> table;
+    protected String filename;
+
+    static {
+        SPLIT = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings();
+        FN_STR_TO_DBL = new FnStrToDbl();
+        FN_DBL_TO_KEY = new FnDblToKey();
+        FN_STR_TO_KEY = Functions.compose(FN_DBL_TO_KEY, FN_STR_TO_DBL);
+    }
+
+    public NZSHM22_GriddedData(String fileName) {
+        this.filename = fileName;
+        table = initTable();
+    }
+
+    private static class FnStrToDbl implements Function<String, Double> {
+        @Override
+        public Double apply(String s) {
+            return Double.valueOf(s);
+        }
+    }
+
+    private static class FnDblToKey implements Function<Double, Integer> {
+        @Override
+        public Integer apply(Double d) {
+            return (int) Math.round(d * 10);
+        }
+    }
 
     /**
-     * Constructs a new grid reader for the supplied filename.
-     *
-     * @param filename
-     */
-    public NZSHM22_GridReader(String filename) {
-        this(filename, new NewZealandRegions.NZ_TEST_GRIDDED());
-    }
-
-    public NZSHM22_GridReader(String fileName, GriddedRegion region) {
-        super(fileName);
-        this.region = region;
-        table = initNZTable();
-    }
-
-    @Override
-    protected Table<Integer, Integer, Double> initTable() {
-        return null;
-    }
-
-    /**
-     * Build the PDF table from the input file
+     * Build the data table from the input file
      * <p>
      * NZ data files have data format: lon|lat|value
      * UCERF3 data format:  lat|lon|value
      */
-    protected Table<Integer, Integer, Double> initNZTable() {
+    protected Table<Integer, Integer, Double> initTable() {
 
         Table<Integer, Integer, Double> table = HashBasedTable.create();
         String lon, lat;
@@ -89,7 +107,7 @@ public class NZSHM22_GridReader extends GridReader {
      *
      * @return all required values
      */
-    public double[] getValues() {
+    public double[] getValues(GriddedRegion region) {
         double[] values = new double[region.getNodeCount()];
         double nullval = 0.0d; //
         // double nullval = Double.NaN; //	maybe try 0 rather than NaN for nulls ...
@@ -103,6 +121,66 @@ public class NZSHM22_GridReader extends GridReader {
         return values;
     }
 
+    /**
+     * Get all values for NewZealandRegions.NZ_TEST_GRIDDED
+     *
+     * @return
+     */
+    public double[] getValues() {
+        return getValues(new NewZealandRegions.NZ_TEST_GRIDDED());
+    }
+
+    /**
+     * Returns the spatial value at the point closest to the supplied
+     * {@code Location}
+     *
+     * @param loc {@code Location} of interest
+     * @return a value or @code null} if supplied {@coed Location} is more
+     * than 0.05&deg; outside the available data domain
+     */
+    public Double getValue(Location loc) {
+        return table.get(FN_DBL_TO_KEY.apply(loc.getLatitude()),
+                FN_DBL_TO_KEY.apply(loc.getLongitude()));
+    }
+
+    protected Double setValue(Location loc, double value) {
+        return table.put(
+                FN_DBL_TO_KEY.apply(loc.getLatitude()),
+                FN_DBL_TO_KEY.apply(loc.getLongitude()),
+                value);
+    }
+
+    /**
+     * This returns the total sum of values inside the given gridded region
+     *
+     * @param region
+     * @return
+     */
+    public double getFractionInRegion(GriddedRegion region) {
+        double sum = 0;
+        for (Location loc : region) {
+            Double value = getValue(loc);
+            if (value != null) {
+                sum += getValue(loc);
+            }
+        }
+        return sum;
+    }
+
+    /**
+     * Normalises the values in the specified region.
+     *
+     * @param region
+     */
+    public void normaliseRegion(GriddedRegion region) {
+        double fraction = getFractionInRegion(region);
+        for (Location loc : region) {
+            Double value = getValue(loc);
+            if (value != null) {
+                setValue(loc, getValue(loc) / fraction);
+            }
+        }
+    }
 
     /**
      * table entries should be aligned with a grid location within the region
@@ -117,8 +195,8 @@ public class NZSHM22_GridReader extends GridReader {
     private void missingTableEntries(GriddedRegion region) {
         for (Location loc : region) {
             this.table.remove(
-                    FN_DBL_TO_KEY.apply(Double.valueOf(loc.getLatitude())),
-                    FN_DBL_TO_KEY.apply(Double.valueOf(loc.getLongitude())));
+                    FN_DBL_TO_KEY.apply(loc.getLatitude()),
+                    FN_DBL_TO_KEY.apply(loc.getLongitude()));
         }
 
         double tot = 0.0;
@@ -128,53 +206,6 @@ public class NZSHM22_GridReader extends GridReader {
             }
         }
         System.out.println("total missing = " + tot);
-    }
-
-    public static void main(String[] args) {
-        //TODO: some defensive testing around this is recommended to snsure that regional
-        // PDF functions do work as expected.
-        // see also missingTableEntries() method
-        // so for now, just leavintg these examples in main()
-
-        NZSHM22_GridReader gr = new NZSHM22_GridReader("BEST2FLTOLDNC1246.txt");
-        GriddedRegion reg = gr.region.clone();
-        gr.missingTableEntries(reg);
-
-        double[] pdf = NZSHM22_SpatialSeisPDF.NZSHM22_1246.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
-        System.out.println("N22 1256  " + DataUtils.sum(pdf));
-        System.out.println("N22 1256 min " + DataUtils.min(pdf));
-        System.out.println("N22 1256 max " + DataUtils.max(pdf));
-
-        pdf = NZSHM22_SpatialSeisPDF.NZSHM22_1456.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
-        System.out.println("N22 1456  " + DataUtils.sum(pdf));
-
-        pdf = NZSHM22_SpatialSeisPDF.NZSHM22_1246R.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
-        System.out.println("N22 R1256 " + DataUtils.sum(pdf));
-
-        pdf = NZSHM22_SpatialSeisPDF.NZSHM22_1456R.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
-        System.out.println("N22 R1456 " + DataUtils.sum(pdf));
-
-        GriddedRegion nzregion = new NewZealandRegions.NZ_TEST_GRIDDED();
-        double fir = NZSHM22_SpatialSeisPDF.NZSHM22_1246.getFractionInRegion(nzregion);
-        System.out.println("n22 FractionInRegion " + fir);
-
-//		GriddedRegion region = new GriddedRegion(getRegionNZ(), 0.1d, null);
-//		double fir = NZSHM22_SpatialSeisPDF.NZSHM22_1456.getFractionInRegion(region);
-//		System.out.println("n22 FractionInRegion " + fir);		
-
-
-        //		String fName =  "SmoothSeis_KF_5-5-2012.txt";
-//		File f = getSourceFile(fName);
-//		System.out.println(f.exists());
-//		GridReader gr = new GridReader();
-//		
-//		 double sum = 0;
-//		 for (Table.Cell<Integer, Integer, Double> cell : table.cellSet()) {
-//			 sum += cell.getValue();
-//		 }
-//		 System.out.println(sum);
-//		 System.out.println(GridReader.getScale(new Location(39.65,  -120.1)));
-//		 System.out.println(GridReader.getScale(new Location(20, -20)));
     }
 
 }

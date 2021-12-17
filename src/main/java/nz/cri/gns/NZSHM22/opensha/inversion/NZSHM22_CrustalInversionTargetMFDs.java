@@ -175,15 +175,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 					spatialSeisPDF.getPDF(region), regionalRupSet.getPolygonFaultGridAssociations());
 			double fractionSeisOnFault = gridSeisUtils.pdfInPolys();
 
-			double fractionPDFInRegion = spatialSeisPDF.getFractionInRegion(region);
-
-			System.out.println("fractionPDFInRegion: " + fractionPDFInRegion);
 			System.out.println("faultSectionData.size() " + faultSectionData.size());
 			System.out.println("fractionSeisOnFault " + fractionSeisOnFault);
-
-			fractionSeisOnFault /= fractionPDFInRegion;
-
-			System.out.println("normalised fractionSeisOnFault: " + fractionSeisOnFault);
 
 			double onFaultRegionRateMgt5 = totalRateM5 * fractionSeisOnFault;
 
@@ -207,7 +200,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			// seems to calculate our corner magnitude for tapered GR
 			trulyOffFaultMFD = NZSHM22_FaultSystemRupSetCalc.getTriLinearCharOffFaultTargetMFD(totalTargetGR, onFaultRegionRateMgt5, aveMinSeismoMag, mMaxOffFault);
 
-			subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(regionalRupSet, gridSeisUtils, totalTargetGR, minMag, fractionPDFInRegion);
+			subSeismoOnFaultMFD_List = NZSHM22_FaultSystemRupSetCalc.getCharSubSeismoOnFaultMFD_forEachSection(regionalRupSet, gridSeisUtils, totalTargetGR, minMag);
 
 			// TODO: use computeMinSeismoMagForSections to find NZ values and explain 7.4
 			// histogram to look for min values > 7.X

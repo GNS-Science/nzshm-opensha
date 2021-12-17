@@ -15,8 +15,11 @@ import java.io.IOException;
 
 public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthChangeFilter {
 
+    protected float threshold;
+
     public DownDipSafeCumulativeAzimuthChangeFilter(JumpAzimuthChangeFilter.AzimuthCalc calc, float threshold) {
         super(calc, threshold);
+        this.threshold = threshold;
     }
 
     @Override
@@ -31,17 +34,30 @@ public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthC
 
     @Override
     public TypeAdapter<PlausibilityFilter> getTypeAdapter() {
-        return new TypeAdapter<PlausibilityFilter>() {
-            @Override
-            public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
-                out.beginObject().endObject();
-            }
-
-            @Override
-            public PlausibilityFilter read(JsonReader in) throws IOException {
-                return null;
-            }
-        };
+        return new DownDipSafeCumulativeAzimuthChangeFilter.Adapter();
     }
 
+    public static class Adapter extends TypeAdapter<PlausibilityFilter> {
+
+        public Adapter() {
+        }
+
+        @Override
+        public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
+            out.beginObject().name("threshold").value(((DownDipSafeCumulativeAzimuthChangeFilter) value).threshold).endObject();
+        }
+
+        @Override
+        public PlausibilityFilter read(JsonReader in) throws IOException {
+            double threshold = 0;
+
+            in.beginObject();
+            while (in.hasNext()) {
+                in.nextName();
+                threshold = in.nextDouble();
+            }
+            in.endObject();
+            return new DownDipSafeCumulativeAzimuthChangeFilter(null, (float) threshold);
+        }
+    }
 }

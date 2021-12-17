@@ -1,5 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.DiscretizedFunc;
@@ -42,8 +44,31 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 
     }
 
-    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
+    /**
+     * Loads a crustal or subduction solution file. Must be modular.
+     * If file is not modular, will attempt to load it as crustal.
+     * @param solutionFile
+     * @return
+     * @throws IOException
+     */
+    public static NZSHM22_InversionFaultSystemSolution fromFile(File solutionFile) throws IOException {
+        FaultSystemSolution solution = FaultSystemSolution.load(solutionFile);
+        NZSHM22_LogicTreeBranch branch = solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+        if (branch == null) {
+            // fallback to crustal for pre-modular solutions
+            return fromCrustalSolution(solution);
+        } else {
+            FaultRegime regime = branch.getValue(FaultRegime.class);
+            Preconditions.checkArgument(regime != null);
+            if (regime == FaultRegime.SUBDUCTION) {
+                return fromSubductionSolution(solution);
+            } else {
+                return fromCrustalSolution(solution);
+            }
+        }
+    }
 
+    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
         FaultSystemRupSet rupSet = solution.getRupSet();
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalFromModuleContainer(rupSet);
         NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
@@ -131,6 +156,21 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         }
 
         return mfd;
+    }
+
+    @Override
+    public IncrementalMagFreqDist getFinalTrulyOffFaultMFD() {
+        //FIXME, not sure this is the right behaviour, see superclass
+        IncrementalMagFreqDist finalTrulyOffMFD = getRupSet().getModule(InversionTargetMFDs.class).getTrulyOffFaultMFD().deepClone();
+        finalTrulyOffMFD.setName("InversionFaultSystemSolution.getFinalTrulyOffFaultMFD()");
+        finalTrulyOffMFD.setInfo("identical to inversionTargetMFDs.getTrulyOffFaultMFD() in this case");
+        return finalTrulyOffMFD;
+    }
+
+    @Override
+    public List<? extends IncrementalMagFreqDist> getFinalSubSeismoOnFaultMFD_List() {
+        //FIXME, not sure this is the right behaviour, see superclass
+        return getRupSet().getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().getAll();
     }
 
 }

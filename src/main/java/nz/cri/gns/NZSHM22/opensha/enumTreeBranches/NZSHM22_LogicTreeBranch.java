@@ -20,6 +20,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
 
     protected static List<LogicTreeLevel<? extends LogicTreeNode>> createLevels() {
         List<LogicTreeLevel<? extends LogicTreeNode>> levels = new ArrayList<>();
+        levels.add(LogicTreeLevel.forEnumUnchecked(NZSHM22_FaultModels.class, "Fault Model", "Fault Model"));
         levels.add(FaultRegime.level());
         levels.add(NZSHM22_SpatialSeisPDF.level());
         levels.add(LogicTreeLevel.forEnumUnchecked(SlipAlongRuptureModels.class, SlipAlongRuptureModels.UNIFORM.getBranchLevelName(), SlipAlongRuptureModels.UNIFORM.getShortBranchLevelName()));
@@ -29,8 +30,11 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         return levels;
     }
 
-    protected NZSHM22_LogicTreeBranch() {
+    public NZSHM22_LogicTreeBranch() {
         super(createLevels());
+    }
+
+    protected void commonInversionSettings() {
         setValue(InversionModels.CHAR_CONSTRAINED);
         setValue(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
         setValue(SlipAlongRuptureModels.UNIFORM);
@@ -41,8 +45,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
      *
      * @return
      */
-    public static NZSHM22_LogicTreeBranch crustal() {
+    public static NZSHM22_LogicTreeBranch crustalInversion() {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        branch.commonInversionSettings();
         branch.setValue(FaultRegime.CRUSTAL);
         NZSHM22_ScalingRelationshipNode scalingRelationship = new NZSHM22_ScalingRelationshipNode();
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
@@ -57,8 +62,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
      *
      * @return
      */
-    public static NZSHM22_LogicTreeBranch subduction() {
+    public static NZSHM22_LogicTreeBranch subductionInversion() {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        branch.commonInversionSettings();
         branch.setValue(FaultRegime.SUBDUCTION);
         NZSHM22_ScalingRelationshipNode scalingRelationship = new NZSHM22_ScalingRelationshipNode();
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
@@ -75,17 +81,18 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
      * @return
      */
     public static NZSHM22_LogicTreeBranch crustalFromModuleContainer(ModuleContainer container) {
-        LogicTreeBranch origBranch = (LogicTreeBranch) container.getModule(LogicTreeBranch.class);
-        if (origBranch instanceof NZSHM22_LogicTreeBranch) {
-            NZSHM22_LogicTreeBranch result = (NZSHM22_LogicTreeBranch) origBranch;
-            Preconditions.checkArgument(result.getValue(FaultRegime.class) == FaultRegime.CRUSTAL);
+        LogicTreeBranch original = (LogicTreeBranch) container.getModule(LogicTreeBranch.class);
+        if (original instanceof NZSHM22_LogicTreeBranch) {
+            Preconditions.checkArgument(original.getValue(FaultRegime.class) == FaultRegime.CRUSTAL);
+            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.crustalInversion();
+            result.copyValuesFrom(original);
             return result;
-        } else if (origBranch instanceof U3LogicTreeBranch) {
-            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.crustal();
-            result.setU3Branch((U3LogicTreeBranch) origBranch);
+        } else if (original instanceof U3LogicTreeBranch) {
+            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.crustalInversion();
+            result.setU3Branch((U3LogicTreeBranch) original);
             return result;
         } else {
-            return NZSHM22_LogicTreeBranch.crustal();
+            return NZSHM22_LogicTreeBranch.crustalInversion();
         }
     }
 
@@ -96,17 +103,26 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
      * @return
      */
     public static NZSHM22_LogicTreeBranch subductionFromModuleContainer(ModuleContainer container) {
-        LogicTreeBranch origBranch = (LogicTreeBranch) container.getModule(LogicTreeBranch.class);
-        if (origBranch instanceof NZSHM22_LogicTreeBranch) {
-            NZSHM22_LogicTreeBranch result = (NZSHM22_LogicTreeBranch) origBranch;
-            Preconditions.checkArgument(result.getValue(FaultRegime.class) == FaultRegime.SUBDUCTION);
+        LogicTreeBranch original = (LogicTreeBranch) container.getModule(LogicTreeBranch.class);
+        if (original instanceof NZSHM22_LogicTreeBranch) {
+            Preconditions.checkArgument(original.getValue(FaultRegime.class) == FaultRegime.SUBDUCTION);
+            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.subductionInversion();
+            result.copyValuesFrom(original);
             return result;
-        } else if (origBranch instanceof U3LogicTreeBranch) {
-            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.subduction();
-            result.setU3Branch((U3LogicTreeBranch) origBranch);
+        } else if (original instanceof U3LogicTreeBranch) {
+            NZSHM22_LogicTreeBranch result = NZSHM22_LogicTreeBranch.subductionInversion();
+            result.setU3Branch((U3LogicTreeBranch) original);
             return result;
         } else {
-            return NZSHM22_LogicTreeBranch.crustal();
+            return NZSHM22_LogicTreeBranch.subductionInversion();
+        }
+    }
+
+    public void copyValuesFrom(LogicTreeBranch<LogicTreeNode> branch) {
+        for (LogicTreeNode node : branch) {
+            if(node != null) {
+                setValue(node);
+            }
         }
     }
 
@@ -114,13 +130,13 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         this.u3Branch = branch;
 
         ScalingRelationships u3Scale = branch.getValue(ScalingRelationships.class);
-        if(u3Scale != null){
+        if (u3Scale != null) {
             clearValue(NZSHM22_ScalingRelationshipNode.class);
             setValue(new NZSHM22_ScalingRelationshipNode(u3Scale));
         }
 
         SlipAlongRuptureModels slipAlongRuptureModel = branch.getValue(SlipAlongRuptureModels.class);
-        if(slipAlongRuptureModel != null){
+        if (slipAlongRuptureModel != null) {
             clearValue(SlipAlongRuptureModels.class);
             setValue(slipAlongRuptureModel);
         }

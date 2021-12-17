@@ -1,10 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
@@ -86,7 +86,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return description;
     }
     
-    public abstract NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException ;
+    public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException ;
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
         this.faultModel = faultModel;
@@ -230,6 +230,17 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             }
             System.out.println(subSections.size() + " Sub Sections created.");
         }
+    }
+
+    public NZSHM22_LogicTreeBranch getLogicTreeBranch(FaultRegime regime){
+        NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        branch.setValue(regime);
+        if(faultModel != null) {
+            branch.setValue(faultModel);
+        }
+        branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
+        branch.setValue(slipAlongRuptureModel);
+        return branch;
     }
 
     /**

@@ -22,6 +22,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.FaultIdFilter;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder.RupturePermutationStrategy;
 
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
@@ -135,10 +136,10 @@ public class scriptCrustalInversionRunner {
 //
 ////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/subduction_tile_parameters.csv"));
 ////        builder.setSubductionFault("Hikurangi", new File("data/FaultModels/hk_tile_parameters_10.csv"));
-        SlipAlongRuptureModelRupSet rupSet = builder.buildRuptureSet();
-       U3FaultSystemIO.writeRupSet(rupSet, rupSetFile);
+        FaultSystemRupSet rupSet = builder.buildRuptureSet();
+        rupSet.write(rupSetFile);
 
-        plotRuptureFrequency(rupSet, new File("data/output/histogram" + (new Date()).getTime() + ".csv"));
+       // plotRuptureFrequency(rupSet, new File("data/output/histogram" + (new Date()).getTime() + ".csv"));
     }
 
     protected static int sectionCount(ClusterRupture rupture) {

@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
 import org.dom4j.DocumentException;
@@ -135,7 +136,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
     }
 
     @Override
-    public NZSHM22_SlipEnabledRuptureSet buildRuptureSet() throws DocumentException, IOException {
+    public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
 
         loadFaults();
 
@@ -567,19 +568,12 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(ruptures.size(), millis));
 
 
-        FaultSystemRupSet origRupSet = ClusterRuptureBuilder.buildClusterRupSet(scale, subSections, config, ruptures);
-
-        // TODO: consider overloading this for Hikurangi to provide
-        // Slip{DOWNDIP}RuptureModel (or similar) see [KKS,CBC]
-        NZSHM22_SlipEnabledRuptureSet rupSet = null;
-        try {
-			rupSet = new NZSHM22_SlipEnabledRuptureSet(ruptures, subSections,
-					this.getScalingRelationship(), this.getSlipAlongRuptureModel());
-            rupSet.setPlausibilityConfiguration(config);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+                        .forScalingRelationship(getScalingRelationship())
+                        .slipAlongRupture(getSlipAlongRuptureModel())
+                        .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+                        .build();
 
         return rupSet;
 
@@ -711,7 +705,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         	.setAdaptiveSectFract(0.1f);
         
         System.out.println(builder.getDescriptiveName());
-        NZSHM22_SlipEnabledRuptureSet ruptureSet = builder.buildRuptureSet();
-        U3FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
+        FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
+        ruptureSet.write(new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
     }
 }
