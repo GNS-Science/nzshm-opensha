@@ -4,7 +4,6 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.Site;
@@ -17,6 +16,9 @@ import org.opensha.sha.calc.params.MaxDistanceParam;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
+import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_2010_AttenRel;
+import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_ChchSpecific_2014_AttenRel;
+import org.opensha.sha.gcim.imr.attenRelImpl.SA_InterpolatedWrapperAttenRel.InterpolatedBradley_2010_AttenRel;
 import org.opensha.sha.gui.infoTools.IMT_Info;
 import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
@@ -37,6 +39,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     boolean linear = false;
     double intensityMeasurePeriod = 1; //default is SA with 1 second
     IncludeBackgroundOption backgroundOption = IncludeBackgroundOption.INCLUDE;
+    ScalarIMR gmpe = null;
 
     /**
      * Sets the solution file.
@@ -67,6 +70,30 @@ public class NZSHM22_HazardCalculatorBuilder {
      */
     public NZSHM22_HazardCalculatorBuilder setForecastTimespan(double duration) {
         this.forecastTimespan = duration;
+        return this;
+    }
+
+    /**
+     * Sets the GMPE
+     * Defaults to ASK_2104
+     * @param gmpe one of the values of the AttenRelRef enum, or one of Bradley_2010, Bradley_2010_int, Bradley_2010_Chch
+     * @return this builder
+     */
+    public NZSHM22_HazardCalculatorBuilder setGMPE(String gmpe) {
+        switch (gmpe) {
+            case "Bradley_2010":
+                this.gmpe = new Bradley_2010_AttenRel(null);
+                break;
+            case "Bradley_2010_int":
+                this.gmpe = new InterpolatedBradley_2010_AttenRel(null);
+                break;
+            case "Bradley_2010_Chch":
+                this.gmpe = new Bradley_ChchSpecific_2014_AttenRel(null);
+                break;
+            default:
+                this.gmpe = AttenRelRef.valueOf(gmpe).instance(null);
+                break;
+        }
         return this;
     }
 
@@ -130,8 +157,10 @@ public class NZSHM22_HazardCalculatorBuilder {
         return erf;
     }
 
-    protected ScalarIMR createGmpe() {
-        ScalarIMR gmpe = AttenRelRef.ASK_2014.instance(null);
+    protected ScalarIMR setUpGmpe() {
+        if(gmpe == null){
+            setGMPE("ASK_2014");
+        }
         gmpe.setParamDefaults();
         if (intensityMeasurePeriod == 0) {
             gmpe.setIntensityMeasure(PGA_Param.NAME);
@@ -151,7 +180,7 @@ public class NZSHM22_HazardCalculatorBuilder {
      */
     public NZSHM22_HazardCalculator build() throws IOException, DocumentException {
         FaultSystemSolutionERF erf = loadERF();
-        ScalarIMR gmpe = createGmpe();
+        ScalarIMR gmpe = setUpGmpe();
         return new ConcreteNSHMHazardCalculator(erf, gmpe);
     }
 
@@ -230,6 +259,7 @@ public class NZSHM22_HazardCalculatorBuilder {
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
+                .setGMPE("Bradley_2010")
                 .setBackgroundOption("INCLUDE");
 
         NZSHM22_HazardCalculator calculator = builder.build();

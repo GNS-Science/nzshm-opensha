@@ -276,6 +276,7 @@ public class SmokeTest {
         NZSHM22_HazardCalculatorBuilder builder = NZSHM22_PythonGateway.getHazardCalculatorBuilder();
         builder.setSolutionFile(solutionFile.getAbsolutePath())
                 .setLinear(true)
+                .setGMPE("BSSA_2014")
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
                 .setBackgroundOption(backgroundOption);
