@@ -53,7 +53,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		InversionModels inversionModel = branch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
-				.forModel(inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
+				.forModel(inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
 						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower,
 						totalRateM5,
 						bValue, mfdTransitionMag);

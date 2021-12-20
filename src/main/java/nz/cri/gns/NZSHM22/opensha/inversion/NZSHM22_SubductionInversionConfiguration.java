@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -67,7 +68,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double totalRateM5 = 5; 
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
-		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0,
+		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0,
 				totalRateM5,bValue, mfdTransitionMag);
 	}
 	
@@ -90,7 +91,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 	 * @return
 	 */
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
-			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
+			NZSHM22_InversionFaultSystemRuptSet rupSet, double[] initialSolution, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
 			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
 			double totalRateM5, double bValue, double mfdTransitionMag) {
 
@@ -180,7 +181,12 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 			minimumRuptureRateBasis = adjustStartingModel(
 					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
 
-			initialRupModel = new double[rupSet.getNumRuptures()];
+			if(initialSolution != null) {
+				Preconditions.checkArgument(rupSet.getNumRuptures() == initialSolution.length, "Initial solution is for the wrong number of ruptures.");
+				initialRupModel = initialSolution;
+			}else {
+				initialRupModel = new double[rupSet.getNumRuptures()];
+			}
 		}
 
 		/* end MODIFIERS */

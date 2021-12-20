@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
 
+import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
@@ -106,7 +107,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		double totalRateM5 = 5;
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
-		return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5, totalRateM5,
+		return forModel(model, rupSet,  null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5, totalRateM5, // here xxx
 				bValue, bValue, mfdTransitionMag, 7.0, 7.0);
 	}
 
@@ -130,7 +131,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	 * @return
 	 */
 	public static NZSHM22_CrustalInversionConfiguration forModel(InversionModels model,
-			NZSHM22_InversionFaultSystemRuptSet rupSet, double mfdEqualityConstraintWt,
+			NZSHM22_InversionFaultSystemRuptSet rupSet, double[] initialSolution, double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt, double totalRateM5_Sans, double totalRateM5_TVZ, double bValue_Sans,
 			double bValue_TVZ, double mfdTransitionMag, double mMin_Sans, double mMin_TVZ) {
 		/*
@@ -187,7 +188,12 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 //				if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0) initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet, true);
 
 //				initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
-				initialRupModel = new double[rupSet.getNumRuptures()];
+				if(initialSolution != null) {
+					Preconditions.checkArgument(rupSet.getNumRuptures() == initialSolution.length, "Initial solution is for the wrong number of ruptures.");
+					initialRupModel = initialSolution;
+				}else {
+					initialRupModel = new double[rupSet.getNumRuptures()];
+				}
 			} else
 				throw new IllegalStateException("Unknown inversion model: " + model);
 		}

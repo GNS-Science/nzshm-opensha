@@ -145,7 +145,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
-                inversionModel, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
+                inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
                 totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ);
 
        inversionConfiguration
@@ -208,6 +208,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setupCrustal(4, 4.1);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
+                .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")

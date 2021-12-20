@@ -3,13 +3,16 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.zip.ZipFile;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
+import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -84,6 +87,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	// // USGS/UCERF3) [KKS, CBC]
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
+	protected double[] initialSolution;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -268,13 +272,38 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Sets the FaultModel file
+	 * Sets the rupture set file
 	 *
 	 * @param ruptureSetFile the rupture file
 	 * @return this builder
 	 */
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) {
 		this.rupSetFile = ruptureSetFile;
+		return this;
+	}
+
+	public double[] loadRates(String path) throws IOException {
+		File file = new File(path);
+		CSVFile<String> ratesCSV;
+		if (path.endsWith(".zip")) {
+			ZipFile zipFile = new ZipFile(file);
+			ratesCSV = CSV_BackedModule.loadFromArchive(zipFile, "solution/", "rates.csv");
+		} else {
+			ratesCSV = CSVFile.readFile(file, false);
+		}
+		return FaultSystemSolution.loadRatesCSV(ratesCSV);
+	}
+
+	/**
+	 * Sets an initial solution. path can point to a solution zip file or a CSV of the same format as the rates
+	 * on a solution archive.
+	 * The initial solution must have exactly one rate for each rupture in the rupture set file.
+	 * @param path a solution archive or rates CSV
+	 * @return this runner
+	 * @throws IOException
+	 */
+	public NZSHM22_AbstractInversionRunner setInitialSolution(String path) throws IOException {
+		initialSolution = loadRates(path);
 		return this;
 	}
 
