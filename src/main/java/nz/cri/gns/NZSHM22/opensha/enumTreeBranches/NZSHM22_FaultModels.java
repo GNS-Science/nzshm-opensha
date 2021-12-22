@@ -44,6 +44,9 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 	SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
 			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv", 10000),
 
+	SBD_0_1_PUY_30("Puysegur, 30km, 50% coupling",
+			"puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000),
+
 	// the following three FaultModels have been replaced by DeformationModels
 
 	@Deprecated

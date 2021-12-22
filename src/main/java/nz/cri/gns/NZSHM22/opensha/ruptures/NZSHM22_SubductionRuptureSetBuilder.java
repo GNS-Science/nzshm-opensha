@@ -291,7 +291,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 //		.setThinningFactor(0.2);
 
     	//Built 322982 total ruptures
-    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_2_HKR_LR_30))
+    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_PUY_30))
 		.setDownDipAspectRatio(2, 5, 7)
 		.setDownDipPositionCoarseness(0.0)
 		.setDownDipSizeCoarseness(0.0)
