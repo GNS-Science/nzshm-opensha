@@ -35,8 +35,11 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.Compo
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.EnergyChangeCompletionCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.ProgressTrackingCompletionCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.TimeCompletionCriteria;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.IterationCompletionCriteria;
+
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
 
 /**
  * @author chrisbc
@@ -53,6 +56,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private boolean inversionAveragingEnabled = false;
 	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001; // FIXME: we should choose a better one
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
+	private CoolingScheduleType coolingSchedule = null;
+	
 	private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
 	protected File rupSetFile;
@@ -61,7 +66,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected List<InversionConstraint> constraints = new ArrayList<>();
 	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
 	private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
-
+	private IterationCompletionCriteria iterationCompletionCriteria = null;
+	
 	private ThreadedSimulatedAnnealing tsa;
 	private double[] initialState;
 	private FaultSystemSolution solution;
@@ -88,6 +94,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
+
+
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -126,6 +134,18 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	/**
+	 * @param iterations        may be set to 0 to noop this method
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setIterationCompletionCriteria(long minIterations) {
+		if (minIterations == 0)
+			this.iterationCompletionCriteria = null;
+		else
+			this.iterationCompletionCriteria = new IterationCompletionCriteria(minIterations);
+		return this;
+	}	
+	
 	/**
 	 * Sets the length of time between inversion selections (syncs) in seconds. Default is 10 seconds.
 	 * 
@@ -208,6 +228,28 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	
+	
+	/**
+	 * @param coolingSchedule (from CLASSICAL_SA, FAST_SA (default), VERYFAST_SA, LINEAR )
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setCoolingSchedule(String coolingSchedule) {
+		return setCoolingSchedule(CoolingScheduleType.valueOf(coolingSchedule));
+	}
+
+	/**
+	 * configure the cooling schedule
+	 *
+	 * @param coolingSchedule
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setCoolingSchedule(CoolingScheduleType coolingSchedule) {
+		this.coolingSchedule = coolingSchedule;
+		return this;
+	}	
+	
+	
 	/**
 	 * @param perturbationFunction
 	 * @return
@@ -436,7 +478,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
 		if (!(this.energyChangeCompletionCriteria == null))
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
-
+		if (!(this.iterationCompletionCriteria == null))
+			this.completionCriterias.add(this.iterationCompletionCriteria);
+		
 		CompletionCriteria completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
 
 		// Bring up window to track progress
@@ -482,10 +526,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
-		tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
-//		tsa.setRuptureSampler(null);
+		// The following should probably be set only for testing purposes.
+		// tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
 		tsa.setPerturbationFunc(perturbationFunction);
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
+		if (!(this.coolingSchedule == null))
+			tsa.setCoolingFunc(this.coolingSchedule);
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
