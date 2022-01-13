@@ -96,12 +96,16 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 	 */
 	public void fetchFaultSections(FaultSectionList sections) throws IOException, DocumentException {
 		try (InputStream in = getStream(fileName)) {
+			fetchFaultSections(sections, in, crustal, id, modelName);
+		}
+	}
+
+	public static void fetchFaultSections(FaultSectionList sections, InputStream in, boolean crustal, int subductionId, String modelName) throws IOException, DocumentException {
 			if (crustal) {
 				sections.addAll(FaultModels.loadStoredFaultSections(XMLUtils.loadDocument(in)));
 			} else {
-				DownDipSubSectBuilder.loadFromStream(sections, id, modelName, in);
+				DownDipSubSectBuilder.loadFromStream(sections, subductionId, modelName, in);
 			}
-		}
 	}
 
 	/**

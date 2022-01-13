@@ -46,6 +46,15 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
+    SBD_0_2_HKR_LR_30_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
+    SBD_0_2_HKR_LR_30_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
+
     SBD_0_2_HKR_LR_30_LTP1(
             "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
@@ -54,7 +63,15 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
-
+    SBD_0_2_HKR_LR_30_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
+    SBD_0_2_HKR_LR_30_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv"),     
+    
     SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv"),
@@ -71,6 +88,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_highkermsliprate_v2.csv");
 
+	
     String description;
     String fileName;
     DeformationHelper helper;
@@ -200,14 +218,20 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         return LogicTreeLevel.forEnumUnchecked(NZSHM22_DeformationModel.class, "NZSHM22_DeformationModel", "NZSHM22_DeformationModel");
     }
 
-    public static void subductionFmToDm(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
-        Preconditions.checkArgument(!faultModel.isCrustal());
+    /**
+     * Transforms a subduction fault model into a deformation model
+     * @param subductionFaultModelFile
+     * @throws DocumentException
+     * @throws IOException
+     */
+    public static void subductionFmToDm(String subductionFaultModelFile) throws DocumentException, IOException {
 
         FaultSectionList sections = new FaultSectionList();
-        faultModel.fetchFaultSections(sections);
+        InputStream in = sections.getClass().getResourceAsStream(resourcePath + subductionFaultModelFile);
+        NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, subductionFaultModelFile);
 
-        try (PrintWriter out = new PrintWriter(new FileWriter("dm_" + faultModel.getFileName()))) {
-            out.println("% generated from faultmodel file " + faultModel.getFileName());
+        try (PrintWriter out = new PrintWriter(new FileWriter(subductionFaultModelFile))) {
+            out.println("% generated from faultmodel file " + subductionFaultModelFile);
             for (FaultSection section : sections) {
                 out.println("" + section.getSectionId() + ", " + section.getParentSectionId() + ", " + section.getOrigAveSlipRate() + ", " + section.getOrigSlipRateStdDev());
             }
@@ -218,10 +242,10 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        subductionFmToDm(NZSHM22_FaultModels.SBD_0_2_HKR_LR_30);
-        subductionFmToDm(NZSHM22_FaultModels.SBD_0_2A_HKR_LR_30);
-        subductionFmToDm(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30);
-        subductionFmToDm(NZSHM22_FaultModels.SBD_0_4_HKR_LR_30);
+        subductionFmToDm("dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_3.csv");
+        subductionFmToDm("dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_4.csv");
+        subductionFmToDm("dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_3.csv");
+        subductionFmToDm("dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv");
     }
 
 }

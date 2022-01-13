@@ -55,7 +55,7 @@ public class PythonGatewayRunner {
 		//    	VERYFAST_SA,
 		//    	LINEAR; // Drops temperature uniformly from 1 to 0.  Only use with a completion criteria of a fixed number of iterations.
         runner
-        	.setCoolingSchedule("VERYFAST_SA")
+        	.setCoolingSchedule("FAST_SA")
         	.setIterationCompletionCriteria(18000000)
         	.setPerturbationFunction("POWER_LAW");
 
