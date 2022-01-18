@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: opensha/opensha
-          ref: master
+          ref: 2022_01-annealing-efficiency-and-tracking
           path: opensha
 
       - uses: actions/checkout@v2
