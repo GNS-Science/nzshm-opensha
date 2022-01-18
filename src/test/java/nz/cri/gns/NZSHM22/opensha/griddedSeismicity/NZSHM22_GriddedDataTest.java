@@ -20,8 +20,8 @@ public class NZSHM22_GriddedDataTest {
         double locationPdf = data.getValue(testLocation);
         double fraction = data.getFractionInRegion(region);
 
-        assertEquals(5.553E-5, locationPdf, tolerance);
-        assertEquals(0.03214175, fraction, tolerance);
+        assertEquals(5.089E-5, locationPdf, tolerance);
+        assertEquals(0.03984544, fraction, tolerance);
 
         data.normaliseRegion(region);
 
@@ -40,15 +40,15 @@ public class NZSHM22_GriddedDataTest {
         double tnzPdf = data.getValue(tvzLocation);
         double tvzFraction = data.getFractionInRegion(tvz);
 
-        assertEquals(5.553E-5, tnzPdf, tolerance);
-        assertEquals(0.03214175, tvzFraction, tolerance);
+        assertEquals(5.089E-5, tnzPdf, tolerance);
+        assertEquals(0.03984544, tvzFraction, tolerance);
 
         Location sansLocation = sansTvz.getLocation(4624);
         double sansPdf = data.getValue(sansLocation);
         double sansFraction = data.getFractionInRegion(sansTvz);
 
         assertEquals(5.972E-6, sansPdf, tolerance);
-        assertEquals(0.9678601200000014, sansFraction, tolerance);
+        assertEquals(0.9601564300000021, sansFraction, tolerance);
 
         data.normaliseRegion(tvz);
         data.normaliseRegion(sansTvz);

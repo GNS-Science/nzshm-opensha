@@ -39,12 +39,22 @@ public class NewZealandRegions {
 	}
 
 	/*
-	 * Taupo Volcanic Zone points from MattG
+	 * Taupo Volcanic Zone points from Chris Rollins
 	 */
 	public static final class NZ_TVZ extends Region {
 		public NZ_TVZ() {
+			super(readCoords("nz_taupo_volcanic_2.coords", true), BorderType.MERCATOR_LINEAR);
+			this.setName("Taupo Volcanic Zone Region 2");
+		}
+	}
+
+	/*
+	 * Taupo Volcanic Zone points from MattG
+	 */
+	public static final class NZ_TVZ_0 extends Region {
+		public NZ_TVZ_0() {
 			super(readCoords("nz_taupo_vocanic.coords", true), BorderType.MERCATOR_LINEAR);
-			this.setName("Taupo Volcanic Zone Region");
+			this.setName("Taupo Volcanic Zone Region 0");
 		}
 	}
 
