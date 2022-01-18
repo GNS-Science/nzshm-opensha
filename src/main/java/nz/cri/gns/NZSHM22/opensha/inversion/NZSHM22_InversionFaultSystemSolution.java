@@ -34,7 +34,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         for (OpenSHA_Module module : solution.getModules(true))
             addModule(module);
 
-        removeAvailableModuleInstances(GridSourceProvider.class);
+        removeModuleInstances(GridSourceProvider.class);
         addAvailableModule(new Callable<NZSHM22_GridSourceGenerator>() {
             @Override
             public NZSHM22_GridSourceGenerator call() throws Exception {
