@@ -16,7 +16,7 @@ import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import java.io.IOException;
 
 @JsonAdapter(NZSHM22_ScalingRelationshipNode.Adapter.class)
-public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationship, LogicTreeNode {
+public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationship {
 
     RupSetScalingRelationship scale;
     boolean recalc = false;

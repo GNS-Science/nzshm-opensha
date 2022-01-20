@@ -4,9 +4,6 @@ import com.google.common.collect.Sets;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
-import scratch.UCERF3.SlipAlongRuptureModelRupSet;
 
 import java.io.File;
 import java.io.IOException;

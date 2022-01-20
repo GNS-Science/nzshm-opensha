@@ -6,6 +6,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.opensha.commons.calc.FaultMomentCalc;
 import org.opensha.commons.eq.MagUtils;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 
 import java.io.IOException;
@@ -58,6 +59,21 @@ public class SimplifiedScalingRelationship implements RupSetScalingRelationship 
             return magAreaRel.equals(other.magAreaRel);
         }
         return false;
+    }
+
+    @Override
+    public String getShortName() {
+        return null;
+    }
+
+    @Override
+    public double getNodeWeight(LogicTreeBranch<?> fullBranch) {
+        return 0;
+    }
+
+    @Override
+    public String getFilePrefix() {
+        return null;
     }
 
     public static class Adapter extends TypeAdapter<SimplifiedScalingRelationship> {
