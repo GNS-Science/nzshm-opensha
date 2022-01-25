@@ -38,6 +38,26 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "rupture set RmlsZTozMDMuMEJCOVVY",
             "slip_deficit_rates_no_prior_uniform-stddev_D90_RmlsZTozMDMuMEJCOVVY.dat"),
 
+    GEOD_NO_PRIOR_2010_RmlsZTo4NTkuMDM2Z2Rw_OFF_GEOL(
+            "geodetic, no geological prior constraint, 2010, offshore rates from geologic",
+            "rupture set RmlsZTo4NTkuMDM2Z2Rw",
+            "slip_deficit_rates_no_prior_2010_RmlsZTo4NTkuMDM2Z2Rw_offshore_swap.dat"),
+
+    GEOD_PRIOR_2010_RmlsZTo4NTkuMDM2Z2Rw_OFF_GEOL(
+            "geodetic, prior geological constraint, 2010, offshore rates from geologic",
+            "rupture set RmlsZTo4NTkuMDM2Z2Rw",
+            "slip_deficit_rates_with_prior_2010_RmlsZTo4NTkuMDM2Z2Rw_offshore_swap.dat"),
+
+    GEOD_NO_PRIOR_D90_RmlsZTozMDMuMEJCOVVY_OFF_GEOL(
+            "geodetic, no geological prior constraint, D90, offshore rates from geologic",
+            "rupture set RmlsZTozMDMuMEJCOVVY",
+            "slip_deficit_rates_no_prior_D90_RmlsZTozMDMuMEJCOVVY_offshore_swap.dat"),
+
+    GEOD_PRIOR_D90_RmlsZTozMDMuMEJCOVVY_OFF_GEOL(
+            "geodetic, prior geological constraint, D90, offshore rates from geologic",
+            "rupture set RmlsZTozMDMuMEJCOVVY",
+            "slip_deficit_rates_with_prior_D90_RmlsZTozMDMuMEJCOVVY_offshore_swap.dat"),
+
     SBD_0_2_HKR_LR_30_CTP1(
             "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
