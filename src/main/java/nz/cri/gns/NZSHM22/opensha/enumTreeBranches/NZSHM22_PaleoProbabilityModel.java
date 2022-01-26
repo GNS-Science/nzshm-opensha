@@ -11,9 +11,14 @@ import java.net.URL;
 
 public enum NZSHM22_PaleoProbabilityModel implements LogicTreeNode {
 
+    NZSHM22_C_41("pdetection_C41.txt"),
+    NZSHM22_C_42("pdetection_C42.txt"),
+    NZSHM22_C_43("pdetection_C43.txt"),
+
     UCERF3("pdetection2.txt"),
     UCERF3_PLUS_PT25("pdetection2_pluspt25.txt"),
     UCERF3_PLUS_PT5("pdetection2_pluspt5.txt");
+
 
     final static String RESOURCE_PATH = "/paleoRates/";
 
