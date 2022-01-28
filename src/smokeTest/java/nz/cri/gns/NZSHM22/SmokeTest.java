@@ -200,14 +200,15 @@ public class SmokeTest {
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
 
         FaultSystemSolution solution = runner
-                .setSlipRateUncertaintyConstraint("NORMALIZED_BY_UNCERTAINTY", 1000, 2)
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
                 .setInversionSeconds(1)
                 .setSelectionInterval(1)
                 .setScalingRelationship(scaling, true)
                 .setRuptureSetFile(ruptureSetFile)
-                .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setSlipRateConstraint("BOTH", 1000, 1000)
+                //.setGutenbergRichterMFDWeights(100.0, 1000.0)
+                //.setSlipRateConstraint("BOTH", 1000, 1000)
+                .setSlipRateUncertaintyConstraint(1000, 2)
+                .setUncertaintyWeightedMFDWeights(0.5, 0.5)
                 .runInversion();
 
         runner.writeSolution(solutionFile.getAbsolutePath());
@@ -231,7 +232,8 @@ public class SmokeTest {
                 .setSelectionInterval(1)
                 .setScalingRelationship(scaling, true)
                 .setRuptureSetFile(ruptureSetFile)
-                .setGutenbergRichterMFDWeights(100.0, 1000.0)
+                //.setGutenbergRichterMFDWeights(100.0, 1000.0)
+                .setUncertaintyWeightedMFDWeights(0.3, 0.5)
                 .setUncertaintyWeightedMFDWeights(1000, 0.1)
                 .setSlipRateConstraint("BOTH", 1000, 1000)
                 .runInversion();
