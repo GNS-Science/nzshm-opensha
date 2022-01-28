@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
@@ -59,6 +60,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	RegionalTargetMFDs tvz;
 
 	protected List<IncrementalMagFreqDist> mfdConstraints;
+	protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints;
 
 	/**
 	 * For NZ reporting only
@@ -79,10 +81,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
     	return mfdConstraints;
     }
 
+	public List<UncertainIncrMagFreqDist> getMfdUncertaintyConstraints() {
+		return mfdUncertaintyConstraints;
+	}
+
 	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,double totalRateM5_Sans,
 											  double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ,
-											  double minMag_Sans, double minMag_TVZ ) {
-		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMag_Sans, minMag_TVZ);
+											  double minMag_Sans, double minMag_TVZ, double uncertaintyPower) {
+		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMag_Sans, minMag_TVZ,
+				uncertaintyPower);
 	}
 
 	public static class RegionalTargetMFDs {
@@ -93,20 +100,23 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		public double totalRateM5;
 		public double bValue;
 		public double minMag;
+		public double uncertaintyPower;
 
 		public GutenbergRichterMagFreqDist totalTargetGR;
 		public IncrementalMagFreqDist trulyOffFaultMFD;
 		public SummedMagFreqDist totalSubSeismoOnFaultMFD;
 		public IncrementalMagFreqDist targetOnFaultSupraSeisMFDs;
 		public List<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List;
+		public UncertainIncrMagFreqDist uncertaintyMFD;
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
-		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag) {
+		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag, double uncertaintyPower) {
 			this.region = regionalRupSet.getRegion();
 			this.totalRateM5 = totalRateM5;
 			this.bValue = bValue;
 			this.minMag = minMag;
+			this.uncertaintyPower = uncertaintyPower;
 			if (region.getName().contains("SANS TVZ")) {
 				suffix = "SansTVZ";
 			} else if (region.getName().contains("TVZ")) {
@@ -133,6 +143,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			out.name("minMag");
 			out.value(minMag);
 
+			// hint for writing a readr: this value is not present in older versions
+			out.name("uncertaintyPower");
+			out.value(uncertaintyPower);
+
 			out.name("totalTargetGR");
 			mfdAdapter.write(out, totalTargetGR);
 
@@ -146,19 +160,6 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			mfdAdapter.write(out, targetOnFaultSupraSeisMFDs);
 
 			out.endObject();
-		}
-
-		public static IncrementalMagFreqDist fillBelowMag(IncrementalMagFreqDist source, double minMag, double value) {
-			IncrementalMagFreqDist result = new IncrementalMagFreqDist(source.getMinX(), source.size(), source.getDelta());
-			for (int i = 0; i < source.size(); i++) {
-				Point2D point = source.get(i);
-				if (point.getX() < minMag) {
-					result.set(i, value);
-				} else {
-					result.set(i, point.getY());
-				}
-			}
-			return result;
 		}
 
 		protected void init() {
@@ -214,8 +215,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
-			targetOnFaultSupraSeisMFDs = fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag,  1.0e-20);
+			targetOnFaultSupraSeisMFDs = MFDManipulation.fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag, 1.0e-20);
 			targetOnFaultSupraSeisMFDs.setRegion(region);
+			uncertaintyMFD = MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFDs, minMag, uncertaintyPower);
 
 			if (MFD_STATS) {
 				System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
@@ -256,12 +258,13 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 						double bValue_SansTVZ,
 						double bValue_TVZ,
 						double minMag_Sans,
-						double minMag_TVZ) {
+						double minMag_TVZ,
+						double uncertaintyPower) {
 
 		setParent(invRupSet);
 
-		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ);
-		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans);
+		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ, uncertaintyPower);
+		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, uncertaintyPower);
 
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
 		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));
@@ -272,6 +275,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		mfdConstraints = new ArrayList<>();
 		mfdConstraints.add(sansTvz.targetOnFaultSupraSeisMFDs);
 		mfdConstraints.add(tvz.targetOnFaultSupraSeisMFDs);
+
+		mfdUncertaintyConstraints = new ArrayList<>();
+		mfdUncertaintyConstraints.add(sansTvz.uncertaintyMFD);
+		mfdUncertaintyConstraints.add(tvz.uncertaintyMFD);
 
 		/*
 		 * TODO CBC the following block sets up base class var required later to save the solution,
