@@ -215,9 +215,9 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
 			// we have both MFD constraints, apply a transition mag from equality to
 			// inequality
-			mfdEqualityConstraints = restrictMFDConstraintMagRange(mfdConstraints,
+			mfdEqualityConstraints = MFDManipulation.restrictMFDConstraintMagRange(mfdConstraints,
 					mfdConstraints.get(0).getMinX(), MFDTransitionMag);
-			mfdInequalityConstraints = restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
+			mfdInequalityConstraints = MFDManipulation.restrictMFDConstraintMagRange(mfdConstraints, MFDTransitionMag,
 					mfdConstraints.get(0).getMaxX());
 			newConfig
 				.setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)

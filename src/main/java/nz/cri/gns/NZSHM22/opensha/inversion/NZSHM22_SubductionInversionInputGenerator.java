@@ -8,7 +8,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.NZ_SlipRateUncertaintyInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 
@@ -82,25 +81,23 @@ public class NZSHM22_SubductionInversionInputGenerator extends InversionInputGen
 
 		// WARNING: pre-modular rupture sets have stdev 1000 times too large
 		if (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY) {
-			//NZSHM22 new slip-rate constraint
-			double[] sectSlipRateReduced = rupSet.getSlipRateForAllSections();
-			double[] stdDevReduced = rupSet.getSlipRateStdDevForAllSections();
-			constraints.add(new NZ_SlipRateUncertaintyInversionConstraint(config.getSlipRateUncertaintyConstraintWt(),
-					config.getSlipRateUncertaintyConstraintScalingFactor(), rupSet, sectSlipRateReduced, stdDevReduced));
-		}
+			constraints.add(
+					NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
+							config.getSlipRateUncertaintyConstraintWt(),
+							rupSet,
+							config.getSlipRateUncertaintyConstraintScalingFactor()));
+		} else {
+			if (config.getSlipRateConstraintWt_normalized() > 0d
+					&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED
+					|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH)) {
+				constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(), ConstraintWeightingType.NORMALIZED, rupSet));
+			}
 
-		if (config.getSlipRateConstraintWt_normalized() > 0d
-				&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED
-				|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH))
-		{
-			constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_normalized(), ConstraintWeightingType.NORMALIZED, rupSet));
-		}
-
-		if (config.getSlipRateConstraintWt_unnormalized() > 0d
-				&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.UNNORMALIZED
-				|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH))
-		{
-			constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_unnormalized(), ConstraintWeightingType.UNNORMALIZED, rupSet));
+			if (config.getSlipRateConstraintWt_unnormalized() > 0d
+					&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.UNNORMALIZED
+					|| config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH)) {
+				constraints.add(new SlipRateInversionConstraint(config.getSlipRateConstraintWt_unnormalized(), ConstraintWeightingType.UNNORMALIZED, rupSet));
+			}
 		}
 
 		// Rupture rate minimization constraint
@@ -128,13 +125,14 @@ public class NZSHM22_SubductionInversionInputGenerator extends InversionInputGen
 		if (config.getMagnitudeInequalityConstraintWt() > 0.0)
 			// constraints.add(new MFDUncertaintyWeightedInversionConstraint(rupSet, 1000, mfdConstraints, null)
 			constraints.add(new MFDInversionConstraint(rupSet,
-					config.getMagnitudeInequalityConstraintWt(), false,
+					config.getMagnitudeInequalityConstraintWt(), true,
 					config.getMfdInequalityConstraints()));
 
 		// Prepare MFD Uncertainty Weighted Constraint 
 		if (config.getMagnitudeUncertaintyWeightedConstraintWt() > 0.0)
 			constraints.add(new MFDInversionConstraint(rupSet,
-					config.getMagnitudeUncertaintyWeightedConstraintWt(), false, // TODO is false correct here?
+					config.getMagnitudeUncertaintyWeightedConstraintWt(), false,
+					ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
 					config.getMfdUncertaintyWeightedConstraints()));
 
 		//		// MFD Subsection nucleation MFD constraint
