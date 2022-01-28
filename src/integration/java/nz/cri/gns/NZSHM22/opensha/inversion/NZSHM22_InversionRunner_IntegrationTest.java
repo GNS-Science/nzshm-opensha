@@ -62,8 +62,15 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetSlipRateUncertaintyConstraintThrowsWithInvalidArgument() {
-        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner()
-                .setSlipRateUncertaintyConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH, 1, 2);
+        new NZSHM22_CrustalInversionRunner()
+                .setSlipRateConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, 1, 2);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testSetSlipRateUncertaintyConstraintThrowsWithInvalidArgument2() {
+        new NZSHM22_CrustalInversionRunner()
+                .setSlipRateConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED, 1, 2)
+                .setSlipRateUncertaintyConstraint( 1, 2);
     }
 
 }
