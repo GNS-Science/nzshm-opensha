@@ -54,7 +54,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private Integer inversionThreadsPerSelector = 1;
 	private Integer inversionAveragingIntervalSecs = null;
 	private boolean inversionAveragingEnabled = false;
-	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001; // FIXME: we should choose a better one
+	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001;
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
 	private CoolingScheduleType coolingSchedule = null;
 	
@@ -80,6 +80,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType;
 	protected double slipRateConstraintWt_normalized;
 	protected double slipRateConstraintWt_unnormalized;
+	protected double slipRateUncertaintyWeight;
+	protected double slipRateUncertaintyScalingFactor;
 	protected double mfdEqualityConstraintWt;
 	protected double mfdInequalityConstraintWt;
 	protected double mfdUncertaintyWeightedConstraintWt;
@@ -94,8 +96,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
-
-
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -135,7 +135,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * @param iterations        may be set to 0 to noop this method
+	 * @param minIterations        may be set to 0 to noop this method
 	 * @return
 	 */
 	public NZSHM22_AbstractInversionRunner setIterationCompletionCriteria(long minIterations) {
@@ -375,6 +375,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt) {
+		Preconditions.checkState(mfdUncertaintyWeightedConstraintWt == 0);
 		this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
 		this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
 		return this;
@@ -382,6 +383,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	public NZSHM22_AbstractInversionRunner setUncertaintyWeightedMFDWeights(double mfdUncertaintyWeightedConstraintWt,
 			double mfdUncertaintyWeightedConstraintPower) {
+		Preconditions.checkState(this.mfdEqualityConstraintWt == 0);
+		Preconditions.checkState(this.mfdInequalityConstraintWt == 0);
 		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
 		this.mfdUncertaintyWeightedConstraintPower = mfdUncertaintyWeightedConstraintPower;
 		return this;
@@ -407,9 +410,27 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		Preconditions.checkArgument(weightingType != AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
 				"setSlipRateConstraint() using  %s is not supported. Use setSlipRateUncertaintyConstraint() instead.",
 				weightingType);
+		Preconditions.checkState(this.slipRateWeightingType == null);
 		this.slipRateWeightingType = weightingType;
 		this.slipRateConstraintWt_normalized = normalizedWt;
 		this.slipRateConstraintWt_unnormalized = unnormalizedWt;
+		return this;
+	}
+
+	/**
+	 * Slip rate uncertainty constraint
+	 *
+	 * @param uncertaintyWeight
+	 * @param scalingFactor
+	 * @return
+	 * @throws IllegalArgumentException if the weighting types is not supported by
+	 *                                  this constraint
+	 */
+	public NZSHM22_AbstractInversionRunner setSlipRateUncertaintyConstraint(double uncertaintyWeight, double scalingFactor) {
+		Preconditions.checkState(this.slipRateWeightingType == null);
+		this.slipRateWeightingType = AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY;
+		this.slipRateUncertaintyWeight = uncertaintyWeight;
+		this.slipRateUncertaintyScalingFactor = scalingFactor;
 		return this;
 	}
 

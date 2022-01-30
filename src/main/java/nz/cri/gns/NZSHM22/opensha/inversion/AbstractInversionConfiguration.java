@@ -19,7 +19,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		BOTH,
 		NORMALIZED_BY_UNCERTAINTY
 	}
-
 	private InversionTargetMFDs inversionTargetMfds;
 	private double magnitudeEqualityConstraintWt;
 	private double magnitudeInequalityConstraintWt;
@@ -32,8 +31,8 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	public static final String XML_METADATA_NAME = "InversionConfiguration";
 	
 	//New NZSHM scaling 
-	private int slipRateUncertaintyConstraintWt;
-	private int slipRateUncertaintyConstraintScalingFactor;
+	private double slipRateUncertaintyConstraintWt;
+	private double slipRateUncertaintyConstraintScalingFactor;
 //	private double paleoSlipConstraintWt;
 
 //	private double rupRateConstraintWt;
@@ -125,22 +124,22 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	public AbstractInversionConfiguration setSlipRateWeightingType(NZSlipRateConstraintWeightingType slipRateWeighting) {
 		this.slipRateWeighting = slipRateWeighting;
 		return this;
-	}	
+	}
 
-	public int getSlipRateUncertaintyConstraintWt() {
+	public double getSlipRateUncertaintyConstraintWt() {
 		return slipRateUncertaintyConstraintWt;
 	}
 
-	public AbstractInversionConfiguration setSlipRateUncertaintyConstraintWt(int slipRateUncertaintyConstraintWt) {
+	public AbstractInversionConfiguration setSlipRateUncertaintyConstraintWt(double slipRateUncertaintyConstraintWt) {
 		this.slipRateUncertaintyConstraintWt = slipRateUncertaintyConstraintWt;
 		return this;
 	}
 
-	public int getSlipRateUncertaintyConstraintScalingFactor() {
+	public double getSlipRateUncertaintyConstraintScalingFactor() {
 		return slipRateUncertaintyConstraintScalingFactor;
 	}	
 	
-	public AbstractInversionConfiguration setSlipRateUncertaintyConstraintScalingFactor(int slipRateUncertaintyConstraintScalingFactor) {
+	public AbstractInversionConfiguration setSlipRateUncertaintyConstraintScalingFactor(double slipRateUncertaintyConstraintScalingFactor) {
 		this.slipRateUncertaintyConstraintScalingFactor = slipRateUncertaintyConstraintScalingFactor;
 		return this;
 	}	
@@ -227,40 +226,6 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		return this;
 	}	
 	
-	/**
-	 * This method returns the input MFD constraint array with each constraint now
-	 * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
-	 * best results, set minMag & maxMag to points along original MFD constraint
-	 * (i.e. 7.05, 7.15, etc)
-	 * 
-	 * @param mfdConstraints
-	 * @param minMag
-	 * @param maxMag
-	 * @return newMFDConstraints
-	 */
-	protected static List<IncrementalMagFreqDist> restrictMFDConstraintMagRange(
-			List<IncrementalMagFreqDist> mfdConstraints, double minMag, double maxMag) {
-
-		List<IncrementalMagFreqDist> newMFDConstraints = new ArrayList<>();
-
-		for (int i = 0; i < mfdConstraints.size(); i++) {
-			IncrementalMagFreqDist originalMFD = mfdConstraints.get(i);
-			double delta = originalMFD.getDelta();
-			IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag,
-					(int) Math.round((maxMag - minMag) / delta + 1.0));
-			newMFD.setTolerance(delta / 2.0);
-			newMFD.setRegion(originalMFD.getRegion());
-			for (double m = minMag; m <= maxMag; m += delta) {
-				// WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
-				// points along original MFD constraint (i.e. 7.05, 7.15, etc)
-				newMFD.set(m, originalMFD.getClosestYtoX(m));
-			}
-			newMFDConstraints.add(i, newMFD);
-		}
-
-		return newMFDConstraints;
-	}	
-
 	@Override
 	public Element toXMLMetadata(Element root) {
 		Element el = root.addElement(XML_METADATA_NAME);

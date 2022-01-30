@@ -24,8 +24,6 @@ import java.util.List;
 public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRunner {
 
     //	private NZSHM22_CrustalInversionConfiguration inversionConfiguration;
-    private int slipRateUncertaintyWeight;
-    private int slipRateUncertaintyScalingFactor;
     private double totalRateM5_Sans = 3.6;
     private double totalRateM5_TVZ = 0.4;
     private double bValue_Sans = 1.05;
@@ -43,40 +41,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
      */
     public NZSHM22_CrustalInversionRunner() {
         super();
-    }
-
-    /**
-     * New NZSHM22 Slip rate uncertainty constraint
-     *
-     * @param uncertaintyWeight
-     * @param scalingFactor
-     * @return
-     * @throws IllegalArgumentException if the weighting types is not supported by
-     *                                  this constraint
-     */
-    public NZSHM22_CrustalInversionRunner setSlipRateUncertaintyConstraint(
-            AbstractInversionConfiguration.NZSlipRateConstraintWeightingType weightingType, int uncertaintyWeight, int scalingFactor) {
-        Preconditions.checkArgument(weightingType == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
-                "setSlipRateUncertaintyConstraint() using %s is not supported. Use setSlipRateConstraint() instead.",
-                weightingType);
-        this.slipRateWeightingType = weightingType;
-        this.slipRateUncertaintyWeight = uncertaintyWeight;
-        this.slipRateUncertaintyScalingFactor = scalingFactor;
-        return this;
-    }
-
-    /**
-     * New NZSHM22 Slip rate uncertainty constraint
-     *
-     * @param weightingType
-     * @param uncertaintyWeight
-     * @param scalingFactor
-     * @return
-     */
-    public NZSHM22_CrustalInversionRunner setSlipRateUncertaintyConstraint(String weightingType, int uncertaintyWeight,
-                                                                           int scalingFactor) {
-        return setSlipRateUncertaintyConstraint(AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.valueOf(weightingType),
-                uncertaintyWeight, scalingFactor);
     }
 
     /**
@@ -146,7 +110,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                 inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
-                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ);
+                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ,
+                mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower);
 
        inversionConfiguration
                .setPaleoRateConstraintWt(paleoRateConstraintWt)
@@ -214,8 +179,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setSlipRateConstraint("BOTH", 1000, 1000))
-                .setSlipRateUncertaintyConstraint("NORMALIZED_BY_UNCERTAINTY", 1000, 2)
+                .setSlipRateConstraint("BOTH", 1000, 1000)
+                .setSlipRateUncertaintyConstraint(1000, 2))
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
 

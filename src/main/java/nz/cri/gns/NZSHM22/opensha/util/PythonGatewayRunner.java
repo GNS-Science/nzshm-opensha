@@ -36,8 +36,8 @@ public class PythonGatewayRunner {
                 //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet.getAbsolutePath())
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setSlipRateConstraint("BOTH", 1000, 1000))
-                .setSlipRateUncertaintyConstraint("NORMALIZED_BY_UNCERTAINTY", 1000, 2)
+              //  .setSlipRateConstraint("BOTH", 1000, 1000)
+                .setSlipRateUncertaintyConstraint(1000, 2))
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85);
         
         // see org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params
