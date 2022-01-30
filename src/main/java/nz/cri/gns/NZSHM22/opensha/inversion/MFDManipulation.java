@@ -16,7 +16,7 @@ public class MFDManipulation {
      * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
      * best results, set minMag & maxMag to points along original MFD constraint
      * (i.e. 7.05, 7.15, etc)
-     *
+     * <p>
      * Can handle UncertainIncrMagFreqDist objects.
      **/
     public static IncrementalMagFreqDist restrictMFDConstraintMagRange(
@@ -29,14 +29,8 @@ public class MFDManipulation {
         int num = (int) Math.round((maxMag - minMag) / delta + 1.0);
 
         IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag, num);
-        EvenlyDiscretizedFunc stdDevs = null;
         newMFD.setTolerance(delta / 2.0);
         newMFD.setRegion(originalMFD.getRegion());
-
-        if (originalMFD instanceof UncertainIncrMagFreqDist) {
-            stdDevs = new EvenlyDiscretizedFunc(minMag, maxMag, num);
-            stdDevs.setTolerance(delta / 2.0);
-        }
 
         for (int i = 0; i < num; i++) {
 
@@ -44,15 +38,8 @@ public class MFDManipulation {
             // WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
             // points along original MFD constraint (i.e. 7.05, 7.15, etc)
             newMFD.set(m, originalMFD.getClosestYtoX(m));
-            if (stdDevs != null) {
-                stdDevs.set(m, ((UncertainIncrMagFreqDist) originalMFD).getStdDevs().getClosestYtoX(m));
-            }
         }
-        if (stdDevs == null) {
-            return newMFD;
-        } else {
-            return new UncertainIncrMagFreqDist(newMFD, stdDevs);
-        }
+        return newMFD;
     }
 
     /**
@@ -60,7 +47,7 @@ public class MFDManipulation {
      * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
      * best results, set minMag & maxMag to points along original MFD constraint
      * (i.e. 7.05, 7.15, etc)
-     *
+     * <p>
      * Can handle UncertainIncrMagFreqDist objects.
      *
      * @param mfdConstraints
@@ -81,7 +68,7 @@ public class MFDManipulation {
     public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double power) {
         double firstWeightPower = Math.pow(mfd.getClosestYtoX(minimize_below_mag), power);
         EvenlyDiscretizedFunc stdDevs = new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
-        for(int i = 0; i < stdDevs.size(); i++) {
+        for (int i = 0; i < stdDevs.size(); i++) {
             double mag = mfd.getX(i);
             double rate = mfd.getY(i);
             double stdDev =
