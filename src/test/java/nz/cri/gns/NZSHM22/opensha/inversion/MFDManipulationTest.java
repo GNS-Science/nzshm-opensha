@@ -96,29 +96,5 @@ public class MFDManipulationTest {
         actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, 8);
         assertEquals(List.of(20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0), actual.yValues());
     }
-
-    @Test
-    public void testRestrictMFDConstraintMagRangeWithUncertainty() {
-        IncrementalMagFreqDist d = new IncrementalMagFreqDist(5.05, BINS, 0.1);
-        for (int i = 0; i < BINS; i++) {
-            d.set(i, i);
-        }
-
-        UncertainIncrMagFreqDist dist = MFDManipulation.addMfdUncertainty(d, 0, 0.5);
-
-        IncrementalMagFreqDist actual = MFDManipulation.restrictMFDConstraintMagRange(dist, dist.getMinX(), dist.getMaxX());
-        assertEquals(dist.getStdDevs().yValues(), ((UncertainIncrMagFreqDist) actual).getStdDevs().yValues());
-
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, dist.getMaxX());
-        assertEquals(List.of(10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5), ((UncertainIncrMagFreqDist) actual).getStdDevs().yValues());
-
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 8, dist.getMaxX());
-        assertEquals(List.of(15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5), ((UncertainIncrMagFreqDist) actual).getStdDevs().yValues());
-
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, dist.getMinX(), 7);
-        assertEquals(List.of(0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0), ((UncertainIncrMagFreqDist) actual).getStdDevs().yValues());
-
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, 8);
-        assertEquals(List.of(10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0), ((UncertainIncrMagFreqDist) actual).getStdDevs().yValues());
-    }
+    
 }
