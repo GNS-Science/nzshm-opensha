@@ -44,6 +44,18 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 	protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
 	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
 
+    protected boolean invertRake = false;
+
+    /**
+     * For debugging only. adds 180 degrees to each rake in the fault model
+     * @param invertRake
+     * @return
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setInvertRake(boolean invertRake){
+        this.invertRake = invertRake;
+        return this;
+    }
+
     protected static String fmt(float d) {
         if (d == (long) d)
             return String.format("%d", (long) d);
@@ -204,6 +216,16 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         }
 
         System.out.println("Fault model has " + subSections.size() + " fault sections");
+
+        if (invertRake) {
+            for (FaultSection section : subSections) {
+                double rake = section.getAveRake() + 180;
+                if (rake >= 360) {
+                    rake -= 180;
+                }
+                section.setAveRake(rake);
+            }
+        }
 
         if (fsdFile != null || (faultModel != null && faultModel.isCrustal())) {
 
