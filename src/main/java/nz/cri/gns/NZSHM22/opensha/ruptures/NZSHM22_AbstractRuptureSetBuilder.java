@@ -220,8 +220,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         if (invertRake) {
             for (FaultSection section : subSections) {
                 double rake = section.getAveRake() + 180;
-                if (rake >= 360) {
-                    rake -= 180;
+                if (rake >= 180) {
+                    rake -= 360;
                 }
                 section.setAveRake(rake);
             }
