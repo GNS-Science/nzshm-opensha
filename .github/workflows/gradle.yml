@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
-        ref: main
+        ref: issue/82-magnitude-binning
         path: opensha
 
     - uses: actions/checkout@v2
