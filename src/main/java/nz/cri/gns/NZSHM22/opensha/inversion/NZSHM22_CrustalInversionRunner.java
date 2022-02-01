@@ -270,7 +270,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setEnableMinMaxSampler(true)
                 .setInversionSeconds(1)
               // .setSlipRateFactor(0.8, 0.3)
-
+                .setRepeatable(true)
+                .setIterationCompletionCriteria(10)
+                .setSelectionIterations(10)
                 .setScalingRelationship(scaling, true)
                 //.setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)

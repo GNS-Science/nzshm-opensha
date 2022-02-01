@@ -55,10 +55,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected long inversionSecs = 60;
 	protected long selectionInterval = 10;
+	protected Long selectionIterations = null;
 
 	private Integer inversionNumSolutionAverages = 1; // 1 means no averaging
 	private Integer inversionThreadsPerSelector = 1;
 	private Integer inversionAveragingIntervalSecs = null;
+	private Integer inversionAveragingIterations = null;
 	private boolean inversionAveragingEnabled = false;
 	private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001;
 	private NonnegativityConstraintType nonNegAlgorithm = NonnegativityConstraintType.LIMIT_ZERO_RATES;
@@ -126,6 +128,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return minBufferSize;
 	}
 
+	protected boolean repeatable = false;
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -178,7 +182,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		else
 			this.iterationCompletionCriteria = new IterationCompletionCriteria(minIterations);
 		return this;
-	}	
+	}
+
+	public NZSHM22_AbstractInversionRunner setRepeatable(boolean repeatable){
+		this.repeatable = repeatable;
+		return this;
+	}
 	
 	/**
 	 * Sets the length of time between inversion selections (syncs) in seconds. Default is 10 seconds.
@@ -216,6 +225,17 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
+	 * Sets the iterations between sub-solution selections.
+	 *
+	 * @param iterations
+	 * @return this runner.
+	 */
+	public NZSHM22_AbstractInversionRunner setSelectionIterations(long iterations) {
+		this.selectionIterations = iterations;
+		return this;
+	}
+
+	/**
 	 * @param numSolutionAverages the number of inversionNumSolutionAverages
 	 * @return
 	 */
@@ -232,6 +252,17 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setInversionAveragingIntervalSecs(Integer seconds) {
 		this.inversionAveragingIntervalSecs = seconds;
+		return this;
+	}
+
+	/**
+	 * Sets how long each averaging interval will be.
+	 *
+	 * @param iterations the duration of the averaging period
+	 * @return this runner.
+	 */
+	public NZSHM22_AbstractInversionRunner setInversionAveragingIterations(Integer iterations) {
+		this.inversionAveragingIterations = iterations;
 		return this;
 	}
 
@@ -449,7 +480,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 				"mfdUncertWtdConstraintPower must be not less than 0 and not greater than 1.");
 		this.mfdUncertWtdConstraintWt = mfdUncertaintyWeightedConstraintWt;
 		this.mfdUncertWtdConstraintPower = mfdUncertaintyWeightedConstraintPower;
-		this.mfdUncertWtdConstraintScalar = mfdUncertaintyWeightedConstraintScalar; 
+		this.mfdUncertWtdConstraintScalar = mfdUncertaintyWeightedConstraintScalar;
 		return this;
 	}	
 	
@@ -568,7 +599,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			}
 		}
 
-		System.out.println("Completely excluded " + excludedSections.size() + " sections: " + excludedSections);
+		System.out.println("Completely excluded " + excludedSections.size() + " sections.");
 
 		SimpleGeoJsonBuilder excludedGeoJsonBuilder = new SimpleGeoJsonBuilder();
 		SimpleGeoJsonBuilder includedGeoJsonBuilder = new SimpleGeoJsonBuilder();
@@ -633,6 +664,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		configure();
 		validateConfig();
 
+		if(repeatable){
+			Preconditions.checkState(iterationCompletionCriteria != null || energyChangeCompletionCriteria != null);
+			Preconditions.checkState(selectionIterations != null);
+		}
+
 		// weight of entropy-maximization constraint (not used in UCERF3)
 //		double smoothnessWt = 0;
 
@@ -641,7 +677,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		inversionInputGenerator.columnCompress();
 
 		// inversion completion criteria (how long it will run)
-		this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
+		if(!repeatable)
+			this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
 		if (!(this.energyChangeCompletionCriteria == null))
 			this.completionCriterias.add(this.energyChangeCompletionCriteria);
 		if (!(this.iterationCompletionCriteria == null))
@@ -657,16 +694,33 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		// this is the "sub completion criteria" - the amount of time (or iterations)
 		// between solution selection/synchronization
-		CompletionCriteria subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
+		CompletionCriteria subCompletionCriteria;
+
+		if (selectionIterations != null) {
+			subCompletionCriteria = new IterationCompletionCriteria(selectionIterations);
+		} else {
+			subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
+		}
 
 		initialState = inversionInputGenerator.getInitialSolution();
 
 		int numThreads = this.inversionNumSolutionAverages * this.inversionThreadsPerSelector;
 
+		if(repeatable){
+			numThreads = 1;
+			inversionThreadsPerSelector = 1;
+		}
+
 		if (this.inversionAveragingEnabled) {
 			Preconditions.checkState(inversionThreadsPerSelector <= numThreads);
 
-			CompletionCriteria avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
+			CompletionCriteria avgSubCompletionCriteria;
+
+			if(repeatable){
+				avgSubCompletionCriteria = new IterationCompletionCriteria(inversionAveragingIterations);
+			}else {
+				avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
+			}
 
 			int threadsLeft = numThreads;
 
@@ -696,9 +750,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			tsa = new ReweightEvenFitSimulatedAnnealing((ThreadedSimulatedAnnealing)tsa, reweightTargetQuantity);
 		}
 
+		if(repeatable) {
+			tsa.setRandom(new Random(1));
+		}
 
-		// The following should probably be set only for testing purposes.
-		// tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
 		tsa.setPerturbationFunc(perturbationFunction);
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
 		if (!(this.coolingSchedule == null))
@@ -906,8 +961,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public List<IncrementalMagFreqDist> getSolutionMfdsV2() {
 		return solutionMfdsV2;
 	}
-	
-	
+
+
 	/**
 	 * build an MFD from the inversion solution
 	 * 
@@ -983,7 +1038,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	}
 
-	
+
 	public ArrayList<ArrayList<String>> getTabularSolutionMfdsV2() {
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
 
@@ -1000,6 +1055,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		return rows;
 
-	}	
-	
+	}
+
 }

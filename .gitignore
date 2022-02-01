@@ -34,3 +34,5 @@ bin/**
 
 .idea/
 /TEST/
+*excludedSections.geoJson
+*includedSections.geoJson
