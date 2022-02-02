@@ -15,11 +15,21 @@ import java.util.Map;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
 
-	// CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults  
-	CFM_0_9B_ALL_D90("CFM 0.9revB all NZ faults, depth 90", "cfm_0_9b_d90_all.xml"),
-	CFM_0_9B_SANSTVZ_D90("CFM 0.9revB sans TVZ, depth 90", "cfm_0_9b_d90_no_tvz.xml"),
+	// CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
+	CFM_0_9C_ALL_D90("CFM 0.9revC all NZ faults, depth 90", "cfm_0_9c_d90_all.xml"),
+	CFM_0_9C_SANSTVZ_D90("CFM 0.9revC sans TVZ, depth 90", "cfm_0_9c_d90_no_tvz.xml"),
 
+	CFM_0_9C_ALL_2010("CFM 0.9revC all NZ faults, 2010 Stirling depth", "cfm_0_9c_d90_all_stirling_depths.xml"),
+	CFM_0_9C_SANSTVZ_2010("CFM 0.9revC sans TVZ, 2010 Stirling depth", "cfm_0_9c_d90_no_tvz_stirling_depths.xml"),
+
+	// CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults  
+	@Deprecated
+	CFM_0_9B_ALL_D90("CFM 0.9revB all NZ faults, depth 90", "cfm_0_9b_d90_all.xml"),
+	@Deprecated
+	CFM_0_9B_SANSTVZ_D90("CFM 0.9revB sans TVZ, depth 90", "cfm_0_9b_d90_no_tvz.xml"),
+	@Deprecated
 	CFM_0_9B_ALL_2010("CFM 0.9revB all NZ faults, 2010 Stirling depth", "cfm_0_9b_d90_all_stirling_depths.xml"),
+	@Deprecated
 	CFM_0_9B_SANSTVZ_2010("CFM 0.9revB sans TVZ, 2010 Stirling depth", "cfm_0_9b_d90_no_tvz_stirling_depths.xml"),
 
 	// These for deprecated models have their rake 180 degrees off
