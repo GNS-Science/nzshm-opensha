@@ -25,7 +25,7 @@ public abstract class NZSHM22_HazardCalculator {
      * @param lon
      * @return
      */
-    public  List<List<Double>> tabulariseCalc(double lat, double lon){
+    public List<List<Double>> tabulariseCalc(double lat, double lon){
         DiscretizedFunc func = calc(lat, lon);
         List<List<Double>> result = new ArrayList<>();
         for(Point2D point : func){

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModel;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
@@ -72,6 +73,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
+		if(spatialSeisPDF == NZSHM22_SpatialSeisPDF.FROM_SOLUTION){
+			spatialSeisPDF.setPDFSource(ifss.getModule(NZSHM22_PolygonisedDistributedModel.class).getGriddedData());
+		}
 		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_TVZ_GRIDDED());
 		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED());
 		srcSpatialPDF = spatialSeisPDF.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
@@ -264,11 +268,11 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
 	private synchronized static void checkInitFocalMechGrids() {
 		if (fracStrikeSlip == null)
-			fracStrikeSlip = new NZSHM22_GriddedData("strikeFocalHazMech.grid").getValues();
+			fracStrikeSlip = new NZSHM22_GriddedData("seismicityGrids/strikeFocalHazMech.grid").getValues();
 		if (fracReverse == null)
-			fracReverse = new NZSHM22_GriddedData("reverseFocalMech.grid").getValues();
+			fracReverse = new NZSHM22_GriddedData("seismicityGrids/reverseFocalMech.grid").getValues();
 		if (fracNormal == null)
-			fracNormal = new NZSHM22_GriddedData("normalFocalMech.grid").getValues();
+			fracNormal = new NZSHM22_GriddedData("seismicityGrids/normalFocalMech.grid").getValues();
 	}
 
 }

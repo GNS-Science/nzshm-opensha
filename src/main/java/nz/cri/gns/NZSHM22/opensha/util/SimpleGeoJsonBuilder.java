@@ -67,6 +67,13 @@ public class SimpleGeoJsonBuilder {
         return feature.properties;
     }
 
+    public FeatureProperties addRegion(Region region, String colour, double opacity){
+        FeatureProperties props = addRegion(region);
+        props.set(FeatureProperties.FILL_OPACITY_PROP, opacity);
+        props.set(FeatureProperties.FILL_COLOR_PROP, colour);
+        return props;
+    }
+
     public String toJSON() {
         FeatureCollection featureCollection = new FeatureCollection(features);
         try {

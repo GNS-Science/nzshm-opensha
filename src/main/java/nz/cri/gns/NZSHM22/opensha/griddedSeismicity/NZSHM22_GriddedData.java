@@ -1,8 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.function.BiFunction;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
@@ -16,6 +17,7 @@ import com.google.common.collect.Table;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
+import org.opensha.commons.util.modules.helpers.FileBackedModule;
 
 /**
  * Gridded data. Copied and modifed from UCERF3's GridReader
@@ -28,20 +30,51 @@ public class NZSHM22_GriddedData {
     protected static final Function<String, Double> FN_STR_TO_DBL;
     protected static final Function<Double, Integer> FN_DBL_TO_KEY;
     protected static final Function<String, Integer> FN_STR_TO_KEY;
+    protected static final Function<Integer, Double> FN_KEY_TO_DBL;
 
     protected Table<Integer, Integer, Double> table;
     protected String filename;
 
     static {
-        SPLIT = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings();
+        SPLIT = Splitter.on(CharMatcher.whitespace().or(CharMatcher.anyOf(","))).omitEmptyStrings();
         FN_STR_TO_DBL = new FnStrToDbl();
         FN_DBL_TO_KEY = new FnDblToKey();
         FN_STR_TO_KEY = Functions.compose(FN_DBL_TO_KEY, FN_STR_TO_DBL);
+        FN_KEY_TO_DBL = new FnKeyToDbl();
+    }
+
+    public NZSHM22_GriddedData() {
     }
 
     public NZSHM22_GriddedData(String fileName) {
         this.filename = fileName;
-        table = initTable();
+        try (BufferedReader br = new BufferedReader(NZSHM22_DataUtils.getReader(filename))) {
+            table = initTable(br);
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+    protected NZSHM22_GriddedData(Table<Integer, Integer, Double> table){
+        this.table = table;
+    }
+
+    public void writeToStream(BufferedOutputStream out) throws IOException {
+        PrintWriter writer = new PrintWriter(new BufferedOutputStream(out));
+
+        for (Table.Cell<Integer, Integer, Double> cell : table.cellSet()) {
+            writer.print(FN_KEY_TO_DBL.apply(cell.getColumnKey()));
+            writer.print(", ");
+            writer.print(FN_KEY_TO_DBL.apply(cell.getRowKey()));
+            writer.print(", ");
+            writer.print(cell.getValue());
+            writer.println();
+        }
+        writer.flush();
+    }
+
+    public void initFromStream(BufferedInputStream in) throws IOException {
+        this.table = initTable(new BufferedReader(new InputStreamReader(in)));
     }
 
     private static class FnStrToDbl implements Function<String, Double> {
@@ -58,47 +91,55 @@ public class NZSHM22_GriddedData {
         }
     }
 
+    private static class FnKeyToDbl implements Function<Integer, Double> {
+        @Override
+        public Double apply(Integer k) {
+            return 0.1 * k;
+        }
+    }
+
     /**
      * Build the data table from the input file
      * <p>
      * NZ data files have data format: lon|lat|value
      * UCERF3 data format:  lat|lon|value
      */
-    protected Table<Integer, Integer, Double> initTable() {
+    protected Table<Integer, Integer, Double> initTable(BufferedReader br) throws IOException {
 
         Table<Integer, Integer, Double> table = HashBasedTable.create();
-        String lon, lat;
-        Integer lonkey, latkey;
-        Double val;
-        Double totalValue = 0.0;
 
-        try {
-            String DATA_DIR = "seismicityGrids";
-            BufferedReader br = new BufferedReader(NZSHM22_DataUtils.getReader(DATA_DIR, filename));
-            Iterator<String> dat;
-            String line = br.readLine();
-            while (line != null) {
-                dat = SPLIT.split(line).iterator();
-                lon = dat.next();
-                lat = dat.next();
-                lonkey = FN_STR_TO_KEY.apply(lon);
-                latkey = FN_STR_TO_KEY.apply(lat);
-                val = FN_STR_TO_DBL.apply(dat.next());
-                //Guards
-                Location loc = new Location(Double.parseDouble(lat), Double.parseDouble(lon));
-//                if (!region.contains(loc))
-//                    System.out.println("location " + loc + " is not within bounds of expected region");
-                if (table.contains(latkey, lonkey))
-                    System.out.println("location " + loc + " is already defined in table, input data duplication!!");
-                totalValue += val;
-                table.put(latkey, lonkey, val);
-                line = br.readLine();
-            }
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
+        String line = br.readLine();
+        while (line != null) {
+            Iterator<String> dat = SPLIT.split(line).iterator();
+            String lon = dat.next();
+            String lat = dat.next();
+            Integer lonkey = FN_STR_TO_KEY.apply(lon);
+            Integer latkey = FN_STR_TO_KEY.apply(lat);
+            Double val = FN_STR_TO_DBL.apply(dat.next());
+            //Guard
+            Location loc = new Location(Double.parseDouble(lat), Double.parseDouble(lon));
+            if (table.contains(latkey, lonkey))
+                System.out.println("location " + loc + " is already defined in table, input data duplication!!");
+            table.put(latkey, lonkey, val);
+            line = br.readLine();
         }
-        System.out.println("total in " + filename + " = " + totalValue);
         return table;
+    }
+
+    /**
+     * Applies the transformer function to each location/value pair and sets the new value at the location.
+     * @param transformer a function that takes a location and a value and returns a new value
+     * @return a new NZSHM22_GriddedData instance
+     */
+    public NZSHM22_GriddedData transform(BiFunction<Location, Double, Double> transformer) {
+        Table<Integer, Integer, Double> result = HashBasedTable.create();
+        for (Table.Cell<Integer, Integer, Double> cell : table.cellSet()) {
+            double lon = FN_KEY_TO_DBL.apply(cell.getColumnKey());
+            double lat = FN_KEY_TO_DBL.apply(cell.getRowKey());
+            Location location = new Location(lat, lon);
+            result.put(cell.getRowKey(), cell.getColumnKey(), transformer.apply(location, cell.getValue()));
+        }
+        return new NZSHM22_GriddedData(result);
     }
 
     /**
@@ -109,14 +150,10 @@ public class NZSHM22_GriddedData {
      */
     public double[] getValues(GriddedRegion region) {
         double[] values = new double[region.getNodeCount()];
-        double nullval = 0.0d; //
-        // double nullval = Double.NaN; //	maybe try 0 rather than NaN for nulls ...
         int i = 0;
         for (Location loc : region) {
             Double value = getValue(loc);
-//			if (value == null )
-//				System.out.println("gridded region location "  + loc + " was not found in seismicity table");
-            values[i++] = (value == null) ? nullval : value;
+            values[i++] = (value == null) ? 0 : value;
         }
         return values;
     }
@@ -180,32 +217,6 @@ public class NZSHM22_GriddedData {
                 setValue(loc, getValue(loc) / fraction);
             }
         }
-    }
-
-    /**
-     * table entries should be aligned with a grid location within the region
-     * so there should be no 'leftover' table entries printed by this method
-     * <p>
-     *   TODO: add this as a test case and identifyt the root cause.
-     *   Maybe this is to do with the offset grid locations provided bu Sepi
-     *   and how these do/don't align to the actual GriddedRegion layout.
-     *
-     * @param region
-     */
-    private void missingTableEntries(GriddedRegion region) {
-        for (Location loc : region) {
-            this.table.remove(
-                    FN_DBL_TO_KEY.apply(loc.getLatitude()),
-                    FN_DBL_TO_KEY.apply(loc.getLongitude()));
-        }
-
-        double tot = 0.0;
-        for (Integer rowkey : this.table.rowKeySet()) {
-            for (Double x : table.row(rowkey).values()) {
-                tot += x;
-            }
-        }
-        System.out.println("total missing = " + tot);
     }
 
 }

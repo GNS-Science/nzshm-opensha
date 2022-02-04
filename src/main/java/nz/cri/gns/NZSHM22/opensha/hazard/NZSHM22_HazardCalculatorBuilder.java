@@ -255,7 +255,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 //        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
 //                .setLinear(true)
 //                .setForecastTimespan(50);
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy(1).zip")
+        builder.setSolutionFile("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\PolygonisedCrustalInversionSolution.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
