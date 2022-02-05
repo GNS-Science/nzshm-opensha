@@ -21,7 +21,12 @@ import java.util.Map;
 public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     GEOLOGIC_SLIP_1_0("NZNSHM_paleotimings_GEOLOGICsliprates_all_1.0.csv"),
-    GEODETIC_SLIP_1_0("NZNSHM_paleotimings_GEODETICsliprates_1.0.csv");
+    GEODETIC_SLIP_1_0("NZNSHM_paleotimings_GEODETICsliprates_1.0.csv"),
+
+    GEODETIC_SLIP_PRIOR_4FEB("NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_4feb.csv"),
+    GEOLOGIC_SLIP_4FEB("NZNSHM_paleotimings_GEODETICsliprates_4feb.csv"),
+    GEODETIC_SLIP_4FEB("NZNSHM_paleotimings_GEOLOGICsliprates_4feb.csv");
+
 
     final static String RESOURCE_PATH = "/paleoRates/";
 
