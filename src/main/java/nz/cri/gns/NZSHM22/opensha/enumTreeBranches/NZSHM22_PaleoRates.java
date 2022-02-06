@@ -20,22 +20,36 @@ import java.util.Map;
 
 public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
-    GEOLOGIC_SLIP_1_0("NZNSHM_paleotimings_GEOLOGICsliprates_all_1.0.csv"),
-    GEODETIC_SLIP_1_0("NZNSHM_paleotimings_GEODETICsliprates_1.0.csv"),
+    GEOLOGIC_SLIP_1_0(
+    		"Geologic v1",
+    		"NZNSHM_paleotimings_GEOLOGICsliprates_all_1.0.csv"),
+    
+    GEODETIC_SLIP_1_0(
+    		"Geodetic v1",
+    		"NZNSHM_paleotimings_GEODETICsliprates_1.0.csv"),
 
-    GEODETIC_SLIP_PRIOR_4FEB("NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_4feb.csv"),
-    GEOLOGIC_SLIP_4FEB("NZNSHM_paleotimings_GEODETICsliprates_4feb.csv"),
-    GEODETIC_SLIP_4FEB("NZNSHM_paleotimings_GEOLOGICsliprates_4feb.csv");
-
+    GEODETIC_SLIP_PRIOR_4FEB(
+    		"Geodetic with Geologic prior timing, 4 Feb 2022",
+    		"NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_4feb.csv"),
+    
+    GEODETIC_SLIP_4FEB(
+    		"Geodetic timing, 4 Feb 2022",
+    		"NZNSHM_paleotimings_GEODETICsliprates_4feb.csv"),
+    
+    GEOLOGIC_SLIP_4FEB(
+    		"Geologic timing, 4 Feb 2022",
+    		"NZNSHM_paleotimings_GEOLOGICsliprates_4feb.csv");
 
     final static String RESOURCE_PATH = "/paleoRates/";
 
+    final String description;
     final String fileName;
 
-    NZSHM22_PaleoRates(String fileName) {
+    NZSHM22_PaleoRates(String description, String fileName) {
+        this.description = description;
         this.fileName = fileName;
-    }
-
+    }    
+    
     InputStream getStream(String fileName) {
         return getClass().getResourceAsStream(RESOURCE_PATH + fileName);
     }
