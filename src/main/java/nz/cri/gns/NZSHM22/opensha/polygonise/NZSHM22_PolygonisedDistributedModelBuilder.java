@@ -8,6 +8,8 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.DoubleFunction;
+import java.util.function.Function;
 
 public class NZSHM22_PolygonisedDistributedModelBuilder {
 
@@ -15,6 +17,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
     protected double rateWeight;
     protected double pdfWeight;
     protected FaultSystemSolution solution;
+    protected Function<Double,Double> weightingFunction = getWeightingFunction(WeightingFunctionType.LINEAR, null);
 
     public NZSHM22_PolygonisedDistributedModelBuilder() {
     }
@@ -29,9 +32,10 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
     protected void scalePDF(FaultSystemSolution solution, double weight) {
         NZSHM22_LogicTreeBranch branch = solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
-        FaultSectionPolygonWeights weights = new FaultSectionPolygonWeights(solution);
+        FaultSectionPolygonWeights polygonWeights = new FaultSectionPolygonWeights(solution);
 
-        NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform((location, value) -> value * weight * weights.getWeight(location));
+        NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform(
+                (location, value) -> value * weight * polygonWeights.getWeight(location, weightingFunction));
 
         solution.addModule(new NZSHM22_PolygonisedDistributedModel(griddedData));
         branch.clearValue(NZSHM22_SpatialSeisPDF.class);
@@ -60,12 +64,33 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         solution.write(new File(fileName));
     }
 
+    protected Function<Double, Double> getWeightingFunction(WeightingFunctionType type, double[] parameters) {
+        switch (type) {
+            case LINEAR:
+                return weight -> weight;
+            default:
+                throw new IllegalArgumentException("Unsupported WeightingFunctionType " + type.name());
+        }
+    }
+
+    /**
+     * The weighting function is linear by default.
+     * @param type
+     * @param parameters
+     * @return
+     */
+    public NZSHM22_PolygonisedDistributedModelBuilder setWeightingFunction(String type, double... parameters){
+        weightingFunction = getWeightingFunction(WeightingFunctionType.valueOf(type), parameters);
+        return this;
+    }
+
     public static void main(String[] args) throws IOException {
         new NZSHM22_PolygonisedDistributedModelBuilder()
-                .setSolution("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\CrustalInversionSolution.zip")
+                .setSolution("TEST\\inversions\\CrustalInversionSolution.zip")
                 .setWeights(0.8, 0.2)
+                .setWeightingFunction("LINEAR")
                 .build()
-                .save("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\PolygonisedCrustalInversionSolution.zip");
+                .save("TEST\\inversions\\PolygonisedCrustalInversionSolution.zip");
     }
 
 }

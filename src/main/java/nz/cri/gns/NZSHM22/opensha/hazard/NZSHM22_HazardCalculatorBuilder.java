@@ -252,10 +252,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-//        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
-//                .setLinear(true)
-//                .setForecastTimespan(50);
-        builder.setSolutionFile("C:\\Code\\NZSHM\\nzshm-opensha\\TEST\\inversions\\PolygonisedCrustalInversionSolution.zip")
+        builder.setSolutionFile("TEST\\inversions\\PolygonisedCrustalInversionSolution.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
