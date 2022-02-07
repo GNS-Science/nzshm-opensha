@@ -135,7 +135,7 @@ public class FaultSectionPolygonWeights {
      * @param location the location
      * @return the weight for the location
      */
-    public double getWeight(Location location, Function<Double, Double> weightingFunction){
+    public double getWeight(Location location){
         double value = 0;
         int count = 0;
         for (Section section : sectionCache) {
@@ -149,7 +149,7 @@ public class FaultSectionPolygonWeights {
         }
 
         if (count > 0) {
-            return weightingFunction.apply(value / count);
+            return value / count;
         } else {
             return 1;
         }

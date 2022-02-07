@@ -35,7 +35,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         FaultSectionPolygonWeights polygonWeights = new FaultSectionPolygonWeights(solution);
 
         NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform(
-                (location, value) -> value * weight * polygonWeights.getWeight(location, weightingFunction));
+                (location, value) -> value * weight * weightingFunction.apply(polygonWeights.getWeight(location)));
 
         solution.addModule(new NZSHM22_PolygonisedDistributedModel(griddedData));
         branch.clearValue(NZSHM22_SpatialSeisPDF.class);
