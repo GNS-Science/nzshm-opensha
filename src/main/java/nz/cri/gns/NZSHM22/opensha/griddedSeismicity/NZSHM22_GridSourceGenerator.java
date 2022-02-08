@@ -86,10 +86,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		mfdMax = realOffFaultMFD.getMaxX();
 		mfdNum = realOffFaultMFD.size();
 
-//		polyMgr = FaultPolyMgr.create(fss.getFaultSectionDataList(), 12d);
-		GriddedSeisUtils gridSeisUtils = new GriddedSeisUtils(ifss.getRupSet().getFaultSectionDataList(),
-				srcSpatialPDF, ifss.getRupSet().getModule(PolygonFaultGridAssociations.class));
-		polyMgr = gridSeisUtils.getPolyMgr();
+		polyMgr = ifss.getRupSet().getModule(PolygonFaultGridAssociations.class);
 
 		System.out.println("   initSectionMFDs() ...");
 		initSectionMFDs(ifss);

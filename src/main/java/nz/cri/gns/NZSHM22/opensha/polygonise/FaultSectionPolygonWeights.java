@@ -130,7 +130,7 @@ public class FaultSectionPolygonWeights {
      * Returns how close the location is to a fault trace within section polygons.
      * Returns 0 if the location is exactly on the trace for each polygon it is in.
      * Returns 1 if the location is exactly on the polygon border for each polygon it is in.
-     * Returns 1 if the location is not inside a polygon.
+     * Returns -1 if the location is not inside a polygon.
      * If the location is in more than one polygon, the weights are averaged.
      * @param location the location
      * @return the weight for the location
@@ -151,7 +151,7 @@ public class FaultSectionPolygonWeights {
         if (count > 0) {
             return value / count;
         } else {
-            return 1;
+            return -1;
         }
     }
 

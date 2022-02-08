@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.BiFunction;
 
 import com.google.common.base.CharMatcher;
@@ -17,7 +16,6 @@ import com.google.common.collect.Table;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
-import org.opensha.commons.util.modules.helpers.FileBackedModule;
 
 /**
  * Gridded data. Copied and modifed from UCERF3's GridReader

@@ -17,7 +17,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
     protected double rateWeight;
     protected double pdfWeight;
     protected FaultSystemSolution solution;
-    protected Function<Double,Double> weightingFunction = getWeightingFunction(WeightingFunctionType.LINEAR, null);
+    protected Function<Double, Double> weightingFunction = getWeightingFunction(WeightingFunctionType.LINEAR, null);
 
     public NZSHM22_PolygonisedDistributedModelBuilder() {
     }
@@ -35,7 +35,14 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         FaultSectionPolygonWeights polygonWeights = new FaultSectionPolygonWeights(solution);
 
         NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform(
-                (location, value) -> value * weight * weightingFunction.apply(polygonWeights.getWeight(location)));
+                (location, value) ->
+                {
+                    double polygonWeight = polygonWeights.getWeight(location);
+                    if (polygonWeight >= 0) {
+                        return value * weight * weightingFunction.apply(polygonWeight);
+                    } else
+                        return value;
+                });
 
         solution.addModule(new NZSHM22_PolygonisedDistributedModel(griddedData));
         branch.clearValue(NZSHM22_SpatialSeisPDF.class);
@@ -75,11 +82,12 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
 
     /**
      * The weighting function is linear by default.
+     *
      * @param type
      * @param parameters
      * @return
      */
-    public NZSHM22_PolygonisedDistributedModelBuilder setWeightingFunction(String type, double... parameters){
+    public NZSHM22_PolygonisedDistributedModelBuilder setWeightingFunction(String type, double... parameters) {
         weightingFunction = getWeightingFunction(WeightingFunctionType.valueOf(type), parameters);
         return this;
     }
