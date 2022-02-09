@@ -10,33 +10,28 @@ import java.util.List;
 public class Polygoniser {
 
     FaultSystemSolution solution;
-    FaultSectionPolygonWeights polygonWeights;
+    List<FaultSectionPolygonWeights> polygonWeights;
     NZSHM22_GriddedData griddedData;
     List<NZSHM22_GriddedData.GridPoint> gridPoints;
 
-    public Polygoniser(FaultSystemSolution solution, NZSHM22_GriddedData griddedData){
+    public Polygoniser(FaultSystemSolution solution, NZSHM22_GriddedData griddedData) {
         this.solution = solution;
         this.griddedData = griddedData;
-        this.gridPoints = griddedData.getPoints();
-        polygonWeights = new FaultSectionPolygonWeights(solution);
+        gridPoints = griddedData.getPoints();
+        polygonWeights = FaultSectionPolygonWeights.fromSolution(solution);
     }
 
-    public void polygonise(FaultSection section){
-        FaultSectionPolygonWeights.Section polygonSection = polygonWeights.get(section.getSectionId());
+    public void polygonise(FaultSectionPolygonWeights section) {
         List<NZSHM22_GriddedData.GridPoint> sectionPoints = new ArrayList<>();
-        for(NZSHM22_GriddedData.GridPoint point : gridPoints){
-            if(polygonSection.contains(point.getLocation())){
-                sectionPoints.add(point);
+        for (NZSHM22_GriddedData.GridPoint point : gridPoints) {
+            double weight = section.polygonWeight(point);
+            if (weight != -1) {
+
             }
         }
 
 
-
-
-
     }
-
-
 
 
 }

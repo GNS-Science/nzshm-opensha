@@ -162,21 +162,16 @@ public class NZSHM22_GriddedData {
         return values;
     }
 
-    public class GridPoint {
+    public static class GridPoint extends Location{
         int latKey;
         int lonKey;
         double value;
-        Location location;
 
         public GridPoint(int latKey, int lonKey, double value) {
+            super(FN_KEY_TO_DBL.apply(latKey), FN_KEY_TO_DBL.apply(lonKey));
             this.latKey = latKey;
             this.lonKey = lonKey;
             this.value = value;
-            this.location = new Location(FN_KEY_TO_DBL.apply(latKey), FN_KEY_TO_DBL.apply(lonKey));
-        }
-
-        public Location getLocation(){
-            return location;
         }
 
         public double getValue(){
