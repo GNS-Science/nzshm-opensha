@@ -31,7 +31,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
     protected void scalePDF(FaultSystemSolution solution, double weight) {
         NZSHM22_LogicTreeBranch branch = solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
-        FaultPolygon polygonWeights = new FaultPolygon(solution);
+        FaultSectionPolygonWeights polygonWeights = new FaultSectionPolygonWeights(solution);
 
         NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform(
                 (location, value) ->
