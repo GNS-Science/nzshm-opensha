@@ -31,7 +31,10 @@ public class FaultSectionPolygonWeights {
         for (Location l : originalPoly.getBorder()) {
             polygon.add(geo(l));
         }
-        polygon.add(geo(originalPoly.getBorder().first()));
+        // close the polygon if necessary
+        if(!originalPoly.getBorder().first().equals(originalPoly.getBorder().last())) {
+            polygon.add(geo(originalPoly.getBorder().first()));
+        }
     }
 
     public boolean contains(Location l) {
