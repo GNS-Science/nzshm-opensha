@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.polygonise;
 
 import com.bbn.openmap.geo.Geo;
 import com.bbn.openmap.geo.Intersection;
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.geo.*;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
@@ -12,22 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FaultSectionPolygonWeights {
-
-    protected FaultSystemSolution solution;
-    protected Map<Integer, Section> sectionCache;
-
-    /**
-     * Creates an object that can calculate FaultSection polygon weights for grid points on the specified solution.
-     * Uses the OpenMap library internally.
-     * Use getWeight(Location) to calculate the weight for a location.
-     *
-     * @param solution
-     */
-    public FaultSectionPolygonWeights(FaultSystemSolution solution) {
-        this.solution = solution;
-        buildCache();
-    }
+/**
+ * A FaultPolygon represented in OpenMap geometry so that we can use OpenMap operations on it
+ */
+public class FaultPolygon {
 
     /**
      * Convenience method: turns opensha Location into OpenMap Geo
@@ -39,20 +28,15 @@ public class FaultSectionPolygonWeights {
         return new Geo(l.lat, l.lon);
     }
 
-    /**
-     * A FaultSection represented in OpenMap geometry so that we can use OpenMap operations on it
-     */
-    public class Section {
-        public FaultSection section;
+
         public List<Geo> trace;
         public List<Geo> polygon;
         public Region originalPoly;
 
-        public Section(FaultSection section) {
-            this.section = section;
+        public FaultPolygon(NZSHM22_FaultPolyMgr polyMgr, int faultId) {
             trace = new ArrayList<>();
             polygon = new ArrayList<>();
-            for (Location l : section.getFaultTrace()) {
+            for (Location l : polym) {
                 trace.add(geo(l));
             }
             originalPoly = solution.getRupSet().getModule(PolygonFaultGridAssociations.class).getPoly(section.getSectionId());

@@ -8,7 +8,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.function.DoubleFunction;
 import java.util.function.Function;
 
 public class NZSHM22_PolygonisedDistributedModelBuilder {
@@ -32,7 +31,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
     protected void scalePDF(FaultSystemSolution solution, double weight) {
         NZSHM22_LogicTreeBranch branch = solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
-        FaultSectionPolygonWeights polygonWeights = new FaultSectionPolygonWeights(solution);
+        FaultPolygon polygonWeights = new FaultPolygon(solution);
 
         NZSHM22_GriddedData griddedData = spatialSeisPDF.getGriddedData().transform(
                 (location, value) ->

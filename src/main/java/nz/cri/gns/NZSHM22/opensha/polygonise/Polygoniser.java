@@ -10,7 +10,7 @@ import java.util.List;
 public class Polygoniser {
 
     FaultSystemSolution solution;
-    FaultSectionPolygonWeights polygonWeights;
+    FaultPolygon polygonWeights;
     NZSHM22_GriddedData griddedData;
     List<NZSHM22_GriddedData.GridPoint> gridPoints;
 
@@ -18,11 +18,11 @@ public class Polygoniser {
         this.solution = solution;
         this.griddedData = griddedData;
         this.gridPoints = griddedData.getPoints();
-        polygonWeights = new FaultSectionPolygonWeights(solution);
+        polygonWeights = new FaultPolygon(solution);
     }
 
     public void polygonise(FaultSection section){
-        FaultSectionPolygonWeights.Section polygonSection = polygonWeights.get(section.getSectionId());
+        FaultPolygon.Section polygonSection = polygonWeights.get(section.getSectionId());
         List<NZSHM22_GriddedData.GridPoint> sectionPoints = new ArrayList<>();
         for(NZSHM22_GriddedData.GridPoint point : gridPoints){
             if(polygonSection.contains(point.getLocation())){
