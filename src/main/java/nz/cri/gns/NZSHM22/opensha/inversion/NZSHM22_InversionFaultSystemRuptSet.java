@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
@@ -107,7 +108,13 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
 				@Override
 				public PolygonFaultGridAssociations call() throws Exception {
-					return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
+					NZSHM22_LogicTreeBranch branch =  NZSHM22_InversionFaultSystemRuptSet.this.branch;
+					NZSHM22_FaultPolyParameters parameters = branch.getValue(NZSHM22_FaultPolyParameters.class);
+					if (parameters == null) {
+						parameters = new NZSHM22_FaultPolyParameters();
+						branch.setValue(parameters);
+					}
+					return NZSHM22_FaultPolyMgr.create(getFaultSectionDataList(), parameters.getBufferSize(), parameters.getMinBufferSize(), new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 				}
 			}, PolygonFaultGridAssociations.class);
 

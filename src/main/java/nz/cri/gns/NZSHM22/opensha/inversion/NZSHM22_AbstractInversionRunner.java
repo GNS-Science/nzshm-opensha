@@ -105,6 +105,23 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
 
+	protected double bufferSize = 12;
+	protected double minBufferSize = 0;
+
+	public double getPolyBufferSize() {
+		return bufferSize;
+	}
+
+	public NZSHM22_AbstractInversionRunner setPolyBufferSize(double bufferSize, double minBuffersize) {
+		this.bufferSize = bufferSize;
+		this.minBufferSize = minBuffersize;
+		return this;
+	}
+
+	public double getMinPolyBufferSize() {
+		return minBufferSize;
+	}
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -394,6 +411,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			branch.clearValue(NZSHM22_SpatialSeisPDF.class);
 			branch.setValue(spatialSeisPDF);
 		}
+		NZSHM22_FaultPolyParameters polyParams = new NZSHM22_FaultPolyParameters();
+		polyParams.setMinBufferSize(minBufferSize);
+		polyParams.setBufferSize(bufferSize);
+		branch.clearValue(NZSHM22_FaultPolyParameters.class);
+		branch.setValue(polyParams);
 	}
 
 	public NZSHM22_AbstractInversionRunner setDeformationModel(String modelName){

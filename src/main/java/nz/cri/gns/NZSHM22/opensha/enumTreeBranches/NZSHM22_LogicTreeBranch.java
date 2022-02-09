@@ -26,6 +26,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         levels.add(LogicTreeLevel.forEnumUnchecked(SlipAlongRuptureModels.class, SlipAlongRuptureModels.UNIFORM.getBranchLevelName(), SlipAlongRuptureModels.UNIFORM.getShortBranchLevelName()));
         levels.add(LogicTreeLevel.forEnumUnchecked(InversionModels.class, InversionModels.CHAR_CONSTRAINED.getBranchLevelName(), InversionModels.CHAR_CONSTRAINED.getShortBranchLevelName()));
         levels.add(new NZSHM22_ScalingRelationshipNode.Level());
+        levels.add(new NZSHM22_FaultPolyParameters.Level());
         levels.add(NZSHM22_DeformationModel.level());
         return levels;
     }
