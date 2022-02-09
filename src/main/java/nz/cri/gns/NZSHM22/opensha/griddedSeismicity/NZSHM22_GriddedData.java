@@ -1,13 +1,14 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.BiFunction;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Splitter;
+import com.bbn.openmap.omGraphics.grid.GridData;
+import com.google.common.base.*;
+import org.jpedal.fonts.tt.Loca;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 
@@ -16,6 +17,7 @@ import com.google.common.collect.Table;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
+import org.opensha.commons.geo.Region;
 
 /**
  * Gridded data. Copied and modifed from UCERF3's GridReader
@@ -25,6 +27,8 @@ public class NZSHM22_GriddedData {
 
     protected static final Splitter SPLIT;
 
+    protected static final double STEP = 10;
+    protected static final double GRID_SPACING = 1.0 / STEP;
     protected static final Function<String, Double> FN_STR_TO_DBL;
     protected static final Function<Double, Integer> FN_DBL_TO_KEY;
     protected static final Function<String, Integer> FN_STR_TO_KEY;
@@ -53,7 +57,7 @@ public class NZSHM22_GriddedData {
         }
     }
 
-    protected NZSHM22_GriddedData(Table<Integer, Integer, Double> table){
+    protected NZSHM22_GriddedData(Table<Integer, Integer, Double> table) {
         this.table = table;
     }
 
@@ -85,14 +89,14 @@ public class NZSHM22_GriddedData {
     private static class FnDblToKey implements Function<Double, Integer> {
         @Override
         public Integer apply(Double d) {
-            return (int) Math.round(d * 10);
+            return (int) Math.round(d * STEP);
         }
     }
 
     private static class FnKeyToDbl implements Function<Integer, Double> {
         @Override
         public Double apply(Integer k) {
-            return 0.1 * k;
+            return k * GRID_SPACING;
         }
     }
 
@@ -126,6 +130,7 @@ public class NZSHM22_GriddedData {
 
     /**
      * Applies the transformer function to each location/value pair and sets the new value at the location.
+     *
      * @param transformer a function that takes a location and a value and returns a new value
      * @return a new NZSHM22_GriddedData instance
      */
@@ -147,6 +152,7 @@ public class NZSHM22_GriddedData {
      * @return all required values
      */
     public double[] getValues(GriddedRegion region) {
+        Preconditions.checkArgument(region.getSpacing() == GRID_SPACING);
         double[] values = new double[region.getNodeCount()];
         int i = 0;
         for (Location loc : region) {
@@ -154,6 +160,36 @@ public class NZSHM22_GriddedData {
             values[i++] = (value == null) ? 0 : value;
         }
         return values;
+    }
+
+    public class GridPoint {
+        int latKey;
+        int lonKey;
+        double value;
+        Location location;
+
+        public GridPoint(int latKey, int lonKey, double value) {
+            this.latKey = latKey;
+            this.lonKey = lonKey;
+            this.value = value;
+            this.location = new Location(FN_KEY_TO_DBL.apply(latKey), FN_KEY_TO_DBL.apply(lonKey));
+        }
+
+        public Location getLocation(){
+            return location;
+        }
+
+        public double getValue(){
+            return value;
+        }
+    }
+
+    public List<GridPoint> getPoints() {
+        List<GridPoint> points = new ArrayList<>();
+        for(Table.Cell<Integer, Integer, Double> cell : table.cellSet()){
+            points.add(new GridPoint(cell.getRowKey(), cell.getColumnKey(), cell.getValue()));
+        }
+        return points;
     }
 
     /**

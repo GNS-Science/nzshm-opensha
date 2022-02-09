@@ -8,27 +8,30 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssoc
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
 
 public class FaultSectionPolygonWeights {
 
     protected FaultSystemSolution solution;
-    protected List<Section> sectionCache;
+    protected Map<Integer, Section> sectionCache;
 
     /**
      * Creates an object that can calculate FaultSection polygon weights for grid points on the specified solution.
      * Uses the OpenMap library internally.
      * Use getWeight(Location) to calculate the weight for a location.
+     *
      * @param solution
      */
-    public FaultSectionPolygonWeights(FaultSystemSolution solution){
+    public FaultSectionPolygonWeights(FaultSystemSolution solution) {
         this.solution = solution;
         buildCache();
     }
 
     /**
      * Convenience method: turns opensha Location into OpenMap Geo
+     *
      * @param l
      * @return
      */
@@ -39,7 +42,7 @@ public class FaultSectionPolygonWeights {
     /**
      * A FaultSection represented in OpenMap geometry so that we can use OpenMap operations on it
      */
-    protected class Section {
+    public class Section {
         public FaultSection section;
         public List<Geo> trace;
         public List<Geo> polygon;
@@ -99,16 +102,21 @@ public class FaultSectionPolygonWeights {
     }
 
     protected void buildCache() {
-        sectionCache = new ArrayList<>();
+        sectionCache = new HashMap<>();
         for (FaultSection section : solution.getRupSet().getFaultSectionDataList()) {
-            sectionCache.add(new Section(section));
+            sectionCache.put(section.getSectionId(), new Section(section));
         }
+    }
+
+    public Section get(int sectionId){
+        return sectionCache.get(sectionId);
     }
 
     /**
      * Returns the intersection of a line segment and a list of segments.
      * Used to calculate the intersection of a line segment with a fault trace.
      * returns null if no intersection.
+     *
      * @param p1
      * @param p2
      * @param segments
@@ -126,22 +134,32 @@ public class FaultSectionPolygonWeights {
         return null;
     }
 
+    public double getWeight(Location location, int sectionId) {
+        Section section = sectionCache.get(sectionId);
+        if (section != null && section.contains(location)) {
+            return section.polygonWeight(location);
+        } else {
+            return -1;
+        }
+    }
+
     /**
      * Returns how close the location is to a fault trace within section polygons.
      * Returns 0 if the location is exactly on the trace for each polygon it is in.
      * Returns 1 if the location is exactly on the polygon border for each polygon it is in.
      * Returns -1 if the location is not inside a polygon.
      * If the location is in more than one polygon, the weights are averaged.
+     *
      * @param location the location
      * @return the weight for the location
      */
-    public double getWeight(Location location){
+    public double getWeight(Location location) {
         double value = 0;
         int count = 0;
-        for (Section section : sectionCache) {
+        for (Section section : sectionCache.values()) {
             if (section.contains(location)) {
                 double weight = section.polygonWeight(location);
-                if(weight != -1) {
+                if (weight != -1) {
                     value += weight;
                     count++;
                 }
