@@ -111,7 +111,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                 inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
                 totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ,
-                mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower);
+                mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
 
        inversionConfiguration
                .setPaleoRateConstraintWt(paleoRateConstraintWt)
@@ -173,13 +173,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setupCrustal(4, 4.1);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .setInitialSolution("C:\\tmp\\rates.csv")
+              //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setSlipRateConstraint("BOTH", 1000, 1000)
+            //    .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2))
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
