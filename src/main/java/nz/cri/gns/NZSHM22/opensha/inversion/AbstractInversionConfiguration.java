@@ -143,11 +143,13 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 		this.slipRateUncertaintyConstraintScalingFactor = slipRateUncertaintyConstraintScalingFactor;
 		return this;
 	}	
-	
+
+	@Deprecated
 	public double getMinimizationConstraintWt() {
 		return minimizationConstraintWt;
 	}
 
+	@Deprecated
 	public AbstractInversionConfiguration setMinimizationConstraintWt(double relativeMinimizationConstraintWt) {
 		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
 		return this;

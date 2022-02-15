@@ -97,7 +97,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 			double totalRateM5_Sans, double totalRateM5_TVZ,
 			double bValue_Sans, double bValue_TVZ, double mfdTransitionMag,
 			double mMin_Sans, double mMin_TVZ,
-			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower) {
+			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
+			boolean excludeMinMag) {
 
 		/*
 		 * ******************************************* COMMON TO ALL MODELS
@@ -198,10 +199,14 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 				.setMfdEqualityConstraints(mfdEqualityConstraints)
 				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Rate Minimization config
-				.setMinimizationConstraintWt(minimizationConstraintWt)
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
 				.setMinimumRuptureRateBasis(minimumRuptureRateBasis)
 				.setInitialRupModel(initialRupModel);
+
+		// ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned constraint
+		if (!excludeMinMag) {
+			newConfig.setMinimizationConstraintWt(minimizationConstraintWt);
+		}
 
 		if (mfdUncertaintyWeightedConstraintWt > 0.0 ) {
 			newConfig

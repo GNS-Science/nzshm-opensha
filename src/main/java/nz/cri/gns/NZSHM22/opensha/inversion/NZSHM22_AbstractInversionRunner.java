@@ -9,6 +9,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
@@ -96,6 +97,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
+	protected boolean excludeRupturesBelowMinMag = false;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -294,6 +296,17 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
+	 * Exclude ruptures that are below MinMag. True by default.
+	 * @param excludeRupturesBelowMinMag
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setExcludeRupturesBelowMinMag(boolean excludeRupturesBelowMinMag){
+		this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
+		return this;
+	}
+
+
+	/**
 	 * @param inputGen
 	 * @return
 	 */
@@ -476,6 +489,16 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		Preconditions.checkState(regime == scalingRegime, "Regime of rupture set and scaling relationship do not match.");
 	}
 
+	private IntegerSampler createSampler() {
+		List<Integer> belowMinIndexes = new ArrayList<>();
+		for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+			if (rupSet.isRuptureBelowSectMinMag(r)) {
+				belowMinIndexes.add(r);
+			}
+		}
+		return new IntegerSampler.ExclusionIntegerSampler(0, rupSet.getNumRuptures(), belowMinIndexes);
+	}
+
 	/**
 	 * Runs the inversion on the specified rupture set.
 	 * 
@@ -553,6 +576,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
 		if (!(this.coolingSchedule == null))
 			tsa.setCoolingFunc(this.coolingSchedule);
+
+		if(excludeRupturesBelowMinMag){
+			tsa.setRuptureSampler(createSampler());
+		}
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
