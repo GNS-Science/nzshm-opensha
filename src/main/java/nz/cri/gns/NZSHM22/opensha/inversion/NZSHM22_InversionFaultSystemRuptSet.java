@@ -1,29 +1,20 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
-import org.opensha.commons.geo.GriddedRegion;
-import org.opensha.commons.geo.Region;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
-import scratch.UCERF3.utils.UCERF3_Observed_MFD_Fetcher;
 
-import java.awt.geom.Area;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.function.IntPredicate;
 
 /**
  * This class provides specialisatations needed to override some UCERF3 defaults
@@ -39,6 +30,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	protected NZSHM22_LogicTreeBranch branch;
 	protected RegionalRupSetData sansTvz;
 	protected RegionalRupSetData tvz;
+	boolean[] isRupBelowMinMagsForSects;
 
     public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         super(applyDeformationModel(rupSet, branch), branch.getU3Branch());
@@ -140,6 +132,28 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	public RegionalRupSetData getSansTvzRegionalData(){
 		return sansTvz;
+	}
+
+	/**
+	 * This tells whether the given rup is below any of the final minimum magnitudes
+	 * of the sections utilized by the rup.  Actually, the test is really whether the
+	 * mag falls below the lower bin edge implied by the section min mags; see doc for
+	 * computeWhichRupsFallBelowSectionMinMags().
+	 * @param rupIndex
+	 * @return
+	 */
+	@Override
+	public synchronized boolean isRuptureBelowSectMinMag(int rupIndex) {
+		if(isRupBelowMinMagsForSects == null) {
+			ModSectMinMags minMagsModule = getModule(ModSectMinMags.class);
+			isRupBelowMinMagsForSects = NZSHM22_FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(this, minMagsModule);
+		}
+		return isRupBelowMinMagsForSects[rupIndex];
+	}
+
+	@Override
+	public double getUpperMagForSubseismoRuptures(int sectIndex) {
+		throw new RuntimeException("Not supported, don't use this!");
 	}
 
 }

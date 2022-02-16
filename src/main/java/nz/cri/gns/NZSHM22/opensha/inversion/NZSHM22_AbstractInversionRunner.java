@@ -398,6 +398,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			double mfdUncertaintyWeightedConstraintPower) {
 		Preconditions.checkState(this.mfdEqualityConstraintWt == 0);
 		Preconditions.checkState(this.mfdInequalityConstraintWt == 0);
+		Preconditions.checkArgument(
+				0 <= mfdUncertaintyWeightedConstraintPower && mfdUncertaintyWeightedConstraintPower <= 1,
+				"mfdUncertaintyWeightedConstraintPower must be not less than 0 and not greater than 1.");
 		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
 		this.mfdUncertaintyWeightedConstraintPower = mfdUncertaintyWeightedConstraintPower;
 		return this;
