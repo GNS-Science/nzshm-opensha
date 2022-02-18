@@ -11,6 +11,8 @@ import java.util.List;
 
 public class MFDManipulation {
 
+    public final static double FIRST_WEIGHT_POWER_MAG = 7.0;
+
     /**
      * This method returns the input MFD constraint
      * restricted between minMag and maxMag. WARNING! This doesn't interpolate. For
@@ -66,8 +68,10 @@ public class MFDManipulation {
     }
 
     public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double power) {
+        Preconditions.checkArgument(minimize_below_mag <= FIRST_WEIGHT_POWER_MAG,
+                "minMag may not be above " + FIRST_WEIGHT_POWER_MAG);
         int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
-        double firstWeightPower = Math.pow(mfd.getY(minMagBin), power - 1);
+        double firstWeightPower = Math.pow(mfd.getY(mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG)), power - 1);
         EvenlyDiscretizedFunc stdDevs = new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);

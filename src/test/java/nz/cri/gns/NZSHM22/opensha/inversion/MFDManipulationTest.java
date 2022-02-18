@@ -55,7 +55,7 @@ public class MFDManipulationTest {
 
         UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(dist, 5.1, 0.5);
 
-        assertEquals(List.of(1.0, 1.0, 1.414213562373095, 1.7320508075688774, 2.0, 2.23606797749979, 2.449489742783178, 2.6457513110645903, 2.82842712474619, 3.0, 3.162277660168379, 3.3166247903554, 3.464101615137755, 3.605551275463989, 3.7416573867739413, 3.8729833462074166, 4.0, 4.123105625617661, 4.242640687119285, 4.358898943540673, 4.47213595499958, 4.58257569495584, 4.69041575982343, 4.795831523312719, 4.898979485566356, 5.0, 5.0990195135927845, 5.196152422706632, 5.2915026221291805, 5.385164807134504, 5.477225575051661, 5.5677643628300215, 5.65685424949238, 5.744562646538029, 5.8309518948453, 5.916079783099616, 6.0, 6.082762530298219, 6.164414002968976, 6.244997998398398),
+        assertEquals(List.of(1.0, 0.22360679774997896, 0.3162277660168379, 0.3872983346207417, 0.4472135954999579, 0.5, 0.5477225575051661, 0.5916079783099616, 0.6324555320336758, 0.6708203932499369, 0.7071067811865475, 0.7416198487095662, 0.7745966692414834, 0.8062257748298549, 0.8366600265340755, 0.8660254037844385, 0.8944271909999159, 0.9219544457292888, 0.9486832980505138, 0.9746794344808963, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
                 actual.getStdDevs().yValues());
 
         assertEquals(dist.xValues(), actual.xValues());
@@ -68,7 +68,7 @@ public class MFDManipulationTest {
             dist.set(i, i);
         }
 
-        actual = MFDManipulation.addMfdUncertainty(dist, 7.05, 0.5);
+        actual = MFDManipulation.addMfdUncertainty(dist, 7.0, 0.5);
 
         assertEquals(List.of(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
                 actual.getStdDevs().yValues());
@@ -77,27 +77,19 @@ public class MFDManipulationTest {
         assertEquals(dist.yValues(), actual.yValues());
     }
 
-    public static void testUncertaintyalignment(double minMag) {
-        IncrementalMagFreqDist filled = fillBelowDist(minMag, 0);
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, minMag - 1, 0.5);
-        int indexMinMag = filled.getClosestXIndex(minMag);
+    @Test
+    public void combinedUncertaintyFillBelowTest() {
+        IncrementalMagFreqDist filled = fillBelowDist(8, 0);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 0.5);
+        int indexMinMag = filled.getClosestXIndex(7.0);
 
-        assertTrue("non-aligned minMag leads to infinity", Double.isInfinite(actual.getStdDevs().getY(indexMinMag)));
+        assertTrue("non-aligned minMag leads to NaN", Double.isNaN(actual.getStdDevs().getY(indexMinMag)));
 
-        filled = fillBelowDist(minMag, 7);
-        actual = MFDManipulation.addMfdUncertainty(filled, minMag, 0.5);
+        filled = fillBelowDist(7.0, 7);
+        actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 0.5);
 
         assertEquals("formula always comes out to 1 at minMag", 1, actual.getStdDevs().getY(indexMinMag), 0.00000001);
         assertTrue("formula comes out to >1 at minMag+1", actual.getStdDevs().getY(indexMinMag + 1) > 1);
-    }
-
-    @Test
-    public void combinedUncertaintyFillBelowTest() {
-        // tests the alignment of fillBelowMag and addMfdUncertainty
-        testUncertaintyalignment(6.95);
-        testUncertaintyalignment(6.99);
-        testUncertaintyalignment(7.0);
-        testUncertaintyalignment(7.06);
     }
 
     @Test
