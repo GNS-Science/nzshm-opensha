@@ -98,6 +98,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
 	protected boolean excludeRupturesBelowMinMag = false;
+	protected boolean unmodifiedSlipRateStdvs = false;
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -305,6 +306,15 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	/**
+	 * Sets whether slip rate stddevs should be normalised for the SlipRateInversionConstraint
+	 * @param unmodifiedSlipRateStdvs
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setUnmodifiedSlipRateStdvs(boolean unmodifiedSlipRateStdvs) {
+		this.unmodifiedSlipRateStdvs = unmodifiedSlipRateStdvs;
+		return this;
+	}
 
 	/**
 	 * @param inputGen

@@ -122,6 +122,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         // set up slip rate config
         inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
+        inversionConfiguration.setUnmodifiedSlipRateStdvs(this.unmodifiedSlipRateStdvs);
         if (this.slipRateWeightingType == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY) {
             System.out.println("config for UNCERTAINTY_ADJUSTED " + this.slipRateUncertaintyWeight + ", "
                     + this.slipRateUncertaintyScalingFactor);

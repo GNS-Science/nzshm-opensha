@@ -71,6 +71,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
 			inversionConfiguration.setSlipRateConstraintWt_unnormalized(this.slipRateConstraintWt_unnormalized);
 		}
+		inversionConfiguration.setUnmodifiedSlipRateStdvs(unmodifiedSlipRateStdvs);
 
 		NZSHM22_SubductionInversionInputGenerator inversionInputGenerator = new NZSHM22_SubductionInversionInputGenerator(
 				rupSet, inversionConfiguration);

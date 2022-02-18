@@ -85,7 +85,8 @@ public class NZSHM22_SubductionInversionInputGenerator extends InversionInputGen
 					NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
 							config.getSlipRateUncertaintyConstraintWt(),
 							rupSet,
-							config.getSlipRateUncertaintyConstraintScalingFactor()));
+							config.getSlipRateUncertaintyConstraintScalingFactor(),
+							config.getUnmodifiedSlipRateStdvs()));
 		} else {
 			if (config.getSlipRateConstraintWt_normalized() > 0d
 					&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED
