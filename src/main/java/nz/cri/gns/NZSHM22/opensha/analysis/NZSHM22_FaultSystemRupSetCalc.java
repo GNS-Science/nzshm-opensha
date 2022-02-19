@@ -123,6 +123,10 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 		//	int mMaxIndex = totalTargetGR.getXIndex(upperMag);
 			if(mMaxIndex == -1) throw new RuntimeException("Problem Mmax: "
 					+rupSet.getMinMagForSection(s)+"\t"+rupSet.getFaultSectionDataList().get(s).getName());
+			
+			/*
+			 * TODO: why does mMaxIndex = 14 return 6.449999999999999, while 15 returns 6.55 ??
+			 */
 			double mMax = totalTargetGR.getX(mMaxIndex); // rounded to nearest MFD value
 //if(mMax<5.85)
 //	System.out.println("PROBLEM SubSesMmax=\t"+mMax+"\tMinSeismoRupMag=\t"

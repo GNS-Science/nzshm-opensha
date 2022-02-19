@@ -76,6 +76,33 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		return mfdConstraintComponents;
 	}
 
+	/**
+	 * For NZ reporting. Version 2, with all the regional and total MFDs. 
+	 *
+	 * @return
+	 */
+	public List<IncrementalMagFreqDist> getReportingMFDConstraintComponentsV2() {
+		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
+
+		mfdConstraintComponents.add(totalTargetGR);
+		mfdConstraintComponents.add(sansTvz.totalTargetGR);
+		mfdConstraintComponents.add(tvz.totalTargetGR);
+		
+		mfdConstraintComponents.add(trulyOffFaultMFD);
+		mfdConstraintComponents.add(sansTvz.trulyOffFaultMFD);
+		mfdConstraintComponents.add(tvz.trulyOffFaultMFD);
+	
+		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD); //NONE
+		mfdConstraintComponents.add(sansTvz.targetOnFaultSupraSeisMFDs);
+		mfdConstraintComponents.add(tvz.targetOnFaultSupraSeisMFDs);
+		
+		mfdConstraintComponents.add(totalSubSeismoOnFaultMFD);
+		mfdConstraintComponents.add(sansTvz.totalSubSeismoOnFaultMFD);
+		mfdConstraintComponents.add(tvz.totalSubSeismoOnFaultMFD);
+		
+		return mfdConstraintComponents;
+	}	
+	
 	@Override
     public List<IncrementalMagFreqDist> getMFD_Constraints() {
     	return mfdConstraints;
@@ -317,24 +344,26 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
 		subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
+		targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
+		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
+		
+		totalTargetGR.setName("totalTargetGR.all");
 		trulyOffFaultMFD.setName("trulyOffFaultMFD.all");
-		totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD");
+		totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD.all");
+		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD.all");
 
 		if (MFD_STATS) {
 
-			System.out.println("trulyOffFaultMFD");
+			System.out.println("trulyOffFaultMFD.all");
 			System.out.println(trulyOffFaultMFD.toString());
 			System.out.println("");
 
-			System.out.println("totalSubSeismoOnFaultMFD");
-			System.out.println(totalSubSeismoOnFaultMFD.toString());
-			System.out.println("");
-
-			System.out.println("totalTargetGR");
+			System.out.println("totalTargetGR.all");
 			System.out.println(totalTargetGR.toString());
 			System.out.println("");
 
-			System.out.println("totalSubSeismoOnFaultMFD");
+			System.out.println("totalSubSeismoOnFaultMFD.all");
 			System.out.println(totalSubSeismoOnFaultMFD.toString());
 			System.out.println("");
 
