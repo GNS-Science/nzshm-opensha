@@ -122,10 +122,8 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 			/*
 			 *  TODO: this is moving maxIndex up by one bin after recent minMag changes
 			 *  
-			 */
-			 
-			 // mMaxIndex = Math.max(mMaxIndex, totalTargetGR.getClosestXIndex(minMag)); 
-			 
+			 */			 
+			 mMaxIndex = Math.max(mMaxIndex, totalTargetGR.getClosestXIndex(minMag)-1); // subtract 1 to avoid overlap 
 			
 		//	int mMaxIndex = totalTargetGR.getXIndex(upperMag);
 			if(mMaxIndex == -1) throw new RuntimeException("Problem Mmax: "
