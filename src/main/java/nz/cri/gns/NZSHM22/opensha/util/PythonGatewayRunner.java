@@ -31,14 +31,21 @@ public class PythonGatewayRunner {
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
 
         ((NZSHM22_PythonGateway.CachedCrustalInversionRunner)runner
-                .setInversionSeconds(100)
+                .setInversionSeconds(10)
                 .setScalingRelationship(scaling, true)
                 //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet.getAbsolutePath())
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
-              //  .setSlipRateConstraint("BOTH", 1000, 1000)
-                .setSlipRateUncertaintyConstraint(1000, 2))
-                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85);
+                .setSlipRateConstraint("BOTH", 1000, 1000)
+//                .setSlipRateUncertaintyConstraint(1000, 0.5)     //RUNZI  [x]
+        		//.setUncertaintyWeightedMFDWeights(10000.0, 10)   //RUNZI  [x]
+               
+        		)
+        		.setMinMags(7.0, 6.5)
+                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
+                .setPaleoRateConstraints(1000.0, 100.0, "GEODETIC_SLIP_4FEB", "NZSHM22_C_42") //RUNZI updated [x]    
+                ;
+               
         
         // see org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params
 		//    	/**
@@ -54,10 +61,11 @@ public class PythonGatewayRunner {
 		//    	 */
 		//    	VERYFAST_SA,
 		//    	LINEAR; // Drops temperature uniformly from 1 to 0.  Only use with a completion criteria of a fixed number of iterations.
-        runner
-        	.setCoolingSchedule("FAST_SA")
-        	.setIterationCompletionCriteria(18000000)
-        	.setPerturbationFunction("POWER_LAW");
+
+        //        runner
+		//        	.setCoolingSchedule("FAST_SA")
+		//        	.setIterationCompletionCriteria(18000000)
+		//        	.setPerturbationFunction("POWER_LAW");
 
         runner.runInversion();
         runner.writeSolution(new File(outputDir, "crustalInversion.zip").getAbsolutePath());

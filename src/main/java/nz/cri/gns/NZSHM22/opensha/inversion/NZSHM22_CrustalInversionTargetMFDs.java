@@ -208,12 +208,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 			for (GutenbergRichterMagFreqDist mfd : subSeismoOnFaultMFD_List) {
 				totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(mfd);
-			}
+			} // add alll the wobblies
 
 			SummedMagFreqDist tempTargetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 			tempTargetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
-			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
+			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD); //the wobbly starts here
 
 			targetOnFaultSupraSeisMFDs = MFDManipulation.fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag, 1.0e-20);
 			targetOnFaultSupraSeisMFDs.setRegion(region);
@@ -335,8 +335,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			System.out.println("");
 
 			System.out.println("totalSubSeismoOnFaultMFD");
-			System.out.println(totalSubSeismoOnFaultMFD.toString());
+			System.out.println(totalSubSeismoOnFaultMFD.toString()); 
 			System.out.println("");
+			
+			/*
+			 * Note; in opensha the trulyOffFaultMFD + totalSubSeismoOnFaultMFD = TotalGriddedSeisMFD
+			 */
 
 		}
 	}
