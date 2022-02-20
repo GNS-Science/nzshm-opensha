@@ -15,6 +15,7 @@ import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
+import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
 import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
@@ -118,12 +119,20 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 
 			double sectRate = gridSeisUtils.pdfValForSection(s)*totMgt5_rate;
 			int mMaxIndex = totalTargetGR.getClosestXIndex(rupSet.getMinMagForSection(s))-1;	// subtract 1 to avoid overlap
-			//double upperMag = InversionFaultSystemRupSet.getUpperMagForSubseismoRuptures(rupSet.getMinMagForSection(s));
+			
+			// bin centre below bin containing the min mag for the section (getMinMagForSection)
+			/*
+			 * This returns the upper magnitude of sub-seismogenic ruptures
+			 * (at the bin center).  This is the lower bin edge of the minimum
+			 * seismogenic rupture minus half the MFD discretization.
+			 */			
+			double upperMag = InversionFaultSystemRupSet.getUpperMagForSubseismoRuptures(rupSet.getMinMagForSection(s)); 
 			/*
 			 *  TODO: this is moving maxIndex up by one bin after recent minMag changes
 			 *  
 			 */			 
 			 mMaxIndex = Math.max(mMaxIndex, totalTargetGR.getClosestXIndex(minMag)-1); // subtract 1 to avoid overlap 
+
 			
 		//	int mMaxIndex = totalTargetGR.getXIndex(upperMag);
 			if(mMaxIndex == -1) throw new RuntimeException("Problem Mmax: "
