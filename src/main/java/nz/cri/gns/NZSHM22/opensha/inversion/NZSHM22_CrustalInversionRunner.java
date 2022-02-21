@@ -120,6 +120,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         solutionMfds = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
                 .getReportingMFDConstraintComponents();
 
+
+        solutionMfdsV2 = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
+                .getReportingMFDConstraintComponentsV2();        
+        
         // set up slip rate config
         inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
         inversionConfiguration.setUnmodifiedSlipRateStdvs(this.unmodifiedSlipRateStdvs);

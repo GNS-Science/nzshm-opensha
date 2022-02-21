@@ -77,6 +77,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private InversionInputGenerator inversionInputGenerator;
 
 	protected List<IncrementalMagFreqDist> solutionMfds;
+	protected List<IncrementalMagFreqDist> solutionMfdsV2;
 
 	protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType;
 	protected double slipRateConstraintWt_normalized;
@@ -777,6 +778,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return solutionMfds;
 	}
 
+	public List<IncrementalMagFreqDist> getSolutionMfdsV2() {
+		return solutionMfdsV2;
+	}
+	
+	
 	/**
 	 * build an MFD from the inversion solution
 	 * 
@@ -852,4 +858,23 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	}
 
+	
+	public ArrayList<ArrayList<String>> getTabularSolutionMfdsV2() {
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+
+		int series = 0;
+		for (IncrementalMagFreqDist mfd : getSolutionMfdsV2()) {
+			appendMfdRows(mfd, rows, series);
+			series++;
+		}
+
+		HistogramFunction magHist = solutionMagFreqHistogram(true);
+		magHist.setName("solutionMFD");
+		appendMfdRows(magHist, rows, series);
+		series++;
+
+		return rows;
+
+	}	
+	
 }
