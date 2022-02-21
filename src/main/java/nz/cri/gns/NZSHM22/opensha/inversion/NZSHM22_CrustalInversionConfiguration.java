@@ -39,15 +39,16 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
 
-	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ){
+	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ,
+									   double maxMagSans, double maxMagTVZ) {
 
 		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
 		GriddedRegion sansTvzRegion = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 
 		IntPredicate tvzFilter = RegionalRupSetData.createRegionFilter(rupSet, tvzRegion);
 
-		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
-		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
+		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ, maxMagTVZ);
+		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans, maxMagSans);
 
 		rupSet.setRegionalData(tvz, sansTvz);
 
@@ -97,6 +98,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 			double totalRateM5_Sans, double totalRateM5_TVZ,
 			double bValue_Sans, double bValue_TVZ, double mfdTransitionMag,
 			double mMin_Sans, double mMin_TVZ,
+			double maxMagSans, double maxMagTVZ,
 			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
 			boolean excludeMinMag) {
 
@@ -132,11 +134,11 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 
-		setRegionalData(rupSet, mMin_Sans, mMin_TVZ);
+		setRegionalData(rupSet, mMin_Sans, mMin_TVZ, maxMagSans, maxMagTVZ);
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
-				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ,
+				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ, maxMagSans, maxMagTVZ,
 				mfdUncertaintyWeightedConstraintPower);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<IncrementalMagFreqDist> mfdConstraints = inversionMFDs.getMFD_Constraints();

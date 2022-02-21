@@ -29,11 +29,12 @@ public class RegionalRupSetData {
     boolean[] originalSectionIncluded;
     double[] originalMinMags;
 
-    public RegionalRupSetData(FaultSystemRupSet original, GriddedRegion region, IntPredicate sectionIdFilter, double minSeismoMag){
+    public RegionalRupSetData(FaultSystemRupSet original, GriddedRegion region, IntPredicate sectionIdFilter, double minSeismoMag, double maxSeismoMag){
         this.original = original;
         this.region= region;
         this.spatialSeisPDF = original.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
         this.minSeismoMag = minSeismoMag;
+        this.maxMag = maxSeismoMag;
         filter(sectionIdFilter);
     }
 
@@ -50,9 +51,9 @@ public class RegionalRupSetData {
                 minMags.add(originalMinMags[s]);
                 originalSectionIncluded[s] = true;
 
-                for (Integer r : original.getRupturesForSection(s)) {
-                    maxMag = Math.max(maxMag, original.getMagForRup(r));
-                }
+//                for (Integer r : original.getRupturesForSection(s)) {
+//                    maxMag = Math.max(maxMag, original.getMagForRup(r));
+//                }
             }
         }
         polygonFaultGridAssociations = FaultPolyMgr.create(sections, U3InversionTargetMFDs.FAULT_BUFFER, region);

@@ -87,9 +87,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,double totalRateM5_Sans,
 											  double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ,
-											  double minMag_Sans, double minMag_TVZ, double uncertaintyPower) {
+											  double minMag_Sans, double minMag_TVZ,
+											  double maxMagSans, double maxMagTVZ, double uncertaintyPower) {
 		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMag_Sans, minMag_TVZ,
-				uncertaintyPower);
+				maxMagSans, maxMagTVZ, uncertaintyPower);
 	}
 
 	public static class RegionalTargetMFDs {
@@ -100,6 +101,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		public double totalRateM5;
 		public double bValue;
 		public double minMag;
+		public double maxMag;
 		public double uncertaintyPower;
 
 		public GutenbergRichterMagFreqDist totalTargetGR;
@@ -111,11 +113,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
-		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag, double uncertaintyPower) {
+		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag, double maxMag, double uncertaintyPower) {
 			this.region = regionalRupSet.getRegion();
 			this.totalRateM5 = totalRateM5;
 			this.bValue = bValue;
 			this.minMag = minMag;
+			this.maxMag = maxMag;
 			this.uncertaintyPower = uncertaintyPower;
 			if (region.getName().contains("SANS TVZ")) {
 				suffix = "SansTVZ";
@@ -142,6 +145,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 			out.name("minMag");
 			out.value(minMag);
+
+			// hint for writing a readr: this value is not present in older versions
+			out.name("maxMag");
+			out.value(maxMag);
 
 			// hint for writing a readr: this value is not present in older versions
 			out.name("uncertaintyPower");
@@ -185,7 +192,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 
 			// populate the MFD bins
-			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(regionalRupSet.getMaxMag()));
+			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(maxMag));
 			totalTargetGR.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue);
 
 			// get ave min seismo mag for region
@@ -216,8 +223,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
 			targetOnFaultSupraSeisMFDs = MFDManipulation.fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag, 1.0e-20);
+			targetOnFaultSupraSeisMFDs = MFDManipulation.fillAboveMag(targetOnFaultSupraSeisMFDs, maxMag, 1.0e-20);
 			targetOnFaultSupraSeisMFDs.setRegion(region);
-			uncertaintyMFD = MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFDs, minMag, uncertaintyPower);
+			uncertaintyMFD = MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFDs, minMag, maxMag, uncertaintyPower);
 
 			if (MFD_STATS) {
 				System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
@@ -259,12 +267,14 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 						double bValue_TVZ,
 						double minMag_Sans,
 						double minMag_TVZ,
+						double maxMagSans,
+						double maxMagTVZ,
 						double uncertaintyPower) {
 
 		setParent(invRupSet);
 
-		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ, uncertaintyPower);
-		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, uncertaintyPower);
+		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ, maxMagTVZ, uncertaintyPower);
+		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, maxMagSans, uncertaintyPower);
 
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
 		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));

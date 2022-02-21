@@ -31,6 +31,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double minMag_Sans = 6.95;
     private double minMag_TVZ = 6.95;
 
+    private double maxMagTVZ = 20.0;
+    private double maxMagSans = 20.0;
+
     private double paleoRateConstraintWt = 0;
     private double paleoParentRateSmoothnessConstraintWeight = 0;
     private NZSHM22_PaleoRates paleoRates;
@@ -52,6 +55,12 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     public NZSHM22_CrustalInversionRunner setMinMags(double minMagSans, double minMagTvz){
         this.minMag_Sans = minMagSans;
         this.minMag_TVZ = minMagTvz;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setMaxMags(double maxMagSans, double maxMagTVZ){
+        this.maxMagSans = maxMagSans;
+        this.maxMagTVZ = maxMagTVZ;
         return this;
     }
 
@@ -110,7 +119,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                 inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
-                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ,
+                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ, maxMagSans, maxMagTVZ,
                 mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
 
        inversionConfiguration
