@@ -33,13 +33,12 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
     private double maxMagTVZ = 20.0;
     private double maxMagSans = 20.0;
+    private MaxMagType maxMagType = MaxMagType.NONE;
 
     private double paleoRateConstraintWt = 0;
     private double paleoParentRateSmoothnessConstraintWeight = 0;
     private NZSHM22_PaleoRates paleoRates;
     private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
-
-    private MaxMagType maxMagType = MaxMagType.NONE;
 
     public enum MaxMagType{
         NONE,
@@ -204,10 +203,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
-        scaling.setupCrustal(4, 4.1);
+        scaling.setupCrustal(4.2, 4.2);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .setMaxMags("FILTER_RUPSET",10,8)
+                .setMaxMags("MANIPULATE_MFD",10,7.5)
+                .setMinMags(6.8 , 6.0)
               //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
@@ -216,7 +216,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setGutenbergRichterMFDWeights(100.0, 1000.0)
             //    .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2))
-                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
+                .setGutenbergRichterMFD(3.9, 0.7, 0.9, 1.2, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
 
         FaultSystemSolution solution = runner.runInversion();

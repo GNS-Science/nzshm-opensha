@@ -192,7 +192,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 
 			// populate the MFD bins
-			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(maxMag));
+			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(Math.min(regionalRupSet.getMaxMag(), maxMag)));
 			totalTargetGR.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue);
 
 			// get ave min seismo mag for region
