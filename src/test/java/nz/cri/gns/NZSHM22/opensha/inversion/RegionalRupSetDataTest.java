@@ -43,7 +43,7 @@ public class RegionalRupSetDataTest {
 
         IntPredicate filter = RegionalRupSetData.createRegionFilter(original, region);
 
-        RegionalRupSetData actual = new RegionalRupSetData(original, region, filter,7.0);
+        RegionalRupSetData actual = new RegionalRupSetData(original, region, filter,7.0, 10.0);
 
         assertEquals(86, original.getNumSections());
         assertEquals(34, actual.getFaultSectionDataList().size());

@@ -31,10 +31,21 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double minMag_Sans = 6.95;
     private double minMag_TVZ = 6.95;
 
+    private double maxMagTVZ = 20.0;
+    private double maxMagSans = 20.0;
+
     private double paleoRateConstraintWt = 0;
     private double paleoParentRateSmoothnessConstraintWeight = 0;
     private NZSHM22_PaleoRates paleoRates;
     private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+
+    private MaxMagType maxMagType = MaxMagType.NONE;
+
+    public enum MaxMagType{
+        NONE,
+        FILTER_RUPSET,
+        MANIPULATE_MFD;
+    }
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -52,6 +63,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     public NZSHM22_CrustalInversionRunner setMinMags(double minMagSans, double minMagTvz){
         this.minMag_Sans = minMagSans;
         this.minMag_TVZ = minMagTvz;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setMaxMags(String maxMagType, double maxMagSans, double maxMagTVZ){
+        this.maxMagType = MaxMagType.valueOf(maxMagType);
+        this.maxMagSans = maxMagSans;
+        this.maxMagTVZ = maxMagTVZ;
         return this;
     }
 
@@ -103,15 +121,29 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
-        this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch);
+
+        if (maxMagType == MaxMagType.FILTER_RUPSET) {
+            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch, maxMagTVZ, maxMagSans);
+        } else {
+            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch);
+        }
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 
         // this contains all inversion weights
-        NZSHM22_CrustalInversionConfiguration inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
-                inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
-                totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ,
-                mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
+        NZSHM22_CrustalInversionConfiguration inversionConfiguration;
+
+        if (maxMagType == MaxMagType.MANIPULATE_MFD) {
+            inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
+                    inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
+                    totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ, maxMagSans, maxMagTVZ,
+                    mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
+        } else{
+            inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
+                    inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
+                    totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ, 100, 100,
+                    mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
+        }
 
        inversionConfiguration
                .setPaleoRateConstraintWt(paleoRateConstraintWt)

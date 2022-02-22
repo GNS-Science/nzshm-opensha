@@ -136,7 +136,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 //		List<MFD_InversionConstraint> mfdUncertaintyConstraints = new ArrayList<>();
 
 		if (mfdUncertaintyWeightedConstraintWt > 0.0) {
-			mfdUncertaintyConstraints.add(MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFD, MINIMIZE_RATE_BELOW_MAG, mfdUncertaintyWeightedConstraintPower));
+			mfdUncertaintyConstraints.add(MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFD, MINIMIZE_RATE_BELOW_MAG, 20, mfdUncertaintyWeightedConstraintPower));
 		} 
 		
 		// original for Eq/InEq constraints

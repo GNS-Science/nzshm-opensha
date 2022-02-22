@@ -58,6 +58,23 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	/**
+	 * Loads a RuptureSet from file. Filter out ruptures outside the specified bounds.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Always recalculates magnitudes.
+	 * @param ruptureSetFile
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double maxMagTVZ, double maxMagSans) throws IOException {
+		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		rupSetA = recalcMags(rupSetA, scaling);
+		rupSetA = RupSetFilter.filter(rupSetA, scaling, maxMagTVZ, maxMagSans);
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
+	/**
 	 * Returns a new RuptureSet with recalculated magnitudes.
 	 * @param rupSet
 	 * @param scale

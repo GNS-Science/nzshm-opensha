@@ -29,7 +29,7 @@ public class NZSHM22_CrustalInversionConfigurationTest {
         NZSHM22_InversionFaultSystemRuptSet rupSet = loadRupSet();
         assertEquals(8, rupSet.getNumSections());
 
-        NZSHM22_CrustalInversionConfiguration.setRegionalData(rupSet, 5, 7);
+        NZSHM22_CrustalInversionConfiguration.setRegionalData(rupSet, 5, 7, 15.0, 15.0);
         RegionalRupSetData tvzData = rupSet.getTvzRegionalData();
         RegionalRupSetData sansTvzData = rupSet.getSansTvzRegionalData();
 
