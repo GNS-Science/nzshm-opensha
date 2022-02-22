@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.opensha.commons.geo.GriddedRegion;
@@ -29,12 +30,11 @@ public class RegionalRupSetData {
     boolean[] originalSectionIncluded;
     double[] originalMinMags;
 
-    public RegionalRupSetData(FaultSystemRupSet original, GriddedRegion region, IntPredicate sectionIdFilter, double minSeismoMag, double maxSeismoMag){
+    public RegionalRupSetData(FaultSystemRupSet original, GriddedRegion region, IntPredicate sectionIdFilter, double minSeismoMag){
         this.original = original;
         this.region= region;
         this.spatialSeisPDF = original.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
         this.minSeismoMag = minSeismoMag;
-        this.maxMag = maxSeismoMag;
         filter(sectionIdFilter);
     }
 
@@ -51,18 +51,26 @@ public class RegionalRupSetData {
                 minMags.add(originalMinMags[s]);
                 originalSectionIncluded[s] = true;
 
-//                for (Integer r : original.getRupturesForSection(s)) {
-//                    maxMag = Math.max(maxMag, original.getMagForRup(r));
-//                }
+                for (Integer r : original.getRupturesForSection(s)) {
+                    maxMag = Math.max(maxMag, original.getMagForRup(r));
+                }
             }
         }
         polygonFaultGridAssociations = FaultPolyMgr.create(sections, U3InversionTargetMFDs.FAULT_BUFFER, region);
         spatialSeisPDF.normaliseRegion(region);
     }
 
+    protected static PolygonFaultGridAssociations getPolyMgr(FaultSystemRupSet rupSet){
+        PolygonFaultGridAssociations polyMgr = rupSet.getModule(PolygonFaultGridAssociations.class);
+        if(polyMgr == null){
+            polyMgr = FaultPolyMgr.create(rupSet.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
+        }
+        return polyMgr;
+    }
+
     protected static IntPredicate createRegionFilter(FaultSystemRupSet original, GriddedRegion region) {
         Area area = region.getShape();
-        PolygonFaultGridAssociations polyMgr = original.getModule(PolygonFaultGridAssociations.class);
+        PolygonFaultGridAssociations polyMgr = getPolyMgr(original);
         return s -> {
             Area sectionArea = polyMgr.getPoly(s).getShape();
                 sectionArea.intersect(area);

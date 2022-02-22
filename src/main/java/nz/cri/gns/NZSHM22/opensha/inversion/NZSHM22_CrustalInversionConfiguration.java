@@ -39,16 +39,15 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
 
-	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ,
-									   double maxMagSans, double maxMagTVZ) {
+	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ) {
 
 		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
 		GriddedRegion sansTvzRegion = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 
 		IntPredicate tvzFilter = RegionalRupSetData.createRegionFilter(rupSet, tvzRegion);
 
-		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ, maxMagTVZ);
-		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans, maxMagSans);
+		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
+		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
 
 		rupSet.setRegionalData(tvz, sansTvz);
 
@@ -134,7 +133,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		double[] initialRupModel = null;
 		double[] minimumRuptureRateBasis = null;
 
-		setRegionalData(rupSet, mMin_Sans, mMin_TVZ, maxMagSans, maxMagTVZ);
+		setRegionalData(rupSet, mMin_Sans, mMin_TVZ);
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
