@@ -4,6 +4,7 @@ import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
@@ -58,6 +59,52 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	/**
+	 * Loads a RuptureSet from file.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Recalculates magnitudes if specified by the LTB.
+	 * @param ruptureSetFile
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
+		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
+
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		if(scaling != null && scaling.getReCalc()){
+			rupSetA = recalcMags(rupSetA, scaling);
+		}
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
+	/**
+	 * Loads a RuptureSet from file. Filter out ruptures outside the specified bounds.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Always recalculates magnitudes.
+	 * @param ruptureSetFile
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double maxMagTVZ, double maxMagSans) throws IOException {
+		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
+
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		rupSetA = recalcMags(rupSetA, scaling);
+
+		PolygonFaultGridAssociations polyMgr = FaultPolyMgr.create(rupSetA.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
+		rupSetA.addModule(polyMgr);
+		NZSHM22_TvzSections tvzSections = new NZSHM22_TvzSections(rupSetA);
+		rupSetA.addModule(tvzSections);
+
+		rupSetA = RupSetMaxMagFilter.filter(rupSetA, scaling, maxMagTVZ, maxMagSans);
+		rupSetA.addModule(polyMgr);
+		rupSetA.addModule(tvzSections);
+
+		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
+	/**
 	 * Returns a new RuptureSet with recalculated magnitudes.
 	 * @param rupSet
 	 * @param scale
@@ -66,7 +113,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, RupSetScalingRelationship scale){
 		return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scale).build();
 	}
-
 
     protected static FaultSystemRupSet applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
@@ -94,7 +140,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		FaultRegime regime = branch.getValue(FaultRegime.class);
 		if(regime == FaultRegime.SUBDUCTION) {
-
 			offerAvailableModule(new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
 				@Override
 				public NZSHM22_SubductionInversionTargetMFDs call() throws Exception {
@@ -102,15 +147,19 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 				}
 			}, NZSHM22_SubductionInversionTargetMFDs.class);
 
-		}else if(regime == FaultRegime.CRUSTAL){
-
+		} else if (regime == FaultRegime.CRUSTAL) {
 			offerAvailableModule(new Callable<PolygonFaultGridAssociations>() {
 				@Override
 				public PolygonFaultGridAssociations call() throws Exception {
 					return FaultPolyMgr.create(getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 				}
 			}, PolygonFaultGridAssociations.class);
-
+			offerAvailableModule(new Callable<NZSHM22_TvzSections>() {
+				@Override
+				public NZSHM22_TvzSections call() throws Exception {
+					return new NZSHM22_TvzSections(NZSHM22_InversionFaultSystemRuptSet.this);
+				}
+			}, NZSHM22_TvzSections.class);
 		}
 	}
 
