@@ -115,4 +115,28 @@ public class MFDManipulationTest {
         assertEquals(List.of(20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0), actual.yValues());
     }
 
+    @Test
+    public void testSwapZeroes() {
+        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
+        for (int i = 0; i < BINS; i++) {
+            if (i % 3 == 0) {
+                dist.set(i, 0);
+            } else {
+                dist.set(i, i + 1);
+            }
+        }
+        IncrementalMagFreqDist expected = new IncrementalMagFreqDist(dist);
+        for (int i = 0; i < BINS; i++) {
+            if (i % 3 == 0) {
+                expected.set(i, Math.PI);
+            } else {
+                expected.set(i, i + 1);
+            }
+        }
+
+        IncrementalMagFreqDist actual = MFDManipulation.swapZeros(dist, Math.PI);
+        assertEquals(expected, actual);
+    }
+
+
 }

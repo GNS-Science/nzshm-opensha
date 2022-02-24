@@ -102,4 +102,16 @@ public class MFDManipulation {
         }
         return result;
     }
+
+    public static IncrementalMagFreqDist swapZeros(IncrementalMagFreqDist source, double value){
+        IncrementalMagFreqDist result = new IncrementalMagFreqDist(source.getMinX(), source.size(), source.getDelta());
+        for(int i =0; i < source.size(); i++){
+            if(source.getY(i) == 0){
+                result.set(i, value);
+            } else{
+                result.set(i, source.getY(i));
+            }
+        }
+        return result;
+    }
 }
