@@ -109,7 +109,7 @@ public class CrustalMFDRunner {
     }
 
     public void run() throws IOException {
-        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMagSans, minMagTvz, mfdUncertaintyPower);
+        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMagSans, minMagTvz, 15, 15, mfdUncertaintyPower);
         rupSet.addModule(targetMfds);
 
         //rupSet.write(new File(outputPath, "rupSet.zip"));

@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.opensha.commons.geo.GriddedRegion;
@@ -59,15 +60,7 @@ public class RegionalRupSetData {
         spatialSeisPDF.normaliseRegion(region);
     }
 
-    protected static IntPredicate createRegionFilter(FaultSystemRupSet original, GriddedRegion region) {
-        Area area = region.getShape();
-        PolygonFaultGridAssociations polyMgr = original.getModule(PolygonFaultGridAssociations.class);
-        return s -> {
-            Area sectionArea = polyMgr.getPoly(s).getShape();
-                sectionArea.intersect(area);
-            return !sectionArea.isEmpty();
-        };
-    }
+
 
     public GriddedRegion getRegion(){
         return region;
