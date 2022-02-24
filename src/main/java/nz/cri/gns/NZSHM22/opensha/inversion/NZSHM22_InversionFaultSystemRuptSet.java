@@ -9,6 +9,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
@@ -34,7 +35,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	boolean[] isRupBelowMinMagsForSects;
 
     public NZSHM22_InversionFaultSystemRuptSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
-        super(applyDeformationModel(rupSet, branch), branch.getU3Branch());
+        super(rupSet, branch.getU3Branch());
         init(branch);
     }
 
@@ -67,11 +68,16 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @return
 	 * @throws IOException
 	 */
-	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double tvzSlipRateFactor) throws IOException {
 		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
-
+		PolygonFaultGridAssociations polyMgr = FaultPolyMgr.create(rupSetA.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
+		rupSetA.addModule(polyMgr);
+		NZSHM22_TvzSections tvzSections = new NZSHM22_TvzSections(rupSetA);
+		rupSetA.addModule(tvzSections);
+		applyDeformationModel(rupSetA, branch);
+		applyTVZSlipRateFactor(rupSetA, tvzSlipRateFactor);
 		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-		if(scaling != null && scaling.getReCalc()){
+		if (scaling != null && scaling.getReCalc()) {
 			rupSetA = recalcMags(rupSetA, scaling);
 		}
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
@@ -86,22 +92,35 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @return
 	 * @throws IOException
 	 */
-	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double maxMagTVZ, double maxMagSans) throws IOException {
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double tvzSlipRateFactor, double maxMagTVZ, double maxMagSans) throws IOException {
 		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
-
-		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-		rupSetA = recalcMags(rupSetA, scaling);
-
 		PolygonFaultGridAssociations polyMgr = FaultPolyMgr.create(rupSetA.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 		rupSetA.addModule(polyMgr);
 		NZSHM22_TvzSections tvzSections = new NZSHM22_TvzSections(rupSetA);
 		rupSetA.addModule(tvzSections);
+		applyDeformationModel(rupSetA, branch);
+		applyTVZSlipRateFactor(rupSetA, tvzSlipRateFactor);
+
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		rupSetA = recalcMags(rupSetA, scaling);
 
 		rupSetA = RupSetMaxMagFilter.filter(rupSetA, scaling, maxMagTVZ, maxMagSans);
 		rupSetA.addModule(polyMgr);
 		rupSetA.addModule(tvzSections);
 
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
+	}
+
+	protected static void applyTVZSlipRateFactor(FaultSystemRupSet rupSet, double tvzSlipRateFactor){
+		if(tvzSlipRateFactor >=0){
+			NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+			SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
+			double[] slipRates = origSlips.getSlipRates();
+			tvzSections.getTvzSections().forEach(sectionId -> {
+				slipRates[sectionId] *= tvzSlipRateFactor;
+			});
+			rupSet.addModule(SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
+		}
 	}
 
 	/**
@@ -114,12 +133,11 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scale).build();
 	}
 
-    protected static FaultSystemRupSet applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
+    protected static void applyDeformationModel(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
         NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
         if (model != null) {
             model.applyTo(rupSet);
         }
-        return rupSet;
     }
 
     protected void setLogicTreeBranch(NZSHM22_LogicTreeBranch branch) {

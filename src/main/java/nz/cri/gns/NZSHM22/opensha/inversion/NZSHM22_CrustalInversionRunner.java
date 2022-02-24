@@ -40,6 +40,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private NZSHM22_PaleoRates paleoRates;
     private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
 
+    private double tvzSlipRateFactor = -1;
+
     public enum MaxMagType{
         NONE,
         FILTER_RUPSET,
@@ -69,6 +71,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         this.maxMagType = MaxMagType.valueOf(maxMagType);
         this.maxMagSans = maxMagSans;
         this.maxMagTVZ = maxMagTVZ;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setTVZSlipRateFactor(double tvzSlipRateFactor){
+        this.tvzSlipRateFactor = tvzSlipRateFactor;
         return this;
     }
 
@@ -122,9 +129,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         setupLTB(branch);
 
         if (maxMagType == MaxMagType.FILTER_RUPSET) {
-            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch, maxMagTVZ, maxMagSans);
+            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch, tvzSlipRateFactor, maxMagTVZ, maxMagSans);
         } else {
-            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);
+            this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch, tvzSlipRateFactor);
         }
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
@@ -206,6 +213,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setupCrustal(4.2, 4.2);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
+                .setTVZSlipRateFactor(0.5)
                 .setMaxMags("MANIPULATE_MFD",10,7.5)
                 .setMinMags(6.8 , 6.0)
               //  .setInitialSolution("C:\\tmp\\rates.csv")

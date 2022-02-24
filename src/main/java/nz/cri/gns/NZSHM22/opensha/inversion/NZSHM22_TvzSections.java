@@ -58,6 +58,10 @@ public class NZSHM22_TvzSections implements CSV_BackedModule {
         return false;
     }
 
+    public Set<Integer> getTvzSections(){
+        return tvzSections;
+    }
+
     public String getRegionName(){
         return regionName;
     }
