@@ -79,36 +79,36 @@ public class MFDManipulationTest {
         assertEquals(fillAfterBin(0), fillAbove(1.0));
     }
 
-    @Test
-    public void TestAddMfdUncertainty() {
-        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
-        for (int i = 0; i < BINS; i++) {
-            dist.set(i, i);
-        }
-
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(dist, 5.1, 20.0, 0.5);
-
-        assertEquals(List.of(1.0, 0.22360679774997896, 0.3162277660168379, 0.3872983346207417, 0.4472135954999579, 0.5, 0.5477225575051661, 0.5916079783099616, 0.6324555320336758, 0.6708203932499369, 0.7071067811865475, 0.7416198487095662, 0.7745966692414834, 0.8062257748298549, 0.8366600265340755, 0.8660254037844385, 0.8944271909999159, 0.9219544457292888, 0.9486832980505138, 0.9746794344808963, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
-                actual.getStdDevs().yValues());
-
-        assertEquals(dist.xValues(), actual.xValues());
-        assertEquals(dist.yValues(), actual.yValues());
-
-        // and now with minimize_below_mag set to something greater than 0
-
-        dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
-        for (int i = 0; i < BINS; i++) {
-            dist.set(i, i);
-        }
-
-        actual = MFDManipulation.addMfdUncertainty(dist, 7.0, 20.0,0.5);
-
-        assertEquals(List.of(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
-                actual.getStdDevs().yValues());
-
-        assertEquals(dist.xValues(), actual.xValues());
-        assertEquals(dist.yValues(), actual.yValues());
-    }
+//    @Test
+//    public void TestAddMfdUncertainty() {
+//        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
+//        for (int i = 0; i < BINS; i++) {
+//            dist.set(i, i);
+//        }
+//
+//        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(dist, 5.1, 20.0, 0.5);
+//
+//        assertEquals(List.of(1.0, 0.22360679774997896, 0.3162277660168379, 0.3872983346207417, 0.4472135954999579, 0.5, 0.5477225575051661, 0.5916079783099616, 0.6324555320336758, 0.6708203932499369, 0.7071067811865475, 0.7416198487095662, 0.7745966692414834, 0.8062257748298549, 0.8366600265340755, 0.8660254037844385, 0.8944271909999159, 0.9219544457292888, 0.9486832980505138, 0.9746794344808963, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
+//                actual.getStdDevs().yValues());
+//
+//        assertEquals(dist.xValues(), actual.xValues());
+//        assertEquals(dist.yValues(), actual.yValues());
+//
+//        // and now with minimize_below_mag set to something greater than 0
+//
+//        dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
+//        for (int i = 0; i < BINS; i++) {
+//            dist.set(i, i);
+//        }
+//
+//        actual = MFDManipulation.addMfdUncertainty(dist, 7.0, 20.0,0.5);
+//
+//        assertEquals(List.of(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0246950765959597, 1.0488088481701514, 1.0723805294763609, 1.0954451150103321, 1.1180339887498947, 1.1401754250991378, 1.1618950038622249, 1.1832159566199232, 1.2041594578792296, 1.2247448713915892, 1.2449899597988732, 1.2649110640673515, 1.2845232578665127, 1.3038404810405297, 1.3228756555322954, 1.3416407864998738, 1.3601470508735443, 1.378404875209022, 1.396424004376894),
+//                actual.getStdDevs().yValues());
+//
+//        assertEquals(dist.xValues(), actual.xValues());
+//        assertEquals(dist.yValues(), actual.yValues());
+//    }
 
     @Test
     public void combinedUncertaintyFillBelowTest() {
@@ -147,5 +147,28 @@ public class MFDManipulationTest {
         actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, 8);
         assertEquals(List.of(20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0), actual.yValues());
     }
+
+//    @Test
+//    public void testSwapZeroes(){
+//        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
+//        for (int i = 0; i < BINS; i++) {
+//            if(i % 3 == 0){
+//                dist.set(i, 0);
+//            } else {
+//                dist.set(i, i+1);
+//            }
+//        }
+//        IncrementalMagFreqDist expected = new IncrementalMagFreqDist(dist);
+//        for (int i = 0; i < BINS; i++) {
+//            if(i % 3 == 0){
+//                expected.set(i, Math.PI);
+//            } else {
+//                expected.set(i, i+1);
+//            }
+//        }
+//
+//        IncrementalMagFreqDist actual = MFDManipulation.swapZeros(dist, Math.PI);
+//        assertEquals(expected, actual);
+//    }
 
 }
