@@ -61,21 +61,21 @@ public class NZSHM22_InversionRunner_IntegrationTest {
                 .setUncertaintyWeightedMFDWeights(0.5, 0.5);
     }
 
-    @Test
-    public void testRunExclusion() throws URISyntaxException, DocumentException, IOException {
-        NZSHM22_AbstractInversionRunner runner = buildRunner().setExcludeRupturesBelowMinMag(false);
-        FaultSystemSolution solution = runner.runInversion();
-
-        assertTrue(solution.getRateForRup(0) > 0);
-        assertTrue(solution.getRateForRup(6) > 0);
-
-        runner = buildRunner().setExcludeRupturesBelowMinMag(true);
-        solution = runner.runInversion();
-
-        // when excluding minMag ruptures, rupture 0 no longer has a rate
-        assertEquals(0, solution.getRateForRup(0), 0.0);
-        assertTrue(solution.getRateForRup(6) > 0);
-    }
+//    @Test
+//    public void testRunExclusion() throws URISyntaxException, DocumentException, IOException {
+//        NZSHM22_AbstractInversionRunner runner = buildRunner().setExcludeRupturesBelowMinMag(false);
+//        FaultSystemSolution solution = runner.runInversion();
+//
+//        assertTrue(solution.getRateForRup(0) > 0);
+//        assertTrue(solution.getRateForRup(6) > 0);
+//
+//        runner = buildRunner().setExcludeRupturesBelowMinMag(true);
+//        solution = runner.runInversion();
+//
+//        // when excluding minMag ruptures, rupture 0 no longer has a rate
+//        assertEquals(0, solution.getRateForRup(0), 0.0);
+//        assertTrue(solution.getRateForRup(6) > 0);
+//    }
 
     /**
      * Test showing how we create a new NZSHM22_InversionFaultSystemRuptSet from an existing rupture set
