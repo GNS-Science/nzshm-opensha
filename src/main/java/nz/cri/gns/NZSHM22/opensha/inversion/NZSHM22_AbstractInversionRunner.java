@@ -18,7 +18,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalarValues;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -101,6 +103,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected boolean excludeRupturesBelowMinMag = false;
 	protected boolean unmodifiedSlipRateStdvs = false;
 
+	protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
+
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
 	 * 
@@ -120,6 +124,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setInversionSeconds(long inversionSeconds) {
 		this.inversionSecs = inversionSeconds;
+		return this;
+	}
+
+	public NZSHM22_AbstractInversionRunner setReweightTargetQuantity(String quantity){
+		this.reweightTargetQuantity = InversionMisfitStats.Quantity.valueOf(quantity);
 		return this;
 	}
 
@@ -584,6 +593,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+		if (reweightTargetQuantity != null) {
+			tsa = new ReweightEvenFitSimulatedAnnealing((ThreadedSimulatedAnnealing)tsa, reweightTargetQuantity);
+		}
+
+
 		// The following should probably be set only for testing purposes.
 		// tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
 		tsa.setPerturbationFunc(perturbationFunction);
@@ -619,6 +633,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
+		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
+			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
+		}
 		return solution;
 	}
 
