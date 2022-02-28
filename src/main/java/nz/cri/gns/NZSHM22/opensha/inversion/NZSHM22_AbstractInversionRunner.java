@@ -633,6 +633,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
+		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
+			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
+		}
 		return solution;
 	}
 
