@@ -229,7 +229,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                // .setGutenbergRichterMFDWeights(100.0, 1000.0)
                 .setUncertaintyWeightedMFDWeights(10000, .75)
             //    .setSlipRateConstraint("BOTH", 1000, 1000)
-                .setSlipRateUncertaintyConstraint(1000, 2))
+                .setSlipRateUncertaintyConstraint(1000, 2)
+                .setReweightTargetQuantity("MAD"))
                 .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
 
