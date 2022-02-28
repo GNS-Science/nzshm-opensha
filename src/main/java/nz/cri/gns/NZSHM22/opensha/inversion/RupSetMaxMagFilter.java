@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import com.google.common.base.Preconditions;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ public class RupSetMaxMagFilter {
         FaultSystemRupSet rupSet = FaultSystemRupSet.builder(original.getFaultSectionDataList(), filteredRups)
                 .forScalingRelationship(scaling)
                 .build();
+
+        rupSet.addModule(ClusterRuptures.singleStranged(rupSet));
 
         return rupSet;
     }

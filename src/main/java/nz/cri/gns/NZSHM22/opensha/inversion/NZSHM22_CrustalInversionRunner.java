@@ -219,7 +219,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
                 .setTVZSlipRateFactor(0.5)
-                .setMaxMags("MANIPULATE_MFD",10,7.5)
+                .setMaxMags("FILTER_RUPSET",10,7.5)
                 .setMinMags(6.8 , 6.5)
               //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
