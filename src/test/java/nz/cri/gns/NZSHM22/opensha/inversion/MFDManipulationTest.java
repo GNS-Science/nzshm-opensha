@@ -121,8 +121,8 @@ public class MFDManipulationTest {
         filled = fillBelowDist(7.0, 7);
         actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5);
 
-        assertEquals("formula always comes out to 1 at minMag", 1, actual.getStdDevs().getY(indexMinMag), 0.00000001);
-        assertTrue("formula comes out to >1 at minMag+1", actual.getStdDevs().getY(indexMinMag + 1) > 1);
+        assertEquals("formula always comes out to 0.4*rate at minMag", filled.getY(indexMinMag)*0.4, actual.getStdDevs().getY(indexMinMag), 0.00000001);
+        //assertTrue("formula comes out to >1 at minMag+1", actual.getStdDevs().getY(indexMinMag + 1) > 1);
     }
 
     @Test
