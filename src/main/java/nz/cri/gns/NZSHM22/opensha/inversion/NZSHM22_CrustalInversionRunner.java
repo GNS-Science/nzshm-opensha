@@ -130,12 +130,12 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                     inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
                     totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ, maxMagSans, maxMagTVZ,
-                    mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
-        } else {
+                    mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar, excludeRupturesBelowMinMag);
+        } else{
             inversionConfiguration = NZSHM22_CrustalInversionConfiguration.forModel(
                     inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt, totalRateM5_Sans,
                     totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mfdTransitionMag, minMag_Sans, minMag_TVZ, 100, 100,
-                    mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, excludeRupturesBelowMinMag);
+                    mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar, excludeRupturesBelowMinMag);
         }
 
        inversionConfiguration
@@ -213,9 +213,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
              //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
                // .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(10000, .75)
-                .setGutenbergRichterMFDWeights(100.0, 1000.0)
-              //  .setPolyBufferSize(12, 0)
+                .setUncertaintyWeightedMFDWeights(10000, .75, 0.4)
             //    .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
                 .setReweightTargetQuantity("MAD"))

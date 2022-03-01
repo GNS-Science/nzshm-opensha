@@ -67,7 +67,7 @@ public class MFDManipulation {
         return newMFDConstraints;
     }
 
-    public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double minimizeAboveMag, double power) {
+    public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double minimizeAboveMag, double power, double uncertaintyScalar) {
         int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
         int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
         int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
@@ -75,7 +75,7 @@ public class MFDManipulation {
                 "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
         Preconditions.checkArgument( firstWeightPowerBin <= maxMagBin,
                 "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
-        double firstWeightPower = Math.pow(mfd.getY(firstWeightPowerBin), power - 1);
+        double firstWeightPower = Math.pow(mfd.getY(firstWeightPowerBin), power - 1) * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
         EvenlyDiscretizedFunc stdDevs = new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);

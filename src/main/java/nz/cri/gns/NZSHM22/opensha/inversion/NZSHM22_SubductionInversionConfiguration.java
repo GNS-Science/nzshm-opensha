@@ -68,8 +68,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double totalRateM5 = 5; 
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
-		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0,
-				totalRateM5,bValue, mfdTransitionMag);
+		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0, 0.4, totalRateM5, bValue, mfdTransitionMag);
 	}
 	
 	
@@ -85,6 +84,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 	 * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY
 	 *                                  constraint relative to slip-rate constraint
 	 *                                  (recommended: 1000)
+	 * @param mfdUncertaintyWeightedConstraintScalar TODO
 	 * @param totalRateM5
 	 * @param bValue
 	 * @param mfdTransitionMag
@@ -93,7 +93,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double[] initialSolution, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
 			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
-			double totalRateM5, double bValue, double mfdTransitionMag) {
+			double mfdUncertaintyWeightedConstraintScalar, double totalRateM5, double bValue, double mfdTransitionMag) {
 
 		double MFDTransitionMag = mfdTransitionMag; // magnitude to switch from MFD equality to MFD inequality
 		
@@ -144,7 +144,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 		// setup MFD constraints
 		NZSHM22_SubductionInversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag,
-				mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower);
+				mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 
 //		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();

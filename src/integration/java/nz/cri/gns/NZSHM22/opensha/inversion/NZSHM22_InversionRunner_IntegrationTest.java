@@ -58,7 +58,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
                 //.setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
-                .setUncertaintyWeightedMFDWeights(0.5, 0.5);
+                .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5);
     }
 
     @Test
