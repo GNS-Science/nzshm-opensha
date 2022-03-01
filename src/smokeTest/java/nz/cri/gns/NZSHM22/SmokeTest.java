@@ -208,7 +208,7 @@ public class SmokeTest {
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
                 //.setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
-                .setUncertaintyWeightedMFDWeights(0.5, 0.5)
+                .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5)
                 .runInversion();
 
         runner.writeSolution(solutionFile.getAbsolutePath());
@@ -233,8 +233,7 @@ public class SmokeTest {
                 .setScalingRelationship(scaling, true)
                 .setRuptureSetFile(ruptureSetFile)
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(0.3, 0.5)
-                .setUncertaintyWeightedMFDWeights(1000, 0.1)
+                .setUncertaintyWeightedMFDWeights(1000, 0.1, 0.5)
                 .setSlipRateConstraint("BOTH", 1000, 1000)
                 .runInversion();
 

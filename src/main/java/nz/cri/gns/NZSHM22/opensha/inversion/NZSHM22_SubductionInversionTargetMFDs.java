@@ -77,12 +77,13 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 	
 	public  NZSHM22_SubductionInversionTargetMFDs (NZSHM22_InversionFaultSystemRuptSet invRupSet){
-		this(invRupSet, 0.7, 1.1, 7.85, 0, 0);
+		this(invRupSet, 0.7, 1.1, 7.85, 0, 0, 0.4);
 	}
 
 	public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,
 									  double totalRateM5, double bValue, double mfdTransitionMag,
-									  double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower){
+									  double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower, 
+									  double mfdUncertaintyWeightedConstraintScalar){
 		
 		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
 		// equivalent
@@ -136,7 +137,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 //		List<MFD_InversionConstraint> mfdUncertaintyConstraints = new ArrayList<>();
 
 		if (mfdUncertaintyWeightedConstraintWt > 0.0) {
-			mfdUncertaintyConstraints.add(MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFD, MINIMIZE_RATE_BELOW_MAG, 20, mfdUncertaintyWeightedConstraintPower));
+			mfdUncertaintyConstraints.add(MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFD, MINIMIZE_RATE_BELOW_MAG, 20, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar));
 		} 
 		
 		// original for Eq/InEq constraints
