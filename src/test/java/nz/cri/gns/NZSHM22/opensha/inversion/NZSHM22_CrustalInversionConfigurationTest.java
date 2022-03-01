@@ -17,16 +17,16 @@ import java.util.stream.Stream;
 public class NZSHM22_CrustalInversionConfigurationTest {
 
 
-    public NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, IOException {
+    public NZSHM22_InversionFaultSystemRuptSet loadRupSet(double maxTVZ, double maxSans) throws URISyntaxException, IOException {
         URL url = Thread.currentThread().getContextClassLoader().getResource("RupSetWaiohauNorth.zip");
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(url.toURI()));
-        return new NZSHM22_InversionFaultSystemRuptSet(rupSet, NZSHM22_LogicTreeBranch.crustalInversion());
+        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(url.toURI()), NZSHM22_LogicTreeBranch.crustalInversion(), -1, maxTVZ, maxSans );
     }
 
 
     @Test
     public void testRegions() throws URISyntaxException, IOException {
-        NZSHM22_InversionFaultSystemRuptSet rupSet = loadRupSet();
+        NZSHM22_InversionFaultSystemRuptSet rupSet = loadRupSet(10, 10);
         assertEquals(8, rupSet.getNumSections());
 
         NZSHM22_CrustalInversionConfiguration.setRegionalData(rupSet, 5, 7);
@@ -41,7 +41,7 @@ public class NZSHM22_CrustalInversionConfigurationTest {
 
         // TVZ has a different minMag applied
         assertEquals(
-                List.of(7.0, 7.0, 7.0, 6.354597519806781, 6.354597519806781, 6.354597519806781, 6.354597519806781, 6.354597519806781),
+                List.of(7.0, 7.0, 7.0, 6.304929191822435, 6.304929191822435, 6.304929191822435, 6.304929191822435, 6.304929191822435),
                 Stream.of(0, 1, 2, 3, 4, 5, 6, 7).map(rupSet::getFinalMinMagForSection).collect(Collectors.toList()));
 
     }
