@@ -18,8 +18,8 @@ jobs:
     - name: Clone opensha
       uses: actions/checkout@v2
       with:
-        repository: opensha/opensha
-        ref: feature/cdc_misfit_stats
+        repository: GNS-Science/opensha
+        ref: feature/cdc-misfit-stats
         path: opensha
 
     - uses: actions/checkout@v2
