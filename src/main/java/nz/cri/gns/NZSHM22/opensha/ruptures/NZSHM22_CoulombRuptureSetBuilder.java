@@ -2,6 +2,8 @@ package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
+
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
@@ -695,13 +697,16 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
+        SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
+        sr.setupCrustal(4.2, 42);
         
-        //builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010);
-        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90);
-        builder.setMaxFaultSections(100);
-        builder
+        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9D_SANSTVZ_D90);
+        builder.setMaxFaultSections(2000);
+        builder.setNumThreads(8);
+        ((NZSHM22_CoulombRuptureSetBuilder) builder
+        	.setScalingRelationship(sr))
         	.setAdaptiveMinDist(6.0d)
-        	.setMaxJumpDistance(15d)
+        	.setMaxJumpDistance(5d)
         	.setAdaptiveSectFract(0.1f);
         
         System.out.println(builder.getDescriptiveName());
