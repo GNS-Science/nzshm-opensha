@@ -113,13 +113,13 @@ public class MFDManipulationTest {
     @Test
     public void combinedUncertaintyFillBelowTest() {
         IncrementalMagFreqDist filled = fillBelowDist(8, 0);
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5, 0.4);
         int indexMinMag = filled.getClosestXIndex(7.0);
 
         assertTrue("non-aligned minMag leads to NaN", Double.isNaN(actual.getStdDevs().getY(indexMinMag)));
 
         filled = fillBelowDist(7.0, 7);
-        actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5);
+        actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5, 0.4);
 
         assertEquals("formula always comes out to 0.4*rate at minMag", filled.getY(indexMinMag)*0.4, actual.getStdDevs().getY(indexMinMag), 0.00000001);
         //assertTrue("formula comes out to >1 at minMag+1", actual.getStdDevs().getY(indexMinMag + 1) > 1);

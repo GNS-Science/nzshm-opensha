@@ -42,7 +42,7 @@ public class PythonGatewayRunner {
             //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
             // .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(10000, .75)
+                .setUncertaintyWeightedMFDWeights(10000, .75, 0.4)
             //    .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
                 .setReweightTargetQuantity("MAD"))
