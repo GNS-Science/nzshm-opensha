@@ -4048,7 +4048,7 @@
         <Location Latitude="-40.8833" Longitude="175.2250" Depth="0.0000"/>
       </FaultTrace>
     </i405>
-    <i406 sectionId="406" sectionName="Otakiri" aveLongTermSlipRate="1.80" slipRateStdDev="0.90" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="1.3" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="147.5" parentSectionId="-1" connector="false">
+    <i406 sectionId="406" sectionName="Otakiri" aveLongTermSlipRate="1.80" slipRateStdDev="0.90" aveDip="50.0" aveRake="-90.0" aveUpperDepth="0.0" aveLowerDepth="9.4" aseismicSlipFactor="0.0" couplingCoeff="1.0" dipDirection="147.5" parentSectionId="-1" connector="false">
       <FaultTrace name="Otakiri">
         <Location Latitude="-37.9220" Longitude="176.9058" Depth="0.0000"/>
         <Location Latitude="-37.9575" Longitude="176.8211" Depth="0.0000"/>
