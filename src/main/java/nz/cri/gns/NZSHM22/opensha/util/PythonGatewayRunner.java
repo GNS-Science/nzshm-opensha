@@ -32,7 +32,7 @@ public class PythonGatewayRunner {
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
 
         ((NZSHM22_PythonGateway.CachedCrustalInversionRunner)runner
-                .setTVZSlipRateFactor(0.5)
+                .setSlipRateFactor(0.9, 0.5)
                 .setMaxMags("FILTER_RUPSET",10,7.5)
                 .setMinMags(6.8 , 6.5)
                 .setMaxMags("MANIPULATE_MFD", 10,7.5)
