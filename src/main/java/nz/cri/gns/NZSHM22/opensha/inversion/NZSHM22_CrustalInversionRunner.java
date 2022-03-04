@@ -228,7 +228,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()      		
                 .setSlipRateFactor(0.9, 0.3)
-                .setMaxMags("MANIPULATE_MFD",10,7.5) //FILTER_RUPSET
+                .setMaxMags("FILTER_RUPSET",10,7.5) //FILTER_RUPSET or MANIPULATE_MFD
                 .setMinMags(6.8 , 6.5)
                 .setInversionSeconds(300)
                 .setScalingRelationship(scaling, true)
@@ -254,7 +254,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         }        
 //		System.out.println(solution.getEnergies().toString());
 
-        File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
+        File solutionFile = new File(outputDir, "CrustalInversionSolutionLatestFeatures.zip");
         solution.write(solutionFile);
 
 //	U3FaultSystemIO.writeSol(solution, solutionFile);
