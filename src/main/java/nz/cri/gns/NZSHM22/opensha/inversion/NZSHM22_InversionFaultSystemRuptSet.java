@@ -68,14 +68,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @return
 	 * @throws IOException
 	 */
-	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double tvzSlipRateFactor) throws IOException {
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double slipRateFactorTVZ, double slipRateFactorSans) throws IOException {
 		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
 		PolygonFaultGridAssociations polyMgr = FaultPolyMgr.create(rupSetA.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 		rupSetA.addModule(polyMgr);
 		NZSHM22_TvzSections tvzSections = new NZSHM22_TvzSections(rupSetA);
 		rupSetA.addModule(tvzSections);
 		applyDeformationModel(rupSetA, branch);
-		applyTVZSlipRateFactor(rupSetA, tvzSlipRateFactor);
+		applySlipRateFactor(rupSetA, slipRateFactorTVZ, slipRateFactorSans);
 		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
 		if (scaling != null && scaling.getReCalc()) {
 			rupSetA = recalcMags(rupSetA, scaling);
@@ -92,14 +92,15 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @return
 	 * @throws IOException
 	 */
-	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double tvzSlipRateFactor, double maxMagTVZ, double maxMagSans) throws IOException {
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(File ruptureSetFile, NZSHM22_LogicTreeBranch branch, double slipRateFactorTVZ, double slipRateFactorSans, double maxMagTVZ, double maxMagSans) throws IOException {
 		FaultSystemRupSet rupSetA = FaultSystemRupSet.load(ruptureSetFile);
 		PolygonFaultGridAssociations polyMgr = FaultPolyMgr.create(rupSetA.getFaultSectionDataList(), U3InversionTargetMFDs.FAULT_BUFFER, new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
 		rupSetA.addModule(polyMgr);
 		NZSHM22_TvzSections tvzSections = new NZSHM22_TvzSections(rupSetA);
 		rupSetA.addModule(tvzSections);
 		applyDeformationModel(rupSetA, branch);
-		applyTVZSlipRateFactor(rupSetA, tvzSlipRateFactor);
+		
+		applySlipRateFactor(rupSetA, slipRateFactorTVZ, slipRateFactorSans);
 
 		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
 		rupSetA = recalcMags(rupSetA, scaling);
@@ -111,16 +112,32 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSetA, branch);
 	}
 
-	protected static void applyTVZSlipRateFactor(FaultSystemRupSet rupSet, double tvzSlipRateFactor){
-		if(tvzSlipRateFactor >=0){
-			NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
-			SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
-			double[] slipRates = origSlips.getSlipRates();
-			tvzSections.getTvzSections().forEach(sectionId -> {
-				slipRates[sectionId] *= tvzSlipRateFactor;
+	protected static void applySlipRateFactor(FaultSystemRupSet rupSet, double slipRateFactorTVZ, double slipRateFactorSans){
+
+		if(slipRateFactorTVZ == 0 && slipRateFactorSans == 0)
+			return;
+		
+		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
+		double[] slipRates = origSlips.getSlipRates();
+		
+		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		
+		if(slipRateFactorTVZ >=0){
+			tvzSections.getSections().forEach(sectionId -> {
+				slipRates[sectionId] *= slipRateFactorTVZ;
 			});
-			rupSet.addModule(SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
 		}
+				
+		if(slipRateFactorSans >=0) {
+			//Shouldn't need to serialise this
+			NZSHM22_SansTvzSections sansSections = new NZSHM22_SansTvzSections(rupSet);
+			sansSections.getSections().forEach(sectionId -> {
+				//make sure we don't scale anything that is also in tvz
+				if (tvzSections.isInRegion(sectionId) == false)
+					slipRates[sectionId] *= slipRateFactorSans;
+			});			
+		}
+		rupSet.addModule(SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
 	}
 
 	/**

@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +21,8 @@ public class NZSHM22_CrustalInversionConfigurationTest {
     public NZSHM22_InversionFaultSystemRuptSet loadRupSet(double maxTVZ, double maxSans) throws URISyntaxException, IOException {
         URL url = Thread.currentThread().getContextClassLoader().getResource("RupSetWaiohauNorth.zip");
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(url.toURI()));
-        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(url.toURI()), NZSHM22_LogicTreeBranch.crustalInversion(), -1, maxTVZ, maxSans );
+        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(url.toURI()), 
+        		NZSHM22_LogicTreeBranch.crustalInversion(), -1, -1, maxTVZ, maxSans );
     }
 
 
@@ -45,4 +47,30 @@ public class NZSHM22_CrustalInversionConfigurationTest {
                 Stream.of(0, 1, 2, 3, 4, 5, 6, 7).map(rupSet::getFinalMinMagForSection).collect(Collectors.toList()));
 
     }
+    
+    
+
+    @Test
+    public void testRegionSlipScaling() throws URISyntaxException, IOException {
+        NZSHM22_InversionFaultSystemRuptSet rupSet = loadRupSet(10, 10);
+        assertEquals(8, rupSet.getNumSections());
+
+        double scalar = 0.3333;
+        
+        SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);     
+        NZSHM22_InversionFaultSystemRuptSet.applySlipRateFactor(rupSet, scalar, scalar);       
+        SectSlipRates scaledSlips = rupSet.getModule(SectSlipRates.class);
+
+        double oldTotalSlip = 0;
+        double newTotalSlip = 0;
+		for (int i=0; i<origSlips.size(); i++)
+			oldTotalSlip += origSlips.getSlipRate(i);
+
+		for (int i=0; i<origSlips.size(); i++)
+			newTotalSlip += scaledSlips.getSlipRate(i);
+       
+        assertEquals(oldTotalSlip * scalar, newTotalSlip, 1e-6);
+
+    }    
+    
 }
