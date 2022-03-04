@@ -116,7 +116,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
 			SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 			double[] slipRates = origSlips.getSlipRates();
-			tvzSections.getTvzSections().forEach(sectionId -> {
+			tvzSections.getSections().forEach(sectionId -> {
 				slipRates[sectionId] *= tvzSlipRateFactor;
 			});
 			rupSet.addModule(SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
