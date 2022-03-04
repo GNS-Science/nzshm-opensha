@@ -88,8 +88,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double slipRateUncertaintyScalingFactor;
 	protected double mfdEqualityConstraintWt;
 	protected double mfdInequalityConstraintWt;
-	protected double mfdUncertaintyWeightedConstraintWt;
-	protected double mfdUncertaintyWeightedConstraintPower; //typically 0.5
+	protected double mfdUncertWtdConstraintWt;
+	protected double mfdUncertWtdConstraintPower; //typically 0.5
+	protected double mfdUncertWtdConstraintScalar; //typically 0.4
 
 	protected abstract NZSHM22_AbstractInversionRunner configure() throws DocumentException, IOException;
 
@@ -408,21 +409,22 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt) {
-		Preconditions.checkState(mfdUncertaintyWeightedConstraintWt == 0);
+		Preconditions.checkState(mfdUncertWtdConstraintWt == 0);
 		this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
 		this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
 		return this;
 	}
 
 	public NZSHM22_AbstractInversionRunner setUncertaintyWeightedMFDWeights(double mfdUncertaintyWeightedConstraintWt,
-			double mfdUncertaintyWeightedConstraintPower) {
+			double mfdUncertaintyWeightedConstraintPower, double mfdUncertaintyWeightedConstraintScalar) {
 		Preconditions.checkState(this.mfdEqualityConstraintWt == 0);
 		Preconditions.checkState(this.mfdInequalityConstraintWt == 0);
 		Preconditions.checkArgument(
 				0 <= mfdUncertaintyWeightedConstraintPower && mfdUncertaintyWeightedConstraintPower <= 1,
-				"mfdUncertaintyWeightedConstraintPower must be not less than 0 and not greater than 1.");
-		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
-		this.mfdUncertaintyWeightedConstraintPower = mfdUncertaintyWeightedConstraintPower;
+				"mfdUncertWtdConstraintPower must be not less than 0 and not greater than 1.");
+		this.mfdUncertWtdConstraintWt = mfdUncertaintyWeightedConstraintWt;
+		this.mfdUncertWtdConstraintPower = mfdUncertaintyWeightedConstraintPower;
+		this.mfdUncertWtdConstraintScalar = mfdUncertaintyWeightedConstraintScalar; 
 		return this;
 	}	
 	

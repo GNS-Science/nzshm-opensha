@@ -91,6 +91,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	 * @param bValue_Sans
 	 * @param bValue_TVZ
 	 * @param mfdTransitionMag
+	 * @param mfdUncertWtdConstraintScalar TODO
 	 * @return
 	 */
 	public static NZSHM22_CrustalInversionConfiguration forModel(
@@ -100,8 +101,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 			double bValue_Sans, double bValue_TVZ, double mfdTransitionMag,
 			double mMin_Sans, double mMin_TVZ,
 			double maxMagSans, double maxMagTVZ,
-			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
-			boolean excludeMinMag) {
+			double mfdUncertWtdConstraintWt, double mfdUncertWtdConstraintPower,
+			double mfdUncertWtdConstraintScalar, boolean excludeMinMag) {
 
 		/*
 		 * ******************************************* COMMON TO ALL MODELS
@@ -140,7 +141,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
 				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ, maxMagSans, maxMagTVZ,
-				mfdUncertaintyWeightedConstraintPower);
+				mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<IncrementalMagFreqDist> mfdConstraints = inversionMFDs.getMFD_Constraints();
 
@@ -211,9 +212,9 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 			newConfig.setMinimizationConstraintWt(minimizationConstraintWt);
 		}
 
-		if (mfdUncertaintyWeightedConstraintWt > 0.0 ) {
+		if (mfdUncertWtdConstraintWt > 0.0 ) {
 			newConfig
-					.setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt)
+					.setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertWtdConstraintWt)
 					.setMfdUncertaintyWeightedConstraints(inversionMFDs.getMfdUncertaintyConstraints());
 		}
 

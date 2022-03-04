@@ -33,8 +33,9 @@ public class CrustalMFDRunner {
     String outputPath = "TEST/mfd";
     String name = "MFD Plot";
     private double mfdUncertaintyPower;
-
-    public CrustalMFDRunner setScalingRelationship(String scalingRelationship, boolean recalcMags) {
+    private double mfdUncertaintyScalar;
+    
+	public CrustalMFDRunner setScalingRelationship(String scalingRelationship, boolean recalcMags) {
         return setScalingRelationship(NZSHM22_ScalingRelationshipNode.createRelationShip(scalingRelationship), recalcMags);
     }
 
@@ -62,11 +63,16 @@ public class CrustalMFDRunner {
         return this;
     }
 
-    public CrustalMFDRunner setMfdUncertaintyPowers(double mfdUncertaintyPower){
+    public CrustalMFDRunner setMfdUncertaintyPower(double mfdUncertaintyPower){
         this.mfdUncertaintyPower = mfdUncertaintyPower;
         return this;
     }
 
+    public CrustalMFDRunner setMfdUncertaintyScalar(double mfdUncertaintyScalar) {
+		this.mfdUncertaintyScalar = mfdUncertaintyScalar;
+		return this;
+	}
+    
     public CrustalMFDRunner setName(String name) {
         this.name = name;
         return this;
@@ -109,7 +115,7 @@ public class CrustalMFDRunner {
     }
 
     public void run() throws IOException {
-        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMagSans, minMagTvz, 15, 15, mfdUncertaintyPower);
+        NZSHM22_CrustalInversionTargetMFDs targetMfds = new NZSHM22_CrustalInversionTargetMFDs(rupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMagSans, minMagTvz, 15, 15, mfdUncertaintyPower, 0.606);
         rupSet.addModule(targetMfds);
 
         //rupSet.write(new File(outputPath, "rupSet.zip"));

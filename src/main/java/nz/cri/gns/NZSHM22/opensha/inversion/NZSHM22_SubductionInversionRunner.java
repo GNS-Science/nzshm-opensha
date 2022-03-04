@@ -54,9 +54,8 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
-						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower,
-						totalRateM5,
-						bValue, mfdTransitionMag);
+						mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar,
+						totalRateM5, bValue, mfdTransitionMag);
 
 		// CBC This may not be needed long term
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
@@ -107,7 +106,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setScalingRelationship(scale, true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
-				.setUncertaintyWeightedMFDWeights(1000, 0.1)
+				.setUncertaintyWeightedMFDWeights(1000, 0.1, 0.4)
 				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
 				.setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
