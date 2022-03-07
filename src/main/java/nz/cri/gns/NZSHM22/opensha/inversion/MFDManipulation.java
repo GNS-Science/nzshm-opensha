@@ -67,16 +67,19 @@ public class MFDManipulation {
         return newMFDConstraints;
     }
 
-    public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double power) {
+    public static UncertainIncrMagFreqDist addMfdUncertainty(IncrementalMagFreqDist mfd, double minimize_below_mag, double minimizeAboveMag, double power) {
         int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
+        int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
         int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
         Preconditions.checkArgument(minMagBin <= firstWeightPowerBin,
                 "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
-        double firstWeightPower = Math.pow(mfd.getY(mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG)), power - 1);
+        Preconditions.checkArgument( firstWeightPowerBin <= maxMagBin,
+                "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
+        double firstWeightPower = Math.pow(mfd.getY(firstWeightPowerBin), power - 1);
         EvenlyDiscretizedFunc stdDevs = new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);
-            double stdDev = (i < minMagBin) ? 1.0 : firstWeightPower / Math.pow(rate, power - 1);
+            double stdDev = ((i < minMagBin) || (maxMagBin < i))? 1e-20 : firstWeightPower / Math.pow(rate, power - 1);
             stdDevs.set(i, stdDev);
         }
         return new UncertainIncrMagFreqDist(mfd, stdDevs);
@@ -102,4 +105,26 @@ public class MFDManipulation {
         }
         return result;
     }
+
+    /**
+     * Returns a copy of source with value in all bins above the bin that maxMag falls in.
+     * @param source
+     * @param maxMag
+     * @param value
+     * @return
+     */
+    public static IncrementalMagFreqDist fillAboveMag(IncrementalMagFreqDist source, double maxMag, double value) {
+        IncrementalMagFreqDist result = new IncrementalMagFreqDist(source.getMinX(), source.size(), source.getDelta());
+        int minMagBin = result.getClosestXIndex(maxMag);
+        for (int i = 0; i < source.size(); i++) {
+            Point2D point = source.get(i);
+            if (i > minMagBin) {
+                result.set(i, value);
+            } else {
+                result.set(i, point.getY());
+            }
+        }
+        return result;
+    }
+
 }

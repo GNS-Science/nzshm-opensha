@@ -19,7 +19,7 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
 
     public FaultSystemRupSet modularRupSet() throws URISyntaxException, IOException {
         URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("ModularAlpineVernonInversionSolution.zip");
-        return NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
+        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
     }
 
     @Test

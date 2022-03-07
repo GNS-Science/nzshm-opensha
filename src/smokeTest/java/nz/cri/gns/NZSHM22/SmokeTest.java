@@ -105,7 +105,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(file, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(file, branch);
 
         sanityCheckAzimuthalRuptureSet(rupSet);
         sanityCheckAzimuthalRuptureSet(loadedRupSet);
@@ -144,7 +144,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(ruptureSetFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(ruptureSetFile, branch);
 
         sanityCheckCoulombRuptureSet(rupSet);
         sanityCheckCoulombRuptureSet(loadedRupSet);
@@ -186,7 +186,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupturesFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupturesFile, branch);
 
         sanityCheckSubductionRuptureSet(rupSet);
         sanityCheckSubductionRuptureSet(loadedRupSet);

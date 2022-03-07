@@ -59,15 +59,7 @@ public class RegionalRupSetData {
         spatialSeisPDF.normaliseRegion(region);
     }
 
-    protected static IntPredicate createRegionFilter(FaultSystemRupSet original, GriddedRegion region) {
-        Area area = region.getShape();
-        PolygonFaultGridAssociations polyMgr = original.getModule(PolygonFaultGridAssociations.class);
-        return s -> {
-            Area sectionArea = polyMgr.getPoly(s).getShape();
-                sectionArea.intersect(area);
-            return !sectionArea.isEmpty();
-        };
-    }
+
 
     public GriddedRegion getRegion(){
         return region;
