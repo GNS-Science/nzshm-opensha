@@ -18,7 +18,6 @@ public class NZSHM22_DeformationModelsTest {
 
     protected NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, DocumentException, IOException {
         URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
-        System.out.println(alpineVernonRupturesUrl);
         return (NZSHM22_InversionFaultSystemRuptSet) NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(alpineVernonRupturesUrl.toURI())).getRupSet();
     }
 
@@ -28,8 +27,8 @@ public class NZSHM22_DeformationModelsTest {
         FaultSection s = ruptSet.getFaultSectionData(0);
         assertEquals(0, s.getSectionId());
         assertEquals(27, s.getOrigAveSlipRate(), 0.00000001);
-        assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(0), 0.0000001);
-        assertEquals(0.02655335389205309, ruptSet.getSlipRateForSection(1), 0.0000001);
+        assertEquals(0.027, ruptSet.getSlipRateForSection(0), 0.0000001);
+        assertEquals(0.027, ruptSet.getSlipRateForSection(1), 0.0000001);
 
         NZSHM22_DeformationModel.DeformationHelper helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
             public InputStream getStream() {

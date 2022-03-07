@@ -63,18 +63,14 @@ public class NZSHM22_InversionRunner_IntegrationTest {
 
     @Test
     public void testRunExclusion() throws URISyntaxException, DocumentException, IOException {
-        NZSHM22_AbstractInversionRunner runner = buildRunner().setExcludeRupturesBelowMinMag(false);
+        NZSHM22_AbstractInversionRunner runner = buildRunner().setExcludeRupturesBelowMinMag(true);
         FaultSystemSolution solution = runner.runInversion();
 
-        assertTrue(solution.getRateForRup(0) > 0);
-        assertTrue(solution.getRateForRup(6) > 0);
-
-        runner = buildRunner().setExcludeRupturesBelowMinMag(true);
-        solution = runner.runInversion();
-
-        // when excluding minMag ruptures, rupture 0 no longer has a rate
-        assertEquals(0, solution.getRateForRup(0), 0.0);
-        assertTrue(solution.getRateForRup(6) > 0);
+        for (int r = 0; r < solution.getRupSet().getNumRuptures(); r++) {
+            if (((NZSHM22_InversionFaultSystemRuptSet) solution.getRupSet()).isRuptureBelowSectMinMag(r)) {
+                assertEquals(0, solution.getRateForRup(r), 0);
+            }
+        }
     }
 
     /**
@@ -86,7 +82,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
      */
     @Test
     public void testLoadRuptureSetForInversion() throws IOException, DocumentException, URISyntaxException {
-        NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
+        NZSHM22_InversionFaultSystemRuptSet ruptureSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
         assertEquals(3101, ruptureSet.getModule(ClusterRuptures.class).getAll().size());
     }
 

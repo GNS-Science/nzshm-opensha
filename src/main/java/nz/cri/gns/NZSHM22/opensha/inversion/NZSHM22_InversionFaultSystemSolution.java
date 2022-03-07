@@ -68,10 +68,10 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
         }
     }
 
-    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) {
+    public static NZSHM22_InversionFaultSystemSolution fromCrustalSolution(FaultSystemSolution solution) throws IOException {
         FaultSystemRupSet rupSet = solution.getRupSet();
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalFromModuleContainer(rupSet);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 solution,
@@ -86,7 +86,7 @@ public class NZSHM22_InversionFaultSystemSolution extends InversionFaultSystemSo
 
         FaultSystemRupSet rupSet = solution.getRupSet();
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionFromModuleContainer(rupSet);
-        NZSHM22_InversionFaultSystemRuptSet nzRupSet = new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
+        NZSHM22_InversionFaultSystemRuptSet nzRupSet = NZSHM22_InversionFaultSystemRuptSet.fromExistingSubductionRuptureSet(rupSet, branch);
 
         NZSHM22_InversionFaultSystemSolution ifss = new NZSHM22_InversionFaultSystemSolution(
                 solution,
