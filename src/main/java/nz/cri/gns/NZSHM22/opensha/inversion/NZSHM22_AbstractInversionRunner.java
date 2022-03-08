@@ -325,7 +325,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
-	 * Exclude ruptures that are below MinMag. True by default.
+	 * Exclude ruptures that are below MinMag. false by default.
 	 * @param excludeRupturesBelowMinMag
 	 * @return
 	 */
