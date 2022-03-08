@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+
+import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
 import org.opensha.commons.data.uncertainty.UncertaintyBoundType;
@@ -20,14 +22,18 @@ import java.util.Map;
 
 public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
-    GEOLOGIC_SLIP_1_0(
-    		"Geologic v1",
-    		"NZNSHM_paleotimings_GEOLOGICsliprates_all_1.0.csv"),
+    GEODETIC_SLIP_PRIOR_22FEB(
+    		"Geodetic with Geologic prior timing, 22 Feb 2022",
+    		"NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_22feb.txt"),
     
-    GEODETIC_SLIP_1_0(
-    		"Geodetic v1",
-    		"NZNSHM_paleotimings_GEODETICsliprates_1.0.csv"),
-
+    GEODETIC_SLIP_22FEB(
+    		"Geodetic timing, 22 Feb 2022",
+    		"NZNSHM_paleotimings_GEODETICsliprates_22feb.txt"),
+    
+    GEOLOGIC_SLIP_22FEB(
+    		"Geologic timing, 22 Feb 2022",
+    		"NZNSHM_paleotimings_GEOLOGICsliprates_22feb.txt"),
+	
     GEODETIC_SLIP_PRIOR_4FEB(
     		"Geodetic with Geologic prior timing, 4 Feb 2022",
     		"NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_4feb.csv"),
@@ -38,7 +44,15 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
     
     GEOLOGIC_SLIP_4FEB(
     		"Geologic timing, 4 Feb 2022",
-    		"NZNSHM_paleotimings_GEOLOGICsliprates_4feb.csv");
+    		"NZNSHM_paleotimings_GEOLOGICsliprates_4feb.csv"),
+
+    GEOLOGIC_SLIP_1_0(
+    		"Geologic v1",
+    		"NZNSHM_paleotimings_GEOLOGICsliprates_all_1.0.csv"),
+    
+    GEODETIC_SLIP_1_0(
+    		"Geodetic v1",
+    		"NZNSHM_paleotimings_GEODETICsliprates_1.0.csv");
 
     final static String RESOURCE_PATH = "/paleoRates/";
 
@@ -164,4 +178,11 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
         return LogicTreeLevel.forEnumUnchecked(NZSHM22_PaleoRates.class, "NZSHM22_PaleoRates", "NZSHM22_PaleoRates");
     }
 
+    public static void main(String[] args) throws DocumentException, IOException {
+        System.out.println(NZSHM22_PaleoRates.GEODETIC_SLIP_PRIOR_22FEB.description);
+//        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints = new ArrayList<>();
+        for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint: NZSHM22_PaleoRates.GEODETIC_SLIP_PRIOR_22FEB.fetchConstraints(null)) {
+        	System.out.println("Constraint: " + constraint.sectionName);
+        }
+    }
 }
