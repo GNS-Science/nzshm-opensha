@@ -27,47 +27,50 @@ public class PythonGatewayRunner {
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
         SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship)NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
-        scaling.setupCrustal(4, 4.1);
-
+        scaling.setupCrustal(4.2, 4.2);
+        
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
 
         ((NZSHM22_PythonGateway.CachedCrustalInversionRunner)runner
-                .setTVZSlipRateFactor(0.5)
+                .setTVZSlipRateFactor(1.0)
+                .setMinMags(6.8 , 6.5)
+                .setMaxMags("MANIPULATE_MFD", 10,7.5)
+                .setScalingRelationship(scaling, true)
+                .setDeformationModel("FAULT_MODEL")
+                .setRuptureSetFile(ruptureSet)
+                .setUncertaintyWeightedMFDWeights(1, .25)
+                .setSlipRateUncertaintyConstraint(1,0)
+                .setUnmodifiedSlipRateStdvs(true)
+                .setReweightTargetQuantity("MAD"))
+                .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
+                .setPaleoRateConstraints(1, 1, "GEOLOGIC_SLIP_4FEB", "NZSHM22_C_42")
+                //.setPaleoRateConstraints(1, 1, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25")
+                .setInversionSeconds(10);
+                
+                /*.setTVZSlipRateFactor(0.5)
                 .setMaxMags("FILTER_RUPSET",10,7.5)
                 .setMinMags(6.8 , 6.5)
                 .setMaxMags("MANIPULATE_MFD", 10,7.5)
             //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
                 .setScalingRelationship(scaling, true)
-            //   .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
+            //  .setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
                 .setRuptureSetFile(ruptureSet)
             // .setGutenbergRichterMFDWeights(100.0, 1000.0)
                 .setUncertaintyWeightedMFDWeights(10000, .75)
-            //    .setSlipRateConstraint("BOTH", 1000, 1000)
+        //    .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
                 .setReweightTargetQuantity("MAD"))
                 .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEODETIC_SLIP_1_0", "UCERF3_PLUS_PT25");
-
+                */
 
         
-        // see org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params
-		//    	/**
-		//    	 * classical SA cooling schedule (Geman and Geman, 1984) (slow but ensures convergence)
-		//    	 */
-		//    	CLASSICAL_SA,
-		//    	/**
-		//    	 * fast SA cooling schedule (Szu and Hartley, 1987)
-		//    	 */
-		//    	FAST_SA,
-		//    	/**
-		//    	 * very fast SA cooling schedule (Ingber, 1989) (recommended)
-		//    	 */
-		//    	VERYFAST_SA,
-		//    	LINEAR; // Drops temperature uniformly from 1 to 0.  Only use with a completion criteria of a fixed number of iterations.
+        //runner.getInversionInputGenerator()
+        
         runner
         	.setCoolingSchedule("FAST_SA")
-        	.setIterationCompletionCriteria(18000000)
+        	//.setIterationCompletionCriteria(18000000)
         	.setPerturbationFunction("POWER_LAW");
 
         runner.runInversion();

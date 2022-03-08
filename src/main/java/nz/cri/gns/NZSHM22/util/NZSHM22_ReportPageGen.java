@@ -160,12 +160,13 @@ public class NZSHM22_ReportPageGen {
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-        reportPageGen.setName("SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw")
-        	.setOutputPath("TEST/REPORTPAGEGEN5")
+        reportPageGen.setName("my report")
+        	//.setOutputPath("/home/chrisdc/NSHM/DEV/REPORTS")
+            .setOutputPath("/tmp/reports")
             .setFillSurfaces(true)
             .setPlotLevel("FULL")
 //                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
-    		.setSolution("./TEST/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy.zip");
+    		.setSolution("/tmp/inversions/crustalInversion.zip");
         reportPageGen.generatePage();
         System.out.println("DONE!");
     }
