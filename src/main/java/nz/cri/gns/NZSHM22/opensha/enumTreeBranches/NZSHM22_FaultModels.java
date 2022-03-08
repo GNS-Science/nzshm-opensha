@@ -15,7 +15,19 @@ import java.util.Map;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
 
-
+	/*
+	 * From: Susan Ellis
+	 * Hi all, d90 is not the same as Df even for the purely seismically defined depth. 
+	 *  D90 is multiplied by overshoot factor  to arrive at Df (seismic).
+	 *  450 degc isotherm depth is also multiplied by an overshoot factor to arrive at Df (thermal). 
+	 *  These two Dfs are them combined into Dfcomb, heavily weighted in favour of the seismology based Df 
+	 *  where there are sufficient earthquakes
+	 *
+	 * So D90 depth is a step on the path to Df-seis. Df-seis is deeper. Df-seis is combined with Df-thermal to arrive at Dfcomb
+	 * Cheers Susan
+	 *
+	 * In summary, Dfc is "maximum fault-rupture depth, combined" 
+	 */
 	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc
 	CFM_1_0_D66_ALL("CFM 1.0 all NZ faults, with Dfc depth scaled by 0.66", "cfm_1_0_dfc0_66_all.xml"),
 	CFM_1_0_D66_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depth scaled by 0.66", "cfm_1_0_dfc0_66_no_tvz.xml"),
