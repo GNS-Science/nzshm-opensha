@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 
-import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
 import org.opensha.commons.data.uncertainty.UncertaintyBoundType;
@@ -178,11 +177,4 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
         return LogicTreeLevel.forEnumUnchecked(NZSHM22_PaleoRates.class, "NZSHM22_PaleoRates", "NZSHM22_PaleoRates");
     }
 
-    public static void main(String[] args) throws DocumentException, IOException {
-        System.out.println(NZSHM22_PaleoRates.GEODETIC_SLIP_PRIOR_22FEB.description);
-//        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints = new ArrayList<>();
-        for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint: NZSHM22_PaleoRates.GEODETIC_SLIP_PRIOR_22FEB.fetchConstraints(null)) {
-        	System.out.println("Constraint: " + constraint.sectionName);
-        }
-    }
 }
