@@ -1,10 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
@@ -40,6 +37,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double paleoParentRateSmoothnessConstraintWeight = 0;
     private NZSHM22_PaleoRates paleoRates;
     private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+    private double sansSlipRateFactor = -1;
+    private double tvzSlipRateFactor = -1;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -64,6 +63,18 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         this.maxMagType = NZSHM22_MagBounds.MaxMagType.valueOf(maxMagType);
         this.maxMagSans = maxMagSans;
         this.maxMagTVZ = maxMagTVZ;
+        return this;
+    }
+
+    /**
+     * Sets regional slip scaling factor
+     * @param sansSlipRateFactor
+     * @param tvzSlipRateFactor
+     * @return
+     */
+    public NZSHM22_CrustalInversionRunner setSlipRateFactor(double sansSlipRateFactor, double tvzSlipRateFactor){
+        this.sansSlipRateFactor = sansSlipRateFactor;
+        this.tvzSlipRateFactor = tvzSlipRateFactor;
         return this;
     }
 
@@ -115,8 +126,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
-        if(maxMagType != NZSHM22_MagBounds.MaxMagType.NONE){
+        if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
             branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ, maxMagType));
+        }
+        if (tvzSlipRateFactor != -1 || sansSlipRateFactor != -1) {
+            branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
 
         this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);

@@ -28,6 +28,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         levels.add(new NZSHM22_ScalingRelationshipNode.Level());
         levels.add(new NZSHM22_FaultPolyParameters.Level());
         levels.add(new NZSHM22_MagBounds.Level());
+        levels.add(new NZSHM22_SlipRateFactors.Level());
         levels.add(NZSHM22_DeformationModel.level());
         return levels;
     }
