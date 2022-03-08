@@ -11,6 +11,8 @@ import com.google.common.base.Preconditions;
 
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
+
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 import java.io.File;
@@ -204,6 +206,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_CrustalInversionInputGenerator inversionInputGenerator = new NZSHM22_CrustalInversionInputGenerator(
                 rupSet, inversionConfiguration, paleoRateConstraints, null, null, paleoProbabilityModel);
         setInversionInputGenerator(inversionInputGenerator);
+
+        rupSet.addModule(new PaleoseismicConstraintData(rupSet, paleoRateConstraints, paleoProbabilityModel, null, null));
+
         return this;
     }
 
