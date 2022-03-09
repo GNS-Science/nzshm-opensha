@@ -192,6 +192,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_CrustalInversionInputGenerator inversionInputGenerator = new NZSHM22_CrustalInversionInputGenerator(
                 rupSet, inversionConfiguration, paleoRateConstraints, null, null, paleoProbabilityModel);
         setInversionInputGenerator(inversionInputGenerator);
+
+        rupSet.addModule(new PaleoseismicConstraintData(rupSet, paleoRateConstraints, paleoProbabilityModel, null, null));
+
         return this;
     }
 
