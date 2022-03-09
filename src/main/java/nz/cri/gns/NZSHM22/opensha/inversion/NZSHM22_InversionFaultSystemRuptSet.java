@@ -51,40 +51,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
-		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-		if (scaling != null && scaling.getReCalc()) {
-			rupSet = recalcMags(rupSet, scaling);
-		}
-
+		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
-	}
-
-	/**
-	 * This needs to happen before rupSet is passed on to the constructor.
-	 * @param rupSet
-	 * @param branch
-	 * @return
-	 */
-	protected static FaultSystemRupSet prepCrustalRupSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
-
-		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-
-		NZSHM22_MagBounds magBounds = branch.getValue(NZSHM22_MagBounds.class);
-		if (magBounds != null && magBounds.getMaxMagType() == NZSHM22_MagBounds.MaxMagType.FILTER_RUPSET) {
-			scaling.setRecalc(true);
-		}
-
-		if (scaling.getReCalc()) {
-			rupSet = recalcMags(rupSet, scaling);
-		}
-
-		if (magBounds != null && magBounds.getMaxMagType() == NZSHM22_MagBounds.MaxMagType.FILTER_RUPSET) {
-			rupSet.addModule(faultPolyMgr(rupSet, branch));
-			rupSet.addModule(new NZSHM22_TvzSections(rupSet));
-			rupSet = RupSetMaxMagFilter.filter(rupSet, scaling, magBounds.getMaxMagTvz(), magBounds.getMaxMagSans());
-		}
-
-		return rupSet;
 	}
 
 	protected static NZSHM22_FaultPolyMgr faultPolyMgr(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
@@ -110,7 +78,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
-		rupSet = prepCrustalRupSet(rupSet, branch);
+		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 	}
 
@@ -149,8 +117,13 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @param scale
 	 * @return
 	 */
-	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, RupSetScalingRelationship scale){
-		return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scale).build();
+	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		if (scaling != null && scaling.getReCalc()) {
+			return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scaling).build();
+		} else {
+			return rupSet;
+		}
 	}
 
 	protected void applyDeformationModel(NZSHM22_LogicTreeBranch branch) {
