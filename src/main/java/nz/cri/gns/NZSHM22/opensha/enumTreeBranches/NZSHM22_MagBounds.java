@@ -17,7 +17,6 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
 
     public enum MaxMagType {
         NONE,
-        FILTER_RUPSET,
         MANIPULATE_MFD;
     }
 
