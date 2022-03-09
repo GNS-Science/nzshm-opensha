@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public class NZSHM22_TvzSections extends RegionSections {
@@ -10,7 +11,7 @@ public class NZSHM22_TvzSections extends RegionSections {
     }
 
     public NZSHM22_TvzSections(FaultSystemRupSet rupSet) {
-        super(rupSet, new NewZealandRegions.NZ_TVZ_GRIDDED());
+        super(rupSet, rupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_Regions.class).getTvzRegion());
     }
 
 }

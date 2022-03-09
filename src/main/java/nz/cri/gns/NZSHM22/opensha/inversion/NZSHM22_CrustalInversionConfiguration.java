@@ -8,9 +8,11 @@ import java.util.function.IntPredicate;
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
@@ -41,8 +43,11 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ) {
 
-		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
-		GriddedRegion sansTvzRegion = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
+		NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+		NZSHM22_Regions regions = branch.getValue(NZSHM22_Regions.class);
+
+		GriddedRegion tvzRegion = regions.getTvzRegion();
+		GriddedRegion sansTvzRegion = regions.getSansTvzRegion();
 
 		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
 		IntPredicate tvzFilter = tvzSections::isInRegion;
@@ -51,26 +56,6 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
 
 		rupSet.setRegionalData(tvz, sansTvz);
-
-		double[] minMags = new double[rupSet.getNumSections()];
-
-		for (int s = 0; s < minMags.length; s++) {
-			if (tvz.isInRegion(s)) {
-				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
-			} else {
-				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
-			}
-		}
-
-		if (rupSet.hasAvailableModule(ModSectMinMags.class)) {
-			rupSet.removeModuleInstances(ModSectMinMags.class);
-		}
-		rupSet.addAvailableModule(new Callable<ModSectMinMags>() {
-			@Override
-			public ModSectMinMags call() throws Exception {
-				return ModSectMinMags.instance(rupSet, minMags);
-			}
-		}, ModSectMinMags.class);
 	}
 
 	/**

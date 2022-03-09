@@ -88,7 +88,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			return;
 		}
 
-		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		RegionSections tvzSections = new RegionSections(rupSet, new NewZealandRegions.NZ_TVZ_GRIDDED()){
+		};
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 
@@ -128,9 +129,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	protected void applyDeformationModel(NZSHM22_LogicTreeBranch branch) {
 		NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
-		if (model != null) {
-			model.applyTo(this);
-		} else {
+		if (model == null || !model.applyTo(this)) {
 			SectSlipRates rates = SectSlipRates.fromFaultSectData(this);
 			addModule(SectSlipRates.precomputed(this, rates.getSlipRates(), rates.getSlipRateStdDevs()));
 		}
@@ -180,6 +179,27 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	public NZSHM22_InversionFaultSystemRuptSet setRegionalData(RegionalRupSetData tvz, RegionalRupSetData sansTvz){
 		this.tvz = tvz;
 		this.sansTvz = sansTvz;
+
+		double[] minMags = new double[getNumSections()];
+
+		for (int s = 0; s < minMags.length; s++) {
+			if (tvz.isInRegion(s)) {
+				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
+			} else {
+				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
+			}
+		}
+
+		if (hasAvailableModule(ModSectMinMags.class)) {
+			removeModuleInstances(ModSectMinMags.class);
+		}
+		addAvailableModule(new Callable<ModSectMinMags>() {
+			@Override
+			public ModSectMinMags call() throws Exception {
+				return ModSectMinMags.instance(NZSHM22_InversionFaultSystemRuptSet.this, minMags);
+			}
+		}, ModSectMinMags.class);
+
 		return this;
 	}
 
