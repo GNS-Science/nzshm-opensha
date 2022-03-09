@@ -88,7 +88,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			return;
 		}
 
-		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		RegionSections tvzSections = new RegionSections(rupSet, new NewZealandRegions.NZ_TVZ_GRIDDED()){
+		};
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 

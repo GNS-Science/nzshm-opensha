@@ -16,6 +16,20 @@ public class NewZealandRegions {
 	private NewZealandRegions() {
 	};
 
+	public static final class NZ_EMPTY_GRIDDED extends GriddedRegion {
+		static LocationList coords = new LocationList();
+
+		static{
+			coords.add(new Location(-16.214675, 123.367611));
+			coords.add(new Location(-24.447150,140.957213));
+		}
+
+		public NZ_EMPTY_GRIDDED(){
+			super(new Region(new Location(-16.214675, 123.367611), new Location(-24.447150,140.957213)), 0.1, ANCHOR_0_0);
+			setName("Not in NZ Region");
+		}
+	}
+
 	/**
 	 * Region used in NZNSHM22
 	 * 

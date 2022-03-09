@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
@@ -29,6 +30,7 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         levels.add(new NZSHM22_FaultPolyParameters.Level());
         levels.add(new NZSHM22_MagBounds.Level());
         levels.add(new NZSHM22_SlipRateFactors.Level());
+        levels.add(new NZSHM22_Regions.Level());
         levels.add(NZSHM22_DeformationModel.level());
         return levels;
     }
@@ -57,6 +59,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         scaling.setupCrustal(4.0, 4.0);
         scalingRelationship.setScalingRelationship(scaling);
         branch.setValue(scalingRelationship);
+        branch.setValue(new NZSHM22_Regions(
+                new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(),
+                new NewZealandRegions.NZ_TVZ_GRIDDED()));
         return branch;
     }
 
