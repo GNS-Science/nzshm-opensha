@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
@@ -313,9 +314,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, maxMagSans, uncertaintyPower, uncertaintyScalar);
 
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
-		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));
-		System.out.println("sans tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED()));
-		System.out.println("combined: " + (spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()) + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED())));
+		NZSHM22_Regions regions =invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_Regions.class);
+		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(regions.getTvzRegion()));
+		System.out.println("sans tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(regions.getSansTvzRegion()));
+		System.out.println("combined: " + (spatialSeisPDF.getFractionInRegion(regions.getTvzRegion()) + spatialSeisPDF.getFractionInRegion(regions.getSansTvzRegion())));
 
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<>();

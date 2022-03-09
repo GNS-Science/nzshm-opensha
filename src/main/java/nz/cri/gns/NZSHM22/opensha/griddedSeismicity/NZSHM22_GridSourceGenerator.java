@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 
@@ -72,8 +73,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
-		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_TVZ_GRIDDED());
-		spatialSeisPDF.normaliseRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED());
+		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getTvzRegion());
+		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getSansTvzRegion());
 		srcSpatialPDF = spatialSeisPDF.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
