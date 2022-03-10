@@ -205,10 +205,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     public static void main(String[] args) throws IOException, DocumentException {
 
         File inputDir = new File("./TEST");
-        File outputRoot = new File("./TEST");
+        File outputRoot = new File("/tmp");
         File ruptureSet = new File(
-//                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
-        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
+               // "/home/chrisdc/NSHM/DEV/rupture_sets/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjk0MDVnTmJZbw==.zip");
+               "/home/chrisdc/NSHM/DEV/rupture_sets/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==.zip");
+//        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
@@ -216,24 +217,23 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setupCrustal(4.2, 4.2);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
+        .setMaxMags("MANIPULATE_MFD",10,10)
+        .setMinMags(6.8 , 6.8)
+        .setInversionSeconds(300)
+        .setScalingRelationship(scaling, true)
+        .setRuptureSetFile(ruptureSet)
+        .setUncertaintyWeightedMFDWeights(1.0, 0.0, 0.1)
+        .setDeformationModel("FAULT_MODEL")
+        .setSlipRateUncertaintyConstraint(1, 0)
+        .setReweightTargetQuantity("MAD"))
+        .setSlipRateFactor(0.9, 0.7)
+        .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
+        .setPaleoRateConstraints(1.0, 1.0, "GEOLOGIC_SLIP_4FEB", "UCERF3_PLUS_PT25");
+        //.setEnableTvz(false);
 
-                .setMaxMags("MANIPULATE_MFD",10,7.5)//FILTER_RUPSET
-                .setMinMags(6.8 , 6.5)
-              //  .setInitialSolution("C:\\tmp\\rates.csv")
-                .setInversionSeconds(1)
-              // .setSlipRateFactor(0.8, 0.3)
-
-                .setScalingRelationship(scaling, true)
-                //.setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
-                .setRuptureSetFile(ruptureSet)
-
-               // .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(10000, .75, 0.4)
-                //.setSlipRateConstraint("BOTH", 1000, 1000)
-                .setSlipRateUncertaintyConstraint(1000, 2)
-                .setReweightTargetQuantity("MAD"))
-                .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
-                .setPaleoRateConstraints(0.01, 1000, "GEOLOGIC_SLIP_22FEB", "UCERF3_PLUS_PT25");
+        runner
+        	.setCoolingSchedule("FAST_SA")
+        	.setPerturbationFunction("POWER_LAW");
 
         FaultSystemSolution solution = runner.runInversion();
 
@@ -246,13 +246,13 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
             System.out.println(row);
         }
-        System.out.println("Solution MFDS V2 ...");      
+        System.out.println("Solution MFDS V2 ...");
         for (ArrayList<String> row : runner.getTabularSolutionMfdsV2()) {
             System.out.println(row);
-        }        
+        }
 //		System.out.println(solution.getEnergies().toString());
 
-        File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
+        File solutionFile = new File(outputDir, "CrustalInversionSolution_noTVZ.zip");
         solution.write(solutionFile);
 
     }
