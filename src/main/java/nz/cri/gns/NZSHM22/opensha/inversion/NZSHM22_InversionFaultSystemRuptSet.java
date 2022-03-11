@@ -155,9 +155,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 	protected void applyDeformationModel(NZSHM22_LogicTreeBranch branch) {
 		NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
-		if (model != null) {
-			model.applyTo(this);
-		} else {
+		if (model == null || !model.applyTo(this)) {
 			SectSlipRates rates = SectSlipRates.fromFaultSectData(this);
 			addModule(SectSlipRates.precomputed(this, rates.getSlipRates(), rates.getSlipRateStdDevs()));
 		}

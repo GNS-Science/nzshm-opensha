@@ -218,9 +218,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
     }
 
-    public void applyTo(FaultSystemRupSet rupSet) {
+    public boolean applyTo(FaultSystemRupSet rupSet) {
         if (fileName != null) {
             helper.applyTo(rupSet);
+            return true;
+        } else {
+            return false;
         }
     }
 
