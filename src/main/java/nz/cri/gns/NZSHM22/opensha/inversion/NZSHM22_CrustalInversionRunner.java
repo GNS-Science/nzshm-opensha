@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -40,11 +41,23 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double sansSlipRateFactor = -1;
     private double tvzSlipRateFactor = -1;
 
+    private boolean enableTvz = true;
+
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
      */
     public NZSHM22_CrustalInversionRunner() {
         super();
+    }
+
+    /**
+     * Determines whether NZ is a single region (false) or is split up in TVZ and Sans TVZ (true)
+     * @param enableTvz
+     * @return
+     */
+    public NZSHM22_CrustalInversionRunner setEnableTvz(boolean enableTvz){
+        this.enableTvz = enableTvz;
+        return this;
     }
 
     /**
@@ -126,6 +139,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
+
+        if(!enableTvz){
+            branch.setValue(new NZSHM22_Regions(new NewZealandRegions.NZ_RECTANGLE_GRIDDED(), new NewZealandRegions.NZ_EMPTY_GRIDDED()));
+        }
         if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
             branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ, maxMagType));
         }
@@ -206,9 +223,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         File inputDir = new File("./TEST");
         File outputRoot = new File("/tmp");
-        File ruptureSet = new File(
-               // "/home/chrisdc/NSHM/DEV/rupture_sets/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjk0MDVnTmJZbw==.zip");
-               "/home/chrisdc/NSHM/DEV/rupture_sets/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==.zip");
+        File ruptureSet = new File
+                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
 //        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
@@ -219,22 +235,22 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
         .setMaxMags("MANIPULATE_MFD",10,10)
         .setMinMags(6.8 , 6.8)
-        .setInversionSeconds(300)
+        .setInversionSeconds(1)
         .setScalingRelationship(scaling, true)
         .setRuptureSetFile(ruptureSet)
         .setUncertaintyWeightedMFDWeights(1.0, 0.0, 0.1)
         .setDeformationModel("FAULT_MODEL")
-        //.setDeformationModel("GEOD_NO_PRIOR_2022_RmlsZToyMjE4My4wUGVpWGE_")
+        .setUnmodifiedSlipRateStdvs(true)
         .setSlipRateUncertaintyConstraint(1, 0)
         .setReweightTargetQuantity("MAD"))
         .setSlipRateFactor(0.9, 0.7)
         .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
         .setPaleoRateConstraints(1.0, 1.0, "GEOLOGIC_SLIP_4FEB", "UCERF3_PLUS_PT25");
-        //.setEnableTvz(false);
 
         runner
         	.setCoolingSchedule("FAST_SA")
         	.setPerturbationFunction("POWER_LAW");
+
 
         FaultSystemSolution solution = runner.runInversion();
 

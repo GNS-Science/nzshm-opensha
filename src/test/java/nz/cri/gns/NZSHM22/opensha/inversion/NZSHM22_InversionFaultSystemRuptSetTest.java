@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SlipRateFactors;
 import org.dom4j.DocumentException;
 import org.junit.Test;
@@ -31,13 +32,21 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
         // orgMags were calculated with SimplifiedScalingRelationship: crustal, 4.0, 4.1
         double[] origMags = Arrays.copyOf(rupSet.getMagForAllRups(),rupSet.getMagForAllRups().length);
 
-        rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, ScalingRelationships.TMG_CRU_2017);
+        NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        NZSHM22_ScalingRelationshipNode scalingNode = new NZSHM22_ScalingRelationshipNode();
+        scalingNode.setScalingRelationship(ScalingRelationships.TMG_CRU_2017);
+        scalingNode.setRecalc(true);
+        branch.setValue(scalingNode);
+
+        rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, branch);
         assertNotEquals(origMags[0], rupSet.getMagForAllRups()[0], 0.00000001);
 
         // to recreate original values
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
         scaling.setupCrustal(4.0, 4.1);
-        rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, scaling);
+        scalingNode.setScalingRelationship(scaling);
+        branch.setValue(scalingNode);
+        rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, branch);
         assertArrayEquals(origMags, rupSet.getMagForAllRups(), 0.00000001);
     }
 
