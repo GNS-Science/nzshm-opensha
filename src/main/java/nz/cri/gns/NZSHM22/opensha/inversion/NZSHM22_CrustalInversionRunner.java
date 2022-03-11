@@ -223,7 +223,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         File inputDir = new File("./TEST");
         File outputRoot = new File("/tmp");
-        File ruptureSet = new File
+        File ruptureSet = new File(
                 "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
 //        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
         File outputDir = new File(outputRoot, "inversions");
