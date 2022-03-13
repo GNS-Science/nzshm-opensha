@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultPolyParameters;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
@@ -19,6 +20,7 @@ public class RegionalRupSetData {
     GriddedRegion region;
     NZSHM22_SpatialSeisPDF spatialSeisPDF;
     double minSeismoMag;
+    boolean empty = false;
 
     PolygonFaultGridAssociations polygonFaultGridAssociations;
     List<FaultSection> sections = new ArrayList<>();
@@ -33,7 +35,12 @@ public class RegionalRupSetData {
         this.region= region;
         this.spatialSeisPDF = original.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
         this.minSeismoMag = minSeismoMag;
-        filter(sectionIdFilter);
+        if(region instanceof NewZealandRegions.NZ_EMPTY_GRIDDED){
+            empty = true;
+            originalSectionIncluded = new boolean[original.getNumSections()];
+        } else {
+            filter(sectionIdFilter);
+        }
     }
 
     protected void filter(IntPredicate sectionPredicate) {
@@ -89,5 +96,9 @@ public class RegionalRupSetData {
 
     public double getMinMagForOriginalSectionid(int originalSectionid){
         return originalMinMags[originalSectionid];
+    }
+
+    public boolean isEmpty() {
+        return empty;
     }
 }

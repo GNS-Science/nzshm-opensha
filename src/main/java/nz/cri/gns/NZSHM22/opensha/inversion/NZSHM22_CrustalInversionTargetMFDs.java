@@ -125,6 +125,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		public GriddedRegion region;
 		public String suffix;
 		public RegionalRupSetData regionalRupSet;
+		public boolean ignore = false;
 
 		public double totalRateM5;
 		public double bValue;
@@ -159,7 +160,11 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 				suffix = "";
 			}
 			this.regionalRupSet = regionalRupSet;
-			init();
+			if (regionalRupSet.isEmpty()){
+				ignore = true;
+			} else {
+				init();
+			}
 		}
 
 		void writeToJson(JsonWriter out) throws IOException {
@@ -322,11 +327,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		// Build the MFD Constraints for regions
 		mfdConstraints = new ArrayList<>();
 		mfdConstraints.add(sansTvz.targetOnFaultSupraSeisMFDs);
-		mfdConstraints.add(tvz.targetOnFaultSupraSeisMFDs);
+		if(!tvz.ignore) {
+			mfdConstraints.add(tvz.targetOnFaultSupraSeisMFDs);
+		}
 
 		mfdUncertaintyConstraints = new ArrayList<>();
 		mfdUncertaintyConstraints.add(sansTvz.uncertaintyMFD);
-		mfdUncertaintyConstraints.add(tvz.uncertaintyMFD);
+		if(!tvz.ignore) {
+			mfdUncertaintyConstraints.add(tvz.uncertaintyMFD);
+		}
 
 		/*
 		 * TODO CBC the following block sets up base class var required later to save the solution,
@@ -337,7 +346,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		 */
 		SummedMagFreqDist tempTargetGR = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		tempTargetGR.addIncrementalMagFreqDist(sansTvz.totalTargetGR);
-		tempTargetGR.addIncrementalMagFreqDist(tvz.totalTargetGR);
+		if (!tvz.ignore) {
+			tempTargetGR.addIncrementalMagFreqDist(tvz.totalTargetGR);
+		}
 
 		totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		for(Point2D p : tempTargetGR){
@@ -346,7 +357,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		SummedMagFreqDist tempTrulyOffFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		tempTrulyOffFaultMFD.addIncrementalMagFreqDist(sansTvz.trulyOffFaultMFD);
-		tempTrulyOffFaultMFD.addIncrementalMagFreqDist(tvz.trulyOffFaultMFD);
+		if (!tvz.ignore) {
+			tempTrulyOffFaultMFD.addIncrementalMagFreqDist(tvz.trulyOffFaultMFD);
+		}
 
 		trulyOffFaultMFD = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		for(Point2D p : tempTrulyOffFaultMFD){
@@ -357,17 +370,23 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		//CHECK: New MFD addition approach....
 		totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(sansTvz.totalSubSeismoOnFaultMFD);
-		totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(tvz.totalSubSeismoOnFaultMFD);
+		if (!tvz.ignore) {
+			totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(tvz.totalSubSeismoOnFaultMFD);
+		}
 
 		// TODO is this correct? It's just a guess by Oakley (and now Chris)
 		ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = new ArrayList<>();
 		subSeismoOnFaultMFD_List.addAll(sansTvz.subSeismoOnFaultMFD_List);
-		subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
+		if (!tvz.ignore) {
+			subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
+		}
 		subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
 		targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
-		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
+		if (!tvz.ignore) {
+			targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
+		}
 		
 		totalTargetGR.setName("totalTargetGR.all");
 		trulyOffFaultMFD.setName("trulyOffFaultMFD.all");

@@ -46,7 +46,9 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
 
 		SummedMagFreqDist targetOnFaultSupraSeisMFDs = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 		targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(targetMFDs.getSansTvz().targetOnFaultSupraSeisMFDs);
-		targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(targetMFDs.getTvz().targetOnFaultSupraSeisMFDs);
+		if (!targetMFDs.getTvz().ignore) {
+			targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(targetMFDs.getTvz().targetOnFaultSupraSeisMFDs);
+		}
 
 		MFD_Plot totalPlot = new MFD_Plot("NZ Total Target MFDs", null);
 		totalPlot.addComp(targetMFDs.getTotalRegionalMFD(), Color.GREEN.darker(), "Total Target");
@@ -62,12 +64,14 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
 		sansPlot.addComp(targetMFDs.getSansTvz().targetOnFaultSupraSeisMFDs, SUPRA_SEIS_TARGET_COLOR, "Target Supra-Seis");
 		plots.add(sansPlot);
 
-		MFD_Plot tvzPlot = new MFD_Plot("NZ TVZ Target MFDs", null);
-		tvzPlot.addComp(targetMFDs.getTvz().totalTargetGR, Color.GREEN.darker(), "Total Target GR");
-		tvzPlot.addComp(targetMFDs.getTvz().trulyOffFaultMFD, Color.GRAY, "Target Gridded (TrulyOffFaultMFD)");
-		tvzPlot.addComp(targetMFDs.getTvz().totalSubSeismoOnFaultMFD, Color.MAGENTA.darker(), "Target Sub-Seis");
-		tvzPlot.addComp(targetMFDs.getTvz().targetOnFaultSupraSeisMFDs, SUPRA_SEIS_TARGET_COLOR, "Target Supra-Seis");
-		plots.add(tvzPlot);
+		if (!targetMFDs.getTvz().ignore) {
+			MFD_Plot tvzPlot = new MFD_Plot("NZ TVZ Target MFDs", null);
+			tvzPlot.addComp(targetMFDs.getTvz().totalTargetGR, Color.GREEN.darker(), "Total Target GR");
+			tvzPlot.addComp(targetMFDs.getTvz().trulyOffFaultMFD, Color.GRAY, "Target Gridded (TrulyOffFaultMFD)");
+			tvzPlot.addComp(targetMFDs.getTvz().totalSubSeismoOnFaultMFD, Color.MAGENTA.darker(), "Target Sub-Seis");
+			tvzPlot.addComp(targetMFDs.getTvz().targetOnFaultSupraSeisMFDs, SUPRA_SEIS_TARGET_COLOR, "Target Supra-Seis");
+			plots.add(tvzPlot);
+		}
 
 	}
 

@@ -179,6 +179,27 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	public NZSHM22_InversionFaultSystemRuptSet setRegionalData(RegionalRupSetData tvz, RegionalRupSetData sansTvz){
 		this.tvz = tvz;
 		this.sansTvz = sansTvz;
+
+		double[] minMags = new double[getNumSections()];
+
+		for (int s = 0; s < minMags.length; s++) {
+			if (tvz.isInRegion(s)) {
+				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
+			} else {
+				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
+			}
+		}
+
+		if (hasAvailableModule(ModSectMinMags.class)) {
+			removeModuleInstances(ModSectMinMags.class);
+		}
+		addAvailableModule(new Callable<ModSectMinMags>() {
+			@Override
+			public ModSectMinMags call() throws Exception {
+				return ModSectMinMags.instance(NZSHM22_InversionFaultSystemRuptSet.this, minMags);
+			}
+		}, ModSectMinMags.class);
+
 		return this;
 	}
 

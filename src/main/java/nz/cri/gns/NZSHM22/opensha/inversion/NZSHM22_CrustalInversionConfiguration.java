@@ -56,26 +56,6 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
 
 		rupSet.setRegionalData(tvz, sansTvz);
-
-		double[] minMags = new double[rupSet.getNumSections()];
-
-		for (int s = 0; s < minMags.length; s++) {
-			if (tvz.isInRegion(s)) {
-				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
-			} else {
-				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
-			}
-		}
-
-		if (rupSet.hasAvailableModule(ModSectMinMags.class)) {
-			rupSet.removeModuleInstances(ModSectMinMags.class);
-		}
-		rupSet.addAvailableModule(new Callable<ModSectMinMags>() {
-			@Override
-			public ModSectMinMags call() throws Exception {
-				return ModSectMinMags.instance(rupSet, minMags);
-			}
-		}, ModSectMinMags.class);
 	}
 
 	/**
