@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.demo;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -18,7 +17,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 public class SectionXml2Csv {

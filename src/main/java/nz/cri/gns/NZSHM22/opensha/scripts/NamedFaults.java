@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.scripts;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.sha.faultSurface.FaultSection;

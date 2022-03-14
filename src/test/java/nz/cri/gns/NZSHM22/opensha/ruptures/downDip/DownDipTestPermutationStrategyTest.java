@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import com.google.common.collect.Lists;
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;

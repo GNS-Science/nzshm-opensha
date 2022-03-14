@@ -18,12 +18,11 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGr
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.*;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 /**
  * Builds opensha SlipAlongRuptureModelRupSet rupture sets using NZ Subduction Ruptures

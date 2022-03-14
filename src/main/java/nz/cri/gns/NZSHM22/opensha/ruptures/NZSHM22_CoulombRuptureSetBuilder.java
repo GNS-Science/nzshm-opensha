@@ -6,10 +6,9 @@ import com.google.common.collect.Range;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -26,7 +25,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistance
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
-import scratch.UCERF3.enumTreeBranches.*;
 
 
 import java.io.File;
@@ -44,7 +42,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Exhaustiv
 import com.google.common.base.Stopwatch;
 
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.utils.U3FaultSystemIO;
 
 public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
