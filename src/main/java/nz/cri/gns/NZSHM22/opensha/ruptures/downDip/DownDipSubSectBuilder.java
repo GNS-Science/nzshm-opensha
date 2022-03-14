@@ -1,7 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationUtils;
