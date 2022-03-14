@@ -101,8 +101,11 @@ public class NZSHM22_SlipRateInversionConstraintBuilder {
         return SectSlipRates.precomputed(oldSlipRates.getParent(), slipRates, stdDevs);
     }
 
-    public static InversionConstraint buildUncertaintyConstraint(double weight, FaultSystemRupSet rupSet, double weightScalingOrderOfMagnitude) {
-        SectSlipRates sectSlipRates = createSectSlipRates(rupSet.getModule(SectSlipRates.class), weightScalingOrderOfMagnitude);
+    public static InversionConstraint buildUncertaintyConstraint(double weight, FaultSystemRupSet rupSet, double weightScalingOrderOfMagnitude, boolean useOriginalStdDevs) {
+        SectSlipRates sectSlipRates = rupSet.getModule(SectSlipRates.class);
+        if (!useOriginalStdDevs) {
+            sectSlipRates = createSectSlipRates(sectSlipRates, weightScalingOrderOfMagnitude);
+        }
         return new SlipRateInversionConstraint(weight, ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, rupSet,
                 rupSet.requireModule(AveSlipModule.class), rupSet.requireModule(SlipAlongRuptureModel.class), sectSlipRates);
     }

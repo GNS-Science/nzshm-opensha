@@ -1,16 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultPolyParameters;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.griddedSeismicity.FaultPolyMgr;
-import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
-import java.awt.geom.Area;
 import java.util.*;
 import java.util.function.IntPredicate;
 
@@ -55,18 +54,9 @@ public class RegionalRupSetData {
                 }
             }
         }
-        polygonFaultGridAssociations = FaultPolyMgr.create(sections, U3InversionTargetMFDs.FAULT_BUFFER, region);
+        NZSHM22_FaultPolyParameters parameters = original.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_FaultPolyParameters.class);
+        polygonFaultGridAssociations = NZSHM22_FaultPolyMgr.create(sections, parameters.getBufferSize(), parameters.getMinBufferSize(), region);
         spatialSeisPDF.normaliseRegion(region);
-    }
-
-    protected static IntPredicate createRegionFilter(FaultSystemRupSet original, GriddedRegion region) {
-        Area area = region.getShape();
-        PolygonFaultGridAssociations polyMgr = original.getModule(PolygonFaultGridAssociations.class);
-        return s -> {
-            Area sectionArea = polyMgr.getPoly(s).getShape();
-                sectionArea.intersect(area);
-            return !sectionArea.isEmpty();
-        };
     }
 
     public GriddedRegion getRegion(){

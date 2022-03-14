@@ -19,8 +19,7 @@ public class NZSHM22_CrustalInversionConfigurationTest {
 
     public NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, IOException {
         URL url = Thread.currentThread().getContextClassLoader().getResource("RupSetWaiohauNorth.zip");
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(url.toURI()));
-        return new NZSHM22_InversionFaultSystemRuptSet(rupSet, NZSHM22_LogicTreeBranch.crustalInversion());
+        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(url.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
     }
 
 

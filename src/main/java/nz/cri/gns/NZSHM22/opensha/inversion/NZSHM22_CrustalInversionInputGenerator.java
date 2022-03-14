@@ -101,7 +101,8 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
 					NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
 							config.getSlipRateUncertaintyConstraintWt(),
 							rupSet,
-							config.getSlipRateUncertaintyConstraintScalingFactor()));
+							config.getSlipRateUncertaintyConstraintScalingFactor(),
+							config.getUnmodifiedSlipRateStdvs()));
 		} else {
 			if (config.getSlipRateConstraintWt_normalized() > 0d
 					&& (config.getSlipRateWeightingType() == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.NORMALIZED

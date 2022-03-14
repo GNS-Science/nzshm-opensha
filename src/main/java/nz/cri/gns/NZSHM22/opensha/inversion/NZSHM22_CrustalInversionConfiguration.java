@@ -39,12 +39,13 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	public static final double DEFAULT_MFD_EQUALITY_WT = 10;
 	public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
 
-	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ){
+	public static void setRegionalData(NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ) {
 
 		GriddedRegion tvzRegion = new NewZealandRegions.NZ_TVZ_GRIDDED();
 		GriddedRegion sansTvzRegion = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 
-		IntPredicate tvzFilter = RegionalRupSetData.createRegionFilter(rupSet, tvzRegion);
+		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		IntPredicate tvzFilter = tvzSections::isInRegion;
 
 		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
 		RegionalRupSetData sansTvz = new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
@@ -53,8 +54,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		double[] minMags = new double[rupSet.getNumSections()];
 
-		for(int s = 0; s < minMags.length; s++){
-			if(tvz.isInRegion(s)){
+		for (int s = 0; s < minMags.length; s++) {
+			if (tvz.isInRegion(s)) {
 				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
 			} else {
 				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
@@ -89,6 +90,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 	 * @param bValue_Sans
 	 * @param bValue_TVZ
 	 * @param mfdTransitionMag
+	 * @param mfdUncertWtdConstraintScalar TODO
 	 * @return
 	 */
 	public static NZSHM22_CrustalInversionConfiguration forModel(
@@ -97,7 +99,9 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 			double totalRateM5_Sans, double totalRateM5_TVZ,
 			double bValue_Sans, double bValue_TVZ, double mfdTransitionMag,
 			double mMin_Sans, double mMin_TVZ,
-			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower) {
+			double maxMagSans, double maxMagTVZ,
+			double mfdUncertWtdConstraintWt, double mfdUncertWtdConstraintPower,
+			double mfdUncertWtdConstraintScalar, boolean excludeMinMag) {
 
 		/*
 		 * ******************************************* COMMON TO ALL MODELS
@@ -135,8 +139,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 
 		// setup MFD constraints
 		NZSHM22_CrustalInversionTargetMFDs inversionMFDs = new NZSHM22_CrustalInversionTargetMFDs(rupSet,
-				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ,
-				mfdUncertaintyWeightedConstraintPower);
+				totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, mMin_Sans, mMin_TVZ, maxMagSans, maxMagTVZ,
+				mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 		List<IncrementalMagFreqDist> mfdConstraints = inversionMFDs.getMFD_Constraints();
 
@@ -198,14 +202,18 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 				.setMfdEqualityConstraints(mfdEqualityConstraints)
 				.setMfdInequalityConstraints(mfdInequalityConstraints)
 				// Rate Minimization config
-				.setMinimizationConstraintWt(minimizationConstraintWt)
 				.setMinimumRuptureRateFraction(minimumRuptureRateFraction)
 				.setMinimumRuptureRateBasis(minimumRuptureRateBasis)
 				.setInitialRupModel(initialRupModel);
 
-		if (mfdUncertaintyWeightedConstraintWt > 0.0 ) {
+		// ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned constraint
+		if (!excludeMinMag) {
+			newConfig.setMinimizationConstraintWt(minimizationConstraintWt);
+		}
+
+		if (mfdUncertWtdConstraintWt > 0.0 ) {
 			newConfig
-					.setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt)
+					.setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertWtdConstraintWt)
 					.setMfdUncertaintyWeightedConstraints(inversionMFDs.getMfdUncertaintyConstraints());
 		}
 

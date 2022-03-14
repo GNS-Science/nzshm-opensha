@@ -55,7 +55,8 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	private List<IncrementalMagFreqDist> mfdEqualityConstraints;
 	private List<IncrementalMagFreqDist> mfdInequalityConstraints;
 	private List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
-	private double minimumRuptureRateFraction;	
+	private double minimumRuptureRateFraction;
+	private boolean unmodifiedSlipRateStdvs;
 	
 	
 	public AbstractInversionConfiguration() {
@@ -142,12 +143,28 @@ public class AbstractInversionConfiguration implements XMLSaveable  {
 	public AbstractInversionConfiguration setSlipRateUncertaintyConstraintScalingFactor(double slipRateUncertaintyConstraintScalingFactor) {
 		this.slipRateUncertaintyConstraintScalingFactor = slipRateUncertaintyConstraintScalingFactor;
 		return this;
-	}	
-	
+	}
+
+	/**
+	 * Sets whether slip rate stddevs should be normalised for the SlipRateInversionConstraint
+	 * @param unmodifiedSlipRateStdvs
+	 * @return
+	 */
+	public AbstractInversionConfiguration setUnmodifiedSlipRateStdvs(boolean unmodifiedSlipRateStdvs) {
+		this.unmodifiedSlipRateStdvs = unmodifiedSlipRateStdvs;
+		return this;
+	}
+
+	public boolean getUnmodifiedSlipRateStdvs(){
+		return unmodifiedSlipRateStdvs;
+	}
+
+	@Deprecated
 	public double getMinimizationConstraintWt() {
 		return minimizationConstraintWt;
 	}
 
+	@Deprecated
 	public AbstractInversionConfiguration setMinimizationConstraintWt(double relativeMinimizationConstraintWt) {
 		this.minimizationConstraintWt = relativeMinimizationConstraintWt;
 		return this;

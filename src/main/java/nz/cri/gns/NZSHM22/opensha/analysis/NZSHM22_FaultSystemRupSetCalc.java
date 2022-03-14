@@ -4,14 +4,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
-import scratch.UCERF3.U3FaultSystemRupSet;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
+
+import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 
@@ -23,7 +28,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 	 * @param systemWideMinSeismoMag
 	 * @return
 	 */
-	public static double[] computeMinSeismoMagForSections(U3FaultSystemRupSet fltSystRupSet,
+	public static double[] computeMinSeismoMagForSections(FaultSystemRupSet fltSystRupSet,
 														  double systemWideMinSeismoMag) {
 		double[] minMagForSect = new double[fltSystRupSet.getNumSections()];
 		String prevParSectName = "junk_imp0ss!ble_fault_name_1067487@#";
@@ -112,12 +117,16 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 		for(int s=0; s<rupSet.getFaultSectionDataList().size(); s++) {
 
 			double sectRate = gridSeisUtils.pdfValForSection(s)*totMgt5_rate;
-//			int mMaxIndex = totalTargetGR.getClosestXIndex(fltSysRupSet.getMinMagForSection(s))-1;	// subtract 1 to avoid overlap
-			double upperMag = InversionFaultSystemRupSet.getUpperMagForSubseismoRuptures(rupSet.getMinMagForSection(s));
-			int mMaxIndex = totalTargetGR.getXIndex(Math.max(upperMag, minMag));
+			int mMaxIndex = totalTargetGR.getClosestXIndex(rupSet.getMinMagForSection(s))-1;	// subtract 1 to avoid overlap
+			//double upperMag = InversionFaultSystemRupSet.getUpperMagForSubseismoRuptures(rupSet.getMinMagForSection(s));
+			 mMaxIndex = Math.max(mMaxIndex, totalTargetGR.getClosestXIndex(minMag));
 		//	int mMaxIndex = totalTargetGR.getXIndex(upperMag);
 			if(mMaxIndex == -1) throw new RuntimeException("Problem Mmax: "
-					+upperMag+"\t"+rupSet.getFaultSectionDataList().get(s).getName());
+					+rupSet.getMinMagForSection(s)+"\t"+rupSet.getFaultSectionDataList().get(s).getName());
+			
+			/*
+			 * TODO: why does mMaxIndex = 14 return 6.449999999999999, while 15 returns 6.55 ??
+			 */
 			double mMax = totalTargetGR.getX(mMaxIndex); // rounded to nearest MFD value
 //if(mMax<5.85)
 //	System.out.println("PROBLEM SubSesMmax=\t"+mMax+"\tMinSeismoRupMag=\t"
@@ -265,6 +274,45 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 			totWt += wt;
 		}
 		return sum / totWt;
+	}
+
+	/**
+	 * This computes whether each rupture has a magnitude below any of the final minimum mags
+	 * for the sections the rupture utilizes. To be precise, the magnitude must be below the lower
+	 * bin edge implied by the minimum magnitude.
+	 */
+	public static boolean[] computeWhichRupsFallBelowSectionMinMags(FaultSystemRupSet fltSystRupSet,
+																	ModSectMinMags modMinMags) {
+		boolean[] rupBelowSectMinMag = new boolean[fltSystRupSet.getNumRuptures()];
+		for (int r = 0; r < fltSystRupSet.getNumRuptures(); r++) {
+			rupBelowSectMinMag[r] = isRuptureBelowSectMinMag(fltSystRupSet, r, modMinMags);
+		}
+		return rupBelowSectMinMag;
+	}
+
+	/**
+	 * This computes whether the rupture at rupIndex has a magnitude below any of the final minimum mags
+	 * for the sections the rupture utilizes. To be precise, the magnitude must be below the lower
+	 * bin edge implied by the minimum magnitude.
+	 */
+	public static boolean isRuptureBelowSectMinMag(FaultSystemRupSet fltSystRupSet,
+												   int rupIndex, ModSectMinMags modMinMags) {
+		// We want to use binning that works for crustal and subduction
+		Preconditions.checkState(NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
+		Preconditions.checkState(DELTA_MAG == NZSHM22_SubductionInversionTargetMFDs.DELTA_MAG);
+		IncrementalMagFreqDist bins = new IncrementalMagFreqDist(
+				NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
+				Math.max(NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS, NZSHM22_SubductionInversionTargetMFDs.NUM_MAG),
+				DELTA_MAG);
+		int rupBin = bins.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
+
+		for (int s : fltSystRupSet.getSectionsIndicesForRup(rupIndex)) {
+			int sectionBin = bins.getClosestXIndex(modMinMags.getMinMagForSection(s));
+			if (rupBin < sectionBin) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

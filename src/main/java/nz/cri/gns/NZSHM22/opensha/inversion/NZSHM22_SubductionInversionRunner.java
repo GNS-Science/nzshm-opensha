@@ -48,15 +48,14 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
 		setupLTB(branch);
-		rupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupSetFile, branch);
+		rupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupSetFile, branch);
 
 		InversionModels inversionModel = branch.getValue(InversionModels.class);
 
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
-						mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower,
-						totalRateM5,
-						bValue, mfdTransitionMag);
+						mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar,
+						totalRateM5, bValue, mfdTransitionMag);
 
 		// CBC This may not be needed long term
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
@@ -71,6 +70,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			inversionConfiguration.setSlipRateConstraintWt_normalized(this.slipRateConstraintWt_normalized);
 			inversionConfiguration.setSlipRateConstraintWt_unnormalized(this.slipRateConstraintWt_unnormalized);
 		}
+		inversionConfiguration.setUnmodifiedSlipRateStdvs(unmodifiedSlipRateStdvs);
 
 		NZSHM22_SubductionInversionInputGenerator inversionInputGenerator = new NZSHM22_SubductionInversionInputGenerator(
 				rupSet, inversionConfiguration);
@@ -106,7 +106,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setScalingRelationship(scale, true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
-				.setUncertaintyWeightedMFDWeights(1000, 0.1)
+				.setUncertaintyWeightedMFDWeights(1000, 0.1, 0.4)
 				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
 				.setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!

@@ -105,7 +105,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(file, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(file, branch);
 
         sanityCheckAzimuthalRuptureSet(rupSet);
         sanityCheckAzimuthalRuptureSet(loadedRupSet);
@@ -144,7 +144,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(ruptureSetFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(ruptureSetFile, branch);
 
         sanityCheckCoulombRuptureSet(rupSet);
         sanityCheckCoulombRuptureSet(loadedRupSet);
@@ -186,7 +186,7 @@ public class SmokeTest {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadRuptureSet(rupturesFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupturesFile, branch);
 
         sanityCheckSubductionRuptureSet(rupSet);
         sanityCheckSubductionRuptureSet(loadedRupSet);
@@ -208,7 +208,7 @@ public class SmokeTest {
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
                 //.setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
-                .setUncertaintyWeightedMFDWeights(0.5, 0.5)
+                .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5)
                 .runInversion();
 
         runner.writeSolution(solutionFile.getAbsolutePath());
@@ -233,8 +233,7 @@ public class SmokeTest {
                 .setScalingRelationship(scaling, true)
                 .setRuptureSetFile(ruptureSetFile)
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(0.3, 0.5)
-                .setUncertaintyWeightedMFDWeights(1000, 0.1)
+                .setUncertaintyWeightedMFDWeights(1000, 0.1, 0.5)
                 .setSlipRateConstraint("BOTH", 1000, 1000)
                 .runInversion();
 

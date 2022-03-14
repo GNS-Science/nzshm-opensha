@@ -28,6 +28,16 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "any",
             null),
 
+    GEOD_NO_PRIOR_2022_RmlsZToyMjE4My4wUGVpWGE_(
+            "geodetic, no geological prior constraint, 2022",
+            "rupture set RmlsZToyMjE4My4wUGVpWGE=",
+            "slip_deficit_rates_no_prior_NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw.dat"),
+
+    GEOD_PRIOR_2022_RmlsZToyMjE4My4wUGVpWGE_(
+            "geodetic, prior geological constraint, 2022",
+            "rupture set RmlsZToyMjE4My4wUGVpWGE=",
+            "slip_deficit_rates_with_prior_NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw.dat"),
+
     GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw(
             "geodetic, no geological prior constraint, uniform std-dev 2010",
             "rupture set RmlsZTo4NTkuMDM2Z2Rw",

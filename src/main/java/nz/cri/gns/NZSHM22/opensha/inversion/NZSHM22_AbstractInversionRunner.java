@@ -9,6 +9,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
@@ -17,7 +18,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalarValues;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -76,6 +79,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private InversionInputGenerator inversionInputGenerator;
 
 	protected List<IncrementalMagFreqDist> solutionMfds;
+	protected List<IncrementalMagFreqDist> solutionMfdsV2;
 
 	protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType;
 	protected double slipRateConstraintWt_normalized;
@@ -84,8 +88,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected double slipRateUncertaintyScalingFactor;
 	protected double mfdEqualityConstraintWt;
 	protected double mfdInequalityConstraintWt;
-	protected double mfdUncertaintyWeightedConstraintWt;
-	protected double mfdUncertaintyWeightedConstraintPower; //typically 0.5
+	protected double mfdUncertWtdConstraintWt;
+	protected double mfdUncertWtdConstraintPower; //typically 0.5
+	protected double mfdUncertWtdConstraintScalar; //typically 0.4
 
 	protected abstract NZSHM22_AbstractInversionRunner configure() throws DocumentException, IOException;
 
@@ -96,6 +101,27 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
+	protected boolean excludeRupturesBelowMinMag = false;
+	protected boolean unmodifiedSlipRateStdvs = false;
+
+	protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
+
+	protected double bufferSize = 12;
+	protected double minBufferSize = 0;
+
+	public double getPolyBufferSize() {
+		return bufferSize;
+	}
+
+	public NZSHM22_AbstractInversionRunner setPolyBufferSize(double bufferSize, double minBuffersize) {
+		this.bufferSize = bufferSize;
+		this.minBufferSize = minBuffersize;
+		return this;
+	}
+
+	public double getMinPolyBufferSize() {
+		return minBufferSize;
+	}
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -116,6 +142,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setInversionSeconds(long inversionSeconds) {
 		this.inversionSecs = inversionSeconds;
+		return this;
+	}
+
+	public NZSHM22_AbstractInversionRunner setReweightTargetQuantity(String quantity){
+		this.reweightTargetQuantity = InversionMisfitStats.Quantity.valueOf(quantity);
 		return this;
 	}
 
@@ -294,6 +325,26 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	/**
+	 * Exclude ruptures that are below MinMag. false by default.
+	 * @param excludeRupturesBelowMinMag
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setExcludeRupturesBelowMinMag(boolean excludeRupturesBelowMinMag){
+		this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
+		return this;
+	}
+
+	/**
+	 * Sets whether slip rate stddevs should be normalised for the SlipRateInversionConstraint
+	 * @param unmodifiedSlipRateStdvs
+	 * @return
+	 */
+	public NZSHM22_AbstractInversionRunner setUnmodifiedSlipRateStdvs(boolean unmodifiedSlipRateStdvs) {
+		this.unmodifiedSlipRateStdvs = unmodifiedSlipRateStdvs;
+		return this;
+	}
+
+	/**
 	 * @param inputGen
 	 * @return
 	 */
@@ -361,6 +412,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 			branch.clearValue(NZSHM22_SpatialSeisPDF.class);
 			branch.setValue(spatialSeisPDF);
 		}
+		NZSHM22_FaultPolyParameters polyParams = new NZSHM22_FaultPolyParameters();
+		polyParams.setMinBufferSize(minBufferSize);
+		polyParams.setBufferSize(bufferSize);
+		branch.clearValue(NZSHM22_FaultPolyParameters.class);
+		branch.setValue(polyParams);
 	}
 
 	public NZSHM22_AbstractInversionRunner setDeformationModel(String modelName){
@@ -375,18 +431,22 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public NZSHM22_AbstractInversionRunner setGutenbergRichterMFDWeights(double mfdEqualityConstraintWt,
 			double mfdInequalityConstraintWt) {
-		Preconditions.checkState(mfdUncertaintyWeightedConstraintWt == 0);
+		Preconditions.checkState(mfdUncertWtdConstraintWt == 0);
 		this.mfdEqualityConstraintWt = mfdEqualityConstraintWt;
 		this.mfdInequalityConstraintWt = mfdInequalityConstraintWt;
 		return this;
 	}
 
 	public NZSHM22_AbstractInversionRunner setUncertaintyWeightedMFDWeights(double mfdUncertaintyWeightedConstraintWt,
-			double mfdUncertaintyWeightedConstraintPower) {
+			double mfdUncertaintyWeightedConstraintPower, double mfdUncertaintyWeightedConstraintScalar) {
 		Preconditions.checkState(this.mfdEqualityConstraintWt == 0);
 		Preconditions.checkState(this.mfdInequalityConstraintWt == 0);
-		this.mfdUncertaintyWeightedConstraintWt = mfdUncertaintyWeightedConstraintWt;
-		this.mfdUncertaintyWeightedConstraintPower = mfdUncertaintyWeightedConstraintPower;
+		Preconditions.checkArgument(
+				0 <= mfdUncertaintyWeightedConstraintPower && mfdUncertaintyWeightedConstraintPower <= 1,
+				"mfdUncertWtdConstraintPower must be not less than 0 and not greater than 1.");
+		this.mfdUncertWtdConstraintWt = mfdUncertaintyWeightedConstraintWt;
+		this.mfdUncertWtdConstraintPower = mfdUncertaintyWeightedConstraintPower;
+		this.mfdUncertWtdConstraintScalar = mfdUncertaintyWeightedConstraintScalar; 
 		return this;
 	}	
 	
@@ -476,6 +536,16 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		Preconditions.checkState(regime == scalingRegime, "Regime of rupture set and scaling relationship do not match.");
 	}
 
+	private IntegerSampler createSampler() {
+		List<Integer> belowMinIndexes = new ArrayList<>();
+		for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+			if (rupSet.isRuptureBelowSectMinMag(r)) {
+				belowMinIndexes.add(r);
+			}
+		}
+		return new IntegerSampler.ExclusionIntegerSampler(0, rupSet.getNumRuptures(), belowMinIndexes);
+	}
+
 	/**
 	 * Runs the inversion on the specified rupture set.
 	 * 
@@ -547,12 +617,21 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+		if (reweightTargetQuantity != null) {
+			tsa = new ReweightEvenFitSimulatedAnnealing((ThreadedSimulatedAnnealing)tsa, reweightTargetQuantity);
+		}
+
+
 		// The following should probably be set only for testing purposes.
 		// tsa.setRandom(new Random(1)); // this removes non-repeatable randomness
 		tsa.setPerturbationFunc(perturbationFunction);
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
 		if (!(this.coolingSchedule == null))
 			tsa.setCoolingFunc(this.coolingSchedule);
+
+		if(excludeRupturesBelowMinMag){
+			tsa.setRuptureSampler(createSampler());
+		}
 
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
@@ -578,6 +657,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
+		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
+			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
+		}
 		return solution;
 	}
 
@@ -737,6 +819,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return solutionMfds;
 	}
 
+	public List<IncrementalMagFreqDist> getSolutionMfdsV2() {
+		return solutionMfdsV2;
+	}
+	
+	
 	/**
 	 * build an MFD from the inversion solution
 	 * 
@@ -812,4 +899,23 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	}
 
+	
+	public ArrayList<ArrayList<String>> getTabularSolutionMfdsV2() {
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+
+		int series = 0;
+		for (IncrementalMagFreqDist mfd : getSolutionMfdsV2()) {
+			appendMfdRows(mfd, rows, series);
+			series++;
+		}
+
+		HistogramFunction magHist = solutionMagFreqHistogram(true);
+		magHist.setName("solutionMFD");
+		appendMfdRows(magHist, rows, series);
+		series++;
+
+		return rows;
+
+	}	
+	
 }

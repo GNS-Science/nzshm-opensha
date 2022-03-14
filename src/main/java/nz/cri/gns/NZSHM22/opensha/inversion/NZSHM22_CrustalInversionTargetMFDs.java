@@ -76,6 +76,33 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		return mfdConstraintComponents;
 	}
 
+	/**
+	 * For NZ reporting. Version 2, with all the regional and total MFDs. 
+	 *
+	 * @return
+	 */
+	public List<IncrementalMagFreqDist> getReportingMFDConstraintComponentsV2() {
+		List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
+
+		mfdConstraintComponents.add(totalTargetGR);
+		mfdConstraintComponents.add(sansTvz.totalTargetGR);
+		mfdConstraintComponents.add(tvz.totalTargetGR);
+		
+		mfdConstraintComponents.add(trulyOffFaultMFD);
+		mfdConstraintComponents.add(sansTvz.trulyOffFaultMFD);
+		mfdConstraintComponents.add(tvz.trulyOffFaultMFD);
+	
+		mfdConstraintComponents.add(targetOnFaultSupraSeisMFD); //NONE
+		mfdConstraintComponents.add(sansTvz.targetOnFaultSupraSeisMFDs);
+		mfdConstraintComponents.add(tvz.targetOnFaultSupraSeisMFDs);
+		
+		mfdConstraintComponents.add(totalSubSeismoOnFaultMFD);
+		mfdConstraintComponents.add(sansTvz.totalSubSeismoOnFaultMFD);
+		mfdConstraintComponents.add(tvz.totalSubSeismoOnFaultMFD);
+		
+		return mfdConstraintComponents;
+	}	
+	
 	@Override
     public List<IncrementalMagFreqDist> getMFD_Constraints() {
     	return mfdConstraints;
@@ -87,9 +114,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 	public NZSHM22_CrustalInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet,double totalRateM5_Sans,
 											  double totalRateM5_TVZ, double bValue_Sans, double bValue_TVZ,
-											  double minMag_Sans, double minMag_TVZ, double uncertaintyPower) {
+											  double minMag_Sans, double minMag_TVZ,
+											  double maxMagSans, double maxMagTVZ, double uncertaintyPower, double uncertaintyScalar) {
 		init(invRupSet, totalRateM5_Sans, totalRateM5_TVZ, bValue_Sans, bValue_TVZ, minMag_Sans, minMag_TVZ,
-				uncertaintyPower);
+				maxMagSans, maxMagTVZ, uncertaintyPower, uncertaintyScalar);
 	}
 
 	public static class RegionalTargetMFDs {
@@ -100,7 +128,9 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		public double totalRateM5;
 		public double bValue;
 		public double minMag;
+		public double maxMag;
 		public double uncertaintyPower;
+		public double uncertaintyScalar;
 
 		public GutenbergRichterMagFreqDist totalTargetGR;
 		public IncrementalMagFreqDist trulyOffFaultMFD;
@@ -111,12 +141,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
 		private static final TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
 
-		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag, double uncertaintyPower) {
+		public RegionalTargetMFDs(RegionalRupSetData regionalRupSet, double totalRateM5, double bValue, double minMag, double maxMag, 
+				double uncertaintyPower, double uncertaintyScalar) {
 			this.region = regionalRupSet.getRegion();
 			this.totalRateM5 = totalRateM5;
 			this.bValue = bValue;
 			this.minMag = minMag;
+			this.maxMag = maxMag;
 			this.uncertaintyPower = uncertaintyPower;
+			this.uncertaintyScalar = uncertaintyScalar;
 			if (region.getName().contains("SANS TVZ")) {
 				suffix = "SansTVZ";
 			} else if (region.getName().contains("TVZ")) {
@@ -144,8 +177,16 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			out.value(minMag);
 
 			// hint for writing a readr: this value is not present in older versions
+			out.name("maxMag");
+			out.value(maxMag);
+
+			// hint for writing a readr: this value is not present in older versions
 			out.name("uncertaintyPower");
 			out.value(uncertaintyPower);
+
+			// hint for writing a readr: this value is not present in older versions
+			out.name("uncertaintyScalar");
+			out.value(uncertaintyScalar);
 
 			out.name("totalTargetGR");
 			mfdAdapter.write(out, totalTargetGR);
@@ -185,7 +226,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
 
 			// populate the MFD bins
-			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(regionalRupSet.getMaxMag()));
+			double roundedMmaxOnFault = totalTargetGR.getX(totalTargetGR.getClosestXIndex(Math.min(regionalRupSet.getMaxMag(), maxMag)));
 			totalTargetGR.setAllButTotMoRate(NZ_MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue);
 
 			// get ave min seismo mag for region
@@ -216,8 +257,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 			tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
 			targetOnFaultSupraSeisMFDs = MFDManipulation.fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag, 1.0e-20);
+			targetOnFaultSupraSeisMFDs = MFDManipulation.fillAboveMag(targetOnFaultSupraSeisMFDs, maxMag, 1.0e-20);
+			targetOnFaultSupraSeisMFDs = MFDManipulation.swapZeros(targetOnFaultSupraSeisMFDs, 1.0e-20);
 			targetOnFaultSupraSeisMFDs.setRegion(region);
-			uncertaintyMFD = MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFDs, minMag, uncertaintyPower);
+			uncertaintyMFD = MFDManipulation.addMfdUncertainty(targetOnFaultSupraSeisMFDs, minMag, maxMag, uncertaintyPower, uncertaintyScalar);
 
 			if (MFD_STATS) {
 				System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
@@ -259,12 +302,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 						double bValue_TVZ,
 						double minMag_Sans,
 						double minMag_TVZ,
-						double uncertaintyPower) {
+						double maxMagSans,
+						double maxMagTVZ,
+						double uncertaintyPower,
+						double uncertaintyScalar ) {
 
 		setParent(invRupSet);
 
-		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ, uncertaintyPower);
-		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, uncertaintyPower);
+		tvz = new RegionalTargetMFDs(invRupSet.getTvzRegionalData(), totalRateM5_TVZ, bValue_TVZ, minMag_TVZ, maxMagTVZ, uncertaintyPower,uncertaintyScalar);
+		sansTvz = new RegionalTargetMFDs(invRupSet.getSansTvzRegionalData(), totalRateM5_SansTVZ, bValue_SansTVZ, minMag_Sans, maxMagSans, uncertaintyPower, uncertaintyScalar);
 
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = invRupSet.getModule(NZSHM22_LogicTreeBranch.class).getValue(NZSHM22_SpatialSeisPDF.class);
 		System.out.println("tvz pdf fraction: " + spatialSeisPDF.getFractionInRegion(new NewZealandRegions.NZ_TVZ_GRIDDED()));
@@ -317,24 +363,26 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 		subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
 		subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
+		targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
+		targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
+		
+		totalTargetGR.setName("totalTargetGR.all");
 		trulyOffFaultMFD.setName("trulyOffFaultMFD.all");
-		totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD");
+		totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD.all");
+		targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD.all");
 
 		if (MFD_STATS) {
 
-			System.out.println("trulyOffFaultMFD");
+			System.out.println("trulyOffFaultMFD.all");
 			System.out.println(trulyOffFaultMFD.toString());
 			System.out.println("");
 
-			System.out.println("totalSubSeismoOnFaultMFD");
-			System.out.println(totalSubSeismoOnFaultMFD.toString());
-			System.out.println("");
-
-			System.out.println("totalTargetGR");
+			System.out.println("totalTargetGR.all");
 			System.out.println(totalTargetGR.toString());
 			System.out.println("");
 
-			System.out.println("totalSubSeismoOnFaultMFD");
+			System.out.println("totalSubSeismoOnFaultMFD.all");
 			System.out.println(totalSubSeismoOnFaultMFD.toString());
 			System.out.println("");
 
