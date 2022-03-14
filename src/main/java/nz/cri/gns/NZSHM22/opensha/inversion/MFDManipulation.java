@@ -79,6 +79,7 @@ public class MFDManipulation {
         EvenlyDiscretizedFunc stdDevs = new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);
+            // TODO remove (rate == 1e-20) condition when it's no longer needed
             double stdDev = ((i < minMagBin) || (maxMagBin < i) || rate == 1e-20 )? 1e-20 : firstWeightPower / Math.pow(rate, power - 1);
             stdDevs.set(i, stdDev);
         }

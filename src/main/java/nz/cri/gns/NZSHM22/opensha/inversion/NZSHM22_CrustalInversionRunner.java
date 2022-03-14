@@ -42,7 +42,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double sansSlipRateFactor = -1;
     private double tvzSlipRateFactor = -1;
 
-    private boolean enableTvz = true;
+    private boolean enableTvzMFDs = true;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -56,8 +56,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
      * @param enableTvz
      * @return
      */
-    public NZSHM22_CrustalInversionRunner setEnableTvz(boolean enableTvz){
-        this.enableTvz = enableTvz;
+    public NZSHM22_CrustalInversionRunner setEnableTvzMFDs(boolean enableTvz){
+        this.enableTvzMFDs = enableTvz;
         return this;
     }
 
@@ -141,7 +141,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
 
-        if(!enableTvz){
+        if(!enableTvzMFDs){
             branch.setValue(new NZSHM22_Regions(new NewZealandRegions.NZ_RECTANGLE_GRIDDED(), new NewZealandRegions.NZ_EMPTY_GRIDDED()));
         }
         if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
