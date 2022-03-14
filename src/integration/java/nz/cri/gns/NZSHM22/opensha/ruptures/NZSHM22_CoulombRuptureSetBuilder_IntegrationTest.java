@@ -37,7 +37,7 @@ public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
                         .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
                         .buildRuptureSet();
 
-        assertEquals(1185, ruptureSet.getNumRuptures());
+        assertEquals(1192, ruptureSet.getNumRuptures());
         assertEquals(68, ruptureSet.getSlipRateForAllSections().length);
         assertEquals(68, ruptureSet.getSlipRateStdDevForAllSections().length);
         
@@ -73,7 +73,7 @@ public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
 
         //FaultSystemIO.writeRupSet(ruptureSet, new File("./tmp/testAlpineVernon.zip"));
 
-        assertEquals(2171, ruptureSet.getNumRuptures());
+        assertEquals(2178, ruptureSet.getNumRuptures());
         assertTrue(hasRuptureWithFaults(faults, ruptureSet));
 
         assertEquals(86, ruptureSet.getSlipRateForAllSections().length);
