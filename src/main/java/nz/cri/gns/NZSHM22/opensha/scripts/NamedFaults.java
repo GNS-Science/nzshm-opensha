@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.scripts;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -55,9 +55,8 @@ public class NamedFaults {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9C_ALL_D90);
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9C_SANSTVZ_D90);
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9C_ALL_2010);
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_0_9C_SANSTVZ_2010);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0_DOM_ALL);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0_DOM_SANSTVZ);
+        
     }
 }

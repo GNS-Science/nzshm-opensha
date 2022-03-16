@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
-        ref: tmp/cdc-misfit-stats2
+        ref: tmp/cdc-misfits-stats3
         path: opensha
 
     - uses: actions/checkout@v2

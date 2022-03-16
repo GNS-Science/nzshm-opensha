@@ -2,7 +2,8 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import static org.junit.Assert.*;
 
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -49,5 +50,25 @@ public class NZSHM22_FaultModelsTest {
         for (NZSHM22_FaultModels model : NZSHM22_FaultModels.values()) {
             model.getNamedFaultsMapAlt();
         }
+    }
+
+    @Test
+    public void testDomains() throws DocumentException, IOException {
+        FaultSectionList sections = new FaultSectionList();
+        NZSHM22_FaultModels.CFM_1_0_DOM_ALL.fetchFaultSections(sections);
+
+        NZFaultSection section = (NZFaultSection) sections.get(0);
+        assertEquals("21", section.getDomainNo());
+        assertEquals("Southern South Island", section.getDomainName());
+
+        section = (NZFaultSection) sections.get(5);
+        assertEquals("4", section.getDomainNo());
+        assertEquals("Havre Trough - Taupo Rift", section.getDomainName());
+
+        sections = new FaultSectionList();
+        NZSHM22_FaultModels.CFM_0_9_ALL_D90.fetchFaultSections(sections);
+        section = (NZFaultSection) sections.get(0);
+        assertNull(section.getDomainNo());
+        assertNull(section.getDomainName());
     }
 }

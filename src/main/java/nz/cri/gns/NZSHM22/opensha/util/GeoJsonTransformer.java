@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.util;
 
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.geo.Region;
 import org.opensha.sha.faultSurface.FaultSection;

@@ -104,7 +104,8 @@ public class SmokeTest {
         builder.writeRuptureSet(file.getAbsolutePath());
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
-        branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
+        //branch.clearValue(NZSHM22_ScalingRelationshipNode.class);
+        branch.getValue(NZSHM22_ScalingRelationshipNode.class).setRecalc(false); // don't recalculate mags
         NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(file, branch);
 
         sanityCheckAzimuthalRuptureSet(rupSet);

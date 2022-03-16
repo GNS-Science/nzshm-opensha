@@ -21,6 +21,18 @@ import java.util.Map;
 
 public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
+    GEODETIC_SLIP_PRIOR_NO_TVZ(
+            "Geodetic with Geologic prior timing, no TVZ",
+            "NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_notvz.txt"),
+
+    GEODETIC_SLIP_NO_TVZ(
+            "Geodetic timing, no TVZ",
+            "NZNSHM_paleotimings_GEODETICsliprates_notvz.txt"),
+
+    GEOLOGIC_SLIP_NO_TVZ(
+            "Geologic timing, no TVZ",
+            "NZNSHM_paleotimings_GEOLOGICsliprates_notvz.txt"),
+
     GEODETIC_SLIP_PRIOR_22FEB(
     		"Geodetic with Geologic prior timing, 22 Feb 2022",
     		"NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_22feb.txt"),

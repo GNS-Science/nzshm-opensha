@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.util;
+package nz.cri.gns.NZSHM22.opensha.faults;
 
 import org.opensha.sha.faultSurface.FaultSection;
 

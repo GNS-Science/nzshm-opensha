@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -41,11 +42,23 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double sansSlipRateFactor = -1;
     private double tvzSlipRateFactor = -1;
 
+    private boolean enableTvzMFDs = true;
+
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
      */
     public NZSHM22_CrustalInversionRunner() {
         super();
+    }
+
+    /**
+     * Determines whether NZ is a single region (false) or is split up in TVZ and Sans TVZ (true)
+     * @param enableTvz
+     * @return
+     */
+    public NZSHM22_CrustalInversionRunner setEnableTvzMFDs(boolean enableTvz){
+        this.enableTvzMFDs = enableTvz;
+        return this;
     }
 
     /**
@@ -127,6 +140,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         setupLTB(branch);
+
+        if(!enableTvzMFDs){
+            branch.setValue(new NZSHM22_Regions(new NewZealandRegions.NZ_RECTANGLE_GRIDDED(), new NewZealandRegions.NZ_EMPTY_GRIDDED()));
+        }
         if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
             branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ, maxMagType));
         }
@@ -211,8 +228,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         File inputDir = new File("./TEST");
         File outputRoot = new File("./TEST");
         File ruptureSet = new File(
-//                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
-        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
+                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
+//        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 
@@ -220,8 +237,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         scaling.setupCrustal(4.2, 4.2);
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-
-                .setMaxMags("MANIPULATE_MFD",10,7.5)//FILTER_RUPSET
+                .setMaxMags("MANIPULATE_MFD",10,7.5)
                 .setMinMags(6.8 , 6.5)
               //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setInversionSeconds(1)
@@ -236,6 +252,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 //.setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
                 .setReweightTargetQuantity("MAD"))
+                .setSlipRateFactor(0.9, 0.8)
                 .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
                 .setPaleoRateConstraints(0.01, 1000, "GEOLOGIC_SLIP_22FEB", "UCERF3_PLUS_PT25");
 
@@ -250,10 +267,10 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
             System.out.println(row);
         }
-        System.out.println("Solution MFDS V2 ...");      
+        System.out.println("Solution MFDS V2 ...");
         for (ArrayList<String> row : runner.getTabularSolutionMfdsV2()) {
             System.out.println(row);
-        }        
+        }
 //		System.out.println(solution.getEnergies().toString());
 
         File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");

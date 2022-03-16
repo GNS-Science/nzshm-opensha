@@ -1,11 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.TypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
@@ -13,13 +9,10 @@ import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
@@ -218,9 +211,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
     }
 
-    public void applyTo(FaultSystemRupSet rupSet) {
+    public boolean applyTo(FaultSystemRupSet rupSet) {
         if (fileName != null) {
             helper.applyTo(rupSet);
+            return true;
+        } else {
+            return false;
         }
     }
 

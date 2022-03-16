@@ -51,40 +51,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
-		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-		if (scaling != null && scaling.getReCalc()) {
-			rupSet = recalcMags(rupSet, scaling);
-		}
-
+		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
-	}
-
-	/**
-	 * This needs to happen before rupSet is passed on to the constructor.
-	 * @param rupSet
-	 * @param branch
-	 * @return
-	 */
-	protected static FaultSystemRupSet prepCrustalRupSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
-
-		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-
-		NZSHM22_MagBounds magBounds = branch.getValue(NZSHM22_MagBounds.class);
-		if (magBounds != null && magBounds.getMaxMagType() == NZSHM22_MagBounds.MaxMagType.FILTER_RUPSET) {
-			scaling.setRecalc(true);
-		}
-
-		if (scaling.getReCalc()) {
-			rupSet = recalcMags(rupSet, scaling);
-		}
-
-		if (magBounds != null && magBounds.getMaxMagType() == NZSHM22_MagBounds.MaxMagType.FILTER_RUPSET) {
-			rupSet.addModule(faultPolyMgr(rupSet, branch));
-			rupSet.addModule(new NZSHM22_TvzSections(rupSet));
-			rupSet = RupSetMaxMagFilter.filter(rupSet, scaling, magBounds.getMaxMagTvz(), magBounds.getMaxMagSans());
-		}
-
-		return rupSet;
 	}
 
 	protected static NZSHM22_FaultPolyMgr faultPolyMgr(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
@@ -110,7 +78,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	}
 
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
-		rupSet = prepCrustalRupSet(rupSet, branch);
+		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 	}
 
@@ -120,7 +88,8 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 			return;
 		}
 
-		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		RegionSections tvzSections = new RegionSections(rupSet, new NewZealandRegions.NZ_TVZ_GRIDDED()){
+		};
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 
@@ -149,15 +118,18 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	 * @param scale
 	 * @return
 	 */
-	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, RupSetScalingRelationship scale){
-		return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scale).build();
+	public static FaultSystemRupSet recalcMags(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
+		NZSHM22_ScalingRelationshipNode scaling = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+		if (scaling != null && scaling.getReCalc()) {
+			return FaultSystemRupSet.buildFromExisting(rupSet).forScalingRelationship(scaling).build();
+		} else {
+			return rupSet;
+		}
 	}
 
 	protected void applyDeformationModel(NZSHM22_LogicTreeBranch branch) {
 		NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
-		if (model != null) {
-			model.applyTo(this);
-		} else {
+		if (model == null || !model.applyTo(this)) {
 			SectSlipRates rates = SectSlipRates.fromFaultSectData(this);
 			addModule(SectSlipRates.precomputed(this, rates.getSlipRates(), rates.getSlipRateStdDevs()));
 		}
@@ -207,6 +179,27 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 	public NZSHM22_InversionFaultSystemRuptSet setRegionalData(RegionalRupSetData tvz, RegionalRupSetData sansTvz){
 		this.tvz = tvz;
 		this.sansTvz = sansTvz;
+
+		double[] minMags = new double[getNumSections()];
+
+		for (int s = 0; s < minMags.length; s++) {
+			if (tvz.isInRegion(s)) {
+				minMags[s] = tvz.getMinMagForOriginalSectionid(s);
+			} else {
+				minMags[s] = sansTvz.getMinMagForOriginalSectionid(s);
+			}
+		}
+
+		if (hasAvailableModule(ModSectMinMags.class)) {
+			removeModuleInstances(ModSectMinMags.class);
+		}
+		addAvailableModule(new Callable<ModSectMinMags>() {
+			@Override
+			public ModSectMinMags call() throws Exception {
+				return ModSectMinMags.instance(NZSHM22_InversionFaultSystemRuptSet.this, minMags);
+			}
+		}, ModSectMinMags.class);
+
 		return this;
 	}
 

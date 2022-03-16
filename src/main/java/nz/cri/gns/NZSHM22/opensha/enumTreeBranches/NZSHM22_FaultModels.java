@@ -1,12 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.Element;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.commons.util.ExceptionUtils;
 import org.opensha.commons.util.XMLUtils;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 import java.io.*;
@@ -15,7 +19,10 @@ import java.util.Map;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
 
-	
+	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc and CFM Domains
+	CFM_1_0_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_all.xml"),
+	CFM_1_0_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_no_tvz.xml"),
+
 	// CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with shallower TVZ depths
 	CFM_0_9D_ALL_D90("CFM 0.9revD all NZ faults, depth 90, with shallower TVZ depths", "cfm_0_9d_d90_all.xml"),
 	CFM_0_9D_SANSTVZ_D90("CFM 0.9revD sans TVZ, depth 90, with shallower TVZ depths", "cfm_0_9d_d90_no_tvz.xml"),
@@ -126,11 +133,21 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 	}
 
 	public static void fetchFaultSections(FaultSectionList sections, InputStream in, boolean crustal, int subductionId, String modelName) throws IOException, DocumentException {
-			if (crustal) {
-				sections.addAll(FaultModels.loadStoredFaultSections(XMLUtils.loadDocument(in)));
-			} else {
-				DownDipSubSectBuilder.loadFromStream(sections, subductionId, modelName, in);
-			}
+		if (crustal) {
+			loadStoredFaultSections(sections, XMLUtils.loadDocument(in));
+		} else {
+			DownDipSubSectBuilder.loadFromStream(sections, subductionId, modelName, in);
+		}
+	}
+
+	public static void loadStoredFaultSections(FaultSectionList sections, Document doc) {
+		Element el = doc.getRootElement().element("FaultModel");
+		for (int i = 0; i < el.elements().size(); i++) {
+			Element subEl = el.element("i" + i);
+			FaultSection sect;
+			sect = NZFaultSection.fromXMLMetadata(subEl);
+			sections.add(sect);
+		}
 	}
 
 	/**

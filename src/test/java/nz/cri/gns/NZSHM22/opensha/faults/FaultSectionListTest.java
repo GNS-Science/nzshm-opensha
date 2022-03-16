@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.util;
+package nz.cri.gns.NZSHM22.opensha.faults;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 
 import org.junit.Test;
 import org.opensha.sha.faultSurface.FaultSection;

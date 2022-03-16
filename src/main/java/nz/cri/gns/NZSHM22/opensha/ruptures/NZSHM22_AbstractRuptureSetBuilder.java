@@ -1,16 +1,20 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
+import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-import nz.cri.gns.NZSHM22.opensha.util.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.XMLUtils;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.enumTreeBranches.FaultModels;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -18,13 +22,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
 	
 	PlausibilityConfiguration plausibilityConfig;
 	
-    FaultSectionList subSections;
+    protected FaultSectionList subSections;
     List<ClusterRupture> ruptures;
     ClusterRuptureBuilder builder;
 
@@ -45,6 +48,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
 
     protected boolean invertRake = false;
+    String scaleDepthIncludeDomainNo;
+    double scaleDepthIncludeDomainScalar;
+    String scaleDepthExcludeDomainNo;
+    double scaleDepthExcludeDomainScalar;
+
 
     /**
      * For debugging only. adds 180 degrees to each rake in the fault model
@@ -53,6 +61,18 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
      */
     public NZSHM22_AbstractRuptureSetBuilder setInvertRake(boolean invertRake){
         this.invertRake = invertRake;
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthIncludeDomain(String domainNo, double scalar){
+        this.scaleDepthIncludeDomainNo = domainNo;
+        this.scaleDepthIncludeDomainScalar = scalar;
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthExcludeDomain(String domainNo, double scalar){
+        this.scaleDepthExcludeDomainNo = domainNo;
+        this.scaleDepthExcludeDomainScalar = scalar;
         return this;
     }
 
@@ -201,7 +221,28 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         this.minSubSections = minSubSections;
         return this;
     }
-    
+
+    protected void applyDepthScalars(FaultSectionList sections) {
+        if (scaleDepthIncludeDomainNo != null) {
+            Preconditions.checkState(((NZFaultSection) sections.get(0)).getDomainNo() != null,
+                    "fault model must have domain data when using scaleDepthIncludeDomain");
+            for (FaultSection section : sections) {
+                if (((NZFaultSection) section).getDomainNo().equals(scaleDepthIncludeDomainNo)) {
+                    ((FaultSectionPrefData) section).setAveLowerDepth(section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
+                }
+            }
+        }
+        if (scaleDepthExcludeDomainNo != null) {
+            Preconditions.checkState(((NZFaultSection) sections.get(0)).getDomainNo() != null,
+                    "fault model must have domain data when using scaleDepthExcludeDomain");
+            for (FaultSection section : sections) {
+                if (!((NZFaultSection) section).getDomainNo().equals(scaleDepthExcludeDomainNo)) {
+                    ((FaultSectionPrefData) section).setAveLowerDepth(section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
+                }
+            }
+        }
+    }
+
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
             faultModel.fetchFaultSections(subSections);
@@ -210,7 +251,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                 DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
             }
         } else if (fsdFile != null) {
-            subSections = FaultSectionList.fromList((FaultModels.loadStoredFaultSections(fsdFile)));
+            Document doc = XMLUtils.loadDocument(fsdFile);
+            NZSHM22_FaultModels.loadStoredFaultSections(subSections, doc);
         } else {
             throw new IllegalArgumentException("No fault model specified.");
         }
@@ -226,6 +268,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                 section.setAveRake(rake);
             }
         }
+
+        applyDepthScalars(subSections);
 
         if (fsdFile != null || (faultModel != null && faultModel.isCrustal())) {
 
