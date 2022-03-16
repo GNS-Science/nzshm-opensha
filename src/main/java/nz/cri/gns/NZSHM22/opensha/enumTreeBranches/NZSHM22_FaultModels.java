@@ -20,6 +20,11 @@ import java.util.Map;
 public enum NZSHM22_FaultModels implements LogicTreeNode {
 
 	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc and CFM Domains
+	// depth filtering: nothing shallower than 3.9
+	CFM_1_0A_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_all.xml"),
+	CFM_1_0A_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_no_tvz.xml"),
+
+	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc and CFM Domains
 	CFM_1_0_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_all.xml"),
 	CFM_1_0_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_no_tvz.xml"),
 
