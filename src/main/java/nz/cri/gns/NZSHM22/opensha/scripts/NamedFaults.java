@@ -55,8 +55,8 @@ public class NamedFaults {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0_DOM_ALL);
-        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0_DOM_SANSTVZ);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ);
         
     }
 }
