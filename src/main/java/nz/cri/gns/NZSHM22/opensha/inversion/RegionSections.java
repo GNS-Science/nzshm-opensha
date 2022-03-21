@@ -16,15 +16,13 @@ import java.util.stream.Collectors;
 
 public abstract class RegionSections implements CSV_BackedModule {
 
-    Set<Integer> sections;
-    String regionName;
+    protected Set<Integer> sections;
 
     public RegionSections() {
     }
 
     public RegionSections(FaultSystemRupSet rupSet, GriddedRegion region) {
         IntPredicate regionFilter = createRegionFilter(rupSet, region);
-        regionName = region.getName();
         sections = rupSet.getFaultSectionDataList().stream()
                 .map(FaultSection::getSectionId)
                 .filter(regionFilter::test)
@@ -62,15 +60,6 @@ public abstract class RegionSections implements CSV_BackedModule {
         return sections;
     }
 
-    public String getRegionName() {
-        return regionName;
-    }
-
-    @Override
-    public String getName() {
-        return getRegionName() + "RegionSections";
-    }
-
     @Override
     public CSVFile<?> getCSV() {
         CSVFile<Integer> result = new CSVFile<>(true);
@@ -85,7 +74,8 @@ public abstract class RegionSections implements CSV_BackedModule {
     }
 
     @Override
-    public String getFileName() {
-        return getRegionName().replace(" ", "_") + "_Sections.csv";
+    public String getFileName(){
+        return getName() + ".csv";
     }
+
 }

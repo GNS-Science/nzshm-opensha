@@ -33,6 +33,11 @@ public class RegionSectionsTest {
         public TestRegionSections(FaultSystemRupSet rupSet) {
             super(rupSet, testRegion);
         }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 
     @Test
