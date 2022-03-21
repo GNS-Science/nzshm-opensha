@@ -45,12 +45,16 @@ public class NZSHM22_ReportPageGen {
     }
 
     /**
-     * Sets the plot level. Any plots added by addPlot will be overwritten.
+     * Sets the plot level.
      * @param plotLevel
      * @return
      */
     public NZSHM22_ReportPageGen setPlotLevel(String plotLevel) {
-        plots = ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.valueOf(plotLevel));
+        if(plotLevel == null){
+            this.plotLevel = null;
+        } else {
+            this.plotLevel = ReportPageGen.PlotLevel.valueOf(plotLevel);
+        }
         return this;
     }
 
@@ -120,18 +124,22 @@ public class NZSHM22_ReportPageGen {
     	
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
-        if (plots == null) {
-            plots = ReportPageGen.getDefaultSolutionPlots(plotLevel);
+
+        List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        if (plotLevel != null) {
+            reportPlots.addAll(ReportPageGen.getDefaultSolutionPlots(plotLevel));
+        }
+        if(plots != null){
+            reportPlots.addAll(plots);
         }
         if (fillSurfaces) {
-            for (AbstractRupSetPlot plot : plots) {
+            for (AbstractRupSetPlot plot : reportPlots) {
                 if (plot instanceof SolidFillPlot) {
                     ((SolidFillPlot) plot).setFillSurfaces(true);
                 }
             }
         }
-        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath),
-                plots);
+        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath), reportPlots);
         solReport.generatePage();
     }
 
@@ -143,30 +151,42 @@ public class NZSHM22_ReportPageGen {
 
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(solutionPath));
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, rupSet));
-        if (plots == null) {
-            plots = ReportPageGen.getDefaultRupSetPlots(plotLevel);
+
+        List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        if (plotLevel != null) {
+            reportPlots.addAll(ReportPageGen.getDefaultRupSetPlots(plotLevel));
+        }
+        if(plots != null){
+            reportPlots.addAll(plots);
         }
         if (fillSurfaces) {
-            for (AbstractRupSetPlot plot : plots) {
+            for (AbstractRupSetPlot plot : reportPlots) {
                 if (plot instanceof SolidFillPlot) {
                     ((SolidFillPlot) plot).setFillSurfaces(true);
                 }
             }
         }
-        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath),
-                plots);
+        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath), reportPlots);
         solReport.generatePage();
     }
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-        reportPageGen.setName("SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw")
-        	.setOutputPath("TEST/REPORTPAGEGEN5")
-            .setFillSurfaces(true)
-            .setPlotLevel("FULL")
-//                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
-    		.setSolution("./TEST/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy.zip");
-        reportPageGen.generatePage();
+//        reportPageGen.setName("SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw")
+//        	.setOutputPath("TEST/REPORTPAGEGEN6")
+//            .setFillSurfaces(true)
+//            .setPlotLevel("DEFAULT")
+////                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
+//    		.setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip");
+//        reportPageGen.generatePage();
+
+        reportPageGen.setRuptureSet("C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMTA3R2F1Skg=.zip")
+                .setName("hello!")
+                .setOutputPath("TEST/REPORTPAGEGEN7")
+                .setFillSurfaces(true)
+                .setPlotLevel("DEFAULT");
+        reportPageGen.generateRupSetPage();
+
         System.out.println("DONE!");
     }
 }

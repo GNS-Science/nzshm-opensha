@@ -48,6 +48,7 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
         new NZSHM22_ReportPageGen().setOutputPath(tempFolder.toString())
                 .setName("test")
                 .setSolution(alpineVernonInversionSolutionUrl.getFile().toString())
+                .setPlotLevel(null)
                 .addPlot("SolMFDPlot")
                 .generatePage();
 
