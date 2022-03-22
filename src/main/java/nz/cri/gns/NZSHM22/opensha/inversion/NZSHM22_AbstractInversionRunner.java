@@ -6,12 +6,14 @@ import java.util.*;
 import java.util.zip.ZipFile;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
+import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -23,6 +25,7 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalarValues;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import com.google.common.base.Preconditions;
@@ -536,14 +539,86 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		Preconditions.checkState(regime == scalingRegime, "Regime of rupture set and scaling relationship do not match.");
 	}
 
-	private IntegerSampler createSampler() {
-		List<Integer> belowMinIndexes = new ArrayList<>();
-		for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-			if (rupSet.isRuptureBelowSectMinMag(r)) {
-				belowMinIndexes.add(r);
+	protected Set<Integer> createSamplerExclusions() {
+		Set<Integer> exclusions = new HashSet<>();
+		if (excludeRupturesBelowMinMag) {
+			for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+				if (rupSet.isRuptureBelowSectMinMag(r)) {
+					exclusions.add(r);
+				}
 			}
 		}
-		return new IntegerSampler.ExclusionIntegerSampler(0, rupSet.getNumRuptures(), belowMinIndexes);
+		return exclusions;
+	}
+
+	protected void printRuptureExclusionStats(Set<Integer> exclusions, String prefix) {
+
+		System.out.println("Excluded " + exclusions.size() + " ruptures: " + exclusions);
+
+		Set<Integer> includedSections = new HashSet<>();
+		for (int i = 0; i < rupSet.getNumRuptures(); i++) {
+			if (!exclusions.contains(i)) {
+				includedSections.addAll(rupSet.getSectionsIndicesForRup(i));
+			}
+		}
+		Set<Integer> excludedSections = new HashSet<>();
+		for (int s = 0; s < rupSet.getNumSections(); s++) {
+			if (!includedSections.contains(s)) {
+				excludedSections.add(s);
+			}
+		}
+
+		System.out.println("Completely excluded " + excludedSections.size() + " sections: " + excludedSections);
+
+		SimpleGeoJsonBuilder excludedGeoJsonBuilder = new SimpleGeoJsonBuilder();
+		SimpleGeoJsonBuilder includedGeoJsonBuilder = new SimpleGeoJsonBuilder();
+		for (FaultSection section : rupSet.getFaultSectionDataList()) {
+			if (excludedSections.contains(section.getSectionId())) {
+				FeatureProperties props = excludedGeoJsonBuilder.addFaultSection(section);
+				props.set(FeatureProperties.STROKE_COLOR_PROP, "red");
+				props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
+			} else {
+				FeatureProperties props = includedGeoJsonBuilder.addFaultSection(section);
+				props.set(FeatureProperties.STROKE_COLOR_PROP, "green");
+				props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
+			}
+		}
+		excludedGeoJsonBuilder.toJSON(prefix + "excludedSections.geoJson");
+		includedGeoJsonBuilder.toJSON(prefix + "includedSections.geoJson");
+
+		Map<String, Set<Integer>> parents = new HashMap<>();
+		for (FaultSection section : rupSet.getFaultSectionDataList()) {
+			if (!parents.containsKey(section.getParentSectionName())) {
+				parents.put(section.getParentSectionName(), new HashSet<>());
+			}
+			parents.get(section.getParentSectionName()).add(section.getSectionId());
+		}
+		Set<String> excludedParents = new HashSet<>();
+		for (String p : parents.keySet()) {
+			boolean included = false;
+			for (int s : parents.get(p)) {
+				if (includedSections.contains(s)) {
+					included = true;
+					break;
+				}
+			}
+			if (!included) {
+				excludedParents.add(p);
+			}
+		}
+
+		System.out.println("Completely excluded " + excludedParents.size() + " faults: " + excludedParents);
+
+	}
+
+	protected IntegerSampler createSampler() {
+		Set<Integer> exclusions = createSamplerExclusions();
+		if (!exclusions.isEmpty()) {
+			printRuptureExclusionStats(exclusions, "sampler_");
+			return new IntegerSampler.ExclusionIntegerSampler(0, rupSet.getNumRuptures(), exclusions);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -629,8 +704,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		if (!(this.coolingSchedule == null))
 			tsa.setCoolingFunc(this.coolingSchedule);
 
-		if(excludeRupturesBelowMinMag){
-			tsa.setRuptureSampler(createSampler());
+		IntegerSampler sampler = createSampler();
+		if (sampler != null) {
+			tsa.setRuptureSampler(sampler);
 		}
 
 		// From CLI metadata Analysis
@@ -654,6 +730,14 @@ public abstract class NZSHM22_AbstractInversionRunner {
 //				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
 //			}
 //		}
+
+		Set<Integer> zeroRates = new HashSet<>();
+		for (int r = 0; r < solution_adjusted.length; r++) {
+			if (solution_adjusted[r] == 0) {
+				zeroRates.add(r);
+			}
+		}
+		printRuptureExclusionStats(zeroRates, "rates_");
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
