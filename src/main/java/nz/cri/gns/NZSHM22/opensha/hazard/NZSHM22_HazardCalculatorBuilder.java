@@ -4,7 +4,9 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.erf.FaultSystemSolutionERF;
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.Site;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
@@ -14,6 +16,7 @@ import org.opensha.commons.param.Parameter;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.calc.params.MaxDistanceParam;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.GridSourceProvider;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
 import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_2010_AttenRel;
@@ -24,8 +27,6 @@ import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
-
-import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 /**
  * Creates a NZSHM22_HazardCalculator
@@ -142,10 +143,20 @@ public class NZSHM22_HazardCalculatorBuilder {
         return this;
     }
 
+    protected FaultSystemSolution loadSolution() throws IOException {
+        FaultSystemSolution fss = FaultSystemSolution.load(solutionFile);
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.fromContainer(fss.getRupSet());
+        fss.getRupSet().addModule(branch);
+        fss.removeModuleInstances(GridSourceProvider.class);
+        fss.addAvailableModule(
+                () -> new NZSHM22_GridSourceGenerator(fss),
+                GridSourceProvider.class);
+        return fss;
+    }
+
     @SuppressWarnings("unchecked")
-    protected FaultSystemSolutionERF loadERF() throws IOException, DocumentException {
-        // FIXME crustal is hard coded
-        FaultSystemSolution fss = NZSHM22_InversionFaultSystemSolution.fromFile(solutionFile);
+    protected FaultSystemSolutionERF loadERF() throws IOException {
+        FaultSystemSolution fss = loadSolution();
 
         FaultSystemSolutionERF erf = new FaultSystemSolutionERF(fss);
         if (forecastTimespan != null) {
@@ -255,7 +266,7 @@ public class NZSHM22_HazardCalculatorBuilder {
 //        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
 //                .setLinear(true)
 //                .setForecastTimespan(50);
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTQxMjRNQ1cy(1).zip")
+        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)

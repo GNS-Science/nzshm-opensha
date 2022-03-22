@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.util;
 
 import com.google.common.collect.Sets;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
@@ -47,10 +48,18 @@ public class MFDPlotBuilder {
 
     public void plot() throws IOException {
         HashMap<String, Set<Integer>> parentSections = new HashMap<>();
+        if (faultModel == null) {
+            NZSHM22_LogicTreeBranch branch = solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+            if (branch != null) {
+                faultModel = branch.getValue(NZSHM22_FaultModels.class);
+            }
+        }
         if (faultModel != null) {
             Map<String, List<Integer>> namedFaultsMap = faultModel.getNamedFaultsMapAlt();
-            for (String name : namedFaultsMap.keySet()) {
-                parentSections.put(name, Sets.newHashSet(namedFaultsMap.get(name)));
+            if(namedFaultsMap != null) {
+                for (String name : namedFaultsMap.keySet()) {
+                    parentSections.put(name, Sets.newHashSet(namedFaultsMap.get(name)));
+                }
             }
         } else {
             for (FaultSection sect : solution.getRupSet().getFaultSectionDataList()) {

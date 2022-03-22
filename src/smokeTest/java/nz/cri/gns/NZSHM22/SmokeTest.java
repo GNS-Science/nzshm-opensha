@@ -7,6 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.util.MFDPlotBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway;
 import org.dom4j.DocumentException;
 import org.junit.BeforeClass;
@@ -38,11 +39,13 @@ public class SmokeTest {
         dir.mkdir();
         File ruptureSetFile = new File(dir, "rupSet.zip");
         File solutionFile = new File(dir, "solution.zip");
+        File mfdDir = new File(dir, "MFDPlots");
 
         testAzimuthalRuptures(ruptureSetFile);
         testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
+        testMFDPlotBuilder(mfdDir, solutionFile, true);
         testHazard(solutionFile, "INCLUDE");
     }
 
@@ -52,11 +55,13 @@ public class SmokeTest {
         dir.mkdir();
         File ruptureSetFile = new File(dir, "rupSet.zip");
         File solutionFile = new File(dir, "solution.zip");
+        File mfdDir = new File(dir, "MFDPlots");
 
         testCoulombRuptures(ruptureSetFile);
         testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
+        testMFDPlotBuilder(mfdDir, solutionFile, true);
         testHazard(solutionFile, "INCLUDE");
     }
 
@@ -286,6 +291,19 @@ public class SmokeTest {
         NZSHM22_HazardCalculator calculator = builder.build();
 
         System.out.println(calculator.calc(-41.288889, 174.777222));
+    }
+
+    public void testMFDPlotBuilder(File outputDir, File solutionFile, boolean crustal) throws DocumentException, IOException {
+        MFDPlotBuilder builder = new MFDPlotBuilder();
+        if (crustal) {
+            builder.setCrustalSolution(solutionFile.getAbsolutePath());
+        } else {
+            builder.setSubductionSolution(solutionFile.getAbsolutePath());
+        }
+        builder.setOutputDir(outputDir.getAbsolutePath());
+        builder.plot();
+
+        assertTrue(new File(outputDir, "small_MFD_plots").exists());
     }
 
 }

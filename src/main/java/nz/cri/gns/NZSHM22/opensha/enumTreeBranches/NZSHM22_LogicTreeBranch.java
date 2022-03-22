@@ -126,6 +126,15 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         }
     }
 
+    public static NZSHM22_LogicTreeBranch fromContainer(ModuleContainer container){
+        NZSHM22_LogicTreeBranch original = (NZSHM22_LogicTreeBranch) container.getModule(NZSHM22_LogicTreeBranch.class);
+        if(original != null && original.getValue(FaultRegime.class) == FaultRegime.SUBDUCTION){
+            return subductionFromModuleContainer(container);
+        } else {
+            return crustalFromModuleContainer(container);
+        }
+    }
+
     public void copyValuesFrom(LogicTreeBranch<LogicTreeNode> branch) {
         for (LogicTreeNode node : branch) {
             if(node != null) {

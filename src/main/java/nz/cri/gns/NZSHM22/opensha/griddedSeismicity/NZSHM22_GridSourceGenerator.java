@@ -4,7 +4,6 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,8 @@ import java.util.Map;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -20,7 +21,6 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 
 import scratch.UCERF3.griddedSeismicity.AbstractGridSourceProvider;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
-import scratch.UCERF3.inversion.InversionFaultSystemSolution;
 
 import com.google.common.collect.Maps;
 
@@ -70,14 +70,14 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 * @param ifss {@code InversionFaultSystemSolution} for which gridded/background
 	 *             sources should be generated
 	 */
-	public NZSHM22_GridSourceGenerator(NZSHM22_InversionFaultSystemSolution ifss) {
+	public NZSHM22_GridSourceGenerator(FaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getTvzRegion());
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getSansTvzRegion());
 		srcSpatialPDF = spatialSeisPDF.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
-		realOffFaultMFD = ifss.getFinalTrulyOffFaultMFD();
+		realOffFaultMFD = ifss.getRupSet().getModule(InversionTargetMFDs.class).getTrulyOffFaultMFD().deepClone();
 
 		mfdMin = realOffFaultMFD.getMinX();
 		mfdMax = realOffFaultMFD.getMaxX();
@@ -99,9 +99,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	/*
 	 * Initialize the sub-seismogenic MFDs for each fault section (sectSubSeisMFDs)
 	 */
-	protected void initSectionMFDs(InversionFaultSystemSolution ifss) {
+	protected void initSectionMFDs(FaultSystemSolution ifss) {
 
-		List<? extends IncrementalMagFreqDist> subSeisMFD_list = ifss.getFinalSubSeismoOnFaultMFD_List();
+		List<? extends IncrementalMagFreqDist> subSeisMFD_list = ifss.getRupSet().getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().getAll();
 
 		sectSubSeisMFDs = Maps.newHashMap();
 		List<? extends FaultSection> faults = ifss.getRupSet().getFaultSectionDataList();
@@ -115,7 +115,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	 * partitioning the sectSubSeisMFDs according to the overlapping fraction of
 	 * each fault section and grid node.
 	 */
-	protected void initNodeMFDs(InversionFaultSystemSolution ifss) {
+	protected void initNodeMFDs(FaultSystemSolution ifss) {
 		nodeSubSeisMFDs = Maps.newHashMap();
 		for (FaultSection sect : ifss.getRupSet().getFaultSectionDataList()) {
 			int id = sect.getSectionId();
