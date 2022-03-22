@@ -4,10 +4,12 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.dom4j.DocumentException;
+import org.opensha.commons.data.IntegerSampler;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import com.google.common.base.Preconditions;
 
+import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
@@ -16,7 +18,9 @@ import scratch.UCERF3.enumTreeBranches.InversionModels;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Runs the standard NSHM inversion on a crustal rupture set.
@@ -43,6 +47,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double tvzSlipRateFactor = -1;
 
     private boolean enableTvzMFDs = true;
+    private boolean enableMinMaxSampler = false;
 
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
@@ -77,6 +82,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         this.maxMagType = NZSHM22_MagBounds.MaxMagType.valueOf(maxMagType);
         this.maxMagSans = maxMagSans;
         this.maxMagTVZ = maxMagTVZ;
+        return this;
+    }
+
+    public NZSHM22_CrustalInversionRunner setEnableMinMaxSampler(boolean enable){
+        this.enableMinMaxSampler = enable;
         return this;
     }
 
@@ -133,6 +143,23 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         setPaleoRates(NZSHM22_PaleoRates.valueOf(paleoRateConstraints));
         setPaleoProbabilityModel(NZSHM22_PaleoProbabilityModel.valueOf(paleoProbabilityModel));
         return this;
+    }
+
+    @Override
+    protected Set<Integer> createSamplerExclusions() {
+        Set<Integer> exclusions = super.createSamplerExclusions();
+        if (enableMinMaxSampler) {
+            NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+                double mag = rupSet.getMagForRup(r);
+                boolean inTvz = tvzSections.isInRegion(rupSet.getSectionsIndicesForRup(r));
+                if ((inTvz && (mag < minMag_TVZ || mag > maxMagTVZ))
+                        || (!inTvz && (mag < minMag_Sans || mag > maxMagSans))) {
+                    exclusions.add(r);
+                }
+            }
+        }
+        return exclusions;
     }
 
     @Override
@@ -228,7 +255,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         File inputDir = new File("./TEST");
         File outputRoot = new File("./TEST");
         File ruptureSet = new File(
-                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjc5OTBvWWZMVw==(1).zip");
+                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMTA3R2F1Skg=.zip");
 //        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
         File outputDir = new File(outputRoot, "inversions");
         Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
@@ -240,6 +267,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setMaxMags("MANIPULATE_MFD",10,7.5)
                 .setMinMags(6.8 , 6.5)
               //  .setInitialSolution("C:\\tmp\\rates.csv")
+                .setEnableMinMaxSampler(true)
                 .setInversionSeconds(1)
               // .setSlipRateFactor(0.8, 0.3)
 
