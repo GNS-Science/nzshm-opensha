@@ -2,13 +2,13 @@ package nz.cri.gns.NZSHM22.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.gui.plot.HeadlessGraphPanel;
 import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -29,7 +29,7 @@ public class MFDPlot {
      * @param dir
      * @throws IOException
      */
-    public static void writeParentSectionMFDPlots(NZSHM22_InversionFaultSystemSolution sol,
+    public static void writeParentSectionMFDPlots(FaultSystemSolution sol,
                                                   Map<String, Set<Integer>> parents,
                                                   File dir) throws IOException {
         if (!dir.exists())
@@ -70,9 +70,9 @@ public class MFDPlot {
             // get incremental MFDs
             SummedMagFreqDist nuclMFD = null;
 
-            nuclMFD = sol.calcNucleationMFD_forParentSect(parents.get(parentName), minMag, maxMag, numMag);
+            nuclMFD = MFDPlotCalc.calcNucleationMFD_forParentSect(sol, parents.get(parentName), minMag, maxMag, numMag);
             nuclMFDs.add(nuclMFD);
-            IncrementalMagFreqDist partMFD = sol.calcParticipationMFD_forParentSect(parents.get(parentName), minMag, maxMag, numMag);
+            IncrementalMagFreqDist partMFD = MFDPlotCalc.calcParticipationMFD_forParentSect(sol, parents.get(parentName), minMag, maxMag, numMag);
             partMFDs.add(partMFD);
 
             // make cumulative MFDs with offsets
@@ -92,7 +92,7 @@ public class MFDPlot {
 
             subSeismoMFDs = Lists.newArrayList();
             subSeismoCmlMFDs = Lists.newArrayList();
-            SummedMagFreqDist subSeismoMFD = sol.getFinalSubSeismoOnFaultMFDForSects(parents.get(parentName));
+            SummedMagFreqDist subSeismoMFD = MFDPlotCalc.getFinalSubSeismoOnFaultMFDForSects(sol, parents.get(parentName));
             subSeismoMFDs.add(subSeismoMFD);
             subSeismoCmlMFDs.add(subSeismoMFD.getCumRateDistWithOffset());
 

@@ -1,11 +1,11 @@
-package nz.cri.gns.NZSHM22.opensha.inversion;
-
-import static org.junit.Assert.*;
+package nz.cri.gns.NZSHM22.opensha.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import nz.cri.gns.NZSHM22.util.MFDPlotCalc;
 import org.dom4j.DocumentException;
 import org.junit.Test;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -17,14 +17,15 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
-public class NZSHM22_InversionFaultSystemSolutionTest {
+import static org.junit.Assert.assertEquals;
 
-    public static NZSHM22_InversionFaultSystemSolution loadSolution() throws URISyntaxException, DocumentException, IOException {
+public class MFDPlotCalcTest {
+    public static FaultSystemSolution loadSolution() throws URISyntaxException, DocumentException, IOException {
         URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
-        return NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(alpineVernonRupturesUrl.toURI()));
+        return FaultSystemSolution.load(new File(alpineVernonRupturesUrl.toURI()));
     }
 
-    protected void changeParentFromTo(NZSHM22_InversionFaultSystemSolution solution, int from, int to) {
+    protected void changeParentFromTo(FaultSystemSolution solution, int from, int to) {
         for (FaultSection section : solution.getRupSet().getFaultSectionDataList()) {
             if (section.getParentSectionId() == from) {
                 section.setParentSectionId(to);
@@ -34,12 +35,12 @@ public class NZSHM22_InversionFaultSystemSolutionTest {
 
     @Test
     public void calcNucleationMFD_forParentSectTest() throws DocumentException, URISyntaxException, IOException {
-        NZSHM22_InversionFaultSystemSolution solution = loadSolution();
+        FaultSystemSolution solution = loadSolution();
 
         // This test verifies that the new method calcNucleationMFD_forParentSect which takes a set of parent ids
         // is equivalent to the old method which takes a single parent id.
 
-        SummedMagFreqDist actual = solution.calcNucleationMFD_forParentSect(Sets.newHashSet(23, 24), 0, 9, 10);
+        SummedMagFreqDist actual = MFDPlotCalc.calcNucleationMFD_forParentSect(solution, Sets.newHashSet(23, 24), 0, 9, 10);
 
         solution = loadSolution(); // needs to be done to reset caches
         // merge parent faults 23 and 24 into one fault
@@ -55,12 +56,12 @@ public class NZSHM22_InversionFaultSystemSolutionTest {
 
     @Test
     public void calcParticipationMFD_forParentSectTest() throws DocumentException, URISyntaxException, IOException {
-        NZSHM22_InversionFaultSystemSolution solution = loadSolution();
+        FaultSystemSolution solution = loadSolution();
 
         // This test verifies that the new method calcParticipationMFD_forParentSect which takes a set of parent ids
         // is equivalent to the old method which takes a single parent id.
 
-        IncrementalMagFreqDist actual = solution.calcParticipationMFD_forParentSect(Sets.newHashSet(23, 24), 0, 9, 10);
+        IncrementalMagFreqDist actual = MFDPlotCalc.calcParticipationMFD_forParentSect(solution, Sets.newHashSet(23, 24), 0, 9, 10);
 
         solution = loadSolution(); // needs to be done to reset caches
         // merge parent faults 23 and 24 into one fault

@@ -3,9 +3,9 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import com.google.common.collect.Sets;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemSolution;
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.File;
@@ -14,20 +14,20 @@ import java.util.*;
 
 public class MFDPlotBuilder {
 
-    NZSHM22_InversionFaultSystemSolution solution;
+    FaultSystemSolution solution;
     File outputDir;
     NZSHM22_FaultModels faultModel;
 
     public MFDPlotBuilder() {
     }
 
-    public MFDPlotBuilder setCrustalSolution(String fileName) throws DocumentException, IOException {
-        solution = NZSHM22_InversionFaultSystemSolution.fromCrustalFile(new File(fileName));
+    public MFDPlotBuilder setCrustalSolution(String fileName) throws IOException {
+        solution = FaultSystemSolution.load(new File(fileName));
         return this;
     }
 
-    public MFDPlotBuilder setSubductionSolution(String fileName) throws DocumentException, IOException {
-        solution = NZSHM22_InversionFaultSystemSolution.fromSubductionFile(new File(fileName));
+    public MFDPlotBuilder setSubductionSolution(String fileName) throws IOException {
+        solution = FaultSystemSolution.load(new File(fileName));
         return this;
     }
 

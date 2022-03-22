@@ -74,7 +74,7 @@ public class CrustalMFDRunner {
      * @throws IOException
      */
     public void runOnSolution(String solutionFile) throws IOException {
-        NZSHM22_InversionFaultSystemSolution solution = NZSHM22_InversionFaultSystemSolution.fromFile(new File(solutionFile));
+        FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionFile));
         NZSHM22_MFDPlot plot = new NZSHM22_MFDPlot();
         RupSetMetadata rupMeta = new RupSetMetadata(name, solution.getRupSet(), solution);
         ReportMetadata meta = new ReportMetadata(rupMeta);
