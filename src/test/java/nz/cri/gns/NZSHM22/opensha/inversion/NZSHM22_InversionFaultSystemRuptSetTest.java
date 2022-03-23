@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import static org.junit.Assert.*;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SlipRateFactors;
@@ -20,9 +21,35 @@ import java.util.Arrays;
 
 public class NZSHM22_InversionFaultSystemRuptSetTest {
 
-    public NZSHM22_InversionFaultSystemRuptSet modularRupSet() throws URISyntaxException, IOException {
+    public File modularRupSetFile() throws URISyntaxException {
         URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("ModularAlpineVernonInversionSolution.zip");
-        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(alpineVernonRupturesUrl.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
+        return new File(alpineVernonRupturesUrl.toURI());
+    }
+
+    public NZSHM22_InversionFaultSystemRuptSet modularRupSet() throws URISyntaxException, IOException {
+        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(modularRupSetFile(), NZSHM22_LogicTreeBranch.crustalInversion());
+    }
+
+    @Test
+    public void testPreserveLTB() throws URISyntaxException, IOException {
+        FaultSystemRupSet rupSet = FaultSystemRupSet.load(modularRupSetFile());
+        NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        NZSHM22_ScalingRelationshipNode scalingRelationship = new NZSHM22_ScalingRelationshipNode();
+        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
+        scaling.setupCrustal(4.0, 4.0);
+        scalingRelationship.setScalingRelationship(scaling);
+
+        branch.setValue(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        branch.setValue(scalingRelationship);
+        rupSet.addModule(branch);
+
+        NZSHM22_InversionFaultSystemRuptSet actual = NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, NZSHM22_LogicTreeBranch.crustalInversion());
+
+        NZSHM22_LogicTreeBranch actualBranch = actual.getModule(NZSHM22_LogicTreeBranch.class);
+
+        assertEquals(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, actualBranch.getValue(NZSHM22_FaultModels.class));
+        assertEquals(scaling, actualBranch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship());
+
     }
 
     @Test
@@ -49,8 +76,6 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
         rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, branch);
         assertArrayEquals(origMags, rupSet.getMagForAllRups(), 0.00000001);
     }
-
-
 
     @Test
     public void testRegionSlipScaling() throws URISyntaxException, IOException {

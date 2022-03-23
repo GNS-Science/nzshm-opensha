@@ -1,7 +1,10 @@
 package nz.cri.gns.NZSHM22.util;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
 
@@ -115,6 +118,33 @@ public class NZSHM22_ReportPageGen {
         return this;
     }
 
+    public static FaultSystemRupSet addNamedFaults(FaultSystemRupSet rupSet) {
+
+        if (rupSet.getModule(NamedFaults.class) != null) {
+            return rupSet;
+        }
+
+        NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+
+        if (branch == null) {
+            return rupSet;
+        }
+
+        NZSHM22_FaultModels faultModel = branch.getValue(NZSHM22_FaultModels.class);
+        if (faultModel == null) {
+            return rupSet;
+        }
+
+        Map<String, List<Integer>> mapping = faultModel.getNamedFaultsMapAlt();
+
+        if (mapping != null) {
+            NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
+            rupSet.addModule(namedFaults);
+        }
+
+        return rupSet;
+    }
+
     public void generatePage() throws IOException {
     	
     	int available = Runtime.getRuntime().availableProcessors();
@@ -123,6 +153,7 @@ public class NZSHM22_ReportPageGen {
     	}
     	
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
+        addNamedFaults(solution.getRupSet());
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
@@ -150,6 +181,7 @@ public class NZSHM22_ReportPageGen {
         }
 
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(solutionPath));
+        addNamedFaults(rupSet);
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, rupSet));
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
