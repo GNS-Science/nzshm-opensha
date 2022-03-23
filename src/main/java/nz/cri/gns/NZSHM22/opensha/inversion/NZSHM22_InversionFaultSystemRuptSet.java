@@ -137,14 +137,26 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		}
 	}
 
-    protected void setLogicTreeBranch(NZSHM22_LogicTreeBranch branch) {
-        removeModuleInstances(LogicTreeBranch.class);
-        addModule(branch);
-        this.branch = branch;
-    }
+	private void initLogicTreeBranch(NZSHM22_LogicTreeBranch branch) {
+		NZSHM22_LogicTreeBranch originalBranch = getModule(NZSHM22_LogicTreeBranch.class);
+		if (originalBranch != null) {
+			NZSHM22_FaultModels faultModel = originalBranch.getValue(NZSHM22_FaultModels.class);
+			if (faultModel != null) {
+				branch.setValue(faultModel);
+			}
+			NZSHM22_ScalingRelationshipNode scaling = originalBranch.getValue(NZSHM22_ScalingRelationshipNode.class);
+			if (branch.getValue(NZSHM22_ScalingRelationshipNode.class) == null && scaling != null) {
+				branch.setValue(scaling);
+			}
+		}
+		removeModuleInstances(LogicTreeBranch.class);
+		addModule(branch);
+		this.branch = branch;
+	}
 
 	private void init(NZSHM22_LogicTreeBranch branch) {
-		setLogicTreeBranch(branch);
+
+		initLogicTreeBranch(branch);
 
 		//overwrite behaviour of super class
 		removeModuleInstances(FaultGridAssociations.class);
