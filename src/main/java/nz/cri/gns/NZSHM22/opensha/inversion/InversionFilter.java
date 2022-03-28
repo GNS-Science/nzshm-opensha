@@ -8,6 +8,7 @@ import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
+import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InversionFilter {
+
+    public static int longestRupture(FaultSystemRupSet rupSet, String parentName){
+        double length = 0;
+        int longestRupture = -1;
+        for(int r = 0; r < rupSet.getNumRuptures(); r++){
+            if(matchesName(rupSet, r, parentName) && rupSet.getLengthForRup(r) > length && rupSet.getMagForRup(r) > 0){
+                longestRupture = r;
+                length = rupSet.getLengthForRup(r);
+            }
+        }
+        return longestRupture;
+    }
+
+    public static boolean matchesName(FaultSystemRupSet rupSet, int ruptureId, String name){
+        boolean result = false;
+        for(FaultSection section : rupSet.getFaultSectionDataForRupture(ruptureId)){
+            if(section.getSectionName().contains(name)){
+                result = true;
+            }
+        }
+        return result;
+    }
 
     public static void copyModules(ModuleContainer<OpenSHA_Module> source,
                                    ModuleContainer<OpenSHA_Module> target,
@@ -73,10 +96,12 @@ public class InversionFilter {
     }
 
     public static void main(String[] args) throws IOException {
-        String solutionFile = "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDU3.zip";
+        String solutionFile = "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDQ4.zip";
 
         FaultSystemSolution old = FaultSystemSolution.load(new File(solutionFile));
-        FaultSystemSolution newSolution = filter(old, 390931, 0.5);
+        int rupture = longestRupture(old.getRupSet(), "Wellington Hutt");
+        System.out.println(rupture);
+        FaultSystemSolution newSolution = filter(old, rupture, null);
         newSolution.write(new File("filterd.zip"));
     }
 }
