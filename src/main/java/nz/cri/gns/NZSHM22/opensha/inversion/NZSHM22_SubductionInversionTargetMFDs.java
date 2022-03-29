@@ -1,39 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
-import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
-import org.opensha.commons.util.modules.ArchivableModule;
-import org.opensha.commons.util.modules.SubModule;
-import org.opensha.commons.util.modules.helpers.FileBackedModule;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonWriter;
-
-import scratch.UCERF3.analysis.DeformationModelsCalc;
-
-import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.enumTreeBranches.MaxMagOffFault;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
-import scratch.UCERF3.utils.MFD_InversionConstraint;
-import scratch.UCERF3.utils.MFD_WeightedInversionConstraint;
 
 /**
  * This class constructs and stores the various pre-inversion MFD Targets.
@@ -85,18 +61,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 									  double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower, 
 									  double mfdUncertaintyWeightedConstraintScalar){
 		
-		// TODO: we're getting a UCERF3 LTB now, this needs to be replaced with NSHM
-		// equivalent
-		U3LogicTreeBranch logicTreeBranch = invRupSet.getLogicTreeBranch();
-		InversionModels inversionModel = logicTreeBranch.getValue(InversionModels.class);
-		//this.totalRegionRateMgt5 = this.totalRateM5;
-		double mMaxOffFault = logicTreeBranch.getValue(MaxMagOffFault.class).getMaxMagOffFault(); //TODO: set this to 8.05 (more NZ ish)
-
 		// convert mMaxOffFault to bin center
 		List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 		
-		double origOnFltDefModMoRate = DeformationModelsCalc.calculateTotalMomentRate(faultSectionData,true);
-		
+
 		// make the total target GR MFD
 		// TODO: why MIN_MAG = 0 ??
 		GutenbergRichterMagFreqDist totalTargetGR = new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
@@ -187,11 +155,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 		return "NZSHM22 Subduction Inversion Target MFDs";
 	}
 
-	@Override
-	public void writeToArchive(ZipOutputStream zout, String entryPrefix) throws IOException {
-		new SubductionPrecomputed(this).writeToArchive(zout, entryPrefix);
-	}	
-	
 	// only used for plots
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_NoCal() {throw new UnsupportedOperationException();}
@@ -199,110 +162,5 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	// only used for plots
 	@Override
 	public GutenbergRichterMagFreqDist getTotalTargetGR_SoCal() {throw new UnsupportedOperationException();}
-
-	// TODO CBC decide if this pattern is OK, could also be inheriting from InversionTargetMFDs.Precomputed ??
-	public static class SubductionPrecomputed extends NZSHM22_SubductionInversionTargetMFDs implements ArchivableModule {
-		private static TypeAdapter<IncrementalMagFreqDist> mfdAdapter = new IncrementalMagFreqDist.Adapter();
-		private static TypeAdapter<UncertainIncrMagFreqDist> mfdWeightedConstraintAdapter = new UncertainIncrMagFreqDist.Adapter();
-		
-		private IncrementalMagFreqDist totalRegionalMFD;
-		private IncrementalMagFreqDist onFaultSupraSeisMFD;
-		private ImmutableList<IncrementalMagFreqDist> mfdConstraints;
-			
-		public SubductionPrecomputed(NZSHM22_SubductionInversionTargetMFDs targetMFDs) {
-			this((NZSHM22_InversionFaultSystemRuptSet) targetMFDs.getParent(),
-					targetMFDs.getTotalRegionalMFD(),
-					targetMFDs.getTotalOnFaultSupraSeisMFD(),
-					(List<IncrementalMagFreqDist>) targetMFDs.getMFD_Constraints());
-		}
-
-		public SubductionPrecomputed(NZSHM22_InversionFaultSystemRuptSet rupSet, IncrementalMagFreqDist totalRegionalMFD,
-				IncrementalMagFreqDist onFaultSupraSeisMFD, List<IncrementalMagFreqDist> mfdConstraints) {
-			super(rupSet);
-			this.totalRegionalMFD = totalRegionalMFD;
-			this.onFaultSupraSeisMFD = onFaultSupraSeisMFD;
-			this.mfdConstraints = mfdConstraints == null ? null : ImmutableList.copyOf(mfdConstraints);
-		}
-
-		@Override
-		public String getName() {
-			// TODO Auto-generated method stub
-			return "NZSHM Subduction Inversion Target MFDs";
-		}
-
-		@Override
-		public SubModule<FaultSystemRupSet> copy(FaultSystemRupSet newParent) throws IllegalStateException {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void writeToArchive(ZipOutputStream zout, String entryPrefix) throws IOException {
-			FileBackedModule.initEntry(zout, entryPrefix, "inversion_target_mfds.json");
-			BufferedOutputStream out = new BufferedOutputStream(zout);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			OutputStreamWriter writer = new OutputStreamWriter(out);
-			writeToJSON(gson.newJsonWriter(writer));
-			writer.flush();
-			out.flush();
-			zout.closeEntry();
-		}
-
-		private void writeToJSON(JsonWriter out) throws IOException {
-			out.beginObject();
-			
-			out.name("totalRegionalMFD");
-			mfdAdapter.write(out, totalRegionalMFD);
-			
-			out.name("onFaultSupraSeisMFD");
-			mfdAdapter.write(out, onFaultSupraSeisMFD);
-			
-			out.name("mfdConstraints");
-			if (mfdConstraints == null) {
-				out.nullValue();
-			} else {
-				out.beginArray();
-				for (IncrementalMagFreqDist constraint : mfdConstraints)
-					if (constraint.getClass().getSimpleName().contentEquals("UncertainIncrMagFreqDist")) {
-						mfdWeightedConstraintAdapter.write(out, (UncertainIncrMagFreqDist) constraint);
-					} else {
-						mfdAdapter.write(out, constraint);
-					}
-				out.endArray();
-			}
-			
-			out.endObject();
-		}		
-		
-		@Override
-		public void initFromArchive(ZipFile zip, String entryPrefix) throws IOException {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public IncrementalMagFreqDist getTotalRegionalMFD() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public IncrementalMagFreqDist getTotalOnFaultSupraSeisMFD() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public List<IncrementalMagFreqDist> getMFD_Constraints() {
-			// TODO Auto-generated method stub
-			return mfdConstraints;
-		}
-
-		@Override
-		public SubSeismoOnFaultMFDs getOnFaultSubSeisMFDs() {
-			// TODO Auto-generated method stub
-			return null;
-		}		
-	}
 
 }
