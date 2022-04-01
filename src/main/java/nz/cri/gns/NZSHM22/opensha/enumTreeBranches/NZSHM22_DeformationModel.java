@@ -124,16 +124,16 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "FaultModel SBD_0_2A_HKR_LR_30",
             "dm_hk_eastcapesmoothed_PERTURBATION4.csv"),
 
-    SBD_0_3_HKR_LR_30_CTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+    SBD_0_3_HKR_LR_30_LTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
             "FaultModel SBD_0_3_HKR_LR_30",
             "dm_hk_trenchlocked_PERTURBATION1.csv"),
-    SBD_0_3_HKR_LR_30_CTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+    SBD_0_3_HKR_LR_30_LTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
             "FaultModel SBD_0_3_HKR_LR_30",
             "dm_hk_trenchlocked_PERTURBATION2.csv"),
-    SBD_0_3_HKR_LR_30_CTP3("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
+    SBD_0_3_HKR_LR_30_LTP3("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
             "FaultModel SBD_0_3_HKR_LR_30",
             "dm_hk_trenchlocked_PERTURBATION3.csv"),
-    SBD_0_3_HKR_LR_30_CTP4("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
+    SBD_0_3_HKR_LR_30_LTP4("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
             "FaultModel SBD_0_3_HKR_LR_30",
             "dm_hk_trenchlocked_PERTURBATION4.csv");
 
