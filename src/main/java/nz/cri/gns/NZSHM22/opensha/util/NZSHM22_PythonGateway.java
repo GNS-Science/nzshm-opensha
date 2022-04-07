@@ -10,6 +10,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.inversion.CrustalMFDRunner;
+import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
@@ -39,6 +40,7 @@ public class NZSHM22_PythonGateway {
     static CachedSubductionInversionRunner subductionInversionRunner;
     static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
     static NZSHM22_GridHazardCalculator gridHazCalc;
+    static NZSHM22_PolygonisedDistributedModelBuilder polygoniser;
 
 
     public static NZSHM22_CachedAzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
@@ -78,6 +80,11 @@ public class NZSHM22_PythonGateway {
     public static CachedSubductionInversionRunner getSubductionInversionRunner() {
         subductionInversionRunner = new CachedSubductionInversionRunner();
         return subductionInversionRunner;
+    }
+
+    public static NZSHM22_PolygonisedDistributedModelBuilder getPolygoniser(){
+        polygoniser = new NZSHM22_PolygonisedDistributedModelBuilder();
+        return polygoniser;
     }
 
     public static NZSHM22_HazardCalculatorBuilder getHazardCalculatorBuilder() {

@@ -261,6 +261,20 @@ public class NZSHM22_HazardCalculatorBuilder {
         }
     }
 
+    public final static Location Auckland = new Location( -36.848461, 174.763336);
+    public final static Location Wellington = new Location( -41.276825, 174.777969);
+    public final static Location Gisborne = new Location( -38.662334, 178.017654);
+    public final static Location Christchurch = new Location( -43.525650, 172.639847);
+    public final static Location Invercargill = new Location( -46.413056, 168.3475);
+    public final static Location Dunedin = new Location( -45.8740984, 170.5035755);
+    public final static Location Napier = new Location( -39.4902099, 176.917839);
+    public final static Location New_Plymouth = new Location( -39.0579941, 174.0806474);
+    public final static Location Palmerston_North = new Location( -40.356317, 175.6112388);
+    public final static Location Nelson = new Location( -41.2710849, 173.2836756);
+    public final static Location Blenheim = new Location( -41.5118691, 173.9545856);
+    public final static Location Whakatane = new Location( -37.9519223, 176.9945977);
+    public final static Location Greymouth = new Location( -42.4499469, 171.207987);
+
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
 //        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
@@ -269,14 +283,15 @@ public class NZSHM22_HazardCalculatorBuilder {
         builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
-                .setIntensityMeasurePeriod(10)
-                .setGMPE("Bradley_2010")
+                .setIntensityMeasurePeriod(0)
+                .setGMPE("ASK_2014")
                 .setBackgroundOption("INCLUDE");
 
         NZSHM22_HazardCalculator calculator = builder.build();
 
-        System.out.println(calculator.calc(-41.288889, 174.777222));
-        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
+        System.out.println(calculator.calc(Wellington));
+//        System.out.println(calculator.calc(-41.288889, 174.777222));
+//        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
 
     }
 }
