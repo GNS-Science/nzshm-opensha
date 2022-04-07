@@ -169,7 +169,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         setupLTB(branch);
 
         if(!enableTvzMFDs){
-            branch.setValue(new NZSHM22_Regions(new NewZealandRegions.NZ_RECTANGLE_GRIDDED(), new NewZealandRegions.NZ_EMPTY_GRIDDED()));
+            branch.setValue(new NZSHM22_Regions(NewZealandRegions.NZ, new NewZealandRegions.NZ_EMPTY_GRIDDED()));
         }
         if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
             branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ, maxMagType));

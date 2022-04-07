@@ -1,12 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
@@ -18,44 +16,105 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
 
 /**
- * Gridded data. Copied and modifed from UCERF3's GridReader
+ * Gridded data. Copied and modified from UCERF3's GridReader
  */
 
 public class NZSHM22_GriddedData {
 
-    protected static final Splitter SPLIT;
+    protected static final Splitter SPLIT = Splitter.on(CharMatcher.whitespace().or(CharMatcher.anyOf(","))).omitEmptyStrings();
 
-    protected static final Function<String, Double> FN_STR_TO_DBL;
-    protected static final Function<Double, Integer> FN_DBL_TO_KEY;
-    protected static final Function<String, Integer> FN_STR_TO_KEY;
+    // how many possible grid points per degree. UCERF3 uses 10
+    protected static final double STEP = 10;
+    // how many degrees between grid points
+    public static final double GRID_SPACING = 1.0 / STEP;
+
+    protected double step;
+    protected double spacing;
 
     protected Table<Integer, Integer, Double> table;
     protected String filename;
 
-    static {
-        SPLIT = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings();
-        FN_STR_TO_DBL = new FnStrToDbl();
-        FN_DBL_TO_KEY = new FnDblToKey();
-        FN_STR_TO_KEY = Functions.compose(FN_DBL_TO_KEY, FN_STR_TO_DBL);
+    // for deserialisation
+    public NZSHM22_GriddedData() {
     }
 
-    public NZSHM22_GriddedData(String fileName) {
+    /**
+     * Loads the grid in the native resolution of the file.
+     * Use NZSHM22_GriddedData(NZSHM22_GriddedData original) to upsample if required
+     * @param fileName
+     */
+    private NZSHM22_GriddedData(String fileName) {
         this.filename = fileName;
-        table = initTable();
-    }
-
-    private static class FnStrToDbl implements Function<String, Double> {
-        @Override
-        public Double apply(String s) {
-            return Double.valueOf(s);
+        try (BufferedReader br = new BufferedReader(NZSHM22_DataUtils.getReader(filename))) {
+            initTable(br);
+        } catch (IOException x) {
+            throw new RuntimeException(x);
         }
     }
 
-    private static class FnDblToKey implements Function<Double, Integer> {
-        @Override
-        public Integer apply(Double d) {
-            return (int) Math.round(d * 10);
+    /**
+     * Upsamples the original grid to STEP
+     * @param original
+     */
+    protected NZSHM22_GriddedData(NZSHM22_GriddedData original, double step) {
+        setStep(step);
+        this.filename = original.filename;
+        upSample(original);
+    }
+
+    public static NZSHM22_GriddedData fromFile(String fileName){
+        NZSHM22_GriddedData data = new NZSHM22_GriddedData(fileName);
+        if(data.step != STEP){
+            return new NZSHM22_GriddedData(data, STEP);
+        } else {
+            return data;
         }
+    }
+
+    /**
+     * For debugging
+     * @param filename
+     * @return
+     */
+    protected static NZSHM22_GriddedData fromFileNativeStep(String filename){
+        return new NZSHM22_GriddedData(filename);
+    }
+
+    protected void setStep(double step){
+        this.step = step;
+        this.spacing = 1.0 / step;
+    }
+
+    public double getStep(){
+        return step;
+    }
+
+    public void writeToStream(BufferedOutputStream out) throws IOException {
+        PrintWriter writer = new PrintWriter(new BufferedOutputStream(out));
+
+        writer.println("step, " + step);
+
+        for (Table.Cell<Integer, Integer, Double> cell : table.cellSet()) {
+            writer.print(keyToLatLonComp(spacing, cell.getColumnKey()));
+            writer.print(", ");
+            writer.print(keyToLatLonComp(spacing, cell.getRowKey()));
+            writer.print(", ");
+            writer.print(cell.getValue());
+            writer.println();
+        }
+        writer.flush();
+    }
+
+    public void initFromStream(BufferedInputStream in) throws IOException {
+        initTable(new BufferedReader(new InputStreamReader(in)));
+    }
+
+    int latLonCompToKey(double step, double latLonComp) {
+        return (int) Math.round(latLonComp * step);
+    }
+
+    double keyToLatLonComp(double spacing, int key) {
+        return key * spacing;
     }
 
     /**
@@ -64,41 +123,42 @@ public class NZSHM22_GriddedData {
      * NZ data files have data format: lon|lat|value
      * UCERF3 data format:  lat|lon|value
      */
-    protected Table<Integer, Integer, Double> initTable() {
+    protected void initTable(BufferedReader br) throws IOException {
 
-        Table<Integer, Integer, Double> table = HashBasedTable.create();
-        String lon, lat;
-        Integer lonkey, latkey;
-        Double val;
-        Double totalValue = 0.0;
-
-        try {
-            String DATA_DIR = "seismicityGrids";
-            BufferedReader br = new BufferedReader(NZSHM22_DataUtils.getReader(DATA_DIR, filename));
-            Iterator<String> dat;
-            String line = br.readLine();
-            while (line != null) {
-                dat = SPLIT.split(line).iterator();
-                lon = dat.next();
-                lat = dat.next();
-                lonkey = FN_STR_TO_KEY.apply(lon);
-                latkey = FN_STR_TO_KEY.apply(lat);
-                val = FN_STR_TO_DBL.apply(dat.next());
-                //Guards
-                Location loc = new Location(Double.parseDouble(lat), Double.parseDouble(lon));
-//                if (!region.contains(loc))
-//                    System.out.println("location " + loc + " is not within bounds of expected region");
-                if (table.contains(latkey, lonkey))
-                    System.out.println("location " + loc + " is already defined in table, input data duplication!!");
-                totalValue += val;
-                table.put(latkey, lonkey, val);
-                line = br.readLine();
-            }
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
+        table = HashBasedTable.create();
+        String line = br.readLine();
+        if (line.startsWith("step")) {
+            Iterator<String> dat = SPLIT.split(line).iterator();
+            dat.next();
+            setStep(Double.parseDouble(dat.next()));
+            line = br.readLine();
+        } else {
+            setStep(10); // UCERF3 constant
         }
-        System.out.println("total in " + filename + " = " + totalValue);
-        return table;
+
+        while (line != null) {
+            Iterator<String> dat = SPLIT.split(line).iterator();
+            double lon = Double.parseDouble(dat.next());
+            double lat = Double.parseDouble(dat.next());
+            double val = Double.parseDouble(dat.next());
+            Location loc = new Location(lat, lon);
+            if (getValue(loc) != null) {
+                System.out.println("location " + loc + " is already defined in table, input data duplication!");
+            }
+            setValue(loc, val);
+            line = br.readLine();
+        }
+    }
+
+    protected void upSample(NZSHM22_GriddedData source) {
+        table = HashBasedTable.create();
+        GriddedRegion region = new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE(), spacing, GriddedRegion.ANCHOR_0_0);
+        for (Location location : region) {
+            Double value = source.getValue(location);
+            if (value != null) {
+                setValue(location, value);
+            }
+        }
     }
 
     /**
@@ -109,25 +169,12 @@ public class NZSHM22_GriddedData {
      */
     public double[] getValues(GriddedRegion region) {
         double[] values = new double[region.getNodeCount()];
-        double nullval = 0.0d; //
-        // double nullval = Double.NaN; //	maybe try 0 rather than NaN for nulls ...
         int i = 0;
         for (Location loc : region) {
             Double value = getValue(loc);
-//			if (value == null )
-//				System.out.println("gridded region location "  + loc + " was not found in seismicity table");
-            values[i++] = (value == null) ? nullval : value;
+            values[i++] = (value == null) ? 0 : value;
         }
         return values;
-    }
-
-    /**
-     * Get all values for NewZealandRegions.NZ_TEST_GRIDDED
-     *
-     * @return
-     */
-    public double[] getValues() {
-        return getValues(new NewZealandRegions.NZ_TEST_GRIDDED());
     }
 
     /**
@@ -135,18 +182,18 @@ public class NZSHM22_GriddedData {
      * {@code Location}
      *
      * @param loc {@code Location} of interest
-     * @return a value or @code null} if supplied {@coed Location} is more
+     * @return a value or @code null} if supplied {@code Location} is more
      * than 0.05&deg; outside the available data domain
      */
     public Double getValue(Location loc) {
-        return table.get(FN_DBL_TO_KEY.apply(loc.getLatitude()),
-                FN_DBL_TO_KEY.apply(loc.getLongitude()));
+        return table.get(latLonCompToKey(step, loc.getLatitude()),
+                latLonCompToKey(step, loc.getLongitude()));
     }
 
     protected Double setValue(Location loc, double value) {
         return table.put(
-                FN_DBL_TO_KEY.apply(loc.getLatitude()),
-                FN_DBL_TO_KEY.apply(loc.getLongitude()),
+                latLonCompToKey(step, loc.getLatitude()),
+                latLonCompToKey(step, loc.getLongitude()),
                 value);
     }
 
@@ -173,6 +220,7 @@ public class NZSHM22_GriddedData {
      * @param region
      */
     public void normaliseRegion(GriddedRegion region) {
+        Preconditions.checkArgument(region.getSpacing() == spacing);
         double fraction = getFractionInRegion(region);
         for (Location loc : region) {
             Double value = getValue(loc);
@@ -180,32 +228,6 @@ public class NZSHM22_GriddedData {
                 setValue(loc, getValue(loc) / fraction);
             }
         }
-    }
-
-    /**
-     * table entries should be aligned with a grid location within the region
-     * so there should be no 'leftover' table entries printed by this method
-     * <p>
-     *   TODO: add this as a test case and identifyt the root cause.
-     *   Maybe this is to do with the offset grid locations provided bu Sepi
-     *   and how these do/don't align to the actual GriddedRegion layout.
-     *
-     * @param region
-     */
-    private void missingTableEntries(GriddedRegion region) {
-        for (Location loc : region) {
-            this.table.remove(
-                    FN_DBL_TO_KEY.apply(loc.getLatitude()),
-                    FN_DBL_TO_KEY.apply(loc.getLongitude()));
-        }
-
-        double tot = 0.0;
-        for (Integer rowkey : this.table.rowKeySet()) {
-            for (Double x : table.row(rowkey).values()) {
-                tot += x;
-            }
-        }
-        System.out.println("total missing = " + tot);
     }
 
 }

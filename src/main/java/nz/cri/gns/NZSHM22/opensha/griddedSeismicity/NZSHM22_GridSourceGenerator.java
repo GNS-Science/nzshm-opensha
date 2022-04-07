@@ -31,7 +31,7 @@ import com.google.common.collect.Maps;
 
 public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
-	protected final static GriddedRegion region = new NewZealandRegions.NZ_TEST_GRIDDED();
+	protected final static GriddedRegion region = NewZealandRegions.NZ;
 
 	private static double[] fracStrikeSlip, fracNormal, fracReverse;
 	protected NZSHM22_LogicTreeBranch branch;
@@ -73,9 +73,16 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	public NZSHM22_GridSourceGenerator(FaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
+		// XXX FIXME oakley
+//		if(spatialSeisPDF == NZSHM22_SpatialSeisPDF.FROM_SOLUTION){
+//			spatialSeisPDF.setPDFSource(ifss.getModule(NZSHM22_PolygonisedDistributedModel.class).getGriddedData());
+//		}
+		// to here
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getTvzRegion());
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getSansTvzRegion());
-		srcSpatialPDF = spatialSeisPDF.getPDF(new NewZealandRegions.NZ_TEST_GRIDDED());
+		srcSpatialPDF = spatialSeisPDF.getPDF(region);
+
+
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getRupSet().getModule(InversionTargetMFDs.class).getTrulyOffFaultMFD().deepClone();
 
@@ -83,10 +90,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 		mfdMax = realOffFaultMFD.getMaxX();
 		mfdNum = realOffFaultMFD.size();
 
-//		polyMgr = FaultPolyMgr.create(fss.getFaultSectionDataList(), 12d);
-		GriddedSeisUtils gridSeisUtils = new GriddedSeisUtils(ifss.getRupSet().getFaultSectionDataList(),
-				srcSpatialPDF, ifss.getRupSet().getModule(PolygonFaultGridAssociations.class));
-		polyMgr = gridSeisUtils.getPolyMgr();
+		polyMgr = ifss.getRupSet().getModule(PolygonFaultGridAssociations.class);
 
 		System.out.println("   initSectionMFDs() ...");
 		initSectionMFDs(ifss);
@@ -264,12 +268,19 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	}
 
 	private synchronized static void checkInitFocalMechGrids() {
-		if (fracStrikeSlip == null)
-			fracStrikeSlip = new NZSHM22_GriddedData("strikeFocalHazMech.grid").getValues();
-		if (fracReverse == null)
-			fracReverse = new NZSHM22_GriddedData("reverseFocalMech.grid").getValues();
-		if (fracNormal == null)
-			fracNormal = new NZSHM22_GriddedData("normalFocalMech.grid").getValues();
+		if (fracStrikeSlip == null) {
+			System.out.println("checkInitFocalMechGrids");
+			NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFile("seismicityGrids/strikeFocalHazMech.grid");
+			fracStrikeSlip = data.getValues(region);
+		}
+		if (fracReverse == null) {
+			NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFile("seismicityGrids/reverseFocalMech.grid");
+			fracReverse = data.getValues(region);
+		}
+		if (fracNormal == null) {
+			NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFile("seismicityGrids/normalFocalMech.grid");
+			fracNormal = data.getValues(region);
+		}
 	}
 
 }
