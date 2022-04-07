@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.data.region;
 
 import java.io.BufferedReader;
+
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
 import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
@@ -12,6 +14,10 @@ import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
 public class NewZealandRegions {
 
 	static String DATA_DIR = "region";
+
+	public final static GriddedRegion NZ = new NewZealandRegions.NZ_RECTANGLE_GRIDDED();
+	public final static GriddedRegion TVZ = new NewZealandRegions.NZ_TVZ_GRIDDED();
+	public final static GriddedRegion SANS_TVZ = new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED();
 
 	private NewZealandRegions() {
 	};
@@ -47,7 +53,7 @@ public class NewZealandRegions {
 	 */
 	public static final class NZ_TEST_GRIDDED extends GriddedRegion {
 		public NZ_TEST_GRIDDED() {
-			super(readCoords("nz_test.coords"), BorderType.MERCATOR_LINEAR, 0.1, ANCHOR_0_0);
+			super(readCoords("nz_test.coords"), BorderType.MERCATOR_LINEAR, NZSHM22_GriddedData.GRID_SPACING, ANCHOR_0_0);
 			this.setName("NZTEST Gridded Region");
 		}
 	}
@@ -74,7 +80,7 @@ public class NewZealandRegions {
 
 	public static final class NZ_TVZ_GRIDDED extends GriddedRegion {
 		public NZ_TVZ_GRIDDED() {
-			super((Region) new NZ_TVZ(), 0.1, ANCHOR_0_0);
+			super((Region) new NZ_TVZ(), NZSHM22_GriddedData.GRID_SPACING, ANCHOR_0_0);
 			this.setName("NZ TVZ Gridded Region");
 		}
 	}
@@ -93,7 +99,7 @@ public class NewZealandRegions {
 
 	public static final class NZ_RECTANGLE_SANS_TVZ_GRIDDED extends GriddedRegion {
 		public NZ_RECTANGLE_SANS_TVZ_GRIDDED() {
-			super((Region) new NZ_RECTANGLE_SANS_TVZ(), 0.1, ANCHOR_0_0);
+			super((Region) new NZ_RECTANGLE_SANS_TVZ(), NZSHM22_GriddedData.GRID_SPACING, ANCHOR_0_0);
 			this.setName("NZ RECTANGLE SANS TVZ Gridded Region");
 		}
 	}
@@ -110,7 +116,7 @@ public class NewZealandRegions {
 
 	public static final class NZ_RECTANGLE_GRIDDED extends GriddedRegion {
 		public NZ_RECTANGLE_GRIDDED() {
-			super(readCoords("nz_rectangle.coords"), BorderType.MERCATOR_LINEAR, 0.1, ANCHOR_0_0);
+			super(readCoords("nz_rectangle.coords"), BorderType.MERCATOR_LINEAR, NZSHM22_GriddedData.GRID_SPACING, ANCHOR_0_0);
 			this.setName("NZ_RECTANGLE Gridded Region");
 		}
 	}
