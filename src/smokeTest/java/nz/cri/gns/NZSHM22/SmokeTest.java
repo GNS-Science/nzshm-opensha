@@ -233,7 +233,7 @@ public class SmokeTest {
         NZSHM22_PythonGateway.CachedSubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
 
         FaultSystemSolution solution = runner
-                .setGutenbergRichterMFD(29, 1.05, 8.85)
+                .setGutenbergRichterMFD(29, 1.05, 8.85, 7.05)
                 .setInversionSeconds(1)
                 .setSelectionInterval(1)
                 .setScalingRelationship(scaling, true)

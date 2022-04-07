@@ -68,7 +68,8 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double totalRateM5 = 5; 
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
-		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0, 0.4, totalRateM5, bValue, mfdTransitionMag);
+		double mfdMinMag = 7.05;
+		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0, 0.4, totalRateM5, bValue, mfdTransitionMag,mfdMinMag);
 	}
 	
 	
@@ -93,7 +94,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 	public static NZSHM22_SubductionInversionConfiguration forModel(InversionModels model,
 			NZSHM22_InversionFaultSystemRuptSet rupSet, double[] initialSolution, double mfdEqualityConstraintWt, double mfdInequalityConstraintWt,
 			double mfdUncertaintyWeightedConstraintWt, double mfdUncertaintyWeightedConstraintPower,
-			double mfdUncertaintyWeightedConstraintScalar, double totalRateM5, double bValue, double mfdTransitionMag) {
+			double mfdUncertaintyWeightedConstraintScalar, double totalRateM5, double bValue, double mfdTransitionMag, double mfdMinMag) {
 
 		double MFDTransitionMag = mfdTransitionMag; // magnitude to switch from MFD equality to MFD inequality
 		
@@ -144,7 +145,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 		// setup MFD constraints
 		NZSHM22_SubductionInversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag,
-				mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar);
+				mfdMinMag,mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 
 //		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
