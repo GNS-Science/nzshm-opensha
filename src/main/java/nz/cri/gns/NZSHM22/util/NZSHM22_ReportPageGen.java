@@ -204,21 +204,22 @@ public class NZSHM22_ReportPageGen {
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-//        reportPageGen.setName("SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw")
-//        	.setOutputPath("TEST/REPORTPAGEGEN6")
-//            .setFillSurfaces(true)
-//            .setPlotLevel("DEFAULT")
-////                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
-//    		.setSolution("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip");
-//        reportPageGen.generatePage();
+       reportPageGen.setName("Min Mag = 8.05")
+       	.setOutputPath("/tmp/reports/m8_V2")
+           .setFillSurfaces(true)
+           .setPlotLevel("DEFAULT")
+//                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
+   		.setSolution("/tmp/inversions/test_sub_m8.zip");
+       reportPageGen.generatePage();
 
+        /*
         reportPageGen.setRuptureSet("C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMTA3R2F1Skg=.zip")
                 .setName("hello!")
                 .setOutputPath("TEST/REPORTPAGEGEN7")
                 .setFillSurfaces(true)
                 .setPlotLevel("DEFAULT");
         reportPageGen.generateRupSetPage();
-
+        */
         System.out.println("DONE!");
     }
 }

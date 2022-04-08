@@ -17,6 +17,8 @@ import java.util.ArrayList;
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
 
+	protected double mfdMinMag = 7.05;
+		
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
 	 */
@@ -33,8 +35,18 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 	 * @param mfdTransitionMag magnitude to switch from MFD equality to MFD
 	 *                         inequality TODO: how to validate this number for NZ?
 	 *                         (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
+	 * @param mfdMinMag			magnitude of minimum magnitude in MFD target, rate set to 1e-20 below [CDC]
 	 * @return
 	 */
+	public NZSHM22_SubductionInversionRunner setGutenbergRichterMFD(double totalRateM5, double bValue,
+			double mfdTransitionMag, double mfdMinMag) {
+		this.totalRateM5 = totalRateM5;
+		this.bValue = bValue;
+		this.mfdTransitionMag = mfdTransitionMag;
+		this.mfdMinMag = mfdMinMag;
+		return this;
+	}
+
 	public NZSHM22_SubductionInversionRunner setGutenbergRichterMFD(double totalRateM5, double bValue,
 			double mfdTransitionMag) {
 		this.totalRateM5 = totalRateM5;
@@ -55,7 +67,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
 						mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar,
-						totalRateM5, bValue, mfdTransitionMag);
+						totalRateM5, bValue, mfdTransitionMag, mfdMinMag);
 
 		// CBC This may not be needed long term
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
@@ -80,9 +92,10 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 	public static void main(String[] args) throws IOException, DocumentException {
 
-		File inputDir = new File("./TEST");
-		File outputRoot = new File("./TEST");
-		File ruptureSet = new File("C:\\tmp\\NZSHM\\RupSet_Sub_FM(SBD_0_2_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(0.5)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
+		//File inputDir = new File("./TEST");
+		File outputRoot = new File("/tmp");
+		//File ruptureSet = new File("C:\\tmp\\NZSHM\\RupSet_Sub_FM(SBD_0_2_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,7)_ddMnFl(0.5)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
+		File ruptureSet = new File("/home/chrisdc/NSHM/DEV/rupture_sets/RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip");
 		File outputDir = new File(outputRoot, "inversions");
 		Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
 		Preconditions.checkState(ruptureSet.exists());
@@ -106,13 +119,15 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setScalingRelationship(scale, true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
-				.setUncertaintyWeightedMFDWeights(1000, 0.1, 0.4)
+				//.setUncertaintyWeightedMFDWeights(1000, 0.1, 0.4)
+				.setGutenbergRichterMFDWeights(1.0e4, 0.0)
 				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
-				.setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				//.setGutenbergRichterMFD(29, 1.05, 8.85,7.55); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				.setGutenbergRichterMFD(29, 1.05, 8.85,8.0); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
 
 		FaultSystemSolution solution = runner
-				.setInversionSeconds(1)
+				.setInversionSeconds(10)
 				.setNumThreadsPerSelector(1)
 				.setSelectionInterval(2)
 				.setDeformationModel("SBD_0_2_HKR_LR_30_CTP1")
@@ -123,7 +138,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			System.out.println(row);
 		}
 
-		solution.write(new File(outputDir, "NewFormatSubductionInversionSolution-RWcw.zip"));
+		solution.write(new File(outputDir, "test_sub_m8.zip"));
 
 		System.out.println("Done!");
 	}
