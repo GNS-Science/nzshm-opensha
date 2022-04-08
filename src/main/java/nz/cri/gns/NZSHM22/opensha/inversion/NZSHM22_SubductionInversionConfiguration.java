@@ -69,7 +69,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		double bValue = 1;
 		double mfdTransitionMag = 7.75;
 		double mfdMinMag = 7.05;
-		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0, 0.4, totalRateM5, bValue, mfdTransitionMag,mfdMinMag);
+		return forModel(model, rupSet, null, mfdEqualityConstraintWt, mfdInequalityConstraintWt, 0, 0, 0.4, totalRateM5, bValue, mfdTransitionMag, mfdMinMag);
 	}
 	
 	
