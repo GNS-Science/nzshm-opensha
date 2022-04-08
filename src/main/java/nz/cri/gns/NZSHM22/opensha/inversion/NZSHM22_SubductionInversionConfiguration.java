@@ -145,7 +145,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
 		// setup MFD constraints
 		NZSHM22_SubductionInversionTargetMFDs inversionMFDs =  new NZSHM22_SubductionInversionTargetMFDs(rupSet, totalRateM5, bValue, mfdTransitionMag,
-				mfdMinMag,mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar);
+				mfdMinMag, mfdUncertaintyWeightedConstraintWt, mfdUncertaintyWeightedConstraintPower, mfdUncertaintyWeightedConstraintScalar);
 		rupSet.setInversionTargetMFDs(inversionMFDs);
 
 //		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds = (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();

@@ -44,7 +44,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 	public final static double DELTA_MAG = 0.1;
 
 	// CBC NEW
-	public final static double MINIMIZE_RATE_BELOW_MAG = 7.05;
 	public final static double MINIMIZE_RATE_TARGET = 1.0e-20d;
 	
 	protected List<IncrementalMagFreqDist> mfdEqIneqConstraints  = new ArrayList<>();

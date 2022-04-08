@@ -17,9 +17,8 @@ import java.util.ArrayList;
  */
 public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversionRunner {
 
-	protected double mfdMinMag;
-	public final static double MINIMIZE_RATE_BELOW_MAG = 7.05;
-	
+	protected double mfdMinMag = 7.05;
+		
 	/**
 	 * Creates a new NZSHM22_InversionRunner with defaults.
 	 */
@@ -53,7 +52,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		this.totalRateM5 = totalRateM5;
 		this.bValue = bValue;
 		this.mfdTransitionMag = mfdTransitionMag;
-		this.mfdMinMag = MINIMIZE_RATE_BELOW_MAG;
 		return this;
 	}
 
@@ -69,7 +67,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		NZSHM22_SubductionInversionConfiguration inversionConfiguration = NZSHM22_SubductionInversionConfiguration
 				.forModel(inversionModel, rupSet, initialSolution, mfdEqualityConstraintWt, mfdInequalityConstraintWt,
 						mfdUncertWtdConstraintWt, mfdUncertWtdConstraintPower, mfdUncertWtdConstraintScalar,
-						totalRateM5, bValue, mfdTransitionMag,mfdMinMag);
+						totalRateM5, bValue, mfdTransitionMag, mfdMinMag);
 
 		// CBC This may not be needed long term
 		solutionMfds = ((NZSHM22_SubductionInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds()).getMFDConstraintComponents();
@@ -125,10 +123,11 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 				.setGutenbergRichterMFDWeights(1.0e4, 0.0)
 				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
-				.setGutenbergRichterMFD(29, 1.05, 8.85,7.55); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				//.setGutenbergRichterMFD(29, 1.05, 8.85,7.55); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				.setGutenbergRichterMFD(29, 1.05, 8.85,8.0); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
 
 		FaultSystemSolution solution = runner
-				.setInversionSeconds(300)
+				.setInversionSeconds(10)
 				.setNumThreadsPerSelector(1)
 				.setSelectionInterval(2)
 				.setDeformationModel("SBD_0_2_HKR_LR_30_CTP1")
@@ -139,7 +138,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			System.out.println(row);
 		}
 
-		solution.write(new File(outputDir, "test_sub_mm7.55.zip"));
+		solution.write(new File(outputDir, "test_sub_m8.zip"));
 
 		System.out.println("Done!");
 	}
