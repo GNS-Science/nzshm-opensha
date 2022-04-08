@@ -109,9 +109,35 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
     SBD_0_4_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_highkermsliprate_v2.csv");
+            "dm_hk_tile_parameters_highkermsliprate_v2.csv"),
 
-	
+    SBD_0_2A_HKR_LR_30_CTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "dm_hk_eastcapesmoothed_PERTURBATION1.csv"),
+    SBD_0_2A_HKR_LR_30_CTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "dm_hk_eastcapesmoothed_PERTURBATION2.csv"),
+    SBD_0_2A_HKR_LR_30_CTP3("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "dm_hk_eastcapesmoothed_PERTURBATION3.csv"),
+    SBD_0_2A_HKR_LR_30_CTP4("Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "dm_hk_eastcapesmoothed_PERTURBATION4.csv"),
+
+    SBD_0_3_HKR_LR_30_LTP1("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_PERTURBATION1.csv"),
+    SBD_0_3_HKR_LR_30_LTP2("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_PERTURBATION2.csv"),
+    SBD_0_3_HKR_LR_30_LTP3("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_PERTURBATION3.csv"),
+    SBD_0_3_HKR_LR_30_LTP4("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_PERTURBATION4.csv");
+
+
     String description;
     String fileName;
     DeformationHelper helper;
@@ -256,7 +282,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         InputStream in = sections.getClass().getResourceAsStream(resourcePath + subductionFaultModelFile);
         NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, subductionFaultModelFile);
 
-        try (PrintWriter out = new PrintWriter(new FileWriter(subductionFaultModelFile))) {
+        try (PrintWriter out = new PrintWriter(new FileWriter("dm_" + subductionFaultModelFile))) {
             out.println("% generated from faultmodel file " + subductionFaultModelFile);
             for (FaultSection section : sections) {
                 out.println("" + section.getSectionId() + ", " + section.getParentSectionId() + ", " + section.getOrigAveSlipRate() + ", " + section.getOrigSlipRateStdDev());
