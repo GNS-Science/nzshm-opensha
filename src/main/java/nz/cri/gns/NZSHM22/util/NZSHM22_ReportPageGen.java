@@ -204,12 +204,14 @@ public class NZSHM22_ReportPageGen {
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-       reportPageGen.setName("Min Mag = 8.05")
-       	.setOutputPath("/tmp/reports/m8_V2")
+        String inversion_name = "test_subscaling_min8.0_c4.0";
+        // String inversion_name = "NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMzI3";
+       reportPageGen.setName(inversion_name)
+       	.setOutputPath("/tmp/reports/" + inversion_name)
            .setFillSurfaces(true)
            .setPlotLevel("DEFAULT")
 //                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
-   		.setSolution("/tmp/inversions/test_sub_m8.zip");
+   		.setSolution("/tmp/inversions/" + inversion_name + ".zip");
        reportPageGen.generatePage();
 
         /*

@@ -112,22 +112,25 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 		 * mfd_transition_mag	9.15
 		 */
 
+		double c = 4.0;
+		double minMag = 8.0;
 		SimplifiedScalingRelationship scale = new SimplifiedScalingRelationship();
-		scale.setupSubduction(3.0);
+		scale.setupSubduction(c);
 
 		NZSHM22_SubductionInversionRunner runner = ((NZSHM22_SubductionInversionRunner) new NZSHM22_SubductionInversionRunner()
 				.setScalingRelationship(scale, true)
+				// .setScalingRelationship("SMPL_NZ_INT_MN", true)
 				.setRuptureSetFile(ruptureSet)
 				.setGutenbergRichterMFDWeights(1000, 1000.0)
 				//.setUncertaintyWeightedMFDWeights(1000, 0.1, 0.4)
 				.setGutenbergRichterMFDWeights(1.0e4, 0.0)
 				.setSlipRateConstraint("BOTH", 1000, 1000.0)
 				) // end super-class methods
-				//.setGutenbergRichterMFD(29, 1.05, 8.85,7.55); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
-				.setGutenbergRichterMFD(29, 1.05, 8.85,8.0); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				// .setGutenbergRichterMFD(29, 1.05, 8.85); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
+				.setGutenbergRichterMFD(29, 1.05, 8.85,minMag); //CBC add some sanity checking around the 3rd arg, it must be on a bin centre!
 
 		FaultSystemSolution solution = runner
-				.setInversionSeconds(10)
+				.setInversionSeconds(60)
 				.setNumThreadsPerSelector(1)
 				.setSelectionInterval(2)
 				.setDeformationModel("SBD_0_2_HKR_LR_30_CTP1")
@@ -138,7 +141,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 			System.out.println(row);
 		}
 
-		solution.write(new File(outputDir, "test_sub_m8.zip"));
+		solution.write(new File(outputDir, "test_subscaling_min" + String.valueOf(minMag) + "_c" + String.valueOf(c) + ".zip"));
 
 		System.out.println("Done!");
 	}
