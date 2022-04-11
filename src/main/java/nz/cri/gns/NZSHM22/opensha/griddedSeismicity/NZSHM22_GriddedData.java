@@ -24,7 +24,7 @@ public class NZSHM22_GriddedData {
     protected static final Splitter SPLIT = Splitter.on(CharMatcher.whitespace().or(CharMatcher.anyOf(","))).omitEmptyStrings();
 
     // how many possible grid points per degree. UCERF3 uses 10
-    protected static final double STEP = 10;
+    protected static final double STEP = 40;
     // how many degrees between grid points
     public static final double GRID_SPACING = 1.0 / STEP;
 
