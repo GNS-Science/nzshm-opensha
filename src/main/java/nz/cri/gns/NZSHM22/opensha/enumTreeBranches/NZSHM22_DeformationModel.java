@@ -135,7 +135,17 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "dm_hk_trenchlocked_PERTURBATION3.csv"),
     SBD_0_3_HKR_LR_30_LTP4("Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
             "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_PERTURBATION4.csv");
+            "dm_hk_trenchlocked_PERTURBATION4.csv"),
+
+    SBD_0_1_PUY_30_0PT4("Puysegur 0.4",
+            "aust-pacific convergence, 0.4 coupling",
+            "dm_puysegur_tiles_30km_maxd60km_austpaci_0pt4coupled_notrand.csv"),
+    SBD_0_1_PUY_30_0PT7("Puysegur 0.7",
+            "aust-pacific convergence, 0.7 coupling",
+            "dm_puysegur_tiles_30km_maxd60km_austpaci_0pt7coupled_notrand.csv"),
+    SBD_0_1_PUY_30_1PT0("Puysegur 0.7",
+            "aust-pacific convergence, 1.0 coupling",
+            "dm_puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv");
 
 
     String description;
@@ -294,10 +304,9 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        subductionFmToDm("dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_3.csv");
-        subductionFmToDm("dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_4.csv");
-        subductionFmToDm("dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_3.csv");
-        subductionFmToDm("dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv");
+        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_0pt4coupled_notrand.csv");
+        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_0pt7coupled_notrand.csv");
+        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv");
     }
 
 }
