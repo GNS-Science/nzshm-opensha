@@ -45,7 +45,12 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
         } else {
             expected = null; // cause an assertion failure
         }
-        assertEquals(expected, actual.yValues());
+
+        assertEquals(expected.size(), actual.yValues().size());
+        for(int i =0;i<expected.size(); i++){
+            assertEquals(expected.get(i), actual.yValues().get(i), 0.000001);
+        }
+
 
     }
 }

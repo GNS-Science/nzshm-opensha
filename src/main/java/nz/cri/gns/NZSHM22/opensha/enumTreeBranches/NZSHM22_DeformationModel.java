@@ -11,6 +11,9 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +24,17 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "any",
             null),
 
+    GEOD_NO_PRIOR_2022_RmlsZToxMDAwODc_(
+            "geodetic, no geological prior constraint",
+            "rupture set RmlsZToxMDAwODc=",
+            "slip_deficit_rates_no_prior_NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.dat"
+    ),
+    GEOD_PRIOR_2022_RmlsZToxMDAwODc_(
+            "geodetic, prior geological constraint",
+            "rupture set RmlsZToxMDAwODc=",
+            "slip_deficit_rates_with_prior_NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.dat"
+
+    ),
     GEOD_NO_PRIOR_2022_RmlsZToyMjE4My4wUGVpWGE_(
             "geodetic, no geological prior constraint, 2022",
             "rupture set RmlsZToyMjE4My4wUGVpWGE=",
@@ -93,8 +107,8 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     SBD_0_2_HKR_LR_30_LTP4(
             "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv"),     
-    
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
+
     SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv"),
@@ -145,7 +159,93 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "dm_puysegur_tiles_30km_maxd60km_austpaci_0pt7coupled_notrand.csv"),
     SBD_0_1_PUY_30_1PT0("Puysegur 1.0",
             "aust-pacific convergence, 1.0 coupling",
-            "dm_puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv");
+            "dm_puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv"),
+
+    SBD_0_2A_HKR_LR_30_M8(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "dm_hk_trenchcreeping_M7to8momentcorrected_notperturbed.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation1.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation2.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation3.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation4.csv"),
+
+    SBD_0_3_HKR_LR_30_M8(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_M7to8momentcorrected_notperturbed.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed1",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation1.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed2",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation2.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed3",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation3.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed4",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation4.csv"),
+
+    SBD_0_2A_HKR_LR_30_EXP_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchcreeping_exp_perturbation1.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchcreeping_exp_perturbation2.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchcreeping_exp_perturbation3.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchcreeping_exp_perturbation4.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP5(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed5",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchcreeping_exp_perturbation5.csv"),
+
+    SBD_0_2A_HKR_LR_30_EXP_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchlocked_exp_perturbation1.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchlocked_exp_perturbation2.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchlocked_exp_perturbation3.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchlocked_exp_perturbation4.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_LTP5(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed5",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_trenchlocked_exp_perturbation5.csv")
+
+    ;
 
 
     String description;
@@ -241,7 +341,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     /**
      * Used for testing only
      */
-    public void load(){
+    public void load() {
         if (fileName != null) {
             helper.getDeformations();
         }
@@ -282,31 +382,33 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
     /**
      * Transforms a subduction fault model into a deformation model
+     *
      * @param subductionFaultModelFile
      * @throws DocumentException
      * @throws IOException
      */
-    public static void subductionFmToDm(String subductionFaultModelFile) throws DocumentException, IOException {
+    public static void subductionFmToDm(Path subductionFaultModelFile) {
+        try {
+            FaultSectionList sections = new FaultSectionList();
+            InputStream in = new FileInputStream(subductionFaultModelFile.toFile());
+            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "");
 
-        FaultSectionList sections = new FaultSectionList();
-        InputStream in = sections.getClass().getResourceAsStream(resourcePath + subductionFaultModelFile);
-        NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, subductionFaultModelFile);
+            try (PrintWriter out = new PrintWriter(new FileWriter("dm_" + subductionFaultModelFile.getFileName().toString()))) {
+                out.println("% generated from faultmodel file " + subductionFaultModelFile);
+                for (FaultSection section : sections) {
+                    out.println("" + section.getSectionId() + ", " + section.getParentSectionId() + ", " + section.getOrigAveSlipRate() + ", " + section.getOrigSlipRateStdDev());
+                }
 
-        try (PrintWriter out = new PrintWriter(new FileWriter("dm_" + subductionFaultModelFile))) {
-            out.println("% generated from faultmodel file " + subductionFaultModelFile);
-            for (FaultSection section : sections) {
-                out.println("" + section.getSectionId() + ", " + section.getParentSectionId() + ", " + section.getOrigAveSlipRate() + ", " + section.getOrigSlipRateStdDev());
+            } catch (IOException x) {
+                x.printStackTrace();
             }
-
-        } catch (IOException x) {
+        } catch (Exception x) {
             x.printStackTrace();
         }
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_0pt4coupled_notrand.csv");
-        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_0pt7coupled_notrand.csv");
-        subductionFmToDm("puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv");
+        Files.list(Paths.get("C:\\tmp\\temp\\")).forEach(NZSHM22_DeformationModel::subductionFmToDm);
     }
 
 }
