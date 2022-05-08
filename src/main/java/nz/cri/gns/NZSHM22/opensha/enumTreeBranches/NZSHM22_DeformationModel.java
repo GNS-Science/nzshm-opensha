@@ -224,23 +224,23 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchcreeping_exp_perturbation5.csv"),
 
-    SBD_0_2A_HKR_LR_30_EXP_LTP1(
+    SBD_0_3_HKR_LR_30_EXP_LTP1(
             "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed1",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchlocked_exp_perturbation1.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_LTP2(
+    SBD_0_3_HKR_LR_30_EXP_LTP2(
             "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed2",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchlocked_exp_perturbation2.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_LTP3(
+    SBD_0_3_HKR_LR_30_EXP_LTP3(
             "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed3",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchlocked_exp_perturbation3.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_LTP4(
+    SBD_0_3_HKR_LR_30_EXP_LTP4(
             "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed4",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchlocked_exp_perturbation4.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_LTP5(
+    SBD_0_3_HKR_LR_30_EXP_LTP5(
             "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed5",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_trenchlocked_exp_perturbation5.csv")
