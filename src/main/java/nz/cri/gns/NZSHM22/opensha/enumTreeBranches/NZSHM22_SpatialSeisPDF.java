@@ -13,8 +13,7 @@ public enum NZSHM22_SpatialSeisPDF implements LogicTreeNode {
     NZSHM22_1246R("NZSHM22_1246R", "1246R", "BEST2FLTOLDNC1246r.txt"),
     NZSHM22_1456("NZSHM22_1456", "1456", "BESTFLTOLDNC1456.txt"),
     NZSHM22_1456R("NZSHM22_1456R", "1456R", "BESTFLTOLDNC1456r.txt"),
-    NZSHM22_1346("NZSHM22_1346", "1346", "Gruenthalmod1346ConfDSMsss.txt"),
-    FROM_SOLUTION("from solution", "solution", null);
+    NZSHM22_1346("NZSHM22_1346", "1346", "Gruenthalmod1346ConfDSMsss.txt");
 
     static final String DATA_DIR = "seismicityGrids/";
 
@@ -67,10 +66,6 @@ public enum NZSHM22_SpatialSeisPDF implements LogicTreeNode {
 
     public void normaliseRegion(GriddedRegion region){
         pdf.normaliseRegion(region);
-    }
-
-    public void setPDFSource(NZSHM22_GriddedData pdfSource){
-        pdf = pdfSource;
     }
 
     public static LogicTreeLevel<LogicTreeNode> level() {

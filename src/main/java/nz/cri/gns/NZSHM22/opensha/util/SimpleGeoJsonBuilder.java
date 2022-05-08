@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.util;
 
 import com.google.common.base.Preconditions;
 import org.opensha.commons.geo.Location;
+import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.geo.json.Feature;
 import org.opensha.commons.geo.json.FeatureCollection;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -59,6 +61,21 @@ public class SimpleGeoJsonBuilder {
         Feature feature = GeoJSONFaultSection.toFeature(section);
         features.add(feature);
         return feature.properties;
+    }
+
+    public FeatureProperties addLine(Location... locations) {
+        LocationList locs = new LocationList();
+        locs.addAll(Arrays.asList(locations));
+        return addLine(locs);
+    }
+
+    public FeatureProperties addLine(List<Location> locations) {
+        FeatureProperties properties = new FeatureProperties();
+        LocationList locs = new LocationList();
+        locs.addAll(locations);
+        Geometry geometry = new Geometry.LineString(locs);
+        features.add(new Feature("", geometry, properties));
+        return properties;
     }
 
     public FeatureProperties addRegion(Region region) {

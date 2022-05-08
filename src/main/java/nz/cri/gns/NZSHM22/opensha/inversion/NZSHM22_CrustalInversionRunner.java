@@ -3,13 +3,13 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
+import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
-import org.opensha.commons.data.IntegerSampler;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 import com.google.common.base.Preconditions;
 
-import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
@@ -18,7 +18,6 @@ import scratch.UCERF3.enumTreeBranches.InversionModels;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,11 +48,31 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private boolean enableTvzMFDs = true;
     private boolean enableMinMaxSampler = false;
 
+    private NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
+
     /**
      * Creates a new NZSHM22_InversionRunner with defaults.
      */
     public NZSHM22_CrustalInversionRunner() {
         super();
+    }
+
+
+    /**
+     * If the polygonizer is set up, the solution zip file will include a module with the polygonized background.
+     * @param exponent the exponent for the weighting function
+     * @param weightingFunctionType currently only accepts "LINEAR"
+     * @param upScaleStep the absolute step value for the upscaled background that is used during polygonization.
+     *                    Indications the number of grid points per degree.
+     *                    10 is the normal step value for UCERF3 and NZSHM22.
+     * @return
+     */
+    public NZSHM22_CrustalInversionRunner setPolygonizer(double exponent, String weightingFunctionType, int upScaleStep){
+        polygoniser = new NZSHM22_PolygonisedDistributedModelBuilder();
+        polygoniser.setExponent(exponent);
+        polygoniser.setWeightingFunction(weightingFunctionType);
+        polygoniser.setStep(upScaleStep);
+        return this;
     }
 
     /**
@@ -178,7 +197,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
 
-        this.rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);
+        rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 
@@ -239,7 +258,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         setInversionInputGenerator(inversionInputGenerator);
 
         rupSet.addModule(new PaleoseismicConstraintData(rupSet, paleoRateConstraints, paleoProbabilityModel, null, null));
-        
+
+        if(polygoniser != null){
+            polygoniser.apply(rupSet);
+        }
+
         return this;
     }
 
@@ -265,9 +288,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
                 .setMaxMags("MANIPULATE_MFD",10,7.5)
+                .setEnableTvzMFDs(false)
                 .setMinMags(6.8 , 6.5)
               //  .setInitialSolution("C:\\tmp\\rates.csv")
                 .setEnableMinMaxSampler(true)
+                .setPolygonizer(4, "LINEAR", 40)
                 .setInversionSeconds(1)
               // .setSlipRateFactor(0.8, 0.3)
                 .setRepeatable(true)

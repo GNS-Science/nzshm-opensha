@@ -73,15 +73,10 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	public NZSHM22_GridSourceGenerator(FaultSystemSolution ifss) {
 		branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 		NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
-		// XXX FIXME oakley
-//		if(spatialSeisPDF == NZSHM22_SpatialSeisPDF.FROM_SOLUTION){
-//			spatialSeisPDF.setPDFSource(ifss.getModule(NZSHM22_PolygonisedDistributedModel.class).getGriddedData());
-//		}
-		// to here
+
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getTvzRegion());
 		spatialSeisPDF.normaliseRegion(branch.getValue(NZSHM22_Regions.class).getSansTvzRegion());
 		srcSpatialPDF = spatialSeisPDF.getPDF(region);
-
 
 //		totalMgt5_Rate = branch.getValue(TotalMag5Rate.class).getRateMag5();
 		realOffFaultMFD = ifss.getRupSet().getModule(InversionTargetMFDs.class).getTrulyOffFaultMFD().deepClone();

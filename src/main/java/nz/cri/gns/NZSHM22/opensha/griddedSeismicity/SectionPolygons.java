@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * 
  * @version $Id:$
  */
-class SectionPolygons {
+public class SectionPolygons {
 
 	private static boolean log = false;
 	
@@ -676,7 +676,7 @@ class SectionPolygons {
 	 * LocationLists. If Area is singular, returned list will only have one
 	 * LocationList
 	 */
-	static List<LocationList> areaToLocLists(Area area) {
+	public static List<LocationList> areaToLocLists(Area area) {
 		// break apart poly into component paths; many qualify
 		List<LocationList> locLists = Lists.newArrayList();
 		LocationList locs = null;

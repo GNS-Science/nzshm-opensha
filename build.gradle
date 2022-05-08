@@ -7,8 +7,8 @@ compileJava.options.encoding = "UTF-8"
 
 dependencies {
     /* no remote repo */
-    implementation files('python/share/py4j/py4j0.10.9.1.jar') //Py4j jar installed locally  via `pip install py4j`
-
+    implementation files('python/share/py4j/py4j0.10.9.1.jar', //Py4j jar installed locally  via `pip install py4j`
+    'lib/openmap.jar')
     implementation project(path: ':opensha')
 
     testImplementation 'junit:junit:4.12'
@@ -16,7 +16,7 @@ dependencies {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 configurations {

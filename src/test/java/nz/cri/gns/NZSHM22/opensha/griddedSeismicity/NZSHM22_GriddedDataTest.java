@@ -15,7 +15,7 @@ public class NZSHM22_GriddedDataTest {
     public static final double tolerance = 0.000000001;
 
     @Test
-    public void testNormaliseRegion(){
+    public void testNormaliseRegion() {
         NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         // create a gridded region that matches the spacing of the grid
         GriddedRegion region = new GriddedRegion(new NewZealandRegions.NZ_TVZ(), 1.0 / data.getStep(), GriddedRegion.ANCHOR_0_0);
@@ -29,12 +29,12 @@ public class NZSHM22_GriddedDataTest {
 
         data.normaliseRegion(region);
 
-        assertEquals( locationPdf / fraction, data.getValue(testLocation), tolerance );
-        assertEquals( 1, data.getFractionInRegion(region), tolerance);
+        assertEquals(locationPdf / fraction, data.getValue(testLocation), tolerance);
+        assertEquals(1, data.getFractionInRegion(region), tolerance);
     }
 
     @Test
-    public void testNormaliseMultipleRegions(){
+    public void testNormaliseMultipleRegions() {
         // note: the regions may not share nodes
         NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         GriddedRegion tvz = new GriddedRegion(new NewZealandRegions.NZ_TVZ(), 1.0 / data.getStep(), GriddedRegion.ANCHOR_0_0);
@@ -57,11 +57,11 @@ public class NZSHM22_GriddedDataTest {
         data.normaliseRegion(tvz);
         data.normaliseRegion(sansTvz);
 
-        assertEquals( tnzPdf / tvzFraction, data.getValue(tvzLocation), tolerance );
-        assertEquals( 1, data.getFractionInRegion(tvz), tolerance);
+        assertEquals(tnzPdf / tvzFraction, data.getValue(tvzLocation), tolerance);
+        assertEquals(1, data.getFractionInRegion(tvz), tolerance);
 
-        assertEquals( sansPdf / sansFraction, data.getValue(sansLocation), tolerance );
-        assertEquals( 1, data.getFractionInRegion(sansTvz), tolerance);
+        assertEquals(sansPdf / sansFraction, data.getValue(sansLocation), tolerance);
+        assertEquals(1, data.getFractionInRegion(sansTvz), tolerance);
 
     }
 
@@ -81,7 +81,7 @@ public class NZSHM22_GriddedDataTest {
     }
 
     @Test
-    public void testUpsampling(){
+    public void testUpsampling() {
         NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         assertEquals(10, data.getStep(), 0);
 
@@ -89,9 +89,26 @@ public class NZSHM22_GriddedDataTest {
 
         GriddedRegion nz100 = new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE(), 1.0 / 100, GriddedRegion.ANCHOR_0_0);
 
-        double[] values10 = data.getValues(nz100);
-        double[] values100 = upSampled.getValues(nz100);
+        double[] expected = data.getValues(nz100);
+        for (int i = 0; i < expected.length; i++) {
+            expected[i] /= 100;
+        }
+        double[] actual = upSampled.getValues(nz100);
 
-        assertArrayEquals(values10, values100, 0.000000000001);
+        assertArrayEquals(expected, actual, 0.001);
+    }
+
+    @Test
+    public void testReSampling() {
+        NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
+        assertEquals(10, data.getStep(), 0);
+
+        NZSHM22_GriddedData upSampled = NZSHM22_GriddedData.reSample(data, 40);
+        NZSHM22_GriddedData downSampled = NZSHM22_GriddedData.reSample(upSampled, NZSHM22_GriddedData.STEP);
+
+        double[] expected = data.getValues(data.getNativeRegion());
+        double[] actual = downSampled.getValues(downSampled.getNativeRegion());
+
+        assertArrayEquals(expected, actual, 0.0001);
     }
 }
