@@ -19,6 +19,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.GridSourceProvider;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
+import org.opensha.sha.earthquake.param.MagDependentAperiodicityOptions;
 import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_2010_AttenRel;
 import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_ChchSpecific_2014_AttenRel;
 import org.opensha.sha.gcim.imr.attenRelImpl.SA_InterpolatedWrapperAttenRel.InterpolatedBradley_2010_AttenRel;
@@ -27,6 +28,7 @@ import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
+import scratch.UCERF3.erf.utils.ProbabilityModelsCalc;
 
 /**
  * Creates a NZSHM22_HazardCalculator
@@ -195,6 +197,12 @@ public class NZSHM22_HazardCalculatorBuilder {
         return new ConcreteNSHMHazardCalculator(erf, gmpe);
     }
 
+    public void testProbabilityModelsCalc() throws IOException {
+        FaultSystemSolutionERF erf = loadERF();
+        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(erf.getSolution(), erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
+        System.out.println(probabilityModelsCalc.computeBPT_Prob(10, 3, 1, 1));
+    }
+
     class ConcreteNSHMHazardCalculator extends NZSHM22_HazardCalculator {
 
         FaultSystemSolutionERF erf;
@@ -273,10 +281,11 @@ public class NZSHM22_HazardCalculatorBuilder {
                 .setGMPE("Bradley_2010")
                 .setBackgroundOption("INCLUDE");
 
-        NZSHM22_HazardCalculator calculator = builder.build();
-
-        System.out.println(calculator.calc(-41.288889, 174.777222));
-        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
+        builder.testProbabilityModelsCalc();
+//        NZSHM22_HazardCalculator calculator = builder.build();
+//
+//        System.out.println(calculator.calc(-41.288889, 174.777222));
+//        System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
 
     }
 }
