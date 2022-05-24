@@ -63,7 +63,20 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
     
     GEODETIC_SLIP_1_0(
     		"Geodetic v1",
-    		"NZNSHM_paleotimings_GEODETICsliprates_1.0.csv");
+    		"NZNSHM_paleotimings_GEODETICsliprates_1.0.csv"),
+
+    PALEO_RI_GEOLOGIC_MAY24(
+            "Geologic timing, no TVZ, Maruia moved, May 24 corrections",
+            "NZNSHM_paleotimings_GEOLOGIC_24May.txt"),
+
+    PALEO_RI_GEODETIC_MAY24(
+            "Geodetic timing, no TVZ, Maruia moved, May 24 corrections",
+            "NZNSHM_paleotimings_GEODETIC_24May.txt"),
+
+    PALEO_RI_GEODETICGEOLOGICPRIOR_MAY24(
+            "Geodetic with Geologic Prior timing, no TVZ, Maruia moved, May 24 corrections",
+            "NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_24May.txt"),
+    ;
 
     final static String RESOURCE_PATH = "/paleoRates/";
 
