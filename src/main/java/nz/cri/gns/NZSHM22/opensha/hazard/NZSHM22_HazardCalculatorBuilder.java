@@ -15,11 +15,13 @@ import org.opensha.commons.geo.Location;
 import org.opensha.commons.param.Parameter;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.calc.params.MaxDistanceParam;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.GridSourceProvider;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.earthquake.param.IncludeBackgroundParam;
 import org.opensha.sha.earthquake.param.MagDependentAperiodicityOptions;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_2010_AttenRel;
 import org.opensha.sha.gcim.imr.attenRelImpl.Bradley_ChchSpecific_2014_AttenRel;
 import org.opensha.sha.gcim.imr.attenRelImpl.SA_InterpolatedWrapperAttenRel.InterpolatedBradley_2010_AttenRel;
@@ -79,6 +81,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     /**
      * Sets the GMPE
      * Defaults to ASK_2104
+     *
      * @param gmpe one of the values of the AttenRelRef enum, or one of Bradley_2010, Bradley_2010_int, Bradley_2010_Chch
      * @return this builder
      */
@@ -127,20 +130,22 @@ public class NZSHM22_HazardCalculatorBuilder {
      * otherwise to SA.
      * Legal values are
      * [0, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 10.0]
+     *
      * @param seconds period in seconds.
      * @return this builder.
      */
     public NZSHM22_HazardCalculatorBuilder setIntensityMeasurePeriod(double seconds) {
         intensityMeasurePeriod = seconds;
-        return this;        
+        return this;
     }
-    
+
     /**
      * Sets to background option. Legal values are INCLUDE, EXCLUDE, ONLY
+     *
      * @param backgroundOption
      * @return this builder
      */
-    public NZSHM22_HazardCalculatorBuilder setBackgroundOption(String backgroundOption){
+    public NZSHM22_HazardCalculatorBuilder setBackgroundOption(String backgroundOption) {
         this.backgroundOption = IncludeBackgroundOption.valueOf(backgroundOption);
         return this;
     }
@@ -171,7 +176,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     }
 
     protected ScalarIMR setUpGmpe() {
-        if(gmpe == null){
+        if (gmpe == null) {
             setGMPE("ASK_2014");
         }
         gmpe.setParamDefaults();
@@ -198,9 +203,25 @@ public class NZSHM22_HazardCalculatorBuilder {
     }
 
     public void testProbabilityModelsCalc() throws IOException {
+        double durationYears = 50;
+        long now = (long)(ProbabilityModelsCalc.MILLISEC_PER_YEAR * 52);
         FaultSystemSolutionERF erf = loadERF();
-        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(erf.getSolution(), erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
-        System.out.println(probabilityModelsCalc.computeBPT_Prob(10, 3, 1, 1));
+        FaultSystemSolution solution = erf.getSolution();
+        FaultSystemRupSet rupSet = solution.getRupSet();
+        for(FaultSection section : rupSet.getFaultSectionDataList()){
+            section.setDateOfLastEvent((long)(ProbabilityModelsCalc.MILLISEC_PER_YEAR * 1));
+        }
+        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
+        System.out.println("rupture, rate, mag, gain, gain*rate*durationYears");
+        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+            double rate = solution.getRateForRup(r);
+            if (rate != 0) {
+                double mag = rupSet.getMagForRup(r);
+                double gain = probabilityModelsCalc.getU3_ProbGainForRup(r, 0, true, true, true, now, durationYears);
+                System.out.println("" + r + ", " + rate + ", " + mag + ", " + gain + ", " + gain * rate * durationYears);
+            }
+        }
+
     }
 
     class ConcreteNSHMHazardCalculator extends NZSHM22_HazardCalculator {
