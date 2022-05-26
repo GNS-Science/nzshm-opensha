@@ -153,6 +153,13 @@ public class NZSHM22_GriddedData {
         return key * spacing;
     }
 
+
+    public Location snapToGrid(Location location){
+        return new Location(
+                keyToLatLonComp(spacing, latLonCompToKey(step, location.getLatitude())),
+                keyToLatLonComp(spacing, latLonCompToKey(step, location.getLongitude())));
+    }
+
     /**
      * Build the data table from a CS file
      * <p>

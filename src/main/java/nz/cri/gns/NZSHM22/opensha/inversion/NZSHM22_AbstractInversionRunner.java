@@ -358,6 +358,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	public NZSHM22_AbstractInversionRunner setSpatialSeisPDF(String spatialSeisPDF){
+		this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.valueOf(spatialSeisPDF);
+		return this;
+	}
+
 	/**
 	 * Exclude ruptures that are below MinMag. false by default.
 	 * @param excludeRupturesBelowMinMag
