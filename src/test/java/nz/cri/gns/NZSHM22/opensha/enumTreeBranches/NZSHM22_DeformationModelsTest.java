@@ -12,8 +12,8 @@ import org.opensha.sha.faultSurface.FaultSection;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Files;
+import java.util.*;
 
 public class NZSHM22_DeformationModelsTest {
 
@@ -95,11 +95,48 @@ public class NZSHM22_DeformationModelsTest {
     }
 
     @Test
-    public void testLoad() throws DocumentException, IOException {
-        for(NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()){
+    public void testLoad() {
+        for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
             System.out.println(model.name());
             model.load();
         }
+    }
+
+    @Test
+    public void testDuplicateFileNames() {
+        Set<String> seen = new HashSet<>();
+        for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
+            System.out.println(model.name());
+            assert (!seen.contains(model.getFileName()));
+            seen.add(model.getFileName());
+        }
+    }
+
+    public String read(NZSHM22_DeformationModel model) throws IOException {
+        StringBuilder s = new StringBuilder();
+        BufferedReader in = new BufferedReader(new InputStreamReader(model.helper.getStream()));
+        String line;
+        do{
+            line = in.readLine();
+            s.append(line);
+            s.append('\n');
+        }while (line != null);
+        return s.toString();
+    }
+
+    @Test
+    public void testDuplicateFiles() throws IOException {
+        Map<String, NZSHM22_DeformationModel> hashes = new HashMap<>();
+        for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
+            if(model == NZSHM22_DeformationModel.FAULT_MODEL){
+                continue;
+            }
+            System.out.println(model.name());
+            String data = read(model);
+            assert (!hashes.containsKey(data));
+            hashes.put(data, model);
+        }
+
     }
 
 }
