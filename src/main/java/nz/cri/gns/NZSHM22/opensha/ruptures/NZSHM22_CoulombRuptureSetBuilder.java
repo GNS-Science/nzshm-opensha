@@ -706,7 +706,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 .setAdaptiveSectFract(0)
                 .setMaxJumpDistance(15)
                 .setMinSubSections(2)
-                .setMinSubSectsPerParent(2)
+                .setMinSubSectsPerParent(1)
                 .setScaleDepthExcludeDomain("4", 0.8)
                 .setScaleDepthIncludeDomain("4", 0.667);
         
