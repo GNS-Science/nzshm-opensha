@@ -695,16 +695,20 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
         SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
-        sr.setupCrustal(4.2, 42);
+        sr.setupCrustal(4.2, 4.2);
         
-        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9D_SANSTVZ_D90);
+        builder.setFaultModel(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ);
         builder.setMaxFaultSections(2000);
         builder.setNumThreads(8);
         ((NZSHM22_CoulombRuptureSetBuilder) builder
-        	.setScalingRelationship(sr))
-        	.setAdaptiveMinDist(6.0d)
-        	.setMaxJumpDistance(5d)
-        	.setAdaptiveSectFract(0.1f);
+                .setScalingRelationship(sr))
+                .setAdaptiveMinDist(6.0)
+                .setAdaptiveSectFract(0)
+                .setMaxJumpDistance(15)
+                .setMinSubSections(2)
+                .setMinSubSectsPerParent(2)
+                .setScaleDepthExcludeDomain("4", 0.8)
+                .setScaleDepthIncludeDomain("4", 0.667);
         
         System.out.println(builder.getDescriptiveName());
         FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
