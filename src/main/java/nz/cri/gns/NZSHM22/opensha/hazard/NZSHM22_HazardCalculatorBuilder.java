@@ -209,7 +209,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         FaultSystemSolution solution = erf.getSolution();
         FaultSystemRupSet rupSet = solution.getRupSet();
         for(FaultSection section : rupSet.getFaultSectionDataList()){
-            section.setDateOfLastEvent((long)(ProbabilityModelsCalc.MILLISEC_PER_YEAR * 1));
+//            section.setDateOfLastEvent((long)(ProbabilityModelsCalc.MILLISEC_PER_YEAR * -200));
         }
         ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
         System.out.println("rupture, rate, mag, gain, gain*rate*durationYears");
@@ -217,8 +217,8 @@ public class NZSHM22_HazardCalculatorBuilder {
             double rate = solution.getRateForRup(r);
             if (rate != 0) {
                 double mag = rupSet.getMagForRup(r);
-                double gain = probabilityModelsCalc.getU3_ProbGainForRup(r, 0, true, true, true, now, durationYears);
-                System.out.println("" + r + ", " + rate + ", " + mag + ", " + gain + ", " + gain * rate * durationYears);
+                double gain = probabilityModelsCalc.getU3_ProbGainForRup(r, 200, false, true, true, now, durationYears);
+                System.out.println("" + r + ", " + rate + ", " + mag + ", " + gain + ", " + gain * rate * durationYears + ", " + -Math.log(1-(gain * rate * durationYears))/durationYears);
             }
         }
 
