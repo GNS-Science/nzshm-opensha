@@ -1,0 +1,106 @@
+CFM #,Fault,#,MRE average (years before 2022),Rupture Lat bound 1,Rupture Lon bound 1,Rupture Lat bound 2,Rupture Lon bound 2,Whole section (Y/N)
+599,Alpine: George to Jacksons,1,305,-44.52346,167.8427,-44.06347,168.7069,N
+598,Alpine: Jacksons to Kaniere,1,305,-44.06192,168.71043396,-42.97275543,170.9916687,N
+598,Alpine: Jacksons to Kaniere,2,196,-42.94749451,171.0398,-42.89256,171.1434,N
+597,Alpine: Kaniere to Springs Junction,1,196,-42.889,171.15,-42.83171,171.24432373,N
+597,Alpine: Kaniere to Springs Junction,2,305,-42.82728577,171.2516,-42.57966995,171.78401184,N
+597,Alpine: Kaniere to Springs Junction,3,552,-42.57019806,171.80465698,-42.41965866,172.10569763,N
+597,Alpine: Kaniere to Springs Junction,4,197,-42.41342,172.1163,-42.3563,172.2127,N
+596,Alpine Springs Junction to Tophouse,1,197,,,,,Y
+599,Alpine: George to Jacksons,2, ≥180,-44.68208,167.5389,-44.53292,167.8289,N
+607,Alpine: Resolution - Five Fingers ,, ≥180,,,,,Y
+606,Alpine: Resolution - Dagg ,, ≥180,,,,,Y
+605,Alpine: Nancy ,, ≥180,,,,,Y
+604,Alpine: Resolution - Charles ,, ≥180,,,,,Y
+603,Alpine: Caswell ,, ≥180,,,,,Y
+602,Alpine: Caswell - South George ,, ≥180,,,,,Y
+601,Alpine: George seaward ,, ≥180,,,,,Y
+600,Alpine: George landward ,, ≥180,,,,,Y
+578,Kekerengu 1 ,,6,,,,,Y
+570,Needles,,6,,,,,Y
+586,Upper Kowhai – Manakau,,6,,,,,Y
+581,Papatea,,6,,,,,Y
+627,Offshore Splay Thrust,,6,,,,,Y
+629,Stone Jug ,,6,,,,,Y
+624,Leader: North,,6,,,,,Y
+625,Leader: Central,,6,,,,,Y
+626,Leader: South,,6,,,,,Y
+633,The Humps,,6,,,,,Y
+583,Jordan,1,6,-42.19665909,173.7262,-42.09848,173.8159,N
+583,Jordan,2, ≥180,-42.32239,173.6645,-42.20885,173.7241,N
+582,Fidget,,6,-42.13864517,173.626,-42.11673,173.7156,N
+630,Hundalee,1,6,-42.62505,173.3323,-42.50554,173.5134,N
+568,BooBoo,, ≥180,,,,,Y
+553,Hope: Hurunui ,,265,,,,,Y
+552,Hope: Hope River ,1,265,-42.69864,171.9921,-42.63837,172.216,N
+552,Hope: Hope River ,2,134,-42.63769,172.2186,-42.58881,172.57,N
+551,Hope: Kakapo-2-Hamner,,134,,,,,Y
+549,Hope: Hanmer SE ,, ≥180,,,,,Y
+550,Hope: Hanmer NW ,,134,,,,,Y
+547,Hope: Conway ,1, ≥180,-42.53964615,172.9683,-42.47569,173.1581,N
+547,Hope: Conway ,2,240,-42.47031,173.1725,-42.32748,173.655,N
+592,Kakapo,, ≥180,,,,,Y
+593,Kelly,, ≥180,,,,,Y
+284,Wairarapa: Needles,, ≥180,,,,,Y
+283,Wairarapa: 1,1, ≥180,-41.55972,174.7289,-41.47081375,174.8676,N
+283,Wairarapa: 1,2,167,-41.46154785,174.88053894,-41.24291229,175.12568665,N
+282,Wairarapa: 2,,167,,,,,Y
+281,Wairarapa: 3 ,,167,,,,,Y
+328,Wharekauhau,,167,,,,,Y
+322,Dreyers Rock ,,167,,,,,Y
+321,Alfredton South,,167,,,,,Y
+319,Alfredton North,1,167,-40.67823029,175.86582947,-40.61931992,175.90838623,N
+319,Alfredton North,2, ≥180,-40.61507416,175.91143799,-40.55693054,175.94056702,N
+541,Awatere: Southwest,1, ≥180,-42.35371399,172.22445679,-42.19703,172.7046,N
+541,Awatere: Southwest,2,847,-42.18832,172.7196,-42.12516,172.9451,N
+541,Awatere: Southwest,3,632,-42.03193,173.3246,-42.1232605,172.9606,N
+540,Awatere: Northeast 1,,174,,,,,Y
+539,Awatere: Northeast 2 ,,174,-41.63171005,174.0287,-41.58636,174.1343,N
+539,Awatere: Northeast 2 ,, ≥180,-41.58163,174.1453,-41.5373,174.248,N
+289,Wellington Hutt Valley: 1 ,, ≥180,,,,,Y
+288,Wellington Hutt Valley: 2 ,, ≥180,,,,,Y
+287,Wellington Hutt Valley: 3 ,,280,,,,,Y
+286,Wellington Hutt Valley: 4 ,,280,,,,,Y
+285,Wellington Hutt Valley: 5 ,,280,,,,,Y
+278,Wellington: Tararua 1 ,, ≥180,,,,,Y
+277,Wellington: Tararua 2 ,, ≥180,,,,,Y
+276,Wellington: Tararua 3 ,, ≥180,,,,,Y
+275,Wellington: Pahiatua,,382,,,,,Y
+411,Palliser – Kaiwhata ,, ≥180,,,,,Y
+361,Ariel Bank ,, ≥180,,,,,Y
+355,Ariel Bank 2,, ≥180,,,,,Y
+353,Gable End North ,,412,,,,,Y
+862,Puysegur Ridge,, ≥180,,,,,Y
+861,Snares,, ≥180,,,,,Y
+661,EQ rupture - 23Dec2011,,11,,,,,Y
+662,EQ rupture - 22Feb2011,,11,,,,,Y
+663,EQ rupture - 13June2011,,11,,,,,Y
+664,Greendale,,12,,,,,Y
+187,Edgecumbe 1987,,35,,,,,Y
+526,White Creek,,93,-41.90267563,172.14109802,-41.6591301,172.21096802,N
+594,Poulter ,2,93,-42.87385559,171.73217773,-42.75049973,172.07794189,N
+316,Waipukaka ,,88,,,,,Y
+379,Waipukurau - Poukawa,,91,-39.90139,176.60675049,-39.7160759,176.7569,N
+371,Awanui,1,91,,,,,Y
+560,Wairau,1,1432,-41.79721,172.87504578,-41.67041016,173.2077,N
+560,Wairau,2,2092,-41.66523743,173.22117615,-41.39136887,174.16526794,N
+557,Wairau 2 ,,2092,,,,,Y
+558,Wairau 3,,2092,,,,,Y
+567,Vernon 1,,3272,,,,,Y
+566,Vernon 2,,3272,,,,,Y
+564,Vernon 4,,3272,,,,,Y
+544,Clarence: Southwest,, ≥180,,,,,Y
+542,Clarence: Northeast,,1862,,,,,Y
+554,Hope: Taramakau,, ≥180,,,,,Y
+546,Hope: Seaward ,, ≥180,,,,,Y
+409,Uruti basin,, ≥180,,,,,Y
+404,Riversdale,, ≥180,,,,,Y
+399,Riversdale North,, ≥180,,,,,Y
+309,Mataikona,, ≥180,,,,,Y
+364,Lachlan 3,,272,,,,,Y
+272,Mohaka: South,1, ≥180,-40.36297989,175.79878235,-39.69144,176.3086,N
+272,Mohaka: South,2,1026,-39.67654,176.3192,-39.5171814,176.43862915,N
+304,Patoka - Rangiora,, ≥180,,,,,Y
+210,Maleme,1, ≥180,-38.39243317,176.1062,-38.34171,176.1773,N
+210,Maleme,2,972,-38.33983612,176.1799,-38.28914261,176.2508,N
+117,Volkner 4,, ≥180,,,,,Y

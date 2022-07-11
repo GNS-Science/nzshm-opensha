@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 
+import nz.cri.gns.NZSHM22.opensha.timeDependent.TimeDependentRatesGenerator;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import nz.cri.gns.NZSHM22.util.GitVersion;
 import org.dom4j.DocumentException;
@@ -88,6 +89,14 @@ public class NZSHM22_PythonGateway {
     public static NZSHM22_GridHazardCalculator getGridHazardCalculator(NZSHM22_HazardCalculator calculator){
         gridHazCalc = new NZSHM22_GridHazardCalculator(calculator);
         return gridHazCalc;
+    }
+
+    /**
+     * Returns a new TimeDependentRatesGenerator.
+     * @return the generator
+     */
+    public static TimeDependentRatesGenerator getTimeDependentRatesGenerator(){
+        return new TimeDependentRatesGenerator();
     }
 
     // move these up and add comments

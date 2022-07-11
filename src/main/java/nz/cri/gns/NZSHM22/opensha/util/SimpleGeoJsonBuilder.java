@@ -91,6 +91,22 @@ public class SimpleGeoJsonBuilder {
         return props;
     }
 
+    public FeatureProperties setLineColour(FeatureProperties props, String cssColour, double opacity){
+        props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
+        props.set(FeatureProperties.STROKE_OPACITY_PROP, opacity);
+        return props;
+    }
+
+    public FeatureProperties setLineColour(FeatureProperties props, String cssColour){
+        props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
+        return props;
+    }
+
+    public FeatureProperties setLineWidth(FeatureProperties props, int width){
+        props.set(FeatureProperties.STROKE_WIDTH_PROP, width);
+        return props;
+    }
+
     public String toJSON() {
         FeatureCollection featureCollection = new FeatureCollection(features);
         try {
