@@ -22,9 +22,15 @@ public class TimeDependentRatesGenerator {
     int currentYear = 2022;
 
     String solutionFileName;
+    String outputFileName;
 
     public TimeDependentRatesGenerator setSolutionFileName(String solutionFileName) {
         this.solutionFileName = solutionFileName;
+        return this;
+    }
+
+    public TimeDependentRatesGenerator setOutputFileName(String outputFileName){
+        this.outputFileName = outputFileName;
         return this;
     }
 
@@ -91,10 +97,9 @@ public class TimeDependentRatesGenerator {
                 "    - /solution/old-rates.csv has the original rates.\n";
     }
 
-    private String updateSolutionFile(String newRates) throws IOException {
-        String newFileName = solutionFileName.substring(0, solutionFileName.length() - 4) + "-mre.zip";
+    private void updateSolutionFile(String newRates) throws IOException {
         Path originalFile = Paths.get(solutionFileName);
-        Path modifiedFile = Paths.get(newFileName);
+        Path modifiedFile = Paths.get(outputFileName);
         Files.copy(originalFile, modifiedFile);
         try (FileSystem fs = FileSystems.newFileSystem(modifiedFile, null)) {
 
@@ -110,7 +115,6 @@ public class TimeDependentRatesGenerator {
 
             Files.writeString(rates, newRates);
         }
-        return newFileName;
     }
 
     public String generateRates(FaultSystemSolution solution) throws IOException {
@@ -141,20 +145,21 @@ public class TimeDependentRatesGenerator {
      * @return the new file name
      * @throws IOException
      */
-    public String generate() throws IOException {
+    public void generate() throws IOException {
         FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionFileName));
         String rates = generateRates(solution);
-        return updateSolutionFile(rates);
+        updateSolutionFile(rates);
     }
 
     public static void main(String[] args) throws IOException {
         TimeDependentRatesGenerator generator =
                 new TimeDependentRatesGenerator()
                         .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3(2).zip")
+                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3(2)-mre1.zip")
                         .setCurrentYear(2022)
                         .setMREData(MREData.CFM_1_1.name())
                         .setForecastTimespan(50);
 
-        String newFileName = generator.generate();
+        generator.generate();
     }
 }
