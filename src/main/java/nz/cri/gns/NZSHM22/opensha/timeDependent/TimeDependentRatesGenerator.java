@@ -1,9 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.timeDependent;
 
 import com.google.gson.GsonBuilder;
+import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.erf.FaultSystemSolutionERF;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.earthquake.param.MagDependentAperiodicityOptions;
 import scratch.UCERF3.erf.utils.ProbabilityModelsCalc;
 
@@ -29,7 +31,7 @@ public class TimeDependentRatesGenerator {
         return this;
     }
 
-    public TimeDependentRatesGenerator setOutputFileName(String outputFileName){
+    public TimeDependentRatesGenerator setOutputFileName(String outputFileName) {
         this.outputFileName = outputFileName;
         return this;
     }
@@ -125,9 +127,12 @@ public class TimeDependentRatesGenerator {
         ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
         StringBuilder result = new StringBuilder();
         result.append("Rupture Index,Annual Rate\n");
+        ModSectMinMags minMags = rupSet.getModule(ModSectMinMags.class);
+
         for (int r = 0; r < rupSet.getNumRuptures(); r++) {
             double rate = solution.getRateForRup(r);
-            if (rate != 0) {
+            boolean rupTooSmall = NZSHM22_FaultSystemRupSetCalc.isRuptureBelowSectMinMag(rupSet, r, minMags);
+            if (rate > 0 && !rupTooSmall) {
                 double probGain = probabilityModelsCalc.getU3_ProbGainForRup(r, histOpenInterval, false, true, true, currentDate, forecastTimespan);
                 double rupProb = probGain * rate * forecastTimespan;
                 double rupRate = -Math.log(1 - rupProb) / forecastTimespan;
@@ -154,8 +159,8 @@ public class TimeDependentRatesGenerator {
     public static void main(String[] args) throws IOException {
         TimeDependentRatesGenerator generator =
                 new TimeDependentRatesGenerator()
-                        .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3(2).zip")
-                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3(2)-mre1.zip")
+                        .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA1MTE1.zip")
+                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA1MTE1-mre.zip")
                         .setCurrentYear(2022)
                         .setMREData(MREData.CFM_1_1.name())
                         .setForecastTimespan(50);
