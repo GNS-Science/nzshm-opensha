@@ -7,7 +7,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.earthquake.param.MagDependentAperiodicityOptions;
-import scratch.UCERF3.erf.utils.ProbabilityModelsCalc;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +21,7 @@ public class TimeDependentRatesGenerator {
     long forecastTimespan = 50;
     double histOpenInterval = 200;
     int currentYear = 2022;
+    Aperiodicity aperiodicity = Aperiodicity.UCERF3_MID;
 
     String solutionFileName;
     String outputFileName;
@@ -38,6 +38,11 @@ public class TimeDependentRatesGenerator {
 
     public TimeDependentRatesGenerator setMREData(String mreName) {
         mreData = MREData.valueOf(mreName);
+        return this;
+    }
+
+    public TimeDependentRatesGenerator setAperiodicity(String aperiodicity){
+        this.aperiodicity = Aperiodicity.valueOf(aperiodicity);
         return this;
     }
 
@@ -124,7 +129,7 @@ public class TimeDependentRatesGenerator {
         mreData.apply(solution, currentYear);
         long currentDate = MREData.yearsAgoInMillis(currentYear, 0);
         FaultSystemRupSet rupSet = solution.getRupSet();
-        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), MagDependentAperiodicityOptions.MID_VALUES);
+        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), aperiodicity);
         StringBuilder result = new StringBuilder();
         result.append("Rupture Index,Annual Rate\n");
         ModSectMinMags minMags = rupSet.getModule(ModSectMinMags.class);
@@ -159,10 +164,11 @@ public class TimeDependentRatesGenerator {
     public static void main(String[] args) throws IOException {
         TimeDependentRatesGenerator generator =
                 new TimeDependentRatesGenerator()
-                        .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA1MTE1.zip")
-                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA1MTE1-mre.zip")
+                        .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5.zip")
+                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5-mre3.zip")
                         .setCurrentYear(2022)
                         .setMREData(MREData.CFM_1_1.name())
+                        .setAperiodicity("NZSHM22")
                         .setForecastTimespan(50);
 
         generator.generate();
