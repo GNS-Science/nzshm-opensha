@@ -32,23 +32,23 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
         this.scale = scale;
     }
 
-    public RupSetScalingRelationship getScalingRelationship(){
+    public RupSetScalingRelationship getScalingRelationship() {
         return scale;
     }
 
-    public void setRecalc(boolean recalc){
+    public void setRecalc(boolean recalc) {
         this.recalc = recalc;
     }
 
-    public boolean getReCalc(){
+    public boolean getReCalc() {
         return recalc;
     }
 
     public static RupSetScalingRelationship createRelationShip(String name) {
         try {
             return ScalingRelationships.valueOf(name);
-        }catch( IllegalArgumentException x){
-            switch (name){
+        } catch (IllegalArgumentException x) {
+            switch (name) {
                 case "SMPL_NZ_INT_UP":
                     return new Stirling2021SimplifiedScalingRelationship("interface", "upper");
                 case "SMPL_NZ_INT_MN":
@@ -96,13 +96,13 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
     }
 
     @Override
-    public double getAveSlip(double area, double length, double origWidth, double aveRake) {
-        return scale.getAveSlip(area, length, origWidth, aveRake);
+    public double getAveSlip(double area, double length, double width, double origWidth, double aveRake) {
+        return scale.getAveSlip(area, length, width, origWidth, aveRake);
     }
 
     @Override
-    public double getMag(double area, double origWidth, double aveRake) {
-        return scale.getMag(area, origWidth, aveRake);
+    public double getMag(double area, double length, double width, double origWidth, double aveRake) {
+        return scale.getMag(area, length, width, origWidth, aveRake);
     }
 
     @Override
