@@ -6,6 +6,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.calc.TMG2017CruScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.calc.TMG2017SubScalingRelationship;
 import org.opensha.commons.logicTree.JsonAdapterHelper;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
@@ -45,29 +47,29 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
     }
 
     public static RupSetScalingRelationship createRelationShip(String name) {
-        try {
-            return ScalingRelationships.valueOf(name);
-        } catch (IllegalArgumentException x) {
-            switch (name) {
-                case "SMPL_NZ_INT_UP":
-                    return new Stirling2021SimplifiedScalingRelationship("interface", "upper");
-                case "SMPL_NZ_INT_MN":
-                    return new Stirling2021SimplifiedScalingRelationship("interface", "mean");
-                case "SMPL_NZ_INT_LW":
-                    return new Stirling2021SimplifiedScalingRelationship("interface", "lower");
-                case "SMPL_NZ_CRU_UP":
-                    return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "upper");
-                case "SMPL_NZ_CRU_MN":
-                    return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "mean");
-                case "SMPL_NZ_CRU_LW":
-                    return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "lower");
-                case "Stirling_2021_SimplifiedNZ":
-                    return new Stirling2021SimplifiedScalingRelationship();
-                case "SimplifiedScalingRelationship":
-                    return new SimplifiedScalingRelationship();
-            }
+        switch (name) {
+            case "TMG_CRU_2017":
+                return new TMG2017CruScalingRelationship();
+            case "TMG_SUB_2017":
+                return new TMG2017SubScalingRelationship();
+            case "SMPL_NZ_INT_UP":
+                return new Stirling2021SimplifiedScalingRelationship("interface", "upper");
+            case "SMPL_NZ_INT_MN":
+                return new Stirling2021SimplifiedScalingRelationship("interface", "mean");
+            case "SMPL_NZ_INT_LW":
+                return new Stirling2021SimplifiedScalingRelationship("interface", "lower");
+            case "SMPL_NZ_CRU_UP":
+                return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "upper");
+            case "SMPL_NZ_CRU_MN":
+                return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "mean");
+            case "SMPL_NZ_CRU_LW":
+                return new Stirling2021SimplifiedScalingRelationship(0, "crustal", "lower");
+            case "Stirling_2021_SimplifiedNZ":
+                return new Stirling2021SimplifiedScalingRelationship();
+            case "SimplifiedScalingRelationship":
+                return new SimplifiedScalingRelationship();
         }
-        throw new IllegalArgumentException("Unknown scaling relationship " + name);
+        return ScalingRelationships.valueOf(name);
     }
 
     public FaultRegime getRegime() {
@@ -138,6 +140,10 @@ public class NZSHM22_ScalingRelationshipNode implements RupSetScalingRelationshi
             if (value.scale instanceof ScalingRelationships) {
                 out.name("u3Scale");
                 out.value(((ScalingRelationships) value.scale).name());
+            } else if (value.scale instanceof TMG2017CruScalingRelationship ||
+                    value.scale instanceof TMG2017SubScalingRelationship) {
+                out.name("u3Scale");
+                out.value(value.scale.getShortName());
             } else {
                 out.name("scale");
                 JsonAdapterHelper.writeAdapterValue(out, value.scale);

@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.calc.TMG2017CruScalingRelationship;
 import org.junit.Test;
 import org.opensha.commons.logicTree.JsonAdapterHelper;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
@@ -38,7 +39,15 @@ public class NZSHM22_ScalingRelationshipNodeTest {
     @Test
     public void testU3ScalingJson() throws IOException {
         NZSHM22_ScalingRelationshipNode node = new NZSHM22_ScalingRelationshipNode();
-        node.setScalingRelationship(ScalingRelationships.TMG_CRU_2017);
+        node.setScalingRelationship(ScalingRelationships.MEAN_UCERF3);
+
+        assertWriteReadJson(node);
+    }
+
+    @Test
+    public void testTMGScalingJson() throws IOException {
+        NZSHM22_ScalingRelationshipNode node = new NZSHM22_ScalingRelationshipNode();
+        node.setScalingRelationship(new TMG2017CruScalingRelationship());
 
         assertWriteReadJson(node);
     }
