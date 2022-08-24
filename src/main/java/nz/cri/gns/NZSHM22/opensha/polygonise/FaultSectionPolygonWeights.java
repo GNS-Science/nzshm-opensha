@@ -72,9 +72,11 @@ public class FaultSectionPolygonWeights {
             return -1;
         }
 
+        double targetAzimuth = LocationUtils.azimuth(loc(traceIntersection), gridPoint);
+
         // get intersections of the 100km long line with the edges of the polygon
         List<Geo> edgesIntersections = getAllSegIntersections(a, b, polygon);
-        Geo polygonIntersection = nearest(gridP, edgesIntersections);
+        Geo polygonIntersection = nearestAzimuth(targetAzimuth, loc(traceIntersection), edgesIntersections);
 
         if (polygonIntersection == null) {
             return -1;
@@ -142,13 +144,22 @@ public class FaultSectionPolygonWeights {
         return result;
     }
 
-    protected Geo nearest(Geo origin, List<Geo> candidates) {
-        double distance = Double.MAX_VALUE;
+    static double azimuthDifference(double a, double b) {
+        double diff = Math.abs(a - b);
+        while (diff > 180) {
+            diff = 360 - diff;
+        }
+        return diff;
+    }
+
+    protected Geo nearestAzimuth(double targetAzimuth, Location origin, List<Geo> candidates) {
+        double closestDist = Double.MAX_VALUE;
         Geo nearest = null;
         for (Geo candidate : candidates) {
-            double dist = origin.distanceKM(candidate);
-            if (dist < distance) {
-                distance = dist;
+            double azimuth = LocationUtils.azimuth(origin, loc(candidate));
+            double azDist = azimuthDifference(targetAzimuth, azimuth);
+            if (azDist < closestDist) {
+                closestDist = azDist;
                 nearest = candidate;
             }
         }

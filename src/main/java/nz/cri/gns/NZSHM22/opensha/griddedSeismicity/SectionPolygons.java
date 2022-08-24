@@ -641,8 +641,10 @@ public class SectionPolygons {
 	/* 
 	 * Returns an area that is the result of merging the two supplied. Returns
 	 * null if the merged Area is empty.
+	 *
+	 * Public for testing.
 	 */
-	private static Area merge(Area zone, Area dd) {
+	public static Area merge(Area zone, Area dd) {
 		Area area = new Area();
 		if (zone != null) area.add(zone);
 		if (dd != null) area.add(dd);

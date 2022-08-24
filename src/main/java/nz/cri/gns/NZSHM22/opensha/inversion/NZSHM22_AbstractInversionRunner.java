@@ -589,62 +589,64 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected void printRuptureExclusionStats(Set<Integer> exclusions, String prefix) {
 
-		System.out.println("Excluded " + exclusions.size() + " ruptures: " + exclusions);
+		if(false) {
 
-		Set<Integer> includedSections = new HashSet<>();
-		for (int i = 0; i < rupSet.getNumRuptures(); i++) {
-			if (!exclusions.contains(i)) {
-				includedSections.addAll(rupSet.getSectionsIndicesForRup(i));
-			}
-		}
-		Set<Integer> excludedSections = new HashSet<>();
-		for (int s = 0; s < rupSet.getNumSections(); s++) {
-			if (!includedSections.contains(s)) {
-				excludedSections.add(s);
-			}
-		}
+			System.out.println("Excluded " + exclusions.size() + " ruptures: " + exclusions);
 
-		System.out.println("Completely excluded " + excludedSections.size() + " sections.");
-
-		SimpleGeoJsonBuilder excludedGeoJsonBuilder = new SimpleGeoJsonBuilder();
-		SimpleGeoJsonBuilder includedGeoJsonBuilder = new SimpleGeoJsonBuilder();
-		for (FaultSection section : rupSet.getFaultSectionDataList()) {
-			if (excludedSections.contains(section.getSectionId())) {
-				FeatureProperties props = excludedGeoJsonBuilder.addFaultSection(section);
-				props.set(FeatureProperties.STROKE_COLOR_PROP, "red");
-				props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
-			} else {
-				FeatureProperties props = includedGeoJsonBuilder.addFaultSection(section);
-				props.set(FeatureProperties.STROKE_COLOR_PROP, "green");
-				props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
-			}
-		}
-		excludedGeoJsonBuilder.toJSON(prefix + "excludedSections.geoJson");
-		includedGeoJsonBuilder.toJSON(prefix + "includedSections.geoJson");
-
-		Map<String, Set<Integer>> parents = new HashMap<>();
-		for (FaultSection section : rupSet.getFaultSectionDataList()) {
-			if (!parents.containsKey(section.getParentSectionName())) {
-				parents.put(section.getParentSectionName(), new HashSet<>());
-			}
-			parents.get(section.getParentSectionName()).add(section.getSectionId());
-		}
-		Set<String> excludedParents = new HashSet<>();
-		for (String p : parents.keySet()) {
-			boolean included = false;
-			for (int s : parents.get(p)) {
-				if (includedSections.contains(s)) {
-					included = true;
-					break;
+			Set<Integer> includedSections = new HashSet<>();
+			for (int i = 0; i < rupSet.getNumRuptures(); i++) {
+				if (!exclusions.contains(i)) {
+					includedSections.addAll(rupSet.getSectionsIndicesForRup(i));
 				}
 			}
-			if (!included) {
-				excludedParents.add(p);
+			Set<Integer> excludedSections = new HashSet<>();
+			for (int s = 0; s < rupSet.getNumSections(); s++) {
+				if (!includedSections.contains(s)) {
+					excludedSections.add(s);
+				}
 			}
+
+			System.out.println("Completely excluded " + excludedSections.size() + " sections.");
+
+			SimpleGeoJsonBuilder excludedGeoJsonBuilder = new SimpleGeoJsonBuilder();
+			SimpleGeoJsonBuilder includedGeoJsonBuilder = new SimpleGeoJsonBuilder();
+			for (FaultSection section : rupSet.getFaultSectionDataList()) {
+				if (excludedSections.contains(section.getSectionId())) {
+					FeatureProperties props = excludedGeoJsonBuilder.addFaultSection(section);
+					props.set(FeatureProperties.STROKE_COLOR_PROP, "red");
+					props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
+				} else {
+					FeatureProperties props = includedGeoJsonBuilder.addFaultSection(section);
+					props.set(FeatureProperties.STROKE_COLOR_PROP, "green");
+					props.set(FeatureProperties.STROKE_WIDTH_PROP, 4);
+				}
+			}
+			excludedGeoJsonBuilder.toJSON(prefix + "excludedSections.geoJson");
+			includedGeoJsonBuilder.toJSON(prefix + "includedSections.geoJson");
+
+			Map<String, Set<Integer>> parents = new HashMap<>();
+			for (FaultSection section : rupSet.getFaultSectionDataList()) {
+				if (!parents.containsKey(section.getParentSectionName())) {
+					parents.put(section.getParentSectionName(), new HashSet<>());
+				}
+				parents.get(section.getParentSectionName()).add(section.getSectionId());
+			}
+			Set<String> excludedParents = new HashSet<>();
+			for (String p : parents.keySet()) {
+				boolean included = false;
+				for (int s : parents.get(p)) {
+					if (includedSections.contains(s)) {
+						included = true;
+						break;
+					}
+				}
+				if (!included) {
+					excludedParents.add(p);
+				}
+			}
+
+			System.out.println("Completely excluded " + excludedParents.size() + " faults: " + excludedParents);
 		}
-
-		System.out.println("Completely excluded " + excludedParents.size() + " faults: " + excludedParents);
-
 	}
 
 	protected IntegerSampler createSampler() {

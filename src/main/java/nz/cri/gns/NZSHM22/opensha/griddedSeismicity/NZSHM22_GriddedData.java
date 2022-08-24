@@ -68,7 +68,9 @@ public class NZSHM22_GriddedData {
         this.filename = original.filename;
         if (step >= original.getStep()) {
             upSample(original);
-            normaliseRegion(getNativeRegion());
+            if (step != original.getStep()) {
+                normaliseRegion(getNativeRegion());
+            }
         } else if (step < original.getStep()) {
             downSample(original);
         }
@@ -124,8 +126,8 @@ public class NZSHM22_GriddedData {
         return csv;
     }
 
-    public void addToCsv(CSVFile<Double> csv){
-        for(List<Double> row : csv) {
+    public void addToCsv(CSVFile<Double> csv) {
+        for (List<Double> row : csv) {
             row.add(getValue(new Location(row.get(0), row.get(1))));
         }
     }
@@ -154,7 +156,7 @@ public class NZSHM22_GriddedData {
     }
 
 
-    public Location snapToGrid(Location location){
+    public Location snapToGrid(Location location) {
         return new Location(
                 keyToLatLonComp(spacing, latLonCompToKey(step, location.getLatitude())),
                 keyToLatLonComp(spacing, latLonCompToKey(step, location.getLongitude())));
