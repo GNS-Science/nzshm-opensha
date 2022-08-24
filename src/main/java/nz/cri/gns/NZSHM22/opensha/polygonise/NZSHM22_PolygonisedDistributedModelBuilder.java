@@ -4,6 +4,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
+import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
@@ -85,6 +86,27 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         return result;
     }
 
+    private void printGridPoints(int section, NZSHM22_GriddedData origGrid, NZSHM22_GriddedData resultGrid){
+        FaultSectionPolygonWeights polyWeights = polygonWeights.get(section);
+        GriddedRegion polyRegion = new GriddedRegion(polyWeights.originalPoly, origGrid.getSpacing(), GriddedRegion.ANCHOR_0_0);
+        for (Location gridPoint : polyRegion.getNodeList()) {
+            System.out.println(gridPoint.getLatitude() +", " + gridPoint.getLongitude()+", "+ polyWeights.polygonWeight(gridPoint) +", "+ origGrid.getValue(gridPoint)+ ", " + resultGrid.getValue(gridPoint));
+        }
+    }
+
+    private void geojsonGrid(int section, NZSHM22_GriddedData grid, NZSHM22_GriddedData resultGrid){
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        FaultSectionPolygonWeights polyWeights = polygonWeights.get(section);
+        GriddedRegion polyRegion = new GriddedRegion(polyWeights.originalPoly, grid.getSpacing(), GriddedRegion.ANCHOR_0_0);
+        for (Location gridPoint : polyRegion.getNodeList()) {
+            builder.addLocation(gridPoint,
+                    "value", ""+grid.getValue(gridPoint),
+                    "resultValue", ""+resultGrid.getValue(gridPoint),
+                    "weight", ""+polyWeights.polygonWeight(gridPoint));
+        }
+        builder.toJSON("polypoints.geojson");
+    }
+
     protected NZSHM22_GriddedData scalePDF(FaultSystemRupSet rupSet) {
         NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
@@ -125,7 +147,8 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
                     // not in a polygon
                     newValues.add(oldValue);
                 } else {
-                    newValues.add(oldValue * d / sumOfAllDs);
+//                    newValues.add(oldValue * d / sumOfAllDs);
+                    newValues.add(oldValue * d);
                 }
             }
         }
