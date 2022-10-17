@@ -13,6 +13,7 @@ import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.DataUtils;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.GridSourceProvider;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -260,6 +261,11 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 	public double getFracNormal(int idx) {
 		checkInitFocalMechGrids();
 		return fracNormal[idx];
+	}
+
+	@Override
+	public GridSourceProvider newInstance(Map<Integer, IncrementalMagFreqDist> nodeSubSeisMFDs, Map<Integer, IncrementalMagFreqDist> nodeUnassociatedMFDs, double[] fracStrikeSlip, double[] fracNormal, double[] fracReverse) {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	private synchronized static void checkInitFocalMechGrids() {
