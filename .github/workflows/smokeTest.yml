@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: GNS-Science/opensha
-          ref: oakley/upstream
+          ref: 0e87f1fe74decff73181324f3ad59a5908a6ed5c
           path: opensha
 
       - uses: actions/checkout@v2

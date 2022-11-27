@@ -7,6 +7,8 @@ on:
   push:
   pull_request:
     branches: [ master ]
+  schedule:
+    - cron: '30 22 * * 7'
 
 jobs:
   build:
@@ -15,11 +17,20 @@ jobs:
 
     steps:
 
-    - name: Clone opensha
+    - name: Clone opensha fork
+      if: github.event.schedule != '30 22 * * 7'
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
         ref: fix/rup-normalization
+        path: opensha
+
+    - name: Clone opensha
+      if: github.event.schedule == '30 22 * * 7'
+      uses: actions/checkout@v2
+      with:
+        repository: opensha/opensha
+        ref: master
         path: opensha
 
     - uses: actions/checkout@v2
