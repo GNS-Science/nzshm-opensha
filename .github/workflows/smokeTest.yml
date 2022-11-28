@@ -3,7 +3,10 @@
 
 name: Java SmokeTest with Gradle
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  schedule:
+      - cron: '20 15 * * 0'
 
 jobs:
   build:
@@ -12,11 +15,20 @@ jobs:
 
     steps:
 
-      - name: Clone opensha
+      - name: Clone opensha fork
+        if: github.event.schedule != '20 15 * * 0'
         uses: actions/checkout@v2
         with:
           repository: GNS-Science/opensha
-          ref: 0e87f1fe74decff73181324f3ad59a5908a6ed5c
+          ref: fix/rup-normalization
+          path: opensha
+
+      - name: Clone opensha
+        if: github.event.schedule == '20 15 * * 0'
+        uses: actions/checkout@v2
+        with:
+          repository: opensha/opensha
+          ref: master
           path: opensha
 
       - uses: actions/checkout@v2
