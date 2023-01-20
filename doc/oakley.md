@@ -6,7 +6,7 @@ The basic steps are
 
 - Using a fault model, generate a set of ruptures across these faults.
 - Run the inversion over the rupture set.
-- It's possible to generate hazards based on the solution. However, in practice, GNS uses OpenQuake to generate hazards.
+- It's possible to generate hazards based on the solution. However, in practice, GNS uses [OpenQuake](https://github.com/gem/oq-engine) to generate hazards.
 
 ## Generating Ruptures
 
@@ -93,8 +93,32 @@ The actual measured MFDs of the solution are a major tool for scientists to judg
 
 ### Polygons
 
+Fault polygons are mostly relevant for [background seismicity pdfs](#background-seismicity). The polygon of a fault section basically describes the area of influence it has. 
+
+The simplest polygon is the fault section surface vertically projected onto the ground. This polygon is only ever on one side of the fault trace, and there's a UCERF3 algorithm to add a smaller polygon on the other side of the trace. NZSHM22 also ensures there is a minimum polygon x km wide on bth sides of the trace. This happens in `nz.cri.gns.NZSHM22.opensha.griddedSeismicity.SectionPolygons.applyBuffer()`
+
+`SectionPolygons` is, like several other classes, copied from opensha and then modified for NZ purposes. We tried to avoid doing this as much as possible, but sometimes inheritance is not suitable for our purposes. On top of that, many of these classes are no longer relevant for UCERF4 and are no longer maintained or are even deleted.
+
+As mentioned [above](#background-seismicity), polygons are used to determine the area of influence of a fault vs background seismicity. UCERF3 assumes that in the polygon, there's only the fault seismicity, and outside, there's only background. NZSHM22 uses the `NZSHM22_PolygonisedDistributedModelBuilder` to attenuate background and fault influence gradually across the polygons. This flows both into the MFD constraints as well as into a re-built background seismicity pdf file, which is then fed into the OpenQuake hazard calculation. See `NZSHM22_PolygonisedDistributedModel` for how it is written into the archive container. 
+
+### Grids
+
+Some model data is gridded, such as background seismicity. As with UCERF3, grids are anchored at lat/lon 0 and each node is 0.1 degrees apart from its neighbours. Grids are stored as CSV files.  For the [polygonizer](#polygons), we can scale grid resolution up and down.
+
+The NZSHM22 implementation of grids is in `NZSHM22_GriddedData`.
+
+### Geometry
+
+Opensha uses `java.awt.geom` for geometric operations. For historic reasons, this cannot easily be changed (reproducibility of old results). AWT is not meant for this type of application, and opensha sometimes runs into problems - especially when merging polygons. There is some code to try and retry in different ways.
+
+The polygonizer does not need to respect reproducability and uses the OpenMap library for geometric operations. 
+
 ## Hazard
-## Grids
+
+Hazard calculation still works, but since NZSHM22 used OpenQuake for hazard calculation, it is obsolete.
+
+Hazard takes the result of the inversion, the background seismicity, and additional models and calculates different hazards at certain locations. It can for example answer the question, "what is the probability if a ground motion movement exceeding X in the next 50 years at this location?" 
+
 
 ## Containers
 ## Reports
