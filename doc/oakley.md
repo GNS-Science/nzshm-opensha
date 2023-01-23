@@ -111,7 +111,20 @@ The NZSHM22 implementation of grids is in `NZSHM22_GriddedData`.
 
 Opensha uses `java.awt.geom` for geometric operations. For historic reasons, this cannot easily be changed (reproducibility of old results). AWT is not meant for this type of application, and opensha sometimes runs into problems - especially when merging polygons. There is some code to try and retry in different ways.
 
-The polygonizer does not need to respect reproducability and uses the OpenMap library for geometric operations. 
+The polygonizer does not need to respect reproducibility and uses the OpenMap library for geometric operations.
+
+### LogicTrees
+
+Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in opensha in order to configure a group of inversion runs. However, in NZSHM22 they are only used to model the serialisable part of the configuration for a *single* inversion run. The tree nodes for a single run are called a logic tree branch.
+
+The NZSHM22 implementations of `LogicTreeNode` are mainly found in the `enumTreeBranches` package. Most of these are enums. Originally, the UCERF3 enum tree nodes caused problems for us because we needed additional options, and enums cannot be extended. This caused huge problems for us for serialisation and for running the inversion before Kevin made opensha more generic and less California-specific.
+
+### Levels of Configuration
+
+At the moment, we have several levels of configuration when running an inversion:
+
+- The runner provides methods to configure an inversion run, and it also holds the plain configuration values in its member variables. Some of these are LogicTreeNodes
+- *** oakley got to here ***
 
 ## Hazard
 
@@ -119,6 +132,20 @@ Hazard calculation still works, but since NZSHM22 used OpenQuake for hazard calc
 
 Hazard takes the result of the inversion, the background seismicity, and additional models and calculates different hazards at certain locations. It can for example answer the question, "what is the probability if a ground motion movement exceeding X in the next 50 years at this location?" 
 
-
 ## Containers
+
+Rupture sets and inversion solutions are stored as module containers that are saved as zip files on disk. New types of data can be added as modules to the containers and are serialised and deserialised appropriately. 
+
+This modular system was conceived by Kevin in response to the inflexible structure of the UCERF3 archives that made it hard for NZSHM22-specific features to be implemented. The old format was binary with hard-coded serialisation and deserialisation. The modular format is agnostic of which modules need to be in the container and how they are written into the archive. It also provides an inheritance mechanism to fall back on more generic classes if the specific module class cannot be found.
+
+In the archive file, containers that are added to a container are listed in `modules.json`. A module can be a container itself. Ruptures and solutions are examples of this, and they are usually found in the folders `/ruptures` and `/solution`. Most modules are serialised as json or CSV files. There are custom NZSHM22 modules such as `NZSHM22_PolygonisedDistributedModel`, `RegionSections`, and `NZSHM22_CrustalInversionTargetMFDs`.
+
+Rupture generation and inversion create generic `FaultSystemRupSet` and `FaultSystemSolution` containers. However, in order to run the inversion, we unpack the rupture set and re-pack it as an `NZSHM22_InversionFaultSystemRuptSet`. This is because we add a few modules and also manipulate the existing data, such as running the [polygoniser](#polygons) over the [pdfs](#background-seismicity), and most importantly create the [MFDs](#mfds). 
+
+On top of that, our inversion still extends the UCERF3 inversion, which historically relies on methods on the rupture set container that are not present in the generic container.
+
+
+
+
+
 ## Reports
