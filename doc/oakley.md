@@ -115,16 +115,20 @@ The polygonizer does not need to respect reproducibility and uses the OpenMap li
 
 ### LogicTrees
 
-Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in opensha in order to configure a group of inversion runs. However, in NZSHM22 they are only used to model the serialisable part of the configuration for a *single* inversion run. The tree nodes for a single run are called a logic tree branch.
+Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in opensha in order to configure a group of inversion runs. However, NZSHM22 only uses logic tree branches, i.e. the configuration for a single inversion run. The whole tree is realised outside of the Java code in runzi. There is not necessarily a version of each of the scientists' logic tree nodes in the code.
+
+The logic tree branch is attached to the rupture set container and is thus available to each stage of the inversion preparation and the actual inversion. It's a handy way of passing the configuration to parts of the code.
 
 The NZSHM22 implementations of `LogicTreeNode` are mainly found in the `enumTreeBranches` package. Most of these are enums. Originally, the UCERF3 enum tree nodes caused problems for us because we needed additional options, and enums cannot be extended. This caused huge problems for us for serialisation and for running the inversion before Kevin made opensha more generic and less California-specific.
 
 ### Levels of Configuration
 
-At the moment, we have several levels of configuration when running an inversion:
+At the moment, we have several levels of configuration and inputs when running an inversion:
 
-- The runner provides methods to configure an inversion run, and it also holds the plain configuration values in its member variables. Some of these are LogicTreeNodes
-- *** oakley got to here ***
+- The runner provides methods to configure an inversion run, and it also holds the plain configuration values in its member variables. Some of these are LogicTreeNodes.
+- A part of the configuration gets put into the logic tree branch and serialised in the resulting archive.
+- The runner creates an `AbstractInversionConfiguration` instance that is a combination of input configuration and generated constraints.
+- This configuration then gets used by an `InversionInputGenerator` which makes inversion constraints available to the inversion process.
 
 ## Hazard
 
@@ -144,8 +148,13 @@ Rupture generation and inversion create generic `FaultSystemRupSet` and `FaultSy
 
 On top of that, our inversion still extends the UCERF3 inversion, which historically relies on methods on the rupture set container that are not present in the generic container.
 
-
-
-
-
 ## Reports
+
+Opensha provides extensive reporting functionality for rupture sets and inversion solutions. Use `NZSHM22_ReportPageGen` to generate reports. This report generator can be configured to include only certain types of report as some of the reports can take a long time.
+
+## Python Gateway
+
+As mentioned above, [logic trees](#logictrees) are actually run by [runzi](https://github.com/GNS-Science/nzshm-runzi), a Python application. This is done via the `NZSHM22_PythonGateway` which gives access to the different rupture generators, inversion runners, report builder, etc.
+
+This can be tested via Java through the `PythonGatewayRunner`.
+
