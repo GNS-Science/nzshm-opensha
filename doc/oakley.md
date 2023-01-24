@@ -1,12 +1,15 @@
 ## Overview
 
-This repo is mainly used to generate grand inversion solutions that indicate the probability of a fault rupturing. It is a fork of [opensha](https://github.com/opensha/opensha) which contained the [UCERF3](http://wgcep.org/UCERF3.html) code when we started, and most of the UCERF4 code when we finished with NZSHM22.
+This repo is mainly used to generate grand inversion solutions that indicate the probability of a fault rupturing. It is a ~fork~ of [opensha](https://github.com/opensha/opensha) which contained the [UCERF3](http://wgcep.org/UCERF3.html) code when we started, and most of the UCERF4 code when we finished with NZSHM22.
 
 The basic steps are
 
 - Using a fault model, generate a set of ruptures across these faults.
 - Run the inversion over the rupture set.
 - It's possible to generate hazards based on the solution. However, in practice, GNS uses [OpenQuake](https://github.com/gem/oq-engine) to generate hazards.
+
+_### opensha , UC, Kevin credits etc_
+
 
 ## Generating Ruptures
 
@@ -59,17 +62,21 @@ We have two ways of generating solutions:
 
 A number of other models flow into the inversion as constraints, such as background seismicity or paleo rates:
 
+### Slip Rates
+ - _where/what they are and maybe some guidance re file formats (?!)_
+ - _when things need to be consistent timings/rates_
+
 ### Paleo Rates
 
 Prehistoric rates are attached as constraints to the fault section nearest to the lat/lon specified.
 
 This is to ensure the solution fits better to prehistoric earthquake rates.
 
-Paleo rates files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoRates`.
+Paleo rates files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoRates` (Enum).
 
 ### Paleo Probability Model
 
-Paleo probabilities files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoProbabilityModel`.
+Paleo probabilities files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoProbabilityModel` (Enum).
 
 ### Background Seismicity
 
@@ -85,7 +92,7 @@ For a while, background seismicity was handled differently in the TVZ (Taupō Vo
 
 [Magnitude-frequency distributions](https://hazard.openquake.org/gem/methods/mfd/) are used to constrain the solution to fit a certain magnitude profile. For example, we want low magnitude ruptures to have larger rates than high magnitude ruptures.
 
-The main code for this is in `NZSHM22_CrustalInversionTargetMFDs`. NZSHM22 uses MFDs that are based on Gutenberg-Richter. There are global MFDs as well as MFDs attached as constraints to individual fault sections. 
+The main code for this is in `NZSHM22_CrustalInversionTargetMFDs` and _`NZSHM22_SUBXXXTargetMFDs`_. NZSHM22 uses MFDs that are based on Gutenberg-Richter. There are global MFDs as well as MFDs attached as constraints to individual fault sections. 
 
 MFDs inside the TVZ were handled differently at some stage (see [background seismicity](#background-seismicity)), so there's legacy code for this still visible.
 
@@ -99,7 +106,9 @@ The simplest polygon is the fault section surface vertically projected onto the 
 
 `SectionPolygons` is, like several other classes, copied from opensha and then modified for NZ purposes. We tried to avoid doing this as much as possible, but sometimes inheritance is not suitable for our purposes. On top of that, many of these classes are no longer relevant for UCERF4 and are no longer maintained or are even deleted.
 
-As mentioned [above](#background-seismicity), polygons are used to determine the area of influence of a fault vs background seismicity. UCERF3 assumes that in the polygon, there's only the fault seismicity, and outside, there's only background. NZSHM22 uses the `NZSHM22_PolygonisedDistributedModelBuilder` to attenuate background and fault influence gradually across the polygons. This flows both into the MFD constraints as well as into a re-built background seismicity pdf file, which is then fed into the OpenQuake hazard calculation. See `NZSHM22_PolygonisedDistributedModel` for how it is written into the archive container. 
+As mentioned [above](#background-seismicity), polygons are used to determine the area of influence of a fault vs background seismicity. UCERF3 assumes that in the polygon, there's only the fault seismicity, and outside, there's only background. NZSHM22 uses the `NZSHM22_PolygonisedDistributedModelBuilder` to attenuate background and fault influence gradually across the polygons. This flows both into the MFD constraints as well as into a re-built background seismicity pdf file, which is then fed into the OpenQuake hazard calculation. See `NZSHM22_PolygonisedDistributedModel` for how it is written into the archive container.
+
+_insert link here to paper CDC_
 
 ### Grids
 
@@ -115,17 +124,20 @@ The polygonizer does not need to respect reproducibility and uses the OpenMap li
 
 ### LogicTrees
 
-Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in opensha in order to configure a group of inversion runs. However, NZSHM22 only uses logic tree branches, i.e. the configuration for a single inversion run. The whole tree is realised outside of the Java code in runzi. There is not necessarily a version of each of the scientists' logic tree nodes in the code.
+Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in opensha in order to configure a group of inversion runs. However, NZSHM22 only uses logic tree branches, i.e. the configuration for a single inversion run. The whole tree is realised outside of the Java code in runzi. 
+
+NB: There is not necessarily a version of each of the scientists' logic tree nodes in the code, _i.e there may some potential disparities between the LTB defined in a module and what is required to run an Inversion. TODO reconcile/check these._
 
 The logic tree branch is attached to the rupture set container and is thus available to each stage of the inversion preparation and the actual inversion. It's a handy way of passing the configuration to parts of the code.
 
 The NZSHM22 implementations of `LogicTreeNode` are mainly found in the `enumTreeBranches` package. Most of these are enums. Originally, the UCERF3 enum tree nodes caused problems for us because we needed additional options, and enums cannot be extended. This caused huge problems for us for serialisation and for running the inversion before Kevin made opensha more generic and less California-specific.
 
-### Levels of Configuration
+### Levels of Inversion Configuration
 
 At the moment, we have several levels of configuration and inputs when running an inversion:
 
-- The runner provides methods to configure an inversion run, and it also holds the plain configuration values in its member variables. Some of these are LogicTreeNodes.
+- The Runner (_link_to_code_) provides methods to configure an inversion run, and it also holds the plain configuration values in its member variables. Some of these are LogicTreeNodes.
+- _link to #Python Gateway_
 - A part of the configuration gets put into the logic tree branch and serialised in the resulting archive.
 - The runner creates an `AbstractInversionConfiguration` instance that is a combination of input configuration and generated constraints.
 - This configuration then gets used by an `InversionInputGenerator` which makes inversion constraints available to the inversion process.
@@ -136,7 +148,7 @@ Hazard calculation still works, but since NZSHM22 used OpenQuake for hazard calc
 
 Hazard takes the result of the inversion, the background seismicity, and additional models and calculates different hazards at certain locations. It can for example answer the question, "what is the probability if a ground motion movement exceeding X in the next 50 years at this location?" 
 
-## Containers
+## Containers _and Archive Files_
 
 Rupture sets and inversion solutions are stored as module containers that are saved as zip files on disk. New types of data can be added as modules to the containers and are serialised and deserialised appropriately. 
 
@@ -150,7 +162,7 @@ On top of that, our inversion still extends the UCERF3 inversion, which historic
 
 ## Reports
 
-Opensha provides extensive reporting functionality for rupture sets and inversion solutions. Use `NZSHM22_ReportPageGen` to generate reports. This report generator can be configured to include only certain types of report as some of the reports can take a long time.
+Opensha provides extensive reporting functionality for rupture sets and inversion solutions. Use `NZSHM22_ReportPageGen` to generate reports. This report generator can be configured to include only certain types of report as some of the reports can take a long time. _TODO: are we using all Kevins latest report views??_
 
 ## Python Gateway
 
