@@ -81,8 +81,13 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 	SBD_0_2_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
 			"hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv", 10000),
 
+	// this model is mislabled 30km, it has 15km tiles
 	SBD_0_1_PUY_30("Puysegur, 30km, 50% coupling",
 			"puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000),
+	// dip direction for SBD_01_PUY_30 was to the west, causing the fault tiles to be "louvered" off the sudcution interface surface
+	// SBD_0_2_PUY_15 corrects the dip direction (right-hand rule) and indicates the correct tile size (15km)
+	SBD_0_2_PUY_15("Puysegur, 15km, 50% coupling, corrected dip direction",
+			"puysegur_tiles_15km_maxd60km_halfcoupled_dipcorr.csv", 10000),
 
 	// the following three FaultModels have been replaced by DeformationModels
 
