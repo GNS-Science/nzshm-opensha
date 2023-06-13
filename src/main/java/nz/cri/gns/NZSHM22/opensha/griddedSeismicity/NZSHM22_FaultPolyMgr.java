@@ -75,6 +75,11 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
     }
 
     @Override
+    public Map<Integer, Double> getScaledSectFracsOnNode(int nodeIdx) {
+        return sectInNodePartic.column(nodeIdx);
+    }
+
+    @Override
     public Map<Integer, Double> getNodeFractions(int sectIdx) {
         return nodeInSectPartic.row(sectIdx);
     }
