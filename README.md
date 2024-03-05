@@ -1,5 +1,5 @@
-# nshm-nz-opensha
-NSHM NZ Programme opensha applications (patterned on opensha-ucerf3 &amp; opensha-dev)
+# nzshm-opensha
+[NZ NSHM Programme](https://www.gns.cri.nz/research-projects/national-seismic-hazard-model/) opensha applications (patterned on the UCERF3 part of https://github.com/opensha/opensha)
 
 ## Priorities:
 
@@ -12,12 +12,12 @@ Pre-requirements: `git` and `jdk11`
 
  ```bash
 git clone https://github.com/GNS-Scienc/opensha.git &&\
-git clone https://github.com/GNS-Science/nshm-nz-opensha.git
+git clone https://github.com/GNS-Science/nzshm-opensha.git
  ```
 
 You might need to check out the correct branch for the `opensha` project. The branch name will be in `gradle.yml` in the
-`nshm-nz-opensha` project as the `ref` of the `Clone opensha` step. As of writing, this is
-`fix/rup-normalization`.
+`nzshm-opensha` project as the `ref` of the `Clone opensha` step. As of writing, this is
+`fix/rup-normalization-2024`.
 
 ```bash
 cd opensha
@@ -27,7 +27,7 @@ git checkout fix/rup-normalization
 ### Now you can jump into this project
 
  ```bash
- cd nshm-nz-opensha
+ cd nzshm-opensha
  ```
 
 ### and build ....
