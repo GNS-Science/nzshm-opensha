@@ -8,33 +8,44 @@ NSHM NZ Programme opensha applications (patterned on opensha-ucerf3 &amp; opensh
 
 ## Getting started 
 
- ```
-git clone https://github.com/opensha/opensha.git &&\
+Pre-requirements: `git` and `jdk11`
+
+ ```bash
+git clone https://github.com/GNS-Scienc/opensha.git &&\
 git clone https://github.com/GNS-Science/nshm-nz-opensha.git
  ```
 
+You might need to check out the correct branch for the `opensha` project. The branch name will be in `gradle.yml` in the
+`nshm-nz-opensha` project as the `ref` of the `Clone opensha` step. As of writing, this is
+`fix/rup-normalization`.
+
+```bash
+cd opensha
+git checkout fix/rup-normalization
+```
+
 ### Now you can jump into this project
 
- ```
+ ```bash
  cd nshm-nz-opensha
  ```
 
 ### and build ....
 
- ```
+ ```bash
  .\gradlew build
  ```
 
 ### or test just this code
 
-```
+```bash
  .\gradlew localTests --info
 ```
  
 Test reports are found at  `./build/reports/tests/localTests/index.html`
 
 ### or test everything (slow....)
-```
+```bash
  .\gradlew test
 ```
 
