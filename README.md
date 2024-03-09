@@ -11,7 +11,7 @@
 Pre-requirements: `git` and `jdk11`
 
  ```bash
-git clone https://github.com/GNS-Scienc/opensha.git &&\
+git clone https://github.com/GNS-Science/opensha.git &&\
 git clone https://github.com/GNS-Science/nzshm-opensha.git
  ```
 
