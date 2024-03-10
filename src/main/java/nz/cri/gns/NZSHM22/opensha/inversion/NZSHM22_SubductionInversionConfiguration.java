@@ -9,7 +9,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 /**
  * This represents all of the inversion configuration parameters specific to an
@@ -180,7 +179,10 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 			
 			// Made local copy of adjustStartingModel as it's private in UCERF3InversionConfiguration
 			minimumRuptureRateBasis = adjustStartingModel(
-					UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet, targetOnFaultMFD), mfdConstraints, rupSet, true);
+					getSmoothStartingSolution(rupSet, targetOnFaultMFD),
+					mfdConstraints,
+					rupSet,
+					true);
 
 			if(initialSolution != null) {
 				Preconditions.checkArgument(rupSet.getNumRuptures() == initialSolution.length, "Initial solution is for the wrong number of ruptures.");
@@ -323,5 +325,95 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 		
 		return initialRupModel;
 	}
-	
+
+	/**
+	 * --- This method was copied from UCERF3 in order to be able to modify it ---
+	 * This creates a smooth starting solution, which partitions the available rates from the target MagFreqDist
+	 * to each rupture in the rupture set.  So the total rate of all ruptures in a given magnitude bin as defined by the MagFreqDist
+	 * is partitioned among all the ruptures with a magnitude in that bin, in proportion to the minimum slip rate section for each rupture.
+	 * NaN slip rates are treated as zero (so any ruptures with a NaN or 0 slip rate section will have a zero rate in the returned starting solution).
+	 *
+	 * Making rates proportional to the minimum slip rate section of a rupture was found to work better than making the rates proportional to the mean slip rate
+	 * for each rupture.  Also, the current code does not account for overlap of ruptures.  This was tested and did not lead to better starting solutions,
+	 * and in addition had a great computational cost.
+	 *
+	 * @param faultSystemRupSet, targetMagFreqDist
+	 * @return initial_state
+	 */
+	public static double[] getSmoothStartingSolution(
+			FaultSystemRupSet faultSystemRupSet, IncrementalMagFreqDist targetMagFreqDist) {
+
+		double[] rupMeanMag = faultSystemRupSet.getMagForAllRups();
+		double[] sectSlipRateReduced = faultSystemRupSet.getSlipRateForAllSections();
+		int numRup = rupMeanMag.length;
+		double[] initial_state = new double[numRup];  // starting model to be returned
+		double[] minimumSlipRate = new double[numRup];  // mean slip rate per section for each rupture
+
+		// Calculate minimum slip rates for ruptures
+		// If there are NaN slip rates, treat them as 0
+		for (int rup=0; rup<numRup; rup++) {
+			List<Integer> sects = faultSystemRupSet.getSectionsIndicesForRup(rup);
+			minimumSlipRate[rup] = Double.POSITIVE_INFINITY;
+			for (int i=0; i<sects.size(); i++) {
+				int sect = sects.get(i);
+				if (Double.isNaN(sectSlipRateReduced[sect])  || sectSlipRateReduced[sect] == 0)  {
+					minimumSlipRate[rup] = 0;
+				} else 	if (sectSlipRateReduced[sect] < minimumSlipRate[rup]) {
+					minimumSlipRate[rup] = sectSlipRateReduced[sect];
+				}
+			}
+		}
+
+
+		// Find magnitude distribution of ruptures (as discretized)
+		double minMag = Math.floor(faultSystemRupSet.getMinMag()*10.0)/10.0;
+		double maxMag = Math.ceil(faultSystemRupSet.getMaxMag()*10.0)/10.0;
+		IncrementalMagFreqDist magHist = new IncrementalMagFreqDist(minMag,(int) Math.round((maxMag-minMag)*10+1),0.1);
+		magHist.setTolerance(0.05);
+		for(int rup=0; rup<numRup;rup++) {
+			// Each bin in the magnitude histogram should be weighted by the mean slip rates of those ruptures
+			// (since later we weight the ruptures by the mean slip rate, which would otherwise result in
+			// starting solution that did not match target MFD if the mean slip rates per rupture
+			// differed between magnitude bins)
+			if (minimumSlipRate[rup]!=0)
+				magHist.add(rupMeanMag[rup], minimumSlipRate[rup]);  // each bin
+			else magHist.add(rupMeanMag[rup], 1E-4);
+		}
+
+
+		// Set up initial (non-normalized) target MFD rates for each rupture, normalized by meanSlipRate
+		for (int rup=0; rup<numRup; rup++) {
+			initial_state[rup] = targetMagFreqDist.getClosestYtoX(rupMeanMag[rup]) * minimumSlipRate[rup] / magHist.getClosestYtoX(rupMeanMag[rup]);
+			if (Double.isNaN(initial_state[rup]) || Double.isInfinite(initial_state[rup]))
+				throw new IllegalStateException("Pre-normalization initial_state["+rup+"] = "+initial_state[rup]);
+		}
+
+
+		// Find normalization for all ruptures (so that MFD matches target MFD normalization)
+		// Can't just add up all the mag bins to normalize because some bins don't have ruptures.
+		// Instead let's choose one mag bin (that we know has rups) that has rups and normalize
+		// all bins by the amount it's off:
+		double magNorm = 8.1;
+		double totalEventRate=0;
+		for (int rup=0; rup<numRup; rup++) {
+			if (rupMeanMag[rup]>magNorm && rupMeanMag[rup]<=magNorm+0.1)
+				totalEventRate += initial_state[rup];
+		}
+		double normalization = targetMagFreqDist.getClosestYtoX(magNorm)/totalEventRate;
+		if (targetMagFreqDist.getClosestYtoX(magNorm)==0)
+			throw new IllegalStateException("targetMagFreqDist.getClosestY(magNorm) = 0.  Check rupSet.getInversionMFDs().getTargetOnFaultSupraSeisMFD()");
+		// Adjust rates by normalization to match target MFD total event rates
+		for (int rup=0; rup<numRup; rup++) {
+			initial_state[rup]=initial_state[rup]*normalization;
+			if (Double.isNaN(initial_state[rup]) || Double.isInfinite(initial_state[rup]))
+				throw new IllegalStateException("initial_state["+rup+"] = "+initial_state[rup]
+						+" (norm="+normalization+", totalEventRate="+totalEventRate+")");
+		}
+
+
+		return initial_state;
+
+	}
+
+
 }
