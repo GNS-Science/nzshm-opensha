@@ -19,6 +19,7 @@ import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
@@ -106,6 +107,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 	protected NZSHM22_ScalingRelationshipNode scalingRelationship;
 	protected double[] initialSolution;
+	protected double[] variablePerturbationBasis;
 	protected boolean excludeRupturesBelowMinMag = false;
 	protected boolean unmodifiedSlipRateStdvs = false;
 
@@ -439,6 +441,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return this;
 	}
 
+	/**
+	 * Takes an existing solution file and uses the rates as the variablePerturbationBasis.
+	 * If a variable perturbation function is used and this array is not set, one will be
+	 * calculated.
+	 * @param path a solution archive or rates CSV
+	 * @return this runner
+	 * @throws IOException
+	 */
+	public NZSHM22_AbstractInversionRunner setVariablePerturbationBasis(String path) throws IOException {
+		variablePerturbationBasis = loadRates(path);
+		return this;
+	}
+
 	protected void setupLTB(NZSHM22_LogicTreeBranch branch){
 		if (scalingRelationship != null) {
 			branch.clearValue(NZSHM22_ScalingRelationshipNode.class);
@@ -762,6 +777,14 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 
 		tsa.setPerturbationFunc(perturbationFunction);
+		if (perturbationFunction.isVariable()){
+			double[] basis = variablePerturbationBasis;
+			if (basis == null) {
+				basis = Inversions.getDefaultVariablePerturbationBasis(rupSet);
+			}
+			tsa.setVariablePerturbationBasis(basis);
+		}
+
 		tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
 		if (!(this.coolingSchedule == null))
 			tsa.setCoolingFunc(this.coolingSchedule);
