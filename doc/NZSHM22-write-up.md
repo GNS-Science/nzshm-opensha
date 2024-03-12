@@ -3,14 +3,14 @@
 This is the New Zealand implementation of the [OpenSHA](https://github.com/opensha/opensha) grand inversion to calculate the probability of a fault rupturing.
 
 The basic steps are
-
+ 
 - Using a fault model, generate a set of ruptures across these faults.
 - Run the inversion over the rupture set.
 - It's possible to generate hazards based on the solution. However, in practice, GNS uses [OpenQuake](https://github.com/gem/oq-engine) to generate hazards.
 
 ## OpenSHA
 
-When we started, OpenSHA was pretty much the hardcoded implementation of [UCERF3](http://wgcep.org/UCERF3.html) and we were building an NZ implementation on top of this mostly by using inheritance. This was quite limiting, and the current maintainer [Kevin Milner](https://www.scec.org/user/kmilner) made a great effort to make the OpenSHA code more generic in order to support our implementation. 
+When we started, OpenSHA was pretty much the hardcoded implementation of [UCERF3](http://wgcep.org/UCERF3.html), and we were building an NZ implementation on top of this mostly by using inheritance. This was quite limiting, and the current maintainer [Kevin Milner](https://kevinmilner.net/) made a great effort to make the OpenSHA code more generic in order to support our implementation. 
 
 Examples of this are [containers](#containers-and-archive-files) and scaling relationships. Initially, the choice of a scaling relationship was implemented as an enum. Enums cannot be extended, making it hard for us to make modifications on our side. Now, the scaling relationship required by the OpenSHA library is an interface, making it very easy for us to pass in our own.
 
@@ -47,7 +47,7 @@ Limitations in NZSHM22:
 
 We have three ways to generate ruptures:
 - `NZSHM22_AzimuthalRuptureSetBuilder` builds on the UCERF3 way of generating ruptures with plausibility filters preventing ruptures with too far jumps or too much of a curve. We put a bit of work into this, but ended up not using it for NZSHM22 because Kevin had by then developed the Coulomb filter far enough.
-- `NZSHM22_CoulombRuptureSetBuilder` This is what we used in NZSHM22. I (Oakley) do not know enough to describe how they work.
+- `NZSHM22_CoulombRuptureSetBuilder` This is what we used in NZSHM22. TODO: how do they work?
 - `NZSHM22_SubductionRuptureSetBuilder` This is what we used to generate subduction ruptures. The OpenSHA code is not written for 2-dimensional nets of rectangles, and so we mostly wrote this ourselves. We have filers for the overall shape of ruptures on a subduction surface. For example, we want ruptures to be mostly rectangular, but still tolerate jagged edges at the bottom end of the subduction surface.
 
 All three of the builders have a main method that can be used for experimentation and debugging. Sample values are already set in the main methods.
@@ -71,17 +71,21 @@ We have two ways of generating solutions:
 
 A number of other models flow into the inversion as constraints, such as background seismicity or paleo rates:
 
+### Slip Rates
+
+Slip rates (mm/year) are defined per fault segment in the fault models. Fault slips "manifest as earthquakes" ([OpenSha](https://opensha.org/Glossary.html#fault))
+
 ### Paleo Rates
 
 Prehistoric rates are attached as constraints to the fault section nearest to the lat/lon specified.
 
 This is to ensure the solution fits better to prehistoric earthquake rates.
 
-Paleo rates files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoRates`.
+Paleo rates files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoRates` (Enum).
 
 ### Paleo Probability Model
 
-Paleo probabilities files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoProbabilityModel`.
+Paleo probabilities files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoProbabilityModel` (Enum).
 
 ### Background Seismicity
 
@@ -113,7 +117,7 @@ The simplest polygon is the fault section surface vertically projected onto the 
 
 As mentioned [above](#background-seismicity), polygons are used to determine the area of influence of a fault vs background seismicity. UCERF3 assumes that in the polygon, there's only the fault seismicity, and outside, there's only background. NZSHM22 uses the `NZSHM22_PolygonisedDistributedModelBuilder` to attenuate background and fault influence gradually across the polygons. This flows both into the MFD constraints as well as into a re-built background seismicity pdf file, which is then fed into the OpenQuake hazard calculation. See `NZSHM22_PolygonisedDistributedModel` for how it is written into the archive container. 
 
-*CDC: insert link to paper*
+*TODO: CDC: insert link to paper*
 
 ### Grids
 
@@ -129,7 +133,7 @@ The polygonizer does not need to respect reproducibility and uses the OpenMap li
 
 ### LogicTrees
 
-Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in OpenSHA in order to configure a group of inversion runs. However, NZSHM22 only uses logic tree branches (LTBs), i.e. the configuration for a single inversion run. The whole tree is realised outside of the Java code in [runzi](https://github.com/GNS-Science/nzshm-runzi). 
+Logic trees are used by scientists to describe to combined choices they made when running an inversion. Logic trees are implemented in OpenSHA in order to configure a group of inversion runs. However, NZSHM22 only uses logic tree branches (LTBs), i.e. the configuration for a single inversion run. The whole tree is realised outside the Java code in [runzi](https://github.com/GNS-Science/nzshm-runzi). 
 
 The structure of and the parameters of the scientists' logic tree branches do not necessarily match up with logic tree branches as modelled in this code. In this repo, NZSHM22 LTBs were implemented purely from a programmer's perspective without understanding how scientists think about them.
 
