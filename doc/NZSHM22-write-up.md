@@ -48,7 +48,7 @@ Limitations in NZSHM22:
 We have three ways to generate ruptures:
 - `NZSHM22_AzimuthalRuptureSetBuilder` builds on the UCERF3 way of generating ruptures with plausibility filters preventing ruptures with too far jumps or too much of a curve. We put a bit of work into this, but ended up not using it for NZSHM22 because Kevin had by then developed the Coulomb filter far enough.
 - `NZSHM22_CoulombRuptureSetBuilder` This is what we used in NZSHM22. TODO: how do they work?
-- `NZSHM22_SubductionRuptureSetBuilder` This is what we used to generate subduction ruptures. The OpenSHA code is not written for 2-dimensional nets of rectangles, and so we mostly wrote this ourselves. We have filers for the overall shape of ruptures on a subduction surface. For example, we want ruptures to be mostly rectangular, but still tolerate jagged edges at the bottom end of the subduction surface.
+- `NZSHM22_SubductionRuptureSetBuilder` This is what we used to generate subduction ruptures. The OpenSHA code is not written for 2-dimensional nets of rectangles, and so we mostly wrote this ourselves. We have filters for the overall shape of ruptures on a subduction surface. For example, we want ruptures to be mostly rectangular, but still tolerate jagged edges at the bottom end of the subduction surface.
 
 All three of the builders have a main method that can be used for experimentation and debugging. Sample values are already set in the main methods.
 
