@@ -87,9 +87,9 @@ Paleo rates files can be found in `src/main/resources/paleoRates` and their code
 
 Paleo probabilities files can be found in `src/main/resources/paleoRates` and their code in `NZSHM22_PaleoProbabilityModel` (Enum).
 
-### Background Seismicity
+### Distributed Seismicity
 
-Background seismicity is specified as a [grid](#grids) of locations in NZ with a certain seismicity attached to each node. The inversion is focussed on seismicity from ruptures, but there is seismicity that scientists have not been able to attribute to specific faults. This "background noise" is captured here. This data is mostly relevant to hazard, but it also flows into [MFDs](#mfds).
+Distributed or background seismicity is specified as a [grid](#grids) of locations in NZ with a certain seismicity attached to each node. The inversion is focussed on seismicity from ruptures, but there is seismicity that scientists have not been able to attribute to specific faults. This "background noise" is captured here. This data is mostly relevant to hazard, but it also flows into [MFDs](#mfds).
 
 The seismicity of a location is mostly determined by a fault if it's close to that fault, and it's mostly determined by background if it's far from a fault. NZSHM22 uses [fault polygons](#polygons) to determine this.
 
@@ -103,7 +103,7 @@ For a while, background seismicity was handled differently in the TVZ (Taupō Vo
 
 The main code for this is in `NZSHM22_CrustalInversionTargetMFDs` and `NZSHM22_SubductionInversionTargetMFDs`. NZSHM22 uses MFDs that are based on Gutenberg-Richter. There are global MFDs as well as MFDs attached as constraints to individual fault sections. 
 
-MFDs inside the TVZ were handled differently at some stage (see [background seismicity](#background-seismicity)), so there's legacy code for this still visible.
+MFDs inside the TVZ were handled differently at some stage (see [distributed seismicity](#distributed-seismicity)), so there's legacy code for this still visible.
 
 The actual measured MFDs of the solution are a major tool for scientists to judge the quality of a solution. See [reports](#reports).
 
