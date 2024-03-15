@@ -1,20 +1,20 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
-import static org.junit.Assert.*;
-
 import com.google.common.collect.Lists;
-
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveUnilateralRuptureGrowingStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -331,6 +331,28 @@ public class DownDipTestPermutationStrategyTest {
         assertEquals(expected, simplifyPermutations(actual));
     }
 
+    @Test
+    public void testConnectednessConstraint() {
+        ExhaustiveUnilateralRuptureGrowingStrategy ucerf3Strategy = new ExhaustiveUnilateralRuptureGrowingStrategy();
+
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+        strategy.addConnectednessConstraint();
+
+        int[][] sectionGrid = {{1, 1, 1}, {1, 1, 1}};
+        DownDipSubSectBuilder builder = mockDownDipBuilder(0, sectionGrid);
+        FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+
+        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
+
+        int[][] expected = {{0}, {0, 3}, {0, 3, 1}, {0, 3, 1, 4}, {0, 3, 1, 4, 2}, {0, 3, 1, 4, 2, 5}};
+
+        assertTrue(Arrays.deepEquals(expected, simplifyPermutationsToArray(actual)));
+
+        // assertEquals(null, builder.conn);
+
+
+    }
+
     public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int numRows, int numCols) {
         return mockDownDipBuilder(parentId, numRows, numCols, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
@@ -358,6 +380,22 @@ public class DownDipTestPermutationStrategyTest {
         return builder;
     }
 
+    public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
+        List<DownDipFaultSection> sections = new ArrayList<>();
+        for (int r = 0; r < sectionPositions.length; r++) {
+            for (int c = 0; c < sectionPositions[r].length; c++) {
+                if (sectionPositions[r][c] == 1) {
+                    DownDipFaultSection section = mock(DownDipFaultSection.class);
+                    when(section.getSectionId()).thenReturn(sections.size());
+                    when(section.getColIndex()).thenReturn(c);
+                    when(section.getRowIndex()).thenReturn(r);
+                    sections.add(section);
+                }
+            }
+        }
+        return DownDipSubSectBuilder.fromList(sections, "puyrangi", parentId);
+    }
+
     public List<List<Integer>> simplifyPermutations(List<FaultSubsectionCluster> permutations) {
         List<List<Integer>> result = new ArrayList<>();
         for (FaultSubsectionCluster cluster : permutations) {
@@ -365,6 +403,20 @@ public class DownDipTestPermutationStrategyTest {
             result.add(rupture);
             for (FaultSection section : cluster.subSects) {
                 rupture.add(section.getSectionId());
+            }
+        }
+        return result;
+    }
+
+    public int[][] simplifyPermutationsToArray(List<FaultSubsectionCluster> permutations) {
+        int[][] result = new int[permutations.size()][];
+        for (int c = 0; c < permutations.size(); c++) {
+            FaultSubsectionCluster cluster = permutations.get(c);
+            int[] rupture = new int[cluster.subSects.size()];
+            result[c] = rupture;
+            for (int s = 0; s < cluster.subSects.size(); s++) {
+                FaultSection section = cluster.subSects.get(s);
+                rupture[s] = section.getSectionId();
             }
         }
         return result;

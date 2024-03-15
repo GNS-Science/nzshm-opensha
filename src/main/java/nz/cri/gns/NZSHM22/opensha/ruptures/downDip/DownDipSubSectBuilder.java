@@ -1,28 +1,24 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
+import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.geo.Location;
+import org.opensha.commons.geo.LocationUtils;
+import org.opensha.commons.geo.LocationVector;
+import org.opensha.commons.util.FaultUtils;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.FaultTrace;
+import org.opensha.sha.faultSurface.SimpleFaultData;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import org.opensha.commons.data.CSVFile;
-import org.opensha.commons.geo.Location;
-import org.opensha.commons.geo.LocationUtils;
-import org.opensha.commons.geo.LocationVector;
-import org.opensha.commons.util.FaultUtils;
-//import org.opensha.refFaultParamDb.vo.FaultSection;
-//import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
-import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.faultSurface.FaultTrace;
-import org.opensha.sha.faultSurface.SimpleFaultData;
-
-import com.google.common.base.Preconditions;
-
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 
 public class DownDipSubSectBuilder {
 
@@ -32,6 +28,32 @@ public class DownDipSubSectBuilder {
     private int parentID;
     private Map<Integer, Integer> idToRowMap;
     private Map<Integer, Integer> idToColMap;
+
+    public static DownDipSubSectBuilder fromList(List<DownDipFaultSection> sections, String sectName, int parentId) {
+        int maxRow = 0;
+        int maxCol = 0;
+        for (DownDipFaultSection section : sections) {
+            maxRow = Math.max(maxRow, section.getRowIndex());
+            maxCol = Math.max(maxCol, section.getColIndex());
+        }
+        DownDipSubSectBuilder result = new DownDipSubSectBuilder(maxCol, maxRow, sectName, parentId);
+
+        for (DownDipFaultSection section : sections) {
+            result.subSects[section.getColIndex()][section.getRowIndex()] = section;
+            result.idToRowMap.put(section.getSectionId(), section.getRowIndex());
+            result.idToColMap.put(section.getSectionId(), section.getColIndex());
+        }
+        return result;
+    }
+
+    // private constructor to aid the fromList method
+    private DownDipSubSectBuilder(int maxCol, int maxRow, String sectName, int parentId) {
+        subSects = new DownDipFaultSection[maxCol + 1][maxRow + 1];
+        this.sectName = sectName;
+        this.parentID = parentId;
+        idToColMap = new HashMap<>();
+        idToRowMap = new HashMap<>();
+    }
 
     /**
      * Loads a downdip fault from a CSV file and adds all sections to the subSections list
