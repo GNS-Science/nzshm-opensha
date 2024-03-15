@@ -8,7 +8,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveUnilateralRuptureGrowingStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -333,24 +332,36 @@ public class DownDipTestPermutationStrategyTest {
 
     @Test
     public void testConnectednessConstraint() {
-        ExhaustiveUnilateralRuptureGrowingStrategy ucerf3Strategy = new ExhaustiveUnilateralRuptureGrowingStrategy();
-
-        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(null);
         strategy.addConnectednessConstraint();
 
-        int[][] sectionGrid = {{1, 1, 1}, {1, 1, 1}};
-        DownDipSubSectBuilder builder = mockDownDipBuilder(0, sectionGrid);
-        FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+        DownDipSubSectBuilder builder;
+        FaultSubsectionCluster cluster;
+        List<FaultSubsectionCluster> actual;
 
-        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
-
-        int[][] expected = {{0}, {0, 3}, {0, 3, 1}, {0, 3, 1, 4}, {0, 3, 1, 4, 2}, {0, 3, 1, 4, 2, 5}};
-
+        // all connected
+        int[][] sectionGrid = {{1, 1, 1}};
+        int[][] expected = {{0}, {0, 1}, {0, 1, 2}};
+        builder = mockDownDipBuilder(0, sectionGrid);
+        cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+        actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
         assertTrue(Arrays.deepEquals(expected, simplifyPermutationsToArray(actual)));
 
-        // assertEquals(null, builder.conn);
+        // gap
+        int[][] sectionGrid2 = {{1, 0, 1}};
+        int[][] expected2 = {{0}, {0}}; // duplicates will be handled elsewhere
+        builder = mockDownDipBuilder(0, sectionGrid2);
+        cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+        actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
+        assertTrue(Arrays.deepEquals(expected2, simplifyPermutationsToArray(actual)));
 
-
+        // bridged gap
+        int[][] sectionGrid3 = {{1, 0, 1}, {1, 1, 1}};
+        int[][] expected3 = {{0}, {0}, {0, 3}, {0, 3, 4}, {0, 2, 3, 4, 5}};
+        builder = mockDownDipBuilder(0, sectionGrid3);
+        cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+        actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
+        assertTrue(Arrays.deepEquals(expected3, simplifyPermutationsToArray(actual)));
     }
 
     public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int numRows, int numCols) {
@@ -382,18 +393,23 @@ public class DownDipTestPermutationStrategyTest {
 
     public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
         List<DownDipFaultSection> sections = new ArrayList<>();
+        int sectionId = 0;
         for (int r = 0; r < sectionPositions.length; r++) {
             for (int c = 0; c < sectionPositions[r].length; c++) {
                 if (sectionPositions[r][c] == 1) {
                     DownDipFaultSection section = mock(DownDipFaultSection.class);
-                    when(section.getSectionId()).thenReturn(sections.size());
+                    when(section.getSectionId()).thenReturn(sectionId);
                     when(section.getColIndex()).thenReturn(c);
                     when(section.getRowIndex()).thenReturn(r);
                     sections.add(section);
                 }
+                sectionId++;
             }
         }
-        return DownDipSubSectBuilder.fromList(sections, "puyrangi", parentId);
+        DownDipSubSectBuilder result = DownDipSubSectBuilder.fromList(sections, "puyrangi", parentId);
+        DownDipFaultSection section = sections.get(0);
+        when(section.getBuilder()).thenReturn(result);
+        return result;
     }
 
     public List<List<Integer>> simplifyPermutations(List<FaultSubsectionCluster> permutations) {
