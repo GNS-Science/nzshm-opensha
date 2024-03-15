@@ -1,8 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.*;
 
+import gov.usgs.earthquake.nshmp.Faults;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
@@ -79,6 +81,79 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
         }
     }
 
+    protected int countSections(DownDipSubSectBuilder builder, int startRow, int startCol, int rowCount, int colCount) {
+        int count = 0;
+        for (int r = startRow; r < (startRow + rowCount); r++) {
+            for (int c = startCol; c < (startCol + colCount); c++) {
+                if (null != builder.getSubSect(r, c)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+
+    protected boolean floodFill(DownDipSubSectBuilder builder, int startRow, int startCol, int rowCount, int colCount) {
+        Set<FaultSection> seen = new HashSet<>();
+        Stack<FaultSection> toVisit = new Stack<>();
+
+        for (int i = startCol; i < startCol + colCount; i++) {
+            FaultSection s = builder.getSubSect(startRow, i);
+            if (s != null) {
+                toVisit.push(s);
+                seen.add(s);
+                break;
+            }
+        }
+        Preconditions.checkState(!toVisit.empty());
+
+        while (!toVisit.empty()) {
+            FaultSection current = toVisit.pop();
+            List<FaultSection> neighbours = builder.getNeighbors(current);
+            for (FaultSection section : neighbours) {
+                if (!seen.contains(section)) {
+                    int col = builder.getColumn(section);
+                    int row = builder.getRow(section);
+                    if (col >= startCol && col < startCol + colCount &&
+                            row >= startRow && row < startRow + rowCount) {
+                        toVisit.push(section);
+                        seen.add(section);
+                    }
+                }
+            }
+
+        }
+
+        int count = countSections(builder, startRow, startCol, rowCount, colCount);
+        boolean isConnected = count == seen.size();
+        if (!isConnected) {
+            System.out.println("--------------------------- disconnected");
+            try {
+                PrintWriter writer = new PrintWriter(new FileWriter("TEST/disconnected.csv", true));
+                writer.print("" + count+", ");
+                for (int row = startRow; row < startRow + rowCount; row++) {
+                    for (int col = startCol; col < startCol + colCount; col++) {
+                        FaultSection sect = builder.getSubSect(row, col);
+                        if (sect != null) {
+                            writer.print("" + sect.getSectionId() + ", ");
+                        }
+                    }
+                }
+                writer.println();
+                writer.close();
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return isConnected;
+
+    }
+
+    public DownDipPermutationStrategy addConnectednessConstraint() {
+        return addConstraint(this::floodFill);
+    }
+
     public DownDipPermutationStrategy addSizeCoarsenessConstraint(double epsilon) {
         if (epsilon > 0) {
             return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
@@ -93,14 +168,7 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
     public DownDipPermutationStrategy addMinFillConstraint(double minFill) {
         Preconditions.checkArgument(0 < minFill && minFill <= 1);
         return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
-            int count = 0;
-            for (int r = startRow; r < (startRow + rowCount); r++) {
-                for (int c = startCol; c < (startCol + colCount); c++) {
-                    if (null != builder.getSubSect(r, c)) {
-                        count++;
-                    }
-                }
-            }
+            int count = countSections(builder, startRow, startCol, rowCount, colCount);
             return count / ((double) rowCount * colCount) >= minFill;
         });
     }
@@ -117,7 +185,7 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
             return constraint.apply(builder, startRow, startCol, rowCount, colCount);
         }
     }
-    
+
     @Override
     public List<FaultSubsectionCluster> getVariations(
             FaultSubsectionCluster fullCluster, FaultSection firstSection) {
@@ -241,9 +309,9 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
         return Joiner.on(",").join(Ints.asList(indexes));
     }
 
-	@Override
-	public String getName() {
-		return new String("DownDip Permutation Strategy");
-	}
+    @Override
+    public String getName() {
+        return new String("DownDip Permutation Strategy");
+    }
 
 }

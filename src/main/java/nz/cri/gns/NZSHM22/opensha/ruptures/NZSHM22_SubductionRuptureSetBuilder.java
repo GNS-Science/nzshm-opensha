@@ -241,7 +241,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 		RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(null)
 				.addAspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
 				.addPositionCoarsenessConstraint(downDipPositionCoarseness).addMinFillConstraint(downDipMinFill)
-				.addSizeCoarsenessConstraint(downDipSizeCoarseness);
+				.addSizeCoarsenessConstraint(downDipSizeCoarseness)
+				.addConnectednessConstraint();
 		
 		// debugging
 		// numThreads = 1;
@@ -290,7 +291,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 //		.setThinningFactor(0.2);
 
     	//Built 322982 total ruptures
-    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_2_PUY_15))
+    	((NZSHM22_SubductionRuptureSetBuilder)builder.setFaultModel(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30))
 		.setDownDipAspectRatio(2, 5, 7)
 		.setDownDipPositionCoarseness(0.0)
 		.setDownDipSizeCoarseness(0.0)
