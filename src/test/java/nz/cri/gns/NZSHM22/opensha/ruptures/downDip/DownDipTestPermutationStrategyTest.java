@@ -391,7 +391,7 @@ public class DownDipTestPermutationStrategyTest {
         return builder;
     }
 
-    public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
+    public static DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
         List<DownDipFaultSection> sections = new ArrayList<>();
         int sectionId = 0;
         for (int r = 0; r < sectionPositions.length; r++) {
@@ -412,7 +412,7 @@ public class DownDipTestPermutationStrategyTest {
         return result;
     }
 
-    public List<List<Integer>> simplifyPermutations(List<FaultSubsectionCluster> permutations) {
+    public static List<List<Integer>> simplifyPermutations(List<FaultSubsectionCluster> permutations) {
         List<List<Integer>> result = new ArrayList<>();
         for (FaultSubsectionCluster cluster : permutations) {
             List<Integer> rupture = new ArrayList<>();
@@ -424,7 +424,7 @@ public class DownDipTestPermutationStrategyTest {
         return result;
     }
 
-    public int[][] simplifyPermutationsToArray(List<FaultSubsectionCluster> permutations) {
+    public static int[][] simplifyPermutationsToArray(List<FaultSubsectionCluster> permutations) {
         int[][] result = new int[permutations.size()][];
         for (int c = 0; c < permutations.size(); c++) {
             FaultSubsectionCluster cluster = permutations.get(c);
