@@ -11,7 +11,7 @@ public class ConnectednessConstraintTest {
 
     /**
      * Simulates a rupture based on the tile grid passed and runs the ConnectednessConstraint over it
-     * @param sectionGrid a 1/0 grid of sections
+     * @param sectionGrid a 1/0 grid of sections where 1 denotes a section and 0 denotes no section
      * @return whether the rupture is connected
      */
     protected static boolean isRuptureConnected(int[][] sectionGrid) {
