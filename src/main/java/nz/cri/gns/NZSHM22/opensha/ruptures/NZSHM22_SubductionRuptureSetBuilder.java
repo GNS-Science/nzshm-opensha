@@ -302,8 +302,6 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         //Built 322982 total ruptures
         ((NZSHM22_SubductionRuptureSetBuilder) builder.setFaultModel(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30))
                 .setDownDipAspectRatio(2, 5, 7)
-                .setDownDipPositionCoarseness(0.0)
-                .setDownDipSizeCoarseness(0.0)
                 .setDownDipMinFill(0.5);
 
         builder
@@ -312,7 +310,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 
         System.out.println(builder.getDescriptiveName());
         FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
-        ruptureSet.write(new File("/tmp/NZSHM/" + builder.getDescriptiveName() + ".zip"));
+        ruptureSet.write(new File("TEST/ruptures/" + builder.getDescriptiveName() + ".zip"));
     }
 
 }
