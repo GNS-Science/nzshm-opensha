@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.Stack;
 
 /**
- * Verifies that there are no gaps in a rupture.
+ * Constraints for rupture generation in DownDipPermutationStrategy
  */
 public interface DownDipConstraint {
 
