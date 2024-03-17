@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 
@@ -27,7 +28,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.Plausib
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveUnilateralRuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
@@ -145,7 +145,7 @@ public class InterfaceRuptureSetBuilderTest {
         SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
 
         // this creates rectangular permutations only for our down-dip fault to speed up rupture building
-        RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(new ExhaustiveUnilateralRuptureGrowingStrategy());
+        RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
 
         // connection strategy: parent faults connect at closest point, and only when dist <=5 km
         ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);

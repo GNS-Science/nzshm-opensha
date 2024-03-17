@@ -278,7 +278,13 @@ public class DownDipSubSectBuilder {
     }
 
     public FaultSection getSubSect(int row, int col) {
-        return subSects[col][row];
+        if (subSects.length > col) {
+            FaultSection[] rows = subSects[col];
+            if (rows.length > row) {
+                return rows[row];
+            }
+        }
+        return null;
     }
 
     public int getRow(FaultSection sect) {
