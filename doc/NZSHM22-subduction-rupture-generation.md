@@ -16,7 +16,7 @@ A rupture on this fault is a group of sections that rupture together. The `DownD
 
 ![Puysegur rectangle](img/PuysegurRectangle.png)
 
-The subsections in a rectangular selection are written as a rupture into the rupture set if they meet a number of criteria that aree implemented in `DownDipConstraint`:
+The subsections in a rectangular selection are written as a rupture into the rupture set if they meet a number of criteria that are implemented in `DownDipConstraint`:
 
 ### Minimum Fill
 
@@ -34,13 +34,13 @@ For realistic ruptures, we enforce a minimum and maximum aspect ratio of the sel
 
 For `NSHM22`, we enforced aspect ratios to be between 2 and 5, meaning the rectangle had to be at least twice as wide as tall and at most five times as wide as tall.
 
-Additionally, if a rectangle selection begins in the top row and reaches down to a certain threshold, the maximum aspect ratio is no longer enforced. This is so that ruptures can grow horizontally even if they have already reached the bottom of the fault and cannot grow further in that direction.
+Additionally, if a rectangle selection includes row 0 (the topmost edge) and has at least `threshold` rows, then the maximum aspect ratio is no longer enforced. This is so that ruptures can grow horizontally even if they have already reached the bottom of the fault and cannot grow much further in that direction.
 
 For `NZSHM22` the threshold was 8 rows deep.
 
 ### Connectedness
 
-We also want to ensure that ruptures don't have gaps in them. For example, even with the minFill and aspect ratio constraints, a rupture like this would still be possible on the Puysegur fault, leaving two sections marooned in the top right corner:
+We also want to ensure that ruptures don't have gaps in them. For example, even with the minFill and aspect ratio constraints, a rupture like this would still be possible on the Puysegur fault, leaving two sections marooned in the top right corner of the rectangle selection:
 
 ![Puysegur gap](img/PuysegurGap.png)
 
