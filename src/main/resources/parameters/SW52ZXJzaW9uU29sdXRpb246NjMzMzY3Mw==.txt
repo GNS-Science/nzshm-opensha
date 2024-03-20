@@ -1,0 +1,56 @@
+;; NZSHM22 Standard crustal solution
+;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==/InversionSolutionDetailTab
+round	0
+config_type	crustal
+deformation_model	FAULT_MODEL
+rupture_set_file_id	RmlsZToxMDAwODc=
+rupture_set	NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip
+completion_energy	0.0
+max_inversion_time	120
+mfd_uncertainty_power	0.25
+mfd_uncertainty_scalar	0.1
+max_jump_distances	15
+slip_uncertainty_scaling_factor	0
+slip_use_scaling	0
+enable_tvz_mfd	False
+max_mag_type	MANIPULATE_MFD
+min_mag_sans	6.799
+min_mag_tvz	6.799
+max_mag_sans	10.0
+max_mag_tvz	10.0
+mfd_mag_gt_5_sans	3.4
+mfd_mag_gt_5_tvz	1.0
+mfd_b_value_sans	0.959
+mfd_b_value_tvz	1.0
+mfd_transition_mag	7.85
+sans_slip_rate_factor	0.9
+tvz_slip_rate_factor	0.7
+selection_interval_secs	1
+threads_per_selector	4
+averaging_threads	4
+averaging_interval_secs	30
+non_negativity_function	TRY_ZERO_RATES_OFTEN
+perturbation_function	EXPONENTIAL_SCALE
+cooling_schedule	FAST_SA
+scaling_relationship	SIMPLE_CRUSTAL
+scaling_recalc_mag	True
+paleo_rate_constraint	PALEO_RI_GEOLOGIC_MAY24
+paleo_probability_model	NZSHM22_C_42
+paleo_parent_rate_smoothness_constraint_weight	100000.0
+reweight	True
+scaling_c_val_dip_slip	4.2
+scaling_c_val_strike_slip	4.2
+initial_solution_id
+spatial_seis_pdf	FLOOR_ADDOPTIEEPASCOMB_CRU
+b_and_n	{'tag': 'N = 3.4, b=0.959', 'enable_tvz_mfd': False, 'b': 0.959, 'N': 3.4}
+scaling_c	{'tag': '4.2', 'dip': 4.2, 'strike': 4.2}
+constraint_wts	{'tag': 'MFDunc = 0.1, MFDpow = 0.25, Paleosmth = 1e5', 'reweight': True, 'mfd_pow': 0.25, 'mfd_unc_scalar': 0.1, 'sr_scaling': 0, 'sr_use_scaling': 0, 'paleo_smoothing': 100000.0}
+mag_ranges	{'min_mag_sans': 6.799, 'min_mag_tvz': 6.799, 'max_mag_sans': 10.0, 'max_mag_tvz': 10.0}
+slip_rate_factors	{'tag': 'Sans 0.9 TVZ 0.7', 'slip_factor_sans': 0.9, 'slip_factor_tvz': 0.7}
+Environment
+host	ip-10-0-0-245.ec2.internal
+nzshm-opensha.version	nz.cri.gns.NZSHM22.util.GitVersion@5f989b0b
+Metrics
+SPOOF_INVERSION	True
+total_ruptures	411270
+perturbed_ruptures	1301

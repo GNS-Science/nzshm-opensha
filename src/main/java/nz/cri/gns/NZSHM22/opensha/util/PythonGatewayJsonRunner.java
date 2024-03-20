@@ -1,14 +1,18 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import org.dom4j.DocumentException;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 
 /**
  * A helper class to run an inversion based on a previous run in Toshi. Allows us to use
@@ -35,7 +39,7 @@ public class PythonGatewayJsonRunner {
     /**
      * Helper class to read JSON data
      */
-    static class MapWithPrimitives extends HashMap<String, String> {
+    public static class MapWithPrimitives extends HashMap<String, String> {
         public double getDouble(String key) {
             String value = get(key);
             return Double.parseDouble(value);
@@ -71,8 +75,8 @@ public class PythonGatewayJsonRunner {
      * @return a map made up of the key/value pairs of the JSON file
      * @throws IOException if anything goes wrong
      */
-    static MapWithPrimitives readArguments(String path) throws IOException {
-        JsonReader reader = new JsonReader(new FileReader(path));
+    static MapWithPrimitives readJsonArguments(String path) throws IOException {
+        JsonReader reader = new JsonReader(new FileReader(path, StandardCharsets.UTF_8));
         Gson gson = new Gson();
         KVPair[] data = gson.fromJson(reader, KVPair[].class);
 
@@ -81,6 +85,27 @@ public class PythonGatewayJsonRunner {
             arguments.put(pair.k, pair.v);
         }
 
+        reader.close();
+
+        return arguments;
+    }
+
+    static MapWithPrimitives readTableArguments (File file) throws IOException {
+       return readTableArguments(new FileInputStream(file));
+    }
+
+    static MapWithPrimitives readTableArguments(InputStream in) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        MapWithPrimitives arguments = new MapWithPrimitives();
+        reader.lines().forEach(line -> {
+            if (!line.startsWith(";")) {
+                String[] kp = line.split("\t");
+                if (kp.length == 2) {
+                    arguments.put(kp[0].trim(), kp[1].trim());
+                }
+            }
+        });
+        reader.close();
         return arguments;
     }
 
@@ -212,18 +237,18 @@ public class PythonGatewayJsonRunner {
         return inversion_runner;
     }
 
-
     public static void main(String[] args) throws IOException, DocumentException {
 
         File outputDir = new File("TEST/inversions");
-        String ruptureFile = "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-        MapWithPrimitives arguments = readArguments("TEST/arguments68.json");
+        String ruptureFile = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+        MapWithPrimitives arguments = readJsonArguments("TEST/arguments68.json");
 
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = setUpRunner(arguments, ruptureFile);
 
         // runner.setRepeatable(true)
-        runner.setIterationCompletionCriteria(10);
-        runner.setSelectionIterations(10);
+//        runner.setIterationCompletionCriteria(10);
+//        runner.setSelectionIterations(10);
+        runner.setInversionMinutes(4);
         runner.runInversion();
 
         System.out.println("Solution MFDS...");
