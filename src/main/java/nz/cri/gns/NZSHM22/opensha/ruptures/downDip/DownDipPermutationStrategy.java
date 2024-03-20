@@ -1,115 +1,31 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.primitives.Ints;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.primitives.Ints;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
 
-    public interface Constraint {
-        boolean apply(DownDipSubSectBuilder builder, int startRow, int startCol, int rowCount, int colCount);
-    }
+    private DownDipConstraint constraint;
 
-    private Constraint constraint;
-
-    private final RuptureGrowingStrategy crustalStrategy;
     private static final boolean D = false;
 
-    public DownDipPermutationStrategy(RuptureGrowingStrategy crustalStrategy) {
-        this.crustalStrategy = crustalStrategy;
-    }
-
-    public DownDipPermutationStrategy addConstraint(Constraint constraint) {
-        if (null == this.constraint) {
-            this.constraint = constraint;
-        } else {
-            Constraint oldConstraint = this.constraint;
-            this.constraint = (builder, startRow, startCol, rowCount, colCount) ->
-                    oldConstraint.apply(builder, startRow, startCol, rowCount, colCount) &&
-                            constraint.apply(builder, startRow, startCol, rowCount, colCount);
-        }
-        return this;
-    }
-
-    public DownDipPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio) {
-        return addAspectRatioConstraint(minRatio, maxRatio, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Adds an aspect ratio constraint that ensures that ruptures are within the specified minRatio and maxRatio (incl).
-     * If a rupture starts at row 0 and has at least depthThreshold rows, then maxRatio can be exceeded.
-     *
-     * @param minRatio       the minimum required ratio (incl)
-     * @param maxRatio       the max required ratio (incl)
-     * @param depthThreshold from this depth on, maxRatio can be exceeded
-     * @return this strategy
-     */
-    public DownDipPermutationStrategy addAspectRatioConstraint(double minRatio, double maxRatio, int depthThreshold) {
-        return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
-            double ratio = (double) colCount / (double) rowCount;
-            if ((startRow == 0) && (rowCount >= depthThreshold)) {
-                return minRatio <= ratio;
-            } else {
-                return minRatio <= ratio && ratio <= maxRatio;
-            }
-        });
-    }
-
-    private static boolean isDivisibleBy(double dividend, double potentialDivisor) {
-        return ((dividend % potentialDivisor) == 0);
-    }
-
-    public DownDipPermutationStrategy addPositionCoarsenessConstraint(double epsilon) {
-        if (epsilon > 0) {
-            return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
-                int coarseness = Math.max(1, (int) Math.round(epsilon * rowCount * colCount));
-                return isDivisibleBy(startCol, coarseness) && isDivisibleBy(startRow, coarseness);
-            });
-        } else {
-            return this;
-        }
-    }
-
-    public DownDipPermutationStrategy addSizeCoarsenessConstraint(double epsilon) {
-        if (epsilon > 0) {
-            return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
-                int coarseness = Math.max(1, (int) Math.round(epsilon * rowCount * colCount));
-                return isDivisibleBy(rowCount, coarseness) && isDivisibleBy(colCount, coarseness);
-            });
-        } else {
-            return this;
-        }
-    }
-
-    public DownDipPermutationStrategy addMinFillConstraint(double minFill) {
-        Preconditions.checkArgument(0 < minFill && minFill <= 1);
-        return addConstraint((builder, startRow, startCol, rowCount, colCount) -> {
-            int count = 0;
-            for (int r = startRow; r < (startRow + rowCount); r++) {
-                for (int c = startCol; c < (startCol + colCount); c++) {
-                    if (null != builder.getSubSect(r, c)) {
-                        count++;
-                    }
-                }
-            }
-            return count / ((double) rowCount * colCount) >= minFill;
-        });
+    public DownDipPermutationStrategy(DownDipConstraint constraint) {
+        this.constraint = constraint;
     }
 
     private boolean applyConstraint(DownDipSubSectBuilder builder, int startRow, int startCol, int endRow, int endCol) {
         if (constraint == null) {
             return true;
         } else {
-            // normalise coordinates
             int colCount = 1 + Math.abs(endCol - startCol);
             int rowCount = 1 + Math.abs(endRow - startRow);
             startRow = Math.min(startRow, endRow);
@@ -117,7 +33,7 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
             return constraint.apply(builder, startRow, startCol, rowCount, colCount);
         }
     }
-    
+
     @Override
     public List<FaultSubsectionCluster> getVariations(
             FaultSubsectionCluster fullCluster, FaultSection firstSection) {
@@ -131,52 +47,50 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
         List<FaultSubsectionCluster> permutations = new ArrayList<>();
 
         DownDipSubSectBuilder downDipBuilder = DownDipFaultSection.getBuilder(fullCluster);
-        if (downDipBuilder == null) {
-            permutations = crustalStrategy.getVariations(fullCluster, firstSection);
-        } else {
-            // this is a down-dip fault section, only build rectangular permutations
-            int startCol = downDipBuilder.getColumn(firstSection);
-            int startRow = downDipBuilder.getRow(firstSection);
+        Preconditions.checkState(downDipBuilder != null);
+        // this is a down-dip fault section, only build rectangular permutations
+        int startCol = downDipBuilder.getColumn(firstSection);
+        int startRow = downDipBuilder.getRow(firstSection);
 
-            if (D) System.out.println("Building permutations from " + startRow + ", " + startCol);
+        if (D) System.out.println("Building permutations from " + startRow + ", " + startCol);
 
-            int rows = downDipBuilder.getNumRows();
-            int cols = downDipBuilder.getNumCols();
+        int rows = downDipBuilder.getNumRows();
+        int cols = downDipBuilder.getNumCols();
 
-            // build down-dip first, starting with single row
-            if (D) System.out.println("\tbuilding down-dip");
-            for (int endRow = startRow; endRow < rows; endRow++) {
-                // build to the right first (including single column)
-                for (int endCol = startCol; endCol < cols; endCol++)
-                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
-                        permutations.add(buildRectangularPermutation(
-                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
-                    }
-                // build to the left
-                for (int endCol = startCol; --endCol >= 0; )
-                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
-                        permutations.add(buildRectangularPermutation(
-                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
-                    }
-            }
-
-            // build up-dip
-            if (D) System.out.println("\tbuilding up-dip");
-            for (int endRow = startRow; --endRow >= 0; ) {
-                // build to the right first (including single column)
-                for (int endCol = startCol; endCol < cols; endCol++)
-                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
-                        permutations.add(buildRectangularPermutation(
-                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
-                    }
-                // build to the left
-                for (int endCol = startCol; --endCol >= 0; )
-                    if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
-                        permutations.add(buildRectangularPermutation(
-                                downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
-                    }
-            }
+        // build down-dip first, starting with single row
+        if (D) System.out.println("\tbuilding down-dip");
+        for (int endRow = startRow; endRow < rows; endRow++) {
+            // build to the right first (including single column)
+            for (int endCol = startCol; endCol < cols; endCol++)
+                if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
+                    permutations.add(buildRectangularPermutation(
+                            downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
+                }
+            // build to the left
+            for (int endCol = startCol; --endCol >= 0; )
+                if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
+                    permutations.add(buildRectangularPermutation(
+                            downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
+                }
         }
+
+        // build up-dip
+        if (D) System.out.println("\tbuilding up-dip");
+        for (int endRow = startRow; --endRow >= 0; ) {
+            // build to the right first (including single column)
+            for (int endCol = startCol; endCol < cols; endCol++)
+                if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
+                    permutations.add(buildRectangularPermutation(
+                            downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
+                }
+            // build to the left
+            for (int endCol = startCol; --endCol >= 0; )
+                if (applyConstraint(downDipBuilder, startRow, startCol, endRow, endCol)) {
+                    permutations.add(buildRectangularPermutation(
+                            downDipBuilder, fullCluster, startRow, startCol, endRow, endCol));
+                }
+        }
+
         return permutations;
     }
 
@@ -241,9 +155,9 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
         return Joiner.on(",").join(Ints.asList(indexes));
     }
 
-	@Override
-	public String getName() {
-		return new String("DownDip Permutation Strategy");
-	}
+    @Override
+    public String getName() {
+        return new String("DownDip Permutation Strategy");
+    }
 
 }
