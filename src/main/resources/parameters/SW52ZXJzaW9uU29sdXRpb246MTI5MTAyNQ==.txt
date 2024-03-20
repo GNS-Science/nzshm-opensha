@@ -1,0 +1,36 @@
+;; NZSHM22 Standard Puysegur inversion
+;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246MTI5MTAyNQ==
+round	0
+config_type	subduction
+rupture_set_file_id	RmlsZToxMjkwOTg0
+rupture_set	RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip
+completion_energy	0.0
+max_inversion_time	60
+mfd_equality_weight	10000.0
+mfd_inequality_weight	0
+slip_rate_weighting_type	BOTH
+slip_rate_normalized_weight	1000.0
+slip_rate_unnormalized_weight	100000.0
+mfd_mag_gt_5	4.6
+mfd_b_value	0.902
+mfd_transition_mag	9.15
+mfd_min_mag	7.0
+mfd_uncertainty_weight	0
+mfd_uncertainty_power	0.001
+mfd_uncertainty_scalar	0.1
+selection_interval_secs	1
+threads_per_selector	4
+averaging_threads	4
+averaging_interval_secs	30
+non_negativity_function	TRY_ZERO_RATES_OFTEN
+perturbation_function	EXPONENTIAL_SCALE
+scaling_relationship	SIMPLE_SUBDUCTION
+scaling_recalc_mag	True
+deformation_model	SBD_0_1_PUY_30_0PT7
+scaling_c_val	4.0
+initial_solution_id	None
+b_and_n	{'tag': 'b = 0.902, N = 4.6', 'b': 0.902, 'N': 4.6}
+Metrics
+SPOOF_INVERSION	True
+total_ruptures	15800
+perturbed_ruptures	1633

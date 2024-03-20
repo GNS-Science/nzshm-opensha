@@ -4,6 +4,7 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
+import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -275,61 +276,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
     public static void main(String[] args) throws IOException, DocumentException {
 
-        File inputDir = new File("./TEST");
-        File outputRoot = new File("./TEST");
-        File ruptureSet = new File(
-                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMTA3R2F1Skg=.zip");
-//        		"./TEST/NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjg5ODJGamtLRw==.zip"); //Latest Prod
-        File outputDir = new File(outputRoot, "inversions");
-        Preconditions.checkState(outputDir.exists() || outputDir.mkdir());
-
-        SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
-        scaling.setupCrustal(4.2, 4.2);
-
-        NZSHM22_CrustalInversionRunner runner = ((NZSHM22_CrustalInversionRunner) new NZSHM22_CrustalInversionRunner()
-                .setMaxMags("MANIPULATE_MFD",10,7.5)
-                .setEnableTvzMFDs(false)
-                .setMinMags(6.8 , 6.5)
-              //  .setInitialSolution("C:\\tmp\\rates.csv")
-                .setEnableMinMaxSampler(true)
-                .setPolygonizer(4, "LINEAR", 40)
-                .setInversionSeconds(1)
-              // .setSlipRateFactor(0.8, 0.3)
-                .setRepeatable(true)
-                .setIterationCompletionCriteria(10)
-                .setSelectionIterations(10)
-                .setScalingRelationship(scaling, true)
-                //.setDeformationModel("GEOD_NO_PRIOR_UNISTD_2010_RmlsZTo4NTkuMDM2Z2Rw")
-                .setRuptureSetFile(ruptureSet)
-
-               // .setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(10000, .75, 0.4)
-                //.setSlipRateConstraint("BOTH", 1000, 1000)
-                .setSlipRateUncertaintyConstraint(1000, 2)
-                .setReweightTargetQuantity("MAD"))
-                .setSlipRateFactor(0.9, 0.8)
-                .setGutenbergRichterMFD(3.9, 1.0, 0.9, 1.2, 7.85)
-                .setPaleoRateConstraints(0.01, 1000, "GEOLOGIC_SLIP_22FEB", "UCERF3_PLUS_PT25");
-
-        FaultSystemSolution solution = runner.runInversion();
-
-//		System.out.println("Solution MFDS...");
-//		for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
-//			System.out.println(row);
-//		}
-
-        System.out.println("Solution MFDS...");
-        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
-            System.out.println(row);
-        }
-        System.out.println("Solution MFDS V2 ...");
-        for (ArrayList<String> row : runner.getTabularSolutionMfdsV2()) {
-            System.out.println(row);
-        }
-//		System.out.println(solution.getEnergies().toString());
-
-        File solutionFile = new File(outputDir, "CrustalInversionSolution.zip");
-        solution.write(solutionFile);
+        ParameterRunner.runNZSHM22CrustalInversion();
 
     }
 

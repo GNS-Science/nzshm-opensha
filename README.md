@@ -49,6 +49,10 @@ Test reports are found at  `./build/reports/tests/localTests/index.html`
  .\gradlew test
 ```
 
+### Run or Reproduce NZSHM22 Results
+
+See [doc/how-to-run.md](doc/how-to-run.md)
+
 ### Releases on github
 
 Github can build release fatjars and push them to S3.
