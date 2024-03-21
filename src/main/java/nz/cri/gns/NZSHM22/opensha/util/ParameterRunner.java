@@ -36,12 +36,28 @@ public class ParameterRunner {
         this(parameters.getParameters());
     }
 
+    public void readConfig() throws IOException {
+        if(Files.exists(Path.of(".ParameterRunner.config"))) {
+            System.out.println("Found custom config file");
+            Parameters config = Parameters.fromFile(new File(".ParameterRunner.config"));
+            if(config.get("outputPath") != null) {
+                outputPath = config.get("outputPath");
+                System.err.println("outputPath set to " + outputPath);
+            }
+            if(config.get("inputPath") != null) {
+                inputPath = config.get("inputPath");
+            }
+        }
+    }
+
     /**
      * Ensures that input and output paths etc. exist. Creates them if necessary.
      *
      * @throws IOException
      */
     public void ensurePaths() throws IOException {
+        readConfig();
+
         Path inPath = Paths.get(inputPath);
         if (Files.notExists(inPath)) {
             System.err.println("Creating input path " + inputPath);
@@ -336,8 +352,8 @@ public class ParameterRunner {
 
     public static void main(String[] args) throws IOException, DocumentException {
         // runNZSHM22CrustalInversion();
-        buildNZSHM22CoulombCrustalRupset();
-        // buildNZSHM22HikurangiRupset();
+        // buildNZSHM22CoulombCrustalRupset();
+        buildNZSHM22HikurangiRupset();
         // buildNZSHM22PuysegurRupset();
     }
 }

@@ -59,7 +59,7 @@ public class Parameters extends HashMap<String, String> {
         Parameters arguments = new Parameters();
         reader.lines().forEach(line -> {
             if (!line.startsWith(";")) {
-                String[] kp = line.split("\t");
+                String[] kp = line.split("[\t,]");
                 if (kp.length == 2) {
                     arguments.put(kp[0].trim(), kp[1].trim());
                 }
