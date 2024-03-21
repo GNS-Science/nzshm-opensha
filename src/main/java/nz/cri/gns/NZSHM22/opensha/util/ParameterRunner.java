@@ -15,22 +15,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class OakleyRunner {
+/**
+ * Utility class to populate inversion runners and rupture builders with Parameters.
+ * Can be used to make runs repeatable or to reproduce runs from toshi.
+ * <p>
+ * The code to apply parameters to runners and builders is ported form runzi.
+ */
+public class ParameterRunner {
 
     String inputPath = "/tmp/";
     String outputPath = "/tmp/";
 
     Parameters arguments;
 
-    public OakleyRunner(Parameters arguments) {
+    public ParameterRunner(Parameters arguments) {
         this.arguments = arguments;
     }
 
-    public OakleyRunner(Parameters.NZSHM22 parameters) throws IOException {
+    public ParameterRunner(Parameters.NZSHM22 parameters) throws IOException {
         this(parameters.getParameters());
     }
 
-    void ensurePaths() throws IOException {
+    /**
+     * Ensures that input and output paths etc. exist. Creates them if necessary.
+     *
+     * @throws IOException
+     */
+    public void ensurePaths() throws IOException {
         Path inPath = Paths.get(inputPath);
         if (Files.notExists(inPath)) {
             System.err.println("Creating input path " + inputPath);
@@ -53,6 +64,12 @@ public class OakleyRunner {
         }
     }
 
+    /**
+     * Applies the Parameters to a NZSHM22_CoulombRuptureSetBuilder.
+     * Does not run the builder.
+     *
+     * @param builder the builder to be set up.
+     */
     public void setUpCoulombCrustalRuptureSetBuilder(NZSHM22_CoulombRuptureSetBuilder builder) {
 
         builder.setMaxFaultSections(arguments.getInteger("max_sections"));
@@ -82,6 +99,12 @@ public class OakleyRunner {
 //        }
     }
 
+    /**
+     * Applies the Parameters to a NZSHM22_SubductionRuptureSetBuilder.
+     * Does not run the builder.
+     *
+     * @param builder
+     */
     public void setUpSubductionRuptureSetBuilder(NZSHM22_SubductionRuptureSetBuilder builder) {
         builder.setDownDipAspectRatio(
                 arguments.getDouble("min_aspect_ratio"),
@@ -101,10 +124,10 @@ public class OakleyRunner {
     }
 
     /**
-     * Creates a crustal inversion runner based on the arguments. Ported from runzi.
+     * Applies the parameters to a NZSHM22_CrustalInversionRunner.
      *
      * @param runner a crustal inversion runner
-     * @throws IOException if anything goes wrong
+     * @throws IOException
      */
     public void setUpInversionRunner(NZSHM22_CrustalInversionRunner runner) throws IOException {
 
@@ -235,51 +258,86 @@ public class OakleyRunner {
         rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
     }
 
+    /**
+     * Runs and saves an inversion based on Parameters.NZSHM22.INVERSION_CRUSTAL
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
     public static FaultSystemSolution runNZSHM22CrustalInversion() throws IOException, DocumentException {
-        OakleyRunner oakleyRunner = new OakleyRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
         NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
-        oakleyRunner.ensurePaths();
-        oakleyRunner.setUpInversionRunner(runner);
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
-        oakleyRunner.saveSolution(solution);
+        parameterRunner.saveSolution(solution);
         return solution;
     }
 
+    /**
+     * Builds and saves a rupture set based on Parameters.NZSHM22.RUPSET_CRUSTAL
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
     public static FaultSystemRupSet buildNZSHM22CoulombCrustalRupset() throws IOException, DocumentException {
-        OakleyRunner oakleyRunner = new OakleyRunner(Parameters.NZSHM22.RUPSET_CRUSTAL);
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.RUPSET_CRUSTAL);
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
-        oakleyRunner.ensurePaths();
-        oakleyRunner.setUpCoulombCrustalRuptureSetBuilder(builder);
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpCoulombCrustalRuptureSetBuilder(builder);
         FaultSystemRupSet rupSet = builder.buildRuptureSet();
-        oakleyRunner.saveRupSet(rupSet, builder);
+        parameterRunner.saveRupSet(rupSet, builder);
         return rupSet;
     }
 
-    public static FaultSystemRupSet buildNZSHM22SubductionCrustalRupset(Parameters parameters) throws IOException, DocumentException {
-        OakleyRunner oakleyRunner = new OakleyRunner(parameters);
+    /**
+     * Builds and saves a subduction rupture set.
+     *
+     * @param parameters
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
+    public static FaultSystemRupSet buildNZSHM22SubductionRupset(Parameters parameters) throws IOException, DocumentException {
+        ParameterRunner parameterRunner = new ParameterRunner(parameters);
         NZSHM22_SubductionRuptureSetBuilder builder = new NZSHM22_SubductionRuptureSetBuilder();
-        oakleyRunner.ensurePaths();
-        oakleyRunner.setUpSubductionRuptureSetBuilder(builder);
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpSubductionRuptureSetBuilder(builder);
         FaultSystemRupSet rupSet = builder.buildRuptureSet();
-        oakleyRunner.saveRupSet(rupSet, builder);
+        parameterRunner.saveRupSet(rupSet, builder);
         return rupSet;
     }
 
+    /**
+     * Builds and saves a subduction rupture set based on Parameters.NZSHM22.RUPSET_HIKURANGI
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
     public static FaultSystemRupSet buildNZSHM22HikurangiRupset() throws IOException, DocumentException {
         Parameters parameters = Parameters.NZSHM22.RUPSET_HIKURANGI.getParameters();
-        return buildNZSHM22SubductionCrustalRupset(parameters);
+        return buildNZSHM22SubductionRupset(parameters);
     }
 
+    /**
+     * Builds and saves a subduction rupture set based on Parameters.NZSHM22.RUPSET_PUYSEGUR
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
     public static FaultSystemRupSet buildNZSHM22PuysegurRupset() throws IOException, DocumentException {
         Parameters parameters = Parameters.NZSHM22.RUPSET_PUYSEGUR.getParameters();
-        return buildNZSHM22SubductionCrustalRupset(parameters);
+        return buildNZSHM22SubductionRupset(parameters);
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
         // runNZSHM22CrustalInversion();
-        // buildNZSHM22CoulombCrustalRupset();
-       //  buildNZSHM22HikurangiRupset();
-        buildNZSHM22PuysegurRupset();
-
+        buildNZSHM22CoulombCrustalRupset();
+        // buildNZSHM22HikurangiRupset();
+        // buildNZSHM22PuysegurRupset();
     }
 }
