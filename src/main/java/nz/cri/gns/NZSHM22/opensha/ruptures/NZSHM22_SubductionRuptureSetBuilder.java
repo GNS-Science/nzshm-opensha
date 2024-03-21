@@ -158,7 +158,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      */
     public NZSHM22_SubductionRuptureSetBuilder setDownDipPositionCoarseness(double epsilon) {
         // do not use until understood and tested
-        Preconditions.checkArgument(false);
+        Preconditions.checkArgument(epsilon == 0);
         this.downDipPositionCoarseness = epsilon;
         return this;
     }
@@ -171,7 +171,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      */
     public NZSHM22_SubductionRuptureSetBuilder setDownDipSizeCoarseness(double epsilon) {
         // do not use until understood and tested
-        Preconditions.checkArgument(false);
+        Preconditions.checkArgument(epsilon == 0);
         this.downDipSizeCoarseness = epsilon;
         return this;
     }

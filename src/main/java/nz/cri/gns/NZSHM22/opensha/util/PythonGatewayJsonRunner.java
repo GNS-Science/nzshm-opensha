@@ -90,24 +90,7 @@ public class PythonGatewayJsonRunner {
         return arguments;
     }
 
-    static MapWithPrimitives readTableArguments (File file) throws IOException {
-       return readTableArguments(new FileInputStream(file));
-    }
 
-    static MapWithPrimitives readTableArguments(InputStream in) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        MapWithPrimitives arguments = new MapWithPrimitives();
-        reader.lines().forEach(line -> {
-            if (!line.startsWith(";")) {
-                String[] kp = line.split("\t");
-                if (kp.length == 2) {
-                    arguments.put(kp[0].trim(), kp[1].trim());
-                }
-            }
-        });
-        reader.close();
-        return arguments;
-    }
 
     /**
      * Creates an inversion runner based on the arguments. Ported from runzi.

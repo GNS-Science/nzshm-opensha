@@ -1,4 +1,4 @@
-;; NZSHM22 Standard crustal solution
+;; NZSHM22 Standard crustal inversion
 ;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==/InversionSolutionDetailTab
 round	0
 config_type	crustal
