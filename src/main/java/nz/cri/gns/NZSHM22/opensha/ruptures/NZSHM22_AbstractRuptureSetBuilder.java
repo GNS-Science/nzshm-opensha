@@ -243,6 +243,54 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         }
     }
 
+    protected void loadFaults(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
+        faultModel.fetchFaultSections(subSections);
+
+        System.out.println("Fault model has " + subSections.size() + " fault sections");
+
+        if (invertRake) {
+            for (FaultSection section : subSections) {
+                double rake = section.getAveRake() + 180;
+                if (rake >= 360) {
+                    rake -= 180;
+                }
+                section.setAveRake(rake);
+            }
+        }
+
+        applyDepthScalars(subSections);
+
+        subSections.removeIf(faultSection -> faultSection.getFaultTrace().get(0).getLongitude() > 170 ||
+                faultSection.getFaultTrace().get(faultSection.getFaultTrace().size() - 1).getLongitude() > 170);
+        subSections.removeIf(faultSection -> !(faultSection instanceof DownDipFaultSection) && !faultSection.getSectionName().startsWith("Alpine"));
+
+        if (faultModel.isCrustal()) {
+
+            if (maxFaultSections < 1000 || skipFaultSections > 0) {
+                final long endSection = maxFaultSections + skipFaultSections;
+                final long skipSections = skipFaultSections;
+                subSections.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
+                System.out.println("Fault model filtered to " + subSections.size() + " fault sections");
+            }
+
+            FaultSectionList fsd = subSections;
+            subSections = new FaultSectionList();
+            // build the subsections
+            subSections.addParents(fsd);
+            for (FaultSection parentSect : fsd) {
+                double ddw = parentSect.getOrigDownDipWidth();
+                double maxSectLength = ddw * maxSubSectionLength;
+                System.out.println("Get subSections in " + parentSect.getName());
+                // the "2" here sets a minimum number of sub sections
+                List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength,
+                        subSections.getSafeId(), 2);
+                getSubSections().addAll(newSubSects);
+                System.out.println("Produced " + newSubSects.size() + " subSections in " + parentSect.getName());
+            }
+            System.out.println(subSections.size() + " Sub Sections created.");
+        }
+    }
+
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
             faultModel.fetchFaultSections(subSections);
