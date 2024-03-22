@@ -1,14 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
-import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import org.dom4j.DocumentException;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
+import org.dom4j.DocumentException;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A helper class to run an inversion based on a previous run in Toshi. Allows us to use
@@ -216,14 +218,15 @@ public class PythonGatewayJsonRunner {
     public static void main(String[] args) throws IOException, DocumentException {
 
         File outputDir = new File("TEST/inversions");
-        String ruptureFile = "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+        String ruptureFile = "C:\\tmp\\rupset-coulomb-above-68-correct-params.zip";
         MapWithPrimitives arguments = readArguments("TEST/arguments68.json");
 
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = setUpRunner(arguments, ruptureFile);
 
         // runner.setRepeatable(true)
-        runner.setIterationCompletionCriteria(10);
-        runner.setSelectionIterations(10);
+//        runner.setIterationCompletionCriteria(10);
+//        runner.setSelectionIterations(10);
+        runner.setInversionMinutes(4);
         runner.runInversion();
 
         System.out.println("Solution MFDS...");
@@ -235,6 +238,17 @@ public class PythonGatewayJsonRunner {
             System.out.println(row);
         }
         runner.writeSolution(new File(outputDir, "crustalInversion.zip").getAbsolutePath());
+
+        NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
+        reportPageGen.setName("Min Mag = 6.8")
+                .setOutputPath("/tmp/reports/m68_5")
+                .setFillSurfaces(true)
+                .setPlotLevel(null)
+                .addPlot("SolMFDPlot")
+//                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
+                .setSolution(new File(outputDir, "crustalInversion.zip").toString());
+        reportPageGen.generatePage();
+
 
     }
 
