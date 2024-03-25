@@ -9,8 +9,8 @@ The goal of this investigation is
 
 ## Approach
 Kevin suggested:
-- `filter` out ruptures before running the inversion
-- suppress ruptures while `sampling` ruptures during the inversion.
+- `filter` out ruptures before running the inversion. This basically means taking a rupture set, taking some ruptures out and then passing the new file to the script that runs the inversion.
+- Suppress ruptures while `sampling` ruptures during the inversion. This means controlling which ruptures are chosen during the inversion algorithm run.
 
 ## Result
 
