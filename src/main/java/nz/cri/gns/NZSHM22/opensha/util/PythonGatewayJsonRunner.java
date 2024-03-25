@@ -241,7 +241,7 @@ public class PythonGatewayJsonRunner {
 
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
         reportPageGen.setName("Min Mag = 6.8")
-                .setOutputPath("/tmp/reports/m68_sampler1")
+                .setOutputPath("/tmp/reports/m68_sampler2-max")
                 .setFillSurfaces(true)
                 .setPlotLevel(null)
                 .addPlot("SolMFDPlot")
