@@ -218,7 +218,7 @@ public class PythonGatewayJsonRunner {
     public static void main(String[] args) throws IOException, DocumentException {
 
         File outputDir = new File("TEST/inversions");
-        String ruptureFile = "C:\\tmp\\rupset-coulomb-above-68-correct-params.zip";
+        String ruptureFile = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(2).zip";
         MapWithPrimitives arguments = readArguments("TEST/arguments68.json");
 
         NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = setUpRunner(arguments, ruptureFile);
@@ -241,7 +241,7 @@ public class PythonGatewayJsonRunner {
 
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
         reportPageGen.setName("Min Mag = 6.8")
-                .setOutputPath("/tmp/reports/m68_5")
+                .setOutputPath("/tmp/reports/m68_sampler1")
                 .setFillSurfaces(true)
                 .setPlotLevel(null)
                 .addPlot("SolMFDPlot")
