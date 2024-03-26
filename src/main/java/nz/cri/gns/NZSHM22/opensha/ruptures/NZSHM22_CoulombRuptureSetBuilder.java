@@ -9,6 +9,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -574,7 +575,21 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
                         .build();
 
-        return rupSet;
+        List<ClusterRupture> filteredRuptures = new ArrayList<>();
+        for (int i = 0; i < rupSet.getNumRuptures(); i++) {
+            if (rupSet.getMagForRup(i) >= 6.8) {
+                filteredRuptures.add(ruptures.get(i));
+            }
+        }
+
+        FaultSystemRupSet filteredRupSet = FaultSystemRupSet.builderForClusterRups(subSections, filteredRuptures)
+                .forScalingRelationship(getScalingRelationship())
+                .slipAlongRupture(getSlipAlongRuptureModel())
+                .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+                .build();
+
+        return filteredRupSet;
+        
 
 
 //        if (numAzCached < distAzCalc.getNumCachedAzimuths()

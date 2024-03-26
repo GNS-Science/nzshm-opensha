@@ -36,3 +36,4 @@ bin/**
 /TEST/
 *excludedSections.geoJson
 *includedSections.geoJson
+.ParameterRunner.config

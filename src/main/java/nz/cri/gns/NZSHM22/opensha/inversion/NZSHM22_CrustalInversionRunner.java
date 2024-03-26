@@ -46,7 +46,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double tvzSlipRateFactor = -1;
 
     private boolean enableTvzMFDs = true;
-    private boolean enableMinMaxSampler = false;
+    private boolean enableMinMaxSampler = true;
 
     private NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
 
