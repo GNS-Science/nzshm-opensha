@@ -1,7 +1,7 @@
 # Removing 1e-20 buckets from `targetOnFaultSupraSeisMFDs`
 
 ## Problem
-For `NZSHM22`, `targetOnFaultSupraSeisMFDs` went from magnitude 5.05 to 9.05. However, our min mag was `6.8` and we have no ruptures above `8.54`. This meant we zeroed out all bins below the 6.85 bin and above the 8.55 bin. Or rather, we used `1e-20`. In conjunction, we introduced special code in the `misfits` calculation that handles a resulting misfit of `-1`
+For `NZSHM22`, `targetOnFaultSupraSeisMFDs` stretched from magnitude 5.05 to 9.05. However, our min mag was `6.8` and we have no ruptures above `8.54`. This meant we zeroed out all bins below the 6.85 bin and above the 8.55 bin. Or rather, we set it to `1e-20`. In conjunction, we introduced special code in the `misfits` calculation that handles a corresponding misfit of `-1`
 
 The goal of this investigation is 
 - to be able to remove MFD bins that need to be zeroed out, and also 
@@ -9,7 +9,7 @@ The goal of this investigation is
 
 ## Approach
 Kevin suggested:
-- `filter` out ruptures before running the inversion. This basically means taking a rupture set, taking some ruptures out and then passing the new file to the script that runs the inversion.
+- `filter` out ruptures before running the inversion. This basically means creating a new, smaller rupture set before running the inversion script.
 - Suppress ruptures while `sampling` ruptures during the inversion. This means controlling which ruptures are chosen during the inversion algorithm run.
 
 ## Result
@@ -28,7 +28,7 @@ For the avoidance of doubt, the centre of the smallest bin is 6.85 with a delta 
 
 ### NZSHM22 
 
-For comparison the solution MFDs of a [representative NZSHM22 run](http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==/DiagnosticReportTab) with original `targetOnFaultSupraSeisMFDs` containing 1e-20 values.
+For comparison the solution MFDs of a [representative NZSHM22 inversion](http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==/DiagnosticReportTab) with original `targetOnFaultSupraSeisMFDs` containing 1e-20 values.
 
 ![screenshot](Screenshot%202024-03-25%20143539.png)
 
@@ -52,7 +52,7 @@ When filtering ruptures before generating target MFDs, visual result are similar
 
 ![Screenshot 2024-03-25 164358.png](Screenshot%202024-03-25%20164358.png)
 
-The lower rate at 6.9 mag for the `targetOnFaultSupraSeisMFDs` can be explained by a much larger `totalSubSeismoOnFaultMFD` compared to the original rupture set.
+The lower rate at 6.85 mag for the `targetOnFaultSupraSeisMFDs` can be explained by a much larger `totalSubSeismoOnFaultMFD` compared to the original rupture set.
 
 The filtered `totalSubSeismoOnFaultMFD` is larger by about 0.001 at around 6.85 as can be seen in this chart showing the difference between some MFDs for a filtered and an original rupture set.
 
