@@ -56,4 +56,4 @@ The lower rate at 6.9 mag for the `targetOnFaultSupraSeisMFDs` can be explained 
 
 The filtered `totalSubSeismoOnFaultMFD` is larger by about 0.001 at around 6.85 as can be seen in this chart showing the difference between some MFDs for a filtered and an original rupture set.
 
-![Screenshot 2024-03-27 094401.png](Screenshot%202024-03-27%20094401.png)
+![Screenshot 2024-03-27 101633.png](Screenshot%202024-03-27%20101633.png)
