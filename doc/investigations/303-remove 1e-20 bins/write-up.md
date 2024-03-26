@@ -48,6 +48,12 @@ Sampling was implemented by setting `NZSHM22_CrustalInversionRunner.enableMinMax
 
 ### Filtering
 
-When filtering ruptures before generating target MFDs, visual result are similar to NZSHM22 with a dip at 6.9. Looking at the numbers, Target MFDs are different from NZSHM22. 
+When filtering ruptures before generating target MFDs, visual result are similar to NZSHM22 with a dip at 6.85. 
 
 ![Screenshot 2024-03-25 164358.png](Screenshot%202024-03-25%20164358.png)
+
+The lower rate at 6.9 mag for the `targetOnFaultSupraSeisMFDs` can be explained by a much larger `totalSubSeismoOnFaultMFD` compared to the original rupture set.
+
+The filtered `totalSubSeismoOnFaultMFD` is larger by about 0.001 at around 6.85 as can be seen in this chart showing the difference between some MFDs for a filtered and an original rupture set.
+
+![Screenshot 2024-03-27 094401.png](Screenshot%202024-03-27%20094401.png)
