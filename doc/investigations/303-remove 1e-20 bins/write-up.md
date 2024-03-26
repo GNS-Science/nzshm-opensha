@@ -34,7 +34,7 @@ For comparison the solution MFDs of a [representative NZSHM22 inversion](http://
 
 ### Full Rupture Set
 
-With `targetOnFaultSupraSeisMFDs` not having any bins below 6.8, ruptures of lower magnitude are unconstrained.
+Ruptures of lower magnitude are unconstrained with `targetOnFaultSupraSeisMFDs` not having any bins below 6.8.
 
 ![Screenshot 2024-03-25 162802.png](Screenshot%202024-03-25%20162802.png)
 
@@ -52,7 +52,7 @@ When filtering ruptures before generating target MFDs, visual result are similar
 
 ![Screenshot 2024-03-25 164358.png](Screenshot%202024-03-25%20164358.png)
 
-The lower rate at 6.85 mag for the `targetOnFaultSupraSeisMFDs` can be explained by a much larger `totalSubSeismoOnFaultMFD` compared to the original rupture set.
+The lower rate at 6.85 mag for the `targetOnFaultSupraSeisMFDs` can be explained by a larger `totalSubSeismoOnFaultMFD` compared to the original rupture set.
 
 The filtered `totalSubSeismoOnFaultMFD` is larger by about 0.001 at around 6.85 as can be seen in this chart showing the difference between some MFDs for a filtered and an original rupture set.
 
