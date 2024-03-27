@@ -1,0 +1,13 @@
+;; NZSHM22 Crustal Rupture Set
+;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/RmlsZToxMDAwODc=
+
+max_sections	2000
+fault_model	CFM_1_0A_DOM_SANSTVZ
+min_sub_sects_per_parent	2
+min_sub_sections	2
+max_jump_distance	15
+adaptive_min_distance	6
+thinning_factor	0
+scaling_relationship	SIMPLE_CRUSTAL
+depth_scaling_tvz	0.667
+depth_scaling_sans	0.8

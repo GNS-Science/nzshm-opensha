@@ -1,0 +1,12 @@
+;; NZSHM22 Hikurangi Rupture Set
+;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/RmlsZTo3MTQ3LjVramh3Rg==
+fault_model	SBD_0_3_HKR_LR_30
+min_aspect_ratio	2.0
+max_aspect_ratio	5.0
+aspect_depth_threshold	5
+min_fill_ratio	0.1
+growth_position_epsilon	0.0
+growth_size_epsilon	0.0
+scaling_relationship	TMG_SUB_2017
+slip_along_rupture_model	UNIFORM
+deformation_model

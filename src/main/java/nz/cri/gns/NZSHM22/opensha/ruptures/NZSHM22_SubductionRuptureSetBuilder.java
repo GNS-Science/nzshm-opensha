@@ -8,6 +8,7 @@ import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.FaultTypeSeparationConnectionStrategy;
+import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -158,7 +159,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      */
     public NZSHM22_SubductionRuptureSetBuilder setDownDipPositionCoarseness(double epsilon) {
         // do not use until understood and tested
-        Preconditions.checkArgument(false);
+        Preconditions.checkArgument(epsilon == 0);
         this.downDipPositionCoarseness = epsilon;
         return this;
     }
@@ -171,7 +172,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      */
     public NZSHM22_SubductionRuptureSetBuilder setDownDipSizeCoarseness(double epsilon) {
         // do not use until understood and tested
-        Preconditions.checkArgument(false);
+        Preconditions.checkArgument(epsilon == 0);
         this.downDipSizeCoarseness = epsilon;
         return this;
     }
@@ -285,32 +286,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        NZSHM22_SubductionRuptureSetBuilder builder = new NZSHM22_SubductionRuptureSetBuilder();
-
-        SimplifiedScalingRelationship scale = new SimplifiedScalingRelationship();
-        scale.setupSubduction(4.0);
-
-// builds  26430 ruptures....
-//    	Built 39813 total ruptures
-//    	builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_HKR_KRM_30)
-//    		.setDownDipAspectRatio(2, 5, 2)
-//    		.setDownDipPositionCoarseness(0.005)
-//    		.setDownDipSizeCoarseness(0.005)
-//    		.setDownDipMinFill(0.3);
-//		.setThinningFactor(0.2);
-
-        //Built 322982 total ruptures
-        ((NZSHM22_SubductionRuptureSetBuilder) builder.setFaultModel(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30))
-                .setDownDipAspectRatio(2, 5, 7)
-                .setDownDipMinFill(0.5);
-
-        builder
-                .setScalingRelationship(scale)
-                .setSlipAlongRuptureModel(SlipAlongRuptureModels.UNIFORM);
-
-        System.out.println(builder.getDescriptiveName());
-        FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
-        ruptureSet.write(new File("TEST/ruptures/" + builder.getDescriptiveName() + ".zip"));
+        ParameterRunner.buildNZSHM22HikurangiRupset();
+        ParameterRunner.buildNZSHM22PuysegurRupset();
     }
-
 }

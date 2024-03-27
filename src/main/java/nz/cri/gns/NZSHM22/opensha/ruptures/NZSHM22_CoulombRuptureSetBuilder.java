@@ -7,6 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
@@ -693,21 +694,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
-        SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
-        sr.setupCrustal(4.2, 42);
-        
-        builder.setFaultModel(NZSHM22_FaultModels.CFM_0_9D_SANSTVZ_D90);
-        builder.setMaxFaultSections(2000);
-        builder.setNumThreads(8);
-        ((NZSHM22_CoulombRuptureSetBuilder) builder
-        	.setScalingRelationship(sr))
-        	.setAdaptiveMinDist(6.0d)
-        	.setMaxJumpDistance(5d)
-        	.setAdaptiveSectFract(0.1f);
-        
-        System.out.println(builder.getDescriptiveName());
-        FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
-        ruptureSet.write(new File("/tmp/" + builder.getDescriptiveName() + ".zip"));
+        ParameterRunner.buildNZSHM22CoulombCrustalRupset();
     }
 }
