@@ -18,7 +18,7 @@ public class Parameters extends HashMap<String, String> {
     public enum NZSHM22 {
         INVERSION_CRUSTAL("SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==.txt"),
         INVERSION_HIKURANGI("SW52ZXJzaW9uU29sdXRpb246MTEzMTc0.txt"),
-        INVERSION_PUYSEGUR(""),
+        INVERSION_PUYSEGUR("SW52ZXJzaW9uU29sdXRpb246MTI5MTAyNQ==.txt"),
         RUPSET_CRUSTAL("RmlsZToxMDAwODc=.txt"),
         RUPSET_HIKURANGI("RmlsZTo3MTQ3LjVramh3Rg==.txt"),
         RUPSET_PUYSEGUR("RmlsZToxMjkwOTg0.txt");

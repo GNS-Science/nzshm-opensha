@@ -343,6 +343,23 @@ public class ParameterRunner {
         parameterRunner.saveSolution(solution);
         return solution;
     }
+    /**
+     * Runs and saves an inversion based on Parameters.NZSHM22.INVERSION_PUYSEGUR
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
+    public static FaultSystemSolution runNZSHM22PuysegurInversion() throws IOException, DocumentException {
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_PUYSEGUR);
+        NZSHM22_SubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpSubductionInversionRunner(runner);
+        FaultSystemSolution solution = runner.runInversion();
+        parameterRunner.saveSolution(solution);
+        return solution;
+    }
+
 
     /**
      * Builds and saves a rupture set based on Parameters.NZSHM22.RUPSET_CRUSTAL
@@ -404,7 +421,8 @@ public class ParameterRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-        runNZSHM22HikurangiInversion();
+        runNZSHM22PuysegurInversion();;
+        // runNZSHM22HikurangiInversion();
         // runNZSHM22CrustalInversion();
         // buildNZSHM22CoulombCrustalRupset();
         // buildNZSHM22HikurangiRupset();
