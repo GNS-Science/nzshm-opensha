@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 /**
  * Utility class to populate inversion runners and rupture builders with Parameters.
@@ -341,6 +342,9 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
+        for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+            System.out.println(row);
+        }
         return solution;
     }
 
@@ -358,6 +362,9 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
+        for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+            System.out.println(row);
+        }
         return solution;
     }
 
