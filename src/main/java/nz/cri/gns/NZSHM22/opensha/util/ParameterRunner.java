@@ -343,6 +343,7 @@ public class ParameterRunner {
         parameterRunner.saveSolution(solution);
         return solution;
     }
+
     /**
      * Runs and saves an inversion based on Parameters.NZSHM22.INVERSION_PUYSEGUR
      *
@@ -421,11 +422,13 @@ public class ParameterRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-        runNZSHM22PuysegurInversion();;
-        // runNZSHM22HikurangiInversion();
-        // runNZSHM22CrustalInversion();
         // buildNZSHM22CoulombCrustalRupset();
         // buildNZSHM22HikurangiRupset();
         // buildNZSHM22PuysegurRupset();
+
+        // runNZSHM22CrustalInversion();
+        // runNZSHM22HikurangiInversion();
+        runNZSHM22PuysegurInversion();
+        ;
     }
 }
