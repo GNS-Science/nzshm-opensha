@@ -17,6 +17,8 @@ public class Parameters extends HashMap<String, String> {
      */
     public enum NZSHM22 {
         INVERSION_CRUSTAL("SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==.txt"),
+        INVERSION_HIKURANGI("SW52ZXJzaW9uU29sdXRpb246MTEzMTc0.txt"),
+        INVERSION_PUYSEGUR(""),
         RUPSET_CRUSTAL("RmlsZToxMDAwODc=.txt"),
         RUPSET_HIKURANGI("RmlsZTo3MTQ3LjVramh3Rg==.txt"),
         RUPSET_PUYSEGUR("RmlsZToxMjkwOTg0.txt");
@@ -59,7 +61,7 @@ public class Parameters extends HashMap<String, String> {
         Parameters arguments = new Parameters();
         reader.lines().forEach(line -> {
             if (!line.startsWith(";")) {
-                String[] kp = line.split("[\t,]");
+                String[] kp = line.split("[\t]");
                 if (kp.length == 2) {
                     arguments.put(kp[0].trim(), kp[1].trim());
                 }
@@ -136,6 +138,15 @@ public class Parameters extends HashMap<String, String> {
      */
     public boolean getBoolean(String key) {
         return get(key) != null && get(key).equalsIgnoreCase("true");
+    }
+
+    /**
+     * Convenience function to check if a value is set and no zero - mimicking Python's interpretation of truthiness.
+     * @param key
+     * @return
+     */
+    public boolean isNotZero(String key) {
+        return containsKey(key) && Double.parseDouble(get(key)) != 0;
     }
 }
 

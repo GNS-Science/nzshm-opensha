@@ -2,7 +2,9 @@ package nz.cri.gns.NZSHM22.opensha.util;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 import org.dom4j.DocumentException;
@@ -37,14 +39,14 @@ public class ParameterRunner {
     }
 
     public void readConfig() throws IOException {
-        if(Files.exists(Path.of(".ParameterRunner.config"))) {
+        if (Files.exists(Path.of(".ParameterRunner.config"))) {
             System.out.println("Found custom config file");
             Parameters config = Parameters.fromFile(new File(".ParameterRunner.config"));
-            if(config.get("outputPath") != null) {
+            if (config.get("outputPath") != null) {
                 outputPath = config.get("outputPath");
                 System.err.println("outputPath set to " + outputPath);
             }
-            if(config.get("inputPath") != null) {
+            if (config.get("inputPath") != null) {
                 inputPath = config.get("inputPath");
             }
         }
@@ -145,7 +147,7 @@ public class ParameterRunner {
      * @param runner a crustal inversion runner
      * @throws IOException
      */
-    public void setUpInversionRunner(NZSHM22_CrustalInversionRunner runner) throws IOException {
+    public void setUpCrustalInversionRunner(NZSHM22_CrustalInversionRunner runner) throws IOException {
 
         runner.setSpatialSeisPDF(arguments.get("spatial_seis_pdf"));
         runner.setDeformationModel(arguments.get("deformation_model"));
@@ -224,9 +226,43 @@ public class ParameterRunner {
                     arguments.get("paleo_probability_model"));
         }
 
+        setUpAbstractInversionRunner(runner);
+    }
+
+    public void setUpSubductionInversionRunner(NZSHM22_SubductionInversionRunner runner) {
+        runner.setDeformationModel(arguments.get("deformation_model"));
+        runner.setGutenbergRichterMFDWeights(
+                        arguments.getDouble("mfd_equality_weight"),
+                        arguments.getDouble("mfd_inequality_weight"))
+                .setSlipRateConstraint(arguments.get("slip_rate_weighting_type"),
+                        arguments.getDouble("slip_rate_normalized_weight"),
+                        arguments.getDouble("slip_rate_unnormalized_weight"));
+
+        if (arguments.isNotZero("mfd_min_mag")) {
+            runner.setGutenbergRichterMFD(
+                    arguments.getDouble("mfd_mag_gt_5"),
+                    arguments.getDouble("mfd_b_value"),
+                    arguments.getDouble("mfd_transition_mag"),
+                    arguments.getDouble("mfd_min_mag"));
+        } else {
+            runner.setGutenbergRichterMFD(
+                    arguments.getDouble("mfd_mag_gt_5"),
+                    arguments.getDouble("mfd_b_value"),
+                    arguments.getDouble("mfd_transition_mag"));
+        }
+
+        if (arguments.isNotZero("mfd_uncertainty_weight")) {
+            runner.setUncertaintyWeightedMFDWeights(
+                    arguments.getDouble("mfd_uncertainty_weight"),
+                    arguments.getDouble("mfd_uncertainty_power"),
+                    arguments.getDouble("mfd_uncertainty_scalar"));
+        }
+        setUpAbstractInversionRunner(runner);
+    }
+
+    protected void setUpAbstractInversionRunner(NZSHM22_AbstractInversionRunner runner) {
         if (arguments.get("scaling_relationship") != null && arguments.get("scaling_recalc_mag") != null) {
             SimplifiedScalingRelationship sr = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
-
 
             if (arguments.get("scaling_relationship").equals("SIMPLE_CRUSTAL")) {
                 sr.setupCrustal(arguments.getDouble("scaling_c_val_dip_slip"),
@@ -285,7 +321,24 @@ public class ParameterRunner {
         ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
         NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
         parameterRunner.ensurePaths();
-        parameterRunner.setUpInversionRunner(runner);
+        parameterRunner.setUpCrustalInversionRunner(runner);
+        FaultSystemSolution solution = runner.runInversion();
+        parameterRunner.saveSolution(solution);
+        return solution;
+    }
+
+    /**
+     * Runs and saves an inversion based on Parameters.NZSHM22.INVERSION_HIKURANGI
+     *
+     * @return
+     * @throws IOException
+     * @throws DocumentException
+     */
+    public static FaultSystemSolution runNZSHM22HikurangiInversion() throws IOException, DocumentException {
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_HIKURANGI);
+        NZSHM22_SubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
         return solution;
@@ -351,9 +404,10 @@ public class ParameterRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
+        runNZSHM22HikurangiInversion();
         // runNZSHM22CrustalInversion();
         // buildNZSHM22CoulombCrustalRupset();
-        buildNZSHM22HikurangiRupset();
+        // buildNZSHM22HikurangiRupset();
         // buildNZSHM22PuysegurRupset();
     }
 }
