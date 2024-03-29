@@ -37,3 +37,5 @@ bin/**
 *excludedSections.geoJson
 *includedSections.geoJson
 .ParameterRunner.config
+paleoRates.geojson
+src/main/java/nz/cri/gns/NZSHM22/opensha/util/OakleyRunner.java
