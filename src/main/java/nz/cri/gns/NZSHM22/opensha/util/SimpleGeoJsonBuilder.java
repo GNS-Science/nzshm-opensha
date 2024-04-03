@@ -109,12 +109,7 @@ public class SimpleGeoJsonBuilder {
 
     public String toJSON() {
         FeatureCollection featureCollection = new FeatureCollection(features);
-        try {
-            return featureCollection.toJSON();
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
-        return null;
+        return featureCollection.toJSON();
     }
 
     public void toJSON(File file) {
