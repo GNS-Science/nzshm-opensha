@@ -74,3 +74,17 @@ Others are implemented, but they are not used per NZSHM22 parameters
 10 minute run. Solution did not converge on target, is this because subduction and crustal are so different?
 
 ![Screenshot 2024-03-29 130626.png](Screenshot%202024-03-29%20130626.png)
+
+# Possible solutions
+
+## Paleo constraints
+
+As far as I understand it, paleo constraints are based on visible rupture artifacts on the surface. This means they apply to crustal faults. We could apply them to all ruptures that have a crustal section that has associated paleo activity. Magnitudes presumably come from the whole ruptures, but length only from the crustal part of it. Constraints are applied to the whole rupture.
+
+## RupRateMinimizationConstraint
+
+Already identical
+
+## MFDInversionConstraint
+
+Kevin suggested we could hack this into regional MFDs by overwriting `getFractSectsInsideRegion` or `getFractRupsInsideRegion`
