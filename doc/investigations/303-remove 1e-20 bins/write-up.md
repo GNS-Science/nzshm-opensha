@@ -66,7 +66,7 @@ The filtered `totalSubSeismoOnFaultMFD` is larger by about 0.001 at around 6.85 
 
 After 10 minutes, sampled rates are similar to NZSHM22-equivalent rates in that mostly the same ruptures have rates in both cases. Rate values can vary. There are several ruptures that have a rate in the normal set but not in the sampled set. 
 
-Here is an example comparison. Sampled rates on the left, unmodified rate son the right.
+Here is an example comparison. Sampled rates on the left, unmodified rates on the right.
 
 ![Screenshot 2024-04-10 163311.png](Screenshot%202024-04-10%20163311.png)
 
@@ -74,8 +74,8 @@ In this example, rupture 179603 has a zero rate in the sampled dataset. The rupt
 
 ## Filtered
 
-Filtered rates look much more different. While the sampled dataset assigns rates mostly to the same ruptures as the NZSHM22-equivalent dataset, sampled rates do not.
+Filtered rates look much more different. While the sampled dataset assigns rates mostly to the same ruptures as the NZSHM22-equivalent dataset, filtered rates do not.
 
-Here is a screenshot from the beginning of the files. Filtered on the left, unmodified rates on the right. Note that the original ruptures 6 and 10 would have been filtered out and the filtered data has been manually adjusted in this screenshot to match the original ruptures.
+Here is a screenshot from the beginning of the files. Filtered on the left, unmodified rates on the right. Note that the original ruptures 6 and 10 would have been filtered out and the filtered data has been manually adjusted in this screenshot to align with the original ruptures.
 
 ![Screenshot 2024-04-10 165132.png](Screenshot%202024-04-10%20165132.png)
