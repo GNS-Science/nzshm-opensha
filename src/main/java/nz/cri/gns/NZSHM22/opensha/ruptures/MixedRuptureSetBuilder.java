@@ -430,7 +430,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
             }
             if (cffFractInts > 0f)
                 connFilters.add(new NetRuptureCoulombFilter(fractIntsAgg, cffFractInts));
-            connectionStrategy = new PlausibleClusterConnectionStrategy(subSections, distAzCalc, maxJumpDist,
+            connectionStrategy = new MixedPlausibleClusterConnectionStrategy(subSections, distAzCalc, maxJumpDist,
                     PlausibleClusterConnectionStrategy.JUMP_SELECTOR_DEFAULT, connFilters);
             System.out.println("Building plausible connections w/ " + numThreads + " threads...");
             connectionStrategy.checkBuildThreaded(numThreads);
