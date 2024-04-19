@@ -11,7 +11,9 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
@@ -24,6 +26,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.pr
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.*;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveBilateralRuptureGrowingStrategy.SecondaryVariations;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
@@ -33,8 +36,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
@@ -201,6 +207,37 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
         description += "_coFr(" + fmt(coeffOfFriction) + ")";
 
         return description;
+    }
+
+
+    /**
+     * Calculates the length of a cluster. Has special code for handling subduction clusters so that only the top row
+     * is counted towards length
+     * @param cluster a cluster
+     * @return the length of the cluster
+     */
+    private double calculateLength(FaultSubsectionCluster cluster) {
+
+        System.out.println(cluster.subSects);
+
+        if (cluster.subSects.get(0) instanceof DownDipFaultSection) {
+            List<DownDipFaultSection> ddCluster = (List<DownDipFaultSection>) (List<?>) cluster.subSects;
+            int minRow = ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
+            return ddCluster.stream().filter(s -> s.getRowIndex() == minRow).mapToDouble(FaultSection::getTraceLength).sum();
+        }
+
+        return cluster.subSects.stream().mapToDouble(FaultSection::getTraceLength).sum();
+    }
+
+    private double calculateLength(ClusterRupture rupture) {
+        return Arrays.stream(rupture.clusters).mapToDouble(this::calculateLength).sum() * 1e3;
+    }
+
+    protected double[] buildLengths() {
+        // we don't count splays yet
+        Preconditions.checkState(!splays);
+
+        return ruptures.stream().mapToDouble(this::calculateLength).toArray();
     }
 
     @Override
@@ -648,6 +685,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+                        .rupLengths(buildLengths())
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
