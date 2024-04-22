@@ -218,8 +218,6 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
      */
     private double calculateLength(FaultSubsectionCluster cluster) {
 
-        System.out.println(cluster.subSects);
-
         if (cluster.subSects.get(0) instanceof DownDipFaultSection) {
             List<DownDipFaultSection> ddCluster = (List<DownDipFaultSection>) (List<?>) cluster.subSects;
             int minRow = ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
