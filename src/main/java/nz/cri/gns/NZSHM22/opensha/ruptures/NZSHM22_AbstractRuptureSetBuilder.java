@@ -21,6 +21,7 @@ import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
@@ -39,8 +40,6 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
     int minSubSections = 2; // New NZSHM22
 
-    long maxFaultSections = 100000; // maximum fault ruptures to process
-    long skipFaultSections = 0; // skip n fault ruptures, default 0"
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
     int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 
@@ -53,6 +52,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     String scaleDepthExcludeDomainNo;
     double scaleDepthExcludeDomainScalar;
 
+    List<FaultFilter> faultFilters = new ArrayList<>();
 
     /**
      * For debugging only. adds 180 degrees to each rake in the fault model
@@ -73,6 +73,38 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public NZSHM22_AbstractRuptureSetBuilder setScaleDepthExcludeDomain(String domainNo, double scalar){
         this.scaleDepthExcludeDomainNo = domainNo;
         this.scaleDepthExcludeDomainScalar = scalar;
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setDomainFilter(String domains) {
+        faultFilters.add(new FaultFilter.DomainFilter(domains));
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setMinSlipFilter(double minSlip) {
+        faultFilters.add(new FaultFilter.MinSlipFilter(minSlip));
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setPolygonFilter(String filterPolygonFileLonLat) {
+        faultFilters.add(new FaultFilter.PolygonFilter(filterPolygonFileLonLat));
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setIdRangeFilter(int skipFaultSections, int maxFaultSections) {
+        faultFilters.add(new FaultFilter.IdRangeFilter(skipFaultSections, maxFaultSections));
+        return this;
+    }
+
+    /**
+     * Replaced by setIdRangeFilter. Keeping this around for runzi.
+     *
+     * @param maxFaultSections the maximum number of fault sections to be processed.
+     * @return NZSHM22_RuptureSetBuilder the builder
+     */
+    @Deprecated
+    public NZSHM22_AbstractRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
+        faultFilters.add(new FaultFilter.IdRangeFilter(0, maxFaultSections));
         return this;
     }
 
@@ -104,16 +136,13 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         }
         if (downDipFile != null) {
             description = description + "_SF(" + downDipFile.getName() + ")";
-        }        
+        }
         description += "_mnSbS(" + fmt(minSubSections) + ")";
         description += "_mnSSPP(" + fmt(minSubSectsPerParent) + ")";
         description += "_mxSSL(" + fmt(maxSubSectionLength) + ")";
-        
-        if (maxFaultSections != 100000) {
-        	description += "_mxFS(" + fmt(maxFaultSections) + ")";
-        }
-        if (skipFaultSections != 0) {
-        	description += "_skFS(" + fmt(skipFaultSections) + ")";       	
+
+        for(FaultFilter filter:faultFilters) {
+            description += filter.toDescription();
         }
         return description;
     }
@@ -169,28 +198,6 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 //        return this;
 //    }
 
-
-    /**
-     * Used for testing only!
-     *
-     * @param maxFaultSections the maximum number of fault sections to be processed.
-     * @return NZSHM22_RuptureSetBuilder the builder
-     */
-    public NZSHM22_AbstractRuptureSetBuilder setMaxFaultSections(int maxFaultSections) {
-        this.maxFaultSections = maxFaultSections;
-        return this;
-    }
-
-    /**
-     * Used for testing only!
-     *
-     * @param skipFaultSections sets the number fault sections to be skipped.
-     * @return NZSHM22_RuptureSetBuilder the builder
-     */
-    public NZSHM22_AbstractRuptureSetBuilder setSkipFaultSections(int skipFaultSections) {
-        this.skipFaultSections = skipFaultSections;
-        return this;
-    }
 
     /**
      * Some internal classes support parallelisation.
@@ -266,11 +273,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
         if (faultModel.isCrustal()) {
 
-            if (maxFaultSections < 1000 || skipFaultSections > 0) {
-                final long endSection = maxFaultSections + skipFaultSections;
-                final long skipSections = skipFaultSections;
-                subSections.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
-                System.out.println("Fault model filtered to " + subSections.size() + " fault sections");
+            for (FaultFilter filter : faultFilters) {
+                filter.filter(subSections);
             }
 
             FaultSectionList fsd = subSections;
@@ -321,11 +325,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
         if (fsdFile != null || (faultModel != null && faultModel.isCrustal())) {
 
-            if (maxFaultSections < 1000 || skipFaultSections > 0) {
-                final long endSection = maxFaultSections + skipFaultSections;
-                final long skipSections = skipFaultSections;
-                subSections.removeIf(section -> section.getSectionId() >= endSection || section.getSectionId() < skipSections);
-                System.out.println("Fault model filtered to " + subSections.size() + " fault sections");
+            for (FaultFilter filter : faultFilters) {
+                filter.filter(subSections);
             }
 
             FaultSectionList fsd = subSections;

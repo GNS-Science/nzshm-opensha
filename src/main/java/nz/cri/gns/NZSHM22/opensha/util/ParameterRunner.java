@@ -91,7 +91,7 @@ public class ParameterRunner {
      */
     public void setUpCoulombCrustalRuptureSetBuilder(NZSHM22_CoulombRuptureSetBuilder builder) {
 
-        builder.setMaxFaultSections(arguments.getInteger("max_sections"));
+        builder.setIdRangeFilter(0, arguments.getInteger("max_sections"));
         builder.setMaxJumpDistance(arguments.getDouble("max_jump_distance"));
         builder.setAdaptiveMinDist(arguments.getDouble("adaptive_min_distance"));
         builder.setAdaptiveSectFract(arguments.getFloat("thinning_factor"));

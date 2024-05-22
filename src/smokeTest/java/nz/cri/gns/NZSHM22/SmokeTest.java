@@ -100,7 +100,7 @@ public class SmokeTest {
 
         FaultSystemRupSet rupSet = builder
                 .setThinningFactor(0.2)
-                .setMaxFaultSections(40)
+                .setIdRangeFilter(0, 40)
                 .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
                 .setScalingRelationship(scaling)
                 .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
@@ -140,7 +140,7 @@ public class SmokeTest {
                 .setAdaptiveMinDist(6.0d)
                 .setMaxJumpDistance(15d)
                 .setAdaptiveSectFract(0.1f)
-                .setMaxFaultSections(40)
+                .setIdRangeFilter(0, 40)
                 .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
                 .setScalingRelationship(scaling)
                 .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
@@ -181,7 +181,7 @@ public class SmokeTest {
                 .setDownDipPositionCoarseness(0.0)
                 .setDownDipSizeCoarseness(0.0)
                 .setDownDipMinFill(0.5)
-                .setMaxFaultSections(10)
+                .setIdRangeFilter(0, 10)
                 .setFaultModel(NZSHM22_FaultModels.SBD_0_4_HKR_LR_30)
                 .setScalingRelationship(NZSHM22_PythonGateway.getScalingRelationship("TMG_SUB_2017"))
                 .setScalingRelationship(scaling)

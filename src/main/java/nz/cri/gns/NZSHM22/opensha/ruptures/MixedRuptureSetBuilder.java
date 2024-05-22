@@ -818,7 +818,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
         sr.setupCrustal(4.2, 4.2);
 
         builder.setFaultModel(NZSHM22_FaultModels.SBD_0_1_PUY_30);
-        builder.setMaxFaultSections(2000);
+        builder.setIdRangeFilter(0, 2000);
         builder.setNumThreads(12);
         ((MixedRuptureSetBuilder) builder
                 .setScalingRelationship(sr))

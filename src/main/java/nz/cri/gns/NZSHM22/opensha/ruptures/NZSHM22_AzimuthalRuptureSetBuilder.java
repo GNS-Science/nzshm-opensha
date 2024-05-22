@@ -356,7 +356,7 @@ public class NZSHM22_AzimuthalRuptureSetBuilder extends NZSHM22_AbstractRuptureS
 //        	.setMaxAzimuthChange(560)
 //        	.setMaxJumpDistance(5d)
         	.setThinningFactor(0.2)
-					.setMaxFaultSections(100)
+					//.setMaxFaultSections(100)
 		.setScalingRelationship(ScalingRelationships.TMG_CRU_2017)
 		.setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
 				.setScaleDepthIncludeDomain("4", 0.5)
