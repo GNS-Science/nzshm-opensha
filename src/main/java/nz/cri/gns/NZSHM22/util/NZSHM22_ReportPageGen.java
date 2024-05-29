@@ -119,6 +119,21 @@ public class NZSHM22_ReportPageGen {
         return this;
     }
 
+    /**
+     * Adds a specific RupSet plot to the report.
+     *
+     * @param plotName
+     * @return
+     */
+    public NZSHM22_ReportPageGen addRupSetPlot(AbstractRupSetPlot plot) {
+        if (plots == null) {
+            plots = new ArrayList<>();
+        }
+        plots.add(plot);
+        return this;
+    }
+
+
     public NZSHM22_ReportPageGen setFillSurfaces(boolean fillSurfaces) {
         this.fillSurfaces = fillSurfaces;
         return this;
