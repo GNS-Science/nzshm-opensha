@@ -1,5 +1,6 @@
-package nz.cri.gns.NZSHM22.opensha.ruptures;
+package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;

@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.ruptures;
+package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
@@ -140,10 +141,15 @@ public class MixedRuptureSetBuilderTest {
         }, actual, 0.0000001);
     }
 
+    static class MockMixedRuptureSetBuilder extends MixedRuptureSetBuilder {
+        public MockMixedRuptureSetBuilder(List<ClusterRupture> ruptures) {
+            this.ruptures = ruptures;
+        }
+    }
+
     static MixedRuptureSetBuilder mockBuilder(ClusterRupture... ruptures) {
-        MixedRuptureSetBuilder builder = new MixedRuptureSetBuilder();
-        builder.ruptures = ImmutableList.copyOf(ruptures);
-        return builder;
+        return new MockMixedRuptureSetBuilder(ImmutableList.copyOf(ruptures));
+
     }
 
     static class MockRupture extends ClusterRupture {
