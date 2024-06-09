@@ -16,9 +16,13 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeRakeChangeFilter;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.DirectPathPlausibilityFilter;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.MinSectsPerParentFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.SplayConnectionsOnlyFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.coulomb.NetRuptureCoulombFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.path.CumulativeProbPathEvaluator;
@@ -37,10 +41,9 @@ import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
@@ -213,6 +216,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
     /**
      * Calculates the length of a cluster. Has special code for handling subduction clusters so that only the top row
      * is counted towards length
+     *
      * @param cluster a cluster
      * @return the length of the cluster
      */
@@ -243,6 +247,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
         loadFaults(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ);
         loadFaults(NZSHM22_FaultModels.SBD_0_2_PUY_15);
+        loadFaults(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30);
 
         Preconditions.checkState(!subSections.isEmpty());
         String fmPrefix = "nz_demo_crustal";
@@ -491,6 +496,10 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
         if (minSubSectsPerParent > 1) {
             configBuilder.minSectsPerParent(this.minSubSectsPerParent, true, true); // always do this one
         }
+
+        configBuilder.add(new DownDipRuptureGrowthPlausibilityFilter());
+        configBuilder.add(new DownDipRuptureSizePlausibilityFilter());
+
         if (noIndirectPaths) {
             configBuilder.noIndirectPaths(true);
         }
@@ -646,9 +655,18 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
         RuptureGrowingStrategy mixedGrowingStrategy = new MixedGrowingStrategy(growingStrat, downDipPermutationStrategy);
 
-
         // build our configuration
         PlausibilityConfiguration config = configBuilder.build();
+
+        for (int i = 0; i < config.getFilters().size(); i++) {
+            PlausibilityFilter filter = config.getFilters().get(i);
+            if (!filter.getName().startsWith("DownDip") &&
+                    filter.getClass() != MinSectsPerParentFilter.class &&
+                    filter.getClass() != DirectPathPlausibilityFilter.class &&
+                    filter.getClass() != CumulativeRakeChangeFilter.class) {
+                config.getFilters().set(i, new DownDipSkipPlausibilityFilter(filter));
+            }
+        }
 
         /*
          * =============================
@@ -681,12 +699,79 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
                 + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(ruptures.size(), millis));
 
 
+        int crustalCount = 0;
+        int subductionCount = 0;
+        int jointCount = 0;
+
+        for (ClusterRupture rupture : ruptures) {
+            int crustal = 0;
+            int subduction = 0;
+            for (FaultSubsectionCluster cluster : rupture.clusters) {
+                if (cluster.startSect instanceof DownDipFaultSection) {
+                    subduction++;
+                } else {
+                    crustal++;
+                }
+            }
+            if (subduction == 0) {
+                crustalCount++;
+            } else if (crustal == 0) {
+                subductionCount++;
+            } else {
+                jointCount++;
+            }
+        }
+
+        System.out.println("crustal: " + crustalCount + " subduction: " + subductionCount + " joint: " + jointCount);
+
+        Map<Integer, Integer> jointStats = new HashMap<>();
+        List<Jump> jointJumps = connectionStrategy.getAllPossibleJumps().stream().filter(j -> j.fromSection instanceof DownDipFaultSection).collect(Collectors.toList());
+        Set<Integer> puyJumps = jointJumps.stream().filter(j -> j.fromSection.getParentSectionId() == NZSHM22_FaultModels.SBD_0_2_PUY_15.getParentSectionId()).map(j -> j.toSection.getParentSectionId()).collect(Collectors.toSet());
+        Set<Integer> hikJumps = jointJumps.stream().filter(j -> j.fromSection.getParentSectionId() == NZSHM22_FaultModels.SBD_0_3_HKR_LR_30.getParentSectionId()).map(j -> j.toSection.getParentSectionId()).collect(Collectors.toSet());
+
+
+        System.out.println("finding connecting ruptures");
+
+        for (int i = 0; i < ruptures.size(); i++) {
+            ClusterRupture rupture = ruptures.get(i);
+            int start = rupture.clusters[0].startSect.getSectionId();
+            FaultSubsectionCluster cluster = rupture.clusters[rupture.clusters.length - 1];
+            int end = cluster.subSects.get(cluster.subSects.size() - 1).getSectionId();
+            if ((puyJumps.contains(start) && hikJumps.contains((end))) || (puyJumps.contains(end) && hikJumps.contains(start))) {
+                System.out.println("connecting rupture " + i + " with " + rupture.getTotalNumClusters() + " clusters");
+                for (FaultSubsectionCluster c : rupture.clusters) {
+                    System.out.println("  " + c.parentSectionID + " " + c.parentSectionName);
+                }
+            }
+        }
+        System.out.println("done finding connecting ruptures");
+
+        List<ClusterRupture> jointRuptures = new ArrayList<>();
+        for (Jump jump : jointJumps) {
+            FaultSection subdubSection = jump.fromSection;
+            jointStats.compute(subdubSection.getSectionId(), (k, v) -> v == null ? 0 : v);
+            for (ClusterRupture rupture : ruptures) {
+                List<FaultSection> sections = rupture.buildOrderedSectionList();
+                if (sections.get(0) == subdubSection || sections.get(sections.size() - 1) == subdubSection) {
+                    jointStats.compute(subdubSection.getSectionId(), (k, v) -> v + 1);
+                }
+            }
+        }
+
+//        JointRuptureBuilder jointRuptureBuilder = new JointRuptureBuilder(connectionStrategy, ruptures, distAzCalc, 1, 200);
+//
+//        List<ClusterRupture> newJointRuptures = jointRuptureBuilder.build(NZSHM22_FaultModels.SBD_0_2_PUY_15.getParentSectionId());
+//        ruptures.addAll(newJointRuptures);
+//        newJointRuptures = jointRuptureBuilder.build(NZSHM22_FaultModels.SBD_0_3_HKR_LR_30.getParentSectionId());
+//        ruptures.addAll(newJointRuptures);
+
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
                         .rupLengths(buildLengths())
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+                        .addModule(SectionDistanceAzimuthCalculator.archivableInstance(distAzCalc))
                         .build();
 
         return rupSet;
@@ -832,6 +917,16 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
         System.out.println(builder.getDescriptiveName());
         FaultSystemRupSet ruptureSet = builder.buildRuptureSet();
-        ruptureSet.write(new File("TEST/ruptures/" + builder.getDescriptiveName() + ".zip"));
+        File outputPath = new File("TEST/ruptures/" + builder.getDescriptiveName() + ".zip");
+        ruptureSet.write(outputPath);
+
+//
+//
+//        NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
+//        reportPageGen.setName("joint")
+//                .setOutputPath("/tmp/reports/joint3")
+//                .setRuptureSet(outputPath.getPath());
+//        reportPageGen.generateRupSetPage();
+
     }
 }

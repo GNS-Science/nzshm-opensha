@@ -22,6 +22,10 @@ public class DownDipFaultSection extends FaultSectionPrefData {
 	private int colIndex = Integer.MAX_VALUE;
 	private DownDipSubSectBuilder builder;
 
+    private volatile double traceLength = -1;
+    private volatile double creepArea = -1;
+    private volatile double noCreepArea = -1;
+
     public DownDipFaultSection setBuilder(DownDipSubSectBuilder builder) {
         this.builder = builder;
         return this;
@@ -76,6 +80,28 @@ public class DownDipFaultSection extends FaultSectionPrefData {
 	public int getColIndex() {
 		return this.colIndex;
 	}
+
+    @Override
+    public double getTraceLength() {
+        if (traceLength < 0) {
+            traceLength = super.getTraceLength();
+        }
+        return traceLength;
+    }
+
+    @Override
+    public double getArea(boolean creepReduced) {
+        if (creepReduced) {
+            if (creepArea < 0) {
+                creepArea = super.getArea(creepReduced);
+            }
+            return creepArea;
+        }
+        if (noCreepArea < 0) {
+            noCreepArea = super.getArea(creepReduced);
+        }
+        return noCreepArea;
+    }
 
 	public String toString() {
 		String str = "type = DownDipFaultSection\n";

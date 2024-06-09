@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Drop-in replacement for PlausibleClusterConnectionStrategy that is more efficient when subduction faults are
  * present.
+ * The main reason this extends PlausibleClusterConnectionStrategy rather than ClusterConnectionStrategy is that this
+ * way we can call buildPossibleConnections(). It's a hack :-(
  * PlausibleClusterConnectionStrategy will vet a possible jump by looking at permutations on the target fault that
  * do not make sense for subduction faults and are magnitudes more expensive at the same time. These permutations
  * do not take into account the DownDipPermutationStrategy and any of its filters.

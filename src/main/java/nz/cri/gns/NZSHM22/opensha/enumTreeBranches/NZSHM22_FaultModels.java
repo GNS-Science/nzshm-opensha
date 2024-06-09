@@ -96,7 +96,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 			"hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv", 10000),
 	@Deprecated
 	SBD_0_3_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
-					  "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv", 10000),
+					  "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv", 20000),
     @Deprecated
 	SBD_0_4_HKR_LR_30("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
 			"hk_tile_parameters_highkermsliprate_v2.csv", 10000);
@@ -203,8 +203,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 		return getName();
 	}
 
-	public String getFileName(){
+	public String getFileName() {
 		return fileName;
+	}
+
+	public int getParentSectionId() {
+		return id;
 	}
 
 	@Override

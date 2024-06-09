@@ -128,7 +128,7 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
             }
         }
         Preconditions.checkState(subsetSects.get(0).equals(downDipBuilder.getSubSect(startRow, startCol)));
-        FaultSubsectionCluster permutation = new FaultSubsectionCluster(subsetSects, exitPoints);
+        FaultSubsectionCluster permutation = new DownDipFaultSubSectionCluster(subsetSects, exitPoints);
         // add possible jumps out of this permutation
         for (FaultSection sect : subsetSects)
             for (Jump jump : fullCluster.getConnections(sect))
