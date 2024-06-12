@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.ruptures;
+package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -7,6 +7,8 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import org.dom4j.DocumentException;
@@ -39,8 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 

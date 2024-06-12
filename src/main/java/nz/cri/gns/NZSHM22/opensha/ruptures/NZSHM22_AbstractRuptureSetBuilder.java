@@ -29,7 +29,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 	PlausibilityConfiguration plausibilityConfig;
 	
     protected FaultSectionList subSections;
-    List<ClusterRupture> ruptures;
+    protected List<ClusterRupture> ruptures;
     ClusterRuptureBuilder builder;
 
     File fsdFile = null;
@@ -37,11 +37,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     String downDipFaultName = null;
     NZSHM22_FaultModels faultModel = null;
 
-    int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
+    protected int minSubSectsPerParent = 2; // 2 are required for UCERf3 azimuth calcs
     int minSubSections = 2; // New NZSHM22
 
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
-    int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
+    protected int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
 
 	protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
 	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
