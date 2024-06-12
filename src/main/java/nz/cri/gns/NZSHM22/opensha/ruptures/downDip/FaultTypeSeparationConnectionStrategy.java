@@ -10,7 +10,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 import java.util.List;
 
 /**
- * Like DistCutoffClosestSectClusterConnectionStrategy but ensures that we don not create jumps from or to
+ * Like DistCutoffClosestSectClusterConnectionStrategy but ensures that we do not create jumps from or to
  * downdip faults.
  */
 public class FaultTypeSeparationConnectionStrategy extends DistCutoffClosestSectClusterConnectionStrategy {
