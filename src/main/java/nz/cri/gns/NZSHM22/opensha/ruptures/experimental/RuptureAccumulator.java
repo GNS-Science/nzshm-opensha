@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -26,6 +27,7 @@ public class RuptureAccumulator {
     List<Double> lengths = new ArrayList<>();
     List<Double> mags = new ArrayList<>();
     List<Double> areas = new ArrayList<>();
+    List<Double> slips = new ArrayList<>();
 
     Integer nextSectionId = 0;
     Integer nextParentId = 0;
@@ -98,6 +100,7 @@ public class RuptureAccumulator {
         lengths.add(rupSet.getLengthForRup(r));
         mags.add(rupSet.getMagForRup(r));
         areas.add(rupSet.getAreaForRup(r));
+        slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
         return this;
     }
 
@@ -138,21 +141,26 @@ public class RuptureAccumulator {
      * @return the rupture set
      */
     public FaultSystemRupSet build() {
-        return FaultSystemRupSet.builder(sections, sectionForRups)
+        FaultSystemRupSet rupSet = FaultSystemRupSet.builder(sections, sectionForRups)
                 .rupLengths(toDoubleArray(lengths))
                 .rupAreas(toDoubleArray(areas))
                 .rupMags(toDoubleArray(mags))
                 .rupRakes(toDoubleArray(rakes))
                 .build();
+        AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
+        rupSet.addModule(aveSlip);
+        return rupSet;
     }
 
     public static void main(String[] args) throws IOException {
         FaultSystemRupSet crustal = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"));
+        FaultSystemRupSet puysegur = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip"));
         FaultSystemRupSet hikurangi = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
         FaultSystemRupSet result = new RuptureAccumulator().
                 add(crustal).
+                add(puysegur).
                 add(hikurangi).
                 build();
-        result.write(new File("/tmp/ruptureset/merged.zip"));
+        result.write(new File("/tmp/nzshm22_complete_merged.zip"));
     }
 }
