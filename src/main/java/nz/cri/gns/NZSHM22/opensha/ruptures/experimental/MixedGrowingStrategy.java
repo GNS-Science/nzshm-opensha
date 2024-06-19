@@ -8,6 +8,9 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 import java.util.List;
 
+/**
+ * RuptureGrowingStrategy that can be used to apply separate growing strategies to crustal and subduction clusters.
+ */
 public class MixedGrowingStrategy implements RuptureGrowingStrategy {
 
     protected RuptureGrowingStrategy crustalStrategy;
@@ -19,14 +22,19 @@ public class MixedGrowingStrategy implements RuptureGrowingStrategy {
         return "MixedGrowingStrategy";
     }
 
-
-    public MixedGrowingStrategy(RuptureGrowingStrategy crustalStrategy, RuptureGrowingStrategy downdipStrategy){
+    /**
+     * Creates a new MixedGrowingStrategy that grows ruptures using the specified strategies.
+     *
+     * @param crustalStrategy when this strategy is passed a crustal cluster, this growing strategy is used.
+     * @param downdipStrategy when this strategy is passed a subduction cluster, this growing strategy is used.
+     */
+    public MixedGrowingStrategy(RuptureGrowingStrategy crustalStrategy, RuptureGrowingStrategy downdipStrategy) {
         this.crustalStrategy = crustalStrategy;
         this.downdipStrategy = downdipStrategy;
     }
+
     @Override
     public List<FaultSubsectionCluster> getVariations(FaultSubsectionCluster fullCluster, FaultSection firstSection) {
-        List<FaultSection> clusterSects = fullCluster.subSects;
         int myInd = fullCluster.subSects.indexOf(firstSection);
         Preconditions.checkState(myInd >= 0, "first section not found in cluster");
 
