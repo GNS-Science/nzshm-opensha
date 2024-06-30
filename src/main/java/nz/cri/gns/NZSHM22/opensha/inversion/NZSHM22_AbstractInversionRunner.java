@@ -47,6 +47,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.Itera
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
+import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 /**
  * @author chrisbc
@@ -682,6 +683,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 * @throws DocumentException
 	 */
 	public FaultSystemSolution runInversion() throws IOException, DocumentException {
+
+		UCERF3InversionConfiguration.setMagNorm(8.1);
 
 		configure();
 		validateConfig();
