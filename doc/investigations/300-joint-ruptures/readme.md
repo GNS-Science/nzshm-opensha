@@ -58,6 +58,8 @@ Any other physical features such as rake, dip, relative azimuth are not yet take
 
 ## Use Existing Coulomb Filters to Create Joint Ruptures
 
+Put very simply, Coulomb filters are based on the Coulomb 'stiffness' between subsections where a positive stiffness encourages slip on the target section(s) and negative stiffness discourages slip. For a rupture to pass, it is 'grown' from an initial subsection `A` by using Coulomb stiffness to test if `A` induces `B` to slip, then if `AB` induces `C` to slip, then if `ABC` induces `D` to slip, etc. If any of these interactions is negative, this particular path through the rupture is abandoned. A rupture passes the filter if we are able to grow a path through the whole rupture from any of the rupture's subsections. 
+
 Driver class is [MixedRuptureSetBuilder](..%2F..%2F..%2Fsrc%2Fmain%2Fjava%2Fnz%2Fcri%2Fgns%2FNZSHM22%2Fopensha%2Fruptures%2Fexperimental%2FMixedRuptureSetBuilder.java)
 
 This is a modified copy of [NZSHM22_CoulombRuptureSetBuilder](..%2F..%2F..%2Fsrc%2Fmain%2Fjava%2Fnz%2Fcri%2Fgns%2FNZSHM22%2Fopensha%2Fruptures%2FNZSHM22_CoulombRuptureSetBuilder.java) that uses the existing Coulomb filters in order to build joint ruptures.
@@ -113,10 +115,10 @@ Explored strategies:
 
 - Subduction filtering:
     - size increase needs to be at least 10%
-    - ruptures of the same size avoid overlapping
+    - ruptures of the same size avoid overlapping. For example, if there is a rupture of width 5 that starts at fault subsection 0, then the next rupture of width 5 will start at 0 + 5 = 5, and the next one after that at 5 + 5 = 10. The intent of this is to preserve the variety of rupture sizes for each location while removing ruptures of duplicate sizes. The algorithm is not perfect. For example, ruptures of width 5 will not provide perfect coverage of a fault that is 13 sections wide. In the future, me may want to improve the algorithm to allow small overlaps to deal with these cases. Visual inspection of rupture histograms and a density map suggests that we maintain good enough coverage with the simple algorithm for now.
 - Crustal ruptures:
-    - max cumulative azimuth change 10
-    - max cumulative rake change 10
+    - max cumulative azimuth change 10 (we haven't yet explored other values)
+    - max cumulative rake change 10 (we haven't yet explored other values)
 
 The explored crustal filtering is only meant to reduce and simplify the rupture set for development. We'll have to come up with better approaches if it's still required after Coulomb filtering.
 
