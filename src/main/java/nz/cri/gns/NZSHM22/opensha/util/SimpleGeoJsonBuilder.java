@@ -26,6 +26,11 @@ public class SimpleGeoJsonBuilder {
 
     List<Feature> features = new ArrayList<>();
 
+    public FeatureProperties addFeature(Feature feature) {
+        features.add(feature);
+        return feature.properties;
+    }
+
     public FeatureProperties addLocation(Location location) {
         FeatureProperties properties = new FeatureProperties();
         features.add(new Feature(new Geometry.Point(location), properties));
