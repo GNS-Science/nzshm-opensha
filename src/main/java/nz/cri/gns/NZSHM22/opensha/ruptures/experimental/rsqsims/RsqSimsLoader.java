@@ -4,10 +4,13 @@ import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
+import org.opensha.commons.geo.Region;
 import org.opensha.commons.geo.json.Feature;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.geo.json.Geometry;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.*;
@@ -42,6 +45,7 @@ public class RsqSimsLoader {
     int nextId = 0;
 
     Map<String, List<FaultSection>> nameToSection;
+    PolygonFaultGridAssociations polys;
 
     List<Patch> patches;
 
@@ -156,7 +160,12 @@ public class RsqSimsLoader {
         if (name.length() < 32) {
             return name;
         }
-        return name.substring(0, 32);
+        return name.substring(0, 32).trim();
+    }
+
+    public double getDistance(FaultSection section, Patch patch) {
+        Region poly = polys.getPoly(section.getSectionId());
+        return patch.locations.stream().mapToDouble(poly::distanceToLocation).max().getAsDouble();
     }
 
     public void loadRupSet() throws IOException {
@@ -175,21 +184,48 @@ public class RsqSimsLoader {
                     });
                 }
         );
+        Set<String> ghostSections = new HashSet<>();
         patches.forEach(
                 p -> {
                     List<FaultSection> sections = nameToSection.get(p.zname);
-                    if (sections != null && sections.size() == 1) {
-                        p.section = sections.get(0);
+
+                    if ((sections == null || sections.isEmpty()) && !(p.zname.equals("Hikurangi") || (p.zname.equals("Puysegar")))) {
+                        ghostSections.add(p.zname);
                     }
+
+                    if (sections == null || sections.isEmpty()) {
+                        return;
+                    }
+                    if (sections.size() == 1) {
+                        p.section = sections.get(0);
+                    } else {
+                        FaultSection nearest = null;
+                        double distance = Double.MAX_VALUE;
+                        for (FaultSection section : sections) {
+                            double d = getDistance(section, p);
+                            if (d < distance) {
+                                nearest = section;
+                                distance = d;
+                            }
+                        }
+                        p.section = nearest;
+                    }
+
+
                 }
         );
 
         long matches = patches.stream().filter(p -> p.section != null).count();
         System.out.println("zname matches: " + matches + " out of " + patches.size());
+        long subduction = patches.stream().filter(p ->
+                p.section == null && !(p.zname.equals("Hikurangi") || (p.zname.equals("Puysegar")))
+        ).count();
+        System.out.println("crustal without matches: " + subduction);
     }
 
-    public void loadSolutionPolygons() {
-        
+    public void loadSolutionPolygons() throws IOException {
+        FaultSystemRupSet solution = FaultSystemRupSet.load(this.solution);
+        polys = solution.getModule(PolygonFaultGridAssociations.class);
     }
 
     public static void main(String[] args) throws IOException {
@@ -198,6 +234,7 @@ public class RsqSimsLoader {
         String rupSetFileName = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
         RsqSimsLoader loader = new RsqSimsLoader(new File(fileName), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadGeometry();
         loader.loadNames();
         loader.loadRupSet();
