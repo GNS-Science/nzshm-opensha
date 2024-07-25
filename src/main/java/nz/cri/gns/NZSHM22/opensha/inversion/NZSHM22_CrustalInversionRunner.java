@@ -14,11 +14,14 @@ import com.google.common.base.Preconditions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -199,6 +202,28 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         }
 
         rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);
+
+        rupSet.removeRuptures();
+       // rupSet.getFaultSectionDataList().forEach(s -> s.setSectionName(s.getSectionName().replace("Subsection ", "")));
+        Set<String> names = new HashSet<>();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+
+            String name= section.getSectionName();
+            name = name.replace("Subsection ", "");
+            name = name.replace("Alpine", "Al");
+            name = name.replace("Springs Junction", "SJ");
+            name = name.replace("Wedge", "Wg");
+
+            if(name.length()>31) {
+                System.out.println(name);
+            }
+
+            Preconditions.checkState(name.length() < 33);
+            section.setSectionName(name);
+            names.add(name);
+        }
+        Preconditions.checkState(names.size() == rupSet.getNumSections());
+        U3FaultSystemIO.writeRupSet(rupSet, new File("/tmp/NZSHM_crustal_u3_use_this_instead.zip"));
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 
