@@ -16,6 +16,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Un
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.utils.FaultSectionDataWriter;
 import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
@@ -219,11 +220,15 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             }
 
             Preconditions.checkState(name.length() < 33);
-            section.setSectionName(name);
+           // section.setSectionName(name);
             names.add(name);
         }
         Preconditions.checkState(names.size() == rupSet.getNumSections());
         U3FaultSystemIO.writeRupSet(rupSet, new File("/tmp/NZSHM_crustal_u3_use_this_instead.zip"));
+
+        List<String> metaData = new ArrayList<>();
+        metaData.add("test");
+        FaultSectionDataWriter.writeSectionsToFile(rupSet.getFaultSectionDataList(), metaData, new File("/tmp/asciitest.txt"), false);
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 
