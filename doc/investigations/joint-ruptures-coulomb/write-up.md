@@ -60,12 +60,18 @@ Subsections are divided into "patches": 2km x 2km tiles. Ideally, we use 1km x 1
 - `MultiRuptureFractCoulombPositiveFilter` tests whether the number of all positive interactions is at least at a certain percentage value. Currently, the threshold is 0.75, and the filter is applied in both directions (i.e. crustal -> subduction and subduction -> crustal).
 - `MultiRuptureNetCoulombPositiveFilter` tests whether the net interaction is positive. This filter is also applied in both directions.
 
+When running `RuptureMerger`, it is advised to use and re-use a cache for the Coulomb stiffness. We're currently using one that Kevin supplied, but it is possible to create our own.
 
+The [oakley/WIP](https://github.com/GNS-Science/opensha/tree/oakley/WIP) branch off of the `experiment/subduction-coulomb` branch adds debugging reporting to investigate the generated ruptures.
 
+## RSQSims
 
-- Approach
-- Code
-- Ruptures
-- Report
-- RSQSims
-- Future Work
+With very little real world data available, it is not easy to find a ground truth for verifying the generated ruptures. As in [Enumerating Plausible Multifault Ruptures in Complex Fault Systems with Physical Constraints](https://pubs.geoscienceworld.org/ssa/bssa/article-abstract/112/4/1806/613987/Enumerating-Plausible-Multifault-Ruptures-in), we attempt to compare our ruptures to RSQSims output.  
+
+The approach is to take a NZ EQ catalogue generated in RSQSims, identify joint ruptures with a single crustal rupture, and then see if our filters pass the rupture.
+
+Some RSQSims file formats are described in https://zenodo.org/records/5534462 and Bruce Shaw has provided us with a newer catalogue. We're hoping to get a catalogue that matches the crustal geometry from NZSHM22.
+
+There is code for extracting SRQSims geometry in [feature/rsqsims](https://github.com/GNS-Science/nzshm-opensha/tree/feature/rsqsims). There is also the beginning of matching between RSQSims patches and opensha subsections. 
+
+Hopefully we will be able to get a new RSQSims catalogue with matching geometry where we can use the subsection ids from the `znames_Deepen.in` file to map directly to subsections. 
