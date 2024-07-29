@@ -75,3 +75,9 @@ Some RSQSims file formats are described in https://zenodo.org/records/5534462 an
 There is code for extracting SRQSims geometry in [feature/rsqsims](https://github.com/GNS-Science/nzshm-opensha/tree/feature/rsqsims). There is also the beginning of matching between RSQSims patches and opensha subsections. 
 
 Hopefully we will be able to get a new RSQSims catalogue with matching geometry where we can use the subsection ids from the `znames_Deepen.in` file to map directly to subsections. 
+
+The `main` method is in [RsqSimsLoader.java](https://github.com/GNS-Science/nzshm-opensha/blob/feature/rsqsims/src/main/java/nz/cri/gns/NZSHM22/opensha/ruptures/experimental/rsqsims/RsqSimsLoader.java). The code generates `geojson` files to verify the geometry.
+
+When loading the patch geometry, one needs to know the [UTM zone](https://www.dmap.co.uk/utmworld.htm). The documentation in https://zenodo.org/records/5534462 says it's 11S, but for the NZ data I have seen it is actually 59. Rendering the geojson file will make it very obvious if the zone has been chosen correctly.
+
+![Screenshot 2024-07-29 162713.png](Screenshot%202024-07-29%20162713.png)
