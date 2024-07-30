@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -12,7 +13,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.RuptureSurface;
 
+import java.awt.geom.Area;
 import java.io.*;
 import java.util.*;
 
@@ -38,6 +41,9 @@ import java.util.*;
 
 public class RsqSimsLoader {
 
+    final static String RSQSIMS_HIKURANGI = "Hikurangi";
+    final static String RSQSIMS_PUYSEGUR = "Puysegar";
+
     final File zfaultDeepenIn;
     final File znamesDeepenIn;
     final File rupSet;
@@ -46,6 +52,9 @@ public class RsqSimsLoader {
 
     Map<String, List<FaultSection>> nameToSection;
     PolygonFaultGridAssociations polys;
+
+    List<SubductionSection> hikurangi;
+    List<SubductionSection> puysegur;
 
     List<Patch> patches;
 
@@ -89,6 +98,36 @@ public class RsqSimsLoader {
             return new Feature(id, geometry, new FeatureProperties());
         }
 
+    }
+
+    public static class SubductionSection {
+
+        final Area area;
+        public final FaultSection section;
+
+        public SubductionSection(FaultSection section) {
+            this.section = section;
+            RuptureSurface surf = section.getFaultSurface(1, false, false);
+            LocationList locations = surf.getPerimeter();
+            area = new Area(locations.toPath());
+
+        }
+
+        public int overlap(Patch patch) {
+            int overlap = 0;
+
+            if (area.contains(patch.locations.first().lon, patch.locations.first().lat)) {
+                overlap++;
+            }
+            if (area.contains(patch.locations.get(1).lon, patch.locations.get(1).lat)) {
+                overlap++;
+            }
+            if (area.contains(patch.locations.last().lon, patch.locations.last().lat)) {
+                overlap++;
+            }
+
+            return overlap;
+        }
     }
 
     public RsqSimsLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) {
@@ -157,6 +196,7 @@ public class RsqSimsLoader {
     }
 
     String shortenName(String name) {
+
         if (name.length() < 32) {
             return name;
         }
@@ -168,9 +208,44 @@ public class RsqSimsLoader {
         return patch.locations.stream().mapToDouble(poly::distanceToLocation).max().getAsDouble();
     }
 
+    public FaultSection getBestSubductionSection(Patch patch) {
+
+        List<SubductionSection> sections = patch.zname.equals(RSQSIMS_HIKURANGI) ? hikurangi : puysegur;
+
+        FaultSection section = null;
+        int matchCount = 0;
+
+        for (SubductionSection candidate : sections) {
+            int matches = candidate.overlap(patch);
+            if (matches > matchCount) {
+                section = candidate.section;
+                matchCount = matches;
+                if (matchCount == 3) {
+                    break;
+                }
+            }
+        }
+
+        return section;
+    }
+
+    static class LambdaCounter {
+        public int count = 0;
+
+        public void inc() {
+            count++;
+        }
+
+        public String toString() {
+            return "" + count;
+        }
+    }
+
     public void loadRupSet() throws IOException {
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(this.rupSet);
         nameToSection = new HashMap<>();
+        hikurangi = new ArrayList<>();
+        puysegur = new ArrayList<>();
         rupSet.getFaultSectionDataList().forEach(
                 s -> {
                     String name = shortenName(s.getSectionName());
@@ -182,20 +257,39 @@ public class RsqSimsLoader {
                         old.add(s);
                         return old;
                     });
+
+                    if (s.getSectionName().startsWith("Hikurangi")) {
+                        hikurangi.add(new SubductionSection(s));
+                    }
+                    if (s.getSectionName().startsWith("Puysegur")) {
+                        puysegur.add(new SubductionSection(s));
+                    }
+
                 }
         );
         Set<String> ghostSections = new HashSet<>();
+        LambdaCounter totalSubductionPatches = new LambdaCounter();
+        LambdaCounter ghostSubductionPatches = new LambdaCounter();
         patches.forEach(
                 p -> {
-                    List<FaultSection> sections = nameToSection.get(p.zname);
 
-                    if ((sections == null || sections.isEmpty()) && !(p.zname.equals("Hikurangi") || (p.zname.equals("Puysegar")))) {
-                        ghostSections.add(p.zname);
-                    }
-
-                    if (sections == null || sections.isEmpty()) {
+                    if (p.zname.equals(RSQSIMS_HIKURANGI) || p.zname.equals(RSQSIMS_PUYSEGUR)) {
+                        totalSubductionPatches.inc();
+                        p.section = getBestSubductionSection(p);
+                        if (p.section == null) {
+                            ghostSubductionPatches.inc();
+                        }
                         return;
                     }
+
+                    List<FaultSection> sections = nameToSection.get(p.zname);
+
+                    if (sections == null || sections.isEmpty()) {
+                        ghostSections.add(p.zname);
+                        return;
+                    }
+
+
                     if (sections.size() == 1) {
                         p.section = sections.get(0);
                     } else {
@@ -218,9 +312,10 @@ public class RsqSimsLoader {
         long matches = patches.stream().filter(p -> p.section != null).count();
         System.out.println("zname matches: " + matches + " out of " + patches.size());
         long subduction = patches.stream().filter(p ->
-                p.section == null && !(p.zname.equals("Hikurangi") || (p.zname.equals("Puysegar")))
+                p.section == null && !(p.zname.equals(RSQSIMS_HIKURANGI) || (p.zname.equals(RSQSIMS_PUYSEGUR)))
         ).count();
         System.out.println("crustal without matches: " + subduction);
+        System.out.println("total subduction: " + totalSubductionPatches + " ghosts: " + ghostSubductionPatches);
     }
 
     public void loadSolutionPolygons() throws IOException {
@@ -231,7 +326,7 @@ public class RsqSimsLoader {
     public static void main(String[] args) throws IOException {
         String fileName = "C:\\rsqsimsCatalogue\\rundir5469\\zfault_Deepen.in";
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
-        String rupSetFileName = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
         RsqSimsLoader loader = new RsqSimsLoader(new File(fileName), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
         loader.loadSolutionPolygons();
@@ -240,10 +335,27 @@ public class RsqSimsLoader {
         loader.loadRupSet();
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
         patches.stream().filter(Objects::nonNull)
-                .filter(p -> p.getMaxLat() < -44.2555248137888)
+                            .filter(p -> p.getMaxLat() < -37.41483321429752)
 //                .filter(p -> p.parentId==115 || p.parentId == 3)
+//                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR) && p.section != null)
+                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR))
                 .forEach(p -> builder.addFeature(p.toFeature()));
-        builder.toJSON("/tmp/patches_below_dunedin.geojson");
+        builder.toJSON("/tmp/hikurangi-rsqsim.geojson");
+
+        SimpleGeoJsonBuilder builder2 = new SimpleGeoJsonBuilder();
+        loader.puysegur.forEach(s ->
+        {
+            FeatureProperties props = builder2.addFaultSectionPerimeter(s.section);
+            builder2.setLineColour(props, "red");
+        });
+        loader.hikurangi.forEach(s ->
+        {
+            FeatureProperties props = builder2.addFaultSectionPerimeter(s.section);
+            builder2.setLineColour(props, "red");
+
+        });
+        builder2.toJSON("/tmp/puysegurregions.geojson");
+
     }
 
     public static void main1(String[] args) throws IOException {
