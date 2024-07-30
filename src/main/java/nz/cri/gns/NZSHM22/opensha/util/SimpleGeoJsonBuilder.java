@@ -68,6 +68,13 @@ public class SimpleGeoJsonBuilder {
         return feature.properties;
     }
 
+    public FeatureProperties addFaultSectionPerimeter(FaultSection section) {
+        LocationList locations = section.getFaultSurface(1, false, false).getPerimeter();
+        FeatureProperties props = new FeatureProperties();
+        features.add(new Feature(new Geometry.LineString(locations), props));
+        return props;
+    }
+
     public FeatureProperties addLine(Location... locations) {
         LocationList locs = new LocationList();
         locs.addAll(Arrays.asList(locations));
