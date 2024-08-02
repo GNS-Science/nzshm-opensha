@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
-import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -10,7 +9,6 @@ import org.opensha.commons.geo.json.Feature;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.geo.json.Geometry;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.RuptureSurface;
@@ -39,10 +37,10 @@ import java.util.*;
  * columns may exist in each line beyond those listed and can be ignored.
  */
 
-public class RsqSimsLoader {
+public class RsqSimPatchLoader {
 
-    final static String RSQSIMS_HIKURANGI = "Hikurangi";
-    final static String RSQSIMS_PUYSEGUR = "Puysegar";
+    public final static String RSQSIMS_HIKURANGI = "Hikurangi";
+    public final static String RSQSIMS_PUYSEGUR = "Puysegar";
 
     final File zfaultDeepenIn;
     final File znamesDeepenIn;
@@ -56,7 +54,13 @@ public class RsqSimsLoader {
     List<SubductionSection> hikurangi;
     List<SubductionSection> puysegur;
 
-    List<Patch> patches;
+    public List<Patch> patches = new ArrayList<>();
+
+    public Map<Integer, Patch> patchLookup = new HashMap<>();
+
+    public Patch getPatch(int id) {
+        return patchLookup.get(id);
+    }
 
     public static class Patch {
         public final LocationList locations;
@@ -66,7 +70,7 @@ public class RsqSimsLoader {
 
         public String zname;
 
-        public FaultSection section = null;
+        public List<FaultSection> sections = new ArrayList<>();
 
         public double getMaxLat() {
             return locations.stream().mapToDouble(l -> l.lat).max().getAsDouble();
@@ -113,24 +117,23 @@ public class RsqSimsLoader {
 
         }
 
-        public int overlap(Patch patch) {
-            int overlap = 0;
+        public boolean overlaps(Patch patch) {
 
             if (area.contains(patch.locations.first().lon, patch.locations.first().lat)) {
-                overlap++;
+                return true;
             }
             if (area.contains(patch.locations.get(1).lon, patch.locations.get(1).lat)) {
-                overlap++;
+                return true;
             }
             if (area.contains(patch.locations.last().lon, patch.locations.last().lat)) {
-                overlap++;
+                return true;
             }
 
-            return overlap;
+            return false;
         }
     }
 
-    public RsqSimsLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) {
+    public RsqSimPatchLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) {
         this.zfaultDeepenIn = zfaultDeepenIn;
         this.znamesDeepenIn = znamesDeepenIn;
         this.rupSet = rupSet;
@@ -166,7 +169,6 @@ public class RsqSimsLoader {
     }
 
     public List<Patch> loadGeometry() throws IOException {
-        List<Patch> patches = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new FileReader(zfaultDeepenIn));
 
         String line;
@@ -174,11 +176,12 @@ public class RsqSimsLoader {
             if (line.isEmpty() || line.startsWith("#")) {
                 continue;
             }
-            patches.add(loadGeometry(line));
+            Patch patch = loadGeometry(line);
+            patches.add(patch);
+            patchLookup.put(patch.id, patch);
         }
 
         reader.close();
-        this.patches = patches;
         return patches;
     }
 
@@ -208,25 +211,21 @@ public class RsqSimsLoader {
         return patch.locations.stream().mapToDouble(poly::distanceToLocation).max().getAsDouble();
     }
 
-    public FaultSection getBestSubductionSection(Patch patch) {
+    Map<FaultSection, Integer> patchCountPerSection = new HashMap<>();
 
+    public void addSectionToPatch(Patch patch, FaultSection section) {
+        patch.sections.add(section);
+        patchCountPerSection.compute(section, (key, value) -> Objects.isNull(value) ? 1 : value + 1);
+    }
+
+    public void findSubductionSections(Patch patch) {
         List<SubductionSection> sections = patch.zname.equals(RSQSIMS_HIKURANGI) ? hikurangi : puysegur;
 
-        FaultSection section = null;
-        int matchCount = 0;
-
         for (SubductionSection candidate : sections) {
-            int matches = candidate.overlap(patch);
-            if (matches > matchCount) {
-                section = candidate.section;
-                matchCount = matches;
-                if (matchCount == 3) {
-                    break;
-                }
+            if (candidate.overlaps(patch)) {
+                addSectionToPatch(patch, candidate.section);
             }
         }
-
-        return section;
     }
 
     static class LambdaCounter {
@@ -275,10 +274,7 @@ public class RsqSimsLoader {
 
                     if (p.zname.equals(RSQSIMS_HIKURANGI) || p.zname.equals(RSQSIMS_PUYSEGUR)) {
                         totalSubductionPatches.inc();
-                        p.section = getBestSubductionSection(p);
-                        if (p.section == null) {
-                            ghostSubductionPatches.inc();
-                        }
+                        findSubductionSections(p);
                         return;
                     }
 
@@ -291,7 +287,7 @@ public class RsqSimsLoader {
 
 
                     if (sections.size() == 1) {
-                        p.section = sections.get(0);
+                        addSectionToPatch(p, sections.get(0));
                     } else {
                         FaultSection nearest = null;
                         double distance = Double.MAX_VALUE;
@@ -302,17 +298,17 @@ public class RsqSimsLoader {
                                 distance = d;
                             }
                         }
-                        p.section = nearest;
+                        addSectionToPatch(p, nearest);
                     }
 
 
                 }
         );
 
-        long matches = patches.stream().filter(p -> p.section != null).count();
+        long matches = patches.stream().filter(p -> !p.sections.isEmpty()).count();
         System.out.println("zname matches: " + matches + " out of " + patches.size());
         long subduction = patches.stream().filter(p ->
-                p.section == null && !(p.zname.equals(RSQSIMS_HIKURANGI) || (p.zname.equals(RSQSIMS_PUYSEGUR)))
+                p.sections.isEmpty() && !(p.zname.equals(RSQSIMS_HIKURANGI) || (p.zname.equals(RSQSIMS_PUYSEGUR)))
         ).count();
         System.out.println("crustal without matches: " + subduction);
         System.out.println("total subduction: " + totalSubductionPatches + " ghosts: " + ghostSubductionPatches);
@@ -328,17 +324,19 @@ public class RsqSimsLoader {
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
-        RsqSimsLoader loader = new RsqSimsLoader(new File(fileName), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
         loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadGeometry();
         loader.loadNames();
         loader.loadRupSet();
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
         patches.stream().filter(Objects::nonNull)
-                            .filter(p -> p.getMaxLat() < -37.41483321429752)
+                .filter(p -> p.getMaxLat() < -37.41483321429752)
 //                .filter(p -> p.parentId==115 || p.parentId == 3)
 //                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR) && p.section != null)
-                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR))
+//            .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR))
+                .filter(p -> p.zname.equals(RSQSIMS_HIKURANGI))
+                .filter(p -> !p.sections.isEmpty())
                 .forEach(p -> builder.addFeature(p.toFeature()));
         builder.toJSON("/tmp/hikurangi-rsqsim.geojson");
 
@@ -356,6 +354,25 @@ public class RsqSimsLoader {
         });
         builder2.toJSON("/tmp/puysegurregions.geojson");
 
+        RsqSimEventLoader eventLoader = new RsqSimEventLoader(new File("C:\\rsqsimsCatalogue\\rundir5469"), loader);
+        eventLoader.loadEvents();
+
+        List<RsqSimEventLoader.Event> events = eventLoader.getJointRuptures();
+
+        System.out.println("Total joint ruptures " + eventLoader.events.size() + ", reconstructed joint ruptures " + events.size());
+
+        List<FaultSection> sections = eventLoader.toFaultSections(events.get(100));
+        SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
+
+        for(Patch patch: events.get(100).getPatches()) {
+            builder3.addFeature(patch.toFeature());
+        }
+
+        for(FaultSection section:sections) {
+            FeatureProperties props = builder3.addFaultSectionPerimeter(section);
+            builder3.setLineColour(props, "blue");
+        }
+        builder3.toJSON("/tmp/joint-rupture.geojson");
     }
 
     public static void main1(String[] args) throws IOException {
