@@ -209,25 +209,17 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         Set<String> names = new HashSet<>();
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
 
-            String name= section.getSectionName();
-            name = name.replace("Subsection ", "");
-            name = name.replace("Alpine", "Al");
-            name = name.replace("Springs Junction", "SJ");
-            name = name.replace("Wedge", "Wg");
-
-            if(name.length()>31) {
-                System.out.println(name);
-            }
-
-            Preconditions.checkState(name.length() < 33);
-           // section.setSectionName(name);
-            names.add(name);
+            section.setSectionName(section.getSectionId() + " " + section.getSectionName());
         }
-        Preconditions.checkState(names.size() == rupSet.getNumSections());
+      //  Preconditions.checkState(names.size() == rupSet.getNumSections());
         U3FaultSystemIO.writeRupSet(rupSet, new File("/tmp/NZSHM_crustal_u3_use_this_instead.zip"));
 
         List<String> metaData = new ArrayList<>();
-        metaData.add("test");
+        metaData.add("NZSHM22 crustal fault sub sections");
+        metaData.add("fault_model: CFM_1_0A_DOM_SANSTVZ");
+        metaData.add("depth_scaling_tvz: 0.667");
+        metaData.add("depth_scaling_sans: 0.8");
+
         FaultSectionDataWriter.writeSectionsToFile(rupSet.getFaultSectionDataList(), metaData, new File("/tmp/asciitest.txt"), false);
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
@@ -256,8 +248,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 
         solutionMfdsV2 = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
-                .getReportingMFDConstraintComponentsV2();        
-        
+                .getReportingMFDConstraintComponentsV2();
+
         // set up slip rate config
         inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
         inversionConfiguration.setUnmodifiedSlipRateStdvs(this.unmodifiedSlipRateStdvs);
