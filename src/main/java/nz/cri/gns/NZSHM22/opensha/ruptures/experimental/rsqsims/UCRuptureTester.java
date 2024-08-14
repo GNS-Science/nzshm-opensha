@@ -15,11 +15,10 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.co
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.sound.midi.SysexMessage;
+import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 
 public class UCRuptureTester {
 
@@ -27,9 +26,9 @@ public class UCRuptureTester {
     final FaultSystemRupSet rupSet;
     final SectionDistanceAzimuthCalculator disAzCalc;
 
-    StiffnessCalcModule stiffness;
+    final double maxInternalJumpDist = 5;
 
-    final double maxJumpDist = 15;
+    StiffnessCalcModule stiffness;
 
     Map<String, MultiRuptureJump> ruptures = new HashMap<>();
     int crustalEnd = 0;
@@ -94,16 +93,30 @@ public class UCRuptureTester {
         return null;
     }
 
+
     void loadCSV(String fileName) throws IOException {
+        ClusterAggregator aggregator = new ClusterAggregator(disAzCalc, 5);
         BufferedReader reader = new BufferedReader(new FileReader(fileName));
         String currentRuptureId = null;
         List<ClusterRupture> currentRuptures = new ArrayList<>();
+        int totalCount = 0;
+        int jointCount = 0;
         while (true) {
             String line = reader.readLine();
             String[] components = line != null ? line.trim().split("\\h") : new String[]{null};
             String ruptureId = components[0];
             if (!Objects.equals(ruptureId, currentRuptureId)) {
-                if (currentRuptureId != null && currentRuptures.size() > 1) {
+                if(currentRuptureId != null) {
+                    totalCount++;
+                }
+                if(currentRuptureId != null
+                        && currentRuptures.size() > 1) {
+                    jointCount++;
+                }
+
+                if (currentRuptureId != null
+                        && currentRuptures.size() > 1
+                        && aggregator.allConnected(currentRuptures)) {
                     Preconditions.checkState(currentRuptures.size() == 2);
                     ruptures.put(currentRuptureId, makeJump(currentRuptures.get(0), currentRuptures.get(1)));
                 }
@@ -121,6 +134,8 @@ public class UCRuptureTester {
             ClusterRupture rupture = ClusterRupture.forOrderedSingleStrandRupture(clusterSections, disAzCalc);
             currentRuptures.add(rupture);
         }
+
+        System.out.println("total " + totalCount + " joint count " + jointCount);
         reader.close();
     }
 
@@ -153,24 +168,47 @@ public class UCRuptureTester {
         ruptureTester.loadCSV("C:\\Users\\user\\GNS\\RSQSim\\AndyHowellAugust24\\biggest_events.txt");
         System.out.println(ruptureTester.ruptures.size());
         ruptureTester.setupStiffness();
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/UCRSQSimout.csv"));
+
+        int count = 0;
+        int passCount = 0;
+        for (String ruptureId : ruptureTester.ruptures.keySet()) {
+            MultiRuptureJump jump = ruptureTester.ruptures.get(ruptureId);
+            PlausibilityResult r0 = ruptureTester.filters.get(0).apply(jump, false);
+            PlausibilityResult r1 = ruptureTester.filters.get(1).apply(jump, false);
+            PlausibilityResult result = r0.logicalAnd(r1);
+            if (result.canContinue()) {
+                passCount++;
+            }
+            writer.write(ruptureId + ", " + result + ", " + r0 + ", " + r1 + "\n");
+            count++;
+            System.out.println(count + " of " + ruptureTester.ruptures.size());
+        }
+        writer.close();
+
+        System.out.println(passCount);
+
         MultiRuptureJump[] jumps = ruptureTester.ruptures.values().toArray(new MultiRuptureJump[0]);
-        PlausibilityResult r0 = ruptureTester.filters.get(0).apply(jumps[0], true);
-        PlausibilityResult r1 = ruptureTester.filters.get(1).apply(jumps[0], true);
+        PlausibilityResult r0 = ruptureTester.filters.get(0).apply(jumps[10], true);
+        PlausibilityResult r1 = ruptureTester.filters.get(1).apply(jumps[10], true);
 
         ruptureTester.saveCache();
 
         System.out.println("--------------");
-        System.out.println(jumps[0].distance);
+        System.out.println(jumps[10].distance);
         System.out.println(r0);
         System.out.println(r1);
 
+        MultiRuptureJump jump = ruptureTester.ruptures.get("2254817");
+
         SimpleGeoJsonBuilder geoJson = new SimpleGeoJsonBuilder();
-        for (FaultSection section : jumps[0].fromRupture.buildOrderedSectionList()) {
+        for (FaultSection section : jump.fromRupture.buildOrderedSectionList()) {
             geoJson.addFaultSectionPolygon(section);
         }
-        for (FaultSection section : jumps[0].toRupture.buildOrderedSectionList()) {
+        for (FaultSection section : jump.toRupture.buildOrderedSectionList()) {
             geoJson.addFaultSectionPolygon(section);
         }
-        geoJson.toJSON("/tmp/rsqsimRup0.geojson");
+        geoJson.toJSON("/tmp/rsqsimRup2254817.geojson");
     }
 }
