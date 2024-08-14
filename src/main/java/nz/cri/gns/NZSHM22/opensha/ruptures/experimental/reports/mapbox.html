@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>MapBox and three.js</title>
+    <meta property="og:description" content="Use a custom style layer with three.js to add a 3D model to the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+    <div id="map"></div>
+    <script>
+        const geojson =
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2275,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 8, row: 3",
+                        "DipDeg": 7.1186041831970215,
+                        "Rake": 90.0,
+                        "LowDepth": 19.60951042175293,
+                        "UpDepth": 15.891799926757812,
+                        "DipDir": 305.02792,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 23.45197105407715,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.57716369628906,
+                                    -41.351207733154304,
+                                    15.891799926757812
+                                ],
+                                [
+                                    175.28581332609434,
+                                    -41.197177112993316,
+                                    19.60951042175293
+                                ],
+                                [
+                                    175.07787049233667,
+                                    -41.417877374920316,
+                                    19.60951042175293
+                                ],
+                                [
+                                    175.37020874023438,
+                                    -41.5719108581543,
+                                    15.891799926757812
+                                ],
+                                [
+                                    175.57716369628906,
+                                    -41.351207733154304,
+                                    15.891799926757812
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2283,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 9, row: 3",
+                        "DipDeg": 5.547145843505859,
+                        "Rake": 90.0,
+                        "LowDepth": 15.578072547912598,
+                        "UpDepth": 12.678129196166992,
+                        "DipDir": 285.394,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 21.290149688720703,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.00958251953125,
+                                    -41.16159439086914,
+                                    12.678129196166992
+                                ],
+                                [
+                                    175.66606926900423,
+                                    -41.089800363876414,
+                                    15.578072547912598
+                                ],
+                                [
+                                    175.56913394550182,
+                                    -41.35002668628973,
+                                    15.578072547912598
+                                ],
+                                [
+                                    175.9140167236328,
+                                    -41.42182540893555,
+                                    12.678129196166992
+                                ],
+                                [
+                                    176.00958251953125,
+                                    -41.16159439086914,
+                                    12.678129196166992
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2292,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 10, row: 3",
+                        "DipDeg": 3.73930287361145,
+                        "Rake": 90.0,
+                        "LowDepth": 13.325356483459473,
+                        "UpDepth": 11.368851661682129,
+                        "DipDir": 301.1245,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 23.507291793823242,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.4137420654297,
+                                    -41.0500602722168,
+                                    11.368851661682129
+                                ],
+                                [
+                                    176.10878469405407,
+                                    -40.91049721550063,
+                                    13.325356483459473
+                                ],
+                                [
+                                    175.9221979258698,
+                                    -41.14122971458391,
+                                    13.325356483459473
+                                ],
+                                [
+                                    176.2282257080078,
+                                    -41.28079605102539,
+                                    11.368851661682129
+                                ],
+                                [
+                                    176.4137420654297,
+                                    -41.0500602722168,
+                                    11.368851661682129
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2301,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 11, row: 3",
+                        "DipDeg": 3.576723337173462,
+                        "Rake": 90.0,
+                        "LowDepth": 13.206562995910645,
+                        "UpDepth": 11.33501148223877,
+                        "DipDir": 313.70306,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 23.178691864013672,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.72882080078125,
+                                    -40.90504455566406,
+                                    11.33501148223877
+                                ],
+                                [
+                                    176.47198174772552,
+                                    -40.71871447780071,
+                                    13.206562995910645
+                                ],
+                                [
+                                    176.22418774714936,
+                                    -40.91323537531644,
+                                    13.206562995910645
+                                ],
+                                [
+                                    176.48178100585938,
+                                    -41.09956741333008,
+                                    11.33501148223877
+                                ],
+                                [
+                                    176.72882080078125,
+                                    -40.90504455566406,
+                                    11.33501148223877
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2310,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 12, row: 3",
+                        "DipDeg": 3.7573416233062744,
+                        "Rake": 90.0,
+                        "LowDepth": 12.701200485229492,
+                        "UpDepth": 10.735270500183105,
+                        "DipDir": 290.82275,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 19.097562789916992,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.94700622558594,
+                                    -40.61970520019532,
+                                    10.735270500183105
+                                ],
+                                [
+                                    176.61597105817523,
+                                    -40.5235317349818,
+                                    12.701200485229492
+                                ],
+                                [
+                                    176.48790242532615,
+                                    -40.77560270710028,
+                                    12.701200485229492
+                                ],
+                                [
+                                    176.8201904296875,
+                                    -40.87178039550781,
+                                    10.735270500183105
+                                ],
+                                [
+                                    176.94700622558594,
+                                    -40.61970520019532,
+                                    10.735270500183105
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2319,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 13, row: 3",
+                        "DipDeg": 3.9775986671447754,
+                        "Rake": 90.0,
+                        "LowDepth": 12.308518409729004,
+                        "UpDepth": 10.227524757385254,
+                        "DipDir": 288.10846,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 14.506980895996094,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    177.11671447753906,
+                                    -40.37640380859376,
+                                    10.227524757385254
+                                ],
+                                [
+                                    176.78133051976752,
+                                    -40.292263866725534,
+                                    12.308518409729004
+                                ],
+                                [
+                                    176.66956114934524,
+                                    -40.54861855836971,
+                                    12.308518409729004
+                                ],
+                                [
+                                    177.0062255859375,
+                                    -40.63276290893555,
+                                    10.227524757385254
+                                ],
+                                [
+                                    177.11671447753906,
+                                    -40.37640380859376,
+                                    10.227524757385254
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2328,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 14, row: 3",
+                        "DipDeg": 4.506694793701172,
+                        "Rake": 90.0,
+                        "LowDepth": 12.376654624938965,
+                        "UpDepth": 10.019387245178223,
+                        "DipDir": 299.64725,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 11.044438362121582,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    177.28578186035156,
+                                    -40.168670654296875,
+                                    10.019387245178223
+                                ],
+                                [
+                                    176.98048311619547,
+                                    -40.03522491638218,
+                                    12.376654624938965
+                                ],
+                                [
+                                    176.80430350082148,
+                                    -40.269394401577365,
+                                    12.376654624938965
+                                ],
+                                [
+                                    177.11065673828125,
+                                    -40.4028434753418,
+                                    10.019387245178223
+                                ],
+                                [
+                                    177.28578186035156,
+                                    -40.168670654296875,
+                                    10.019387245178223
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2337,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 15, row: 3",
+                        "DipDeg": 5.503721714019775,
+                        "Rake": 90.0,
+                        "LowDepth": 13.24374008178711,
+                        "UpDepth": 10.366427421569824,
+                        "DipDir": 308.2655,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 8.579265594482422,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    177.4232635498047,
+                                    -39.945865631103516,
+                                    10.366427421569824
+                                ],
+                                [
+                                    177.14889848731275,
+                                    -39.779225612194146,
+                                    13.24374008178711
+                                ],
+                                [
+                                    176.9297287136553,
+                                    -39.99056122489987,
+                                    13.24374008178711
+                                ],
+                                [
+                                    177.20494079589844,
+                                    -40.157203674316406,
+                                    10.366427421569824
+                                ],
+                                [
+                                    177.4232635498047,
+                                    -39.945865631103516,
+                                    10.366427421569824
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2276,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 8, row: 4",
+                        "DipDeg": 10.543336868286133,
+                        "Rake": 90.0,
+                        "LowDepth": 24.77788543701172,
+                        "UpDepth": 19.288509368896484,
+                        "DipDir": 304.872,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 20.69731903076172,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.2584991455078,
+                                    -41.229949951171875,
+                                    19.288509368896484
+                                ],
+                                [
+                                    174.9698183806539,
+                                    -41.07793864069347,
+                                    24.77788543701172
+                                ],
+                                [
+                                    174.76304635811698,
+                                    -41.299092898061446,
+                                    24.77788543701172
+                                ],
+                                [
+                                    175.05270385742188,
+                                    -41.45110702514649,
+                                    19.288509368896484
+                                ],
+                                [
+                                    175.2584991455078,
+                                    -41.229949951171875,
+                                    19.288509368896484
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2284,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 9, row: 4",
+                        "DipDeg": 8.05356502532959,
+                        "Rake": 90.0,
+                        "LowDepth": 19.65384292602539,
+                        "UpDepth": 15.450878143310547,
+                        "DipDir": 293.86212,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 20.111919403076172,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.70619201660156,
+                                    -41.06755828857422,
+                                    15.450878143310547
+                                ],
+                                [
+                                    175.38269040792528,
+                                    -40.95903938882827,
+                                    19.65384292602539
+                                ],
+                                [
+                                    175.23610305829095,
+                                    -41.20578150425367,
+                                    19.65384292602539
+                                ],
+                                [
+                                    175.56082153320312,
+                                    -41.31430435180664,
+                                    15.450878143310547
+                                ],
+                                [
+                                    175.70619201660156,
+                                    -41.06755828857422,
+                                    15.450878143310547
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2293,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 10, row: 4",
+                        "DipDeg": 6.7690300941467285,
+                        "Rake": 90.0,
+                        "LowDepth": 16.683761596679688,
+                        "UpDepth": 13.147746086120605,
+                        "DipDir": 301.67126,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 20.609294891357422,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.0942840576172,
+                                    -40.932960510253906,
+                                    13.147746086120605
+                                ],
+                                [
+                                    175.79310850730351,
+                                    -40.79190062079752,
+                                    16.683761596679688
+                                ],
+                                [
+                                    175.6039362007116,
+                                    -41.02132096316426,
+                                    16.683761596679688
+                                ],
+                                [
+                                    175.90615844726562,
+                                    -41.16238403320313,
+                                    13.147746086120605
+                                ],
+                                [
+                                    176.0942840576172,
+                                    -40.932960510253906,
+                                    13.147746086120605
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2302,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 11, row: 4",
+                        "DipDeg": 6.290989875793457,
+                        "Rake": 90.0,
+                        "LowDepth": 16.309412002563477,
+                        "UpDepth": 13.022072792053223,
+                        "DipDir": 317.04013,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 23.25320053100586,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.40931701660156,
+                                    -40.79804229736328,
+                                    13.022072792053223
+                                ],
+                                [
+                                    176.16861367638305,
+                                    -40.6015355703598,
+                                    16.309412002563477
+                                ],
+                                [
+                                    175.90675052460813,
+                                    -40.78486066933658,
+                                    16.309412002563477
+                                ],
+                                [
+                                    176.1481170654297,
+                                    -40.98136901855468,
+                                    13.022072792053223
+                                ],
+                                [
+                                    176.40931701660156,
+                                    -40.79804229736328,
+                                    13.022072792053223
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2311,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 12, row: 4",
+                        "DipDeg": 6.485600471496582,
+                        "Rake": 90.0,
+                        "LowDepth": 16.041662216186523,
+                        "UpDepth": 12.653056144714355,
+                        "DipDir": 301.65158,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 25.09259796142578,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.64340209960938,
+                                    -40.53652572631836,
+                                    12.653056144714355
+                                ],
+                                [
+                                    176.34377118318258,
+                                    -40.395468099676606,
+                                    16.041662216186523
+                                ],
+                                [
+                                    176.1559005311536,
+                                    -40.62487703080155,
+                                    16.041662216186523
+                                ],
+                                [
+                                    176.45655822753906,
+                                    -40.76593780517578,
+                                    12.653056144714355
+                                ],
+                                [
+                                    176.64340209960938,
+                                    -40.53652572631836,
+                                    12.653056144714355
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2320,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 13, row: 4",
+                        "DipDeg": 7.33738374710083,
+                        "Rake": 90.0,
+                        "LowDepth": 15.95654582977295,
+                        "UpDepth": 12.12519359588623,
+                        "DipDir": 296.49496,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 17.637046813964844,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.81277465820312,
+                                    -40.28532028198242,
+                                    12.12519359588623
+                                ],
+                                [
+                                    176.4993901906569,
+                                    -40.16552152515012,
+                                    15.95654582977295
+                                ],
+                                [
+                                    176.3399595470862,
+                                    -40.406812763762616,
+                                    15.95654582977295
+                                ],
+                                [
+                                    176.6544647216797,
+                                    -40.526615142822266,
+                                    12.12519359588623
+                                ],
+                                [
+                                    176.81277465820312,
+                                    -40.28532028198242,
+                                    12.12519359588623
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2329,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 14, row: 4",
+                        "DipDeg": 8.18340015411377,
+                        "Rake": 90.0,
+                        "LowDepth": 16.359933853149414,
+                        "UpDepth": 12.089668273925781,
+                        "DipDir": 302.6943,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 10.981708526611328,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.97195434570315,
+                                    -40.06193542480469,
+                                    12.089668273925781
+                                ],
+                                [
+                                    176.67893275962498,
+                                    -39.91731761247128,
+                                    16.359933853149414
+                                ],
+                                [
+                                    176.48703910909458,
+                                    -40.14405261352589,
+                                    16.359933853149414
+                                ],
+                                [
+                                    176.78103637695312,
+                                    -40.28867340087891,
+                                    12.089668273925781
+                                ],
+                                [
+                                    176.97195434570315,
+                                    -40.06193542480469,
+                                    12.089668273925781
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2338,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 15, row: 4",
+                        "DipDeg": 9.28754711151123,
+                        "Rake": 90.0,
+                        "LowDepth": 17.841096878051758,
+                        "UpDepth": 12.999417304992676,
+                        "DipDir": 307.35135,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 8.958868026733398,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    177.1074981689453,
+                                    -39.82670593261719,
+                                    12.999417304992676
+                                ],
+                                [
+                                    176.83254365493173,
+                                    -39.66484120081963,
+                                    17.841096878051758
+                                ],
+                                [
+                                    176.61811009603832,
+                                    -39.87888520678008,
+                                    17.841096878051758
+                                ],
+                                [
+                                    176.8939208984375,
+                                    -40.04075241088867,
+                                    12.999417304992676
+                                ],
+                                [
+                                    177.1074981689453,
+                                    -39.82670593261719,
+                                    12.999417304992676
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2277,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 8, row: 5",
+                        "DipDeg": 16.607105255126953,
+                        "Rake": 90.0,
+                        "LowDepth": 33.36554718017578,
+                        "UpDepth": 24.791332244873047,
+                        "DipDir": 306.08215,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 12.965473175048828,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    174.94581604003906,
+                                    -41.113285064697266,
+                                    24.791332244873047
+                                ],
+                                [
+                                    174.6691235231579,
+                                    -40.96068662506491,
+                                    33.36554718017578
+                                ],
+                                [
+                                    174.45659633159536,
+                                    -41.17853762249242,
+                                    33.36554718017578
+                                ],
+                                [
+                                    174.7342071533203,
+                                    -41.331138610839844,
+                                    24.791332244873047
+                                ],
+                                [
+                                    174.94581604003906,
+                                    -41.113285064697266,
+                                    24.791332244873047
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2285,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 9, row: 5",
+                        "DipDeg": 13.229549407958984,
+                        "Rake": 90.0,
+                        "LowDepth": 26.829811096191406,
+                        "UpDepth": 19.964221954345703,
+                        "DipDir": 307.01,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 15.971488952636719,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.40528869628906,
+                                    -40.98984909057617,
+                                    19.964221954345703
+                                ],
+                                [
+                                    175.1281107605355,
+                                    -40.83142171897168,
+                                    26.829811096191406
+                                ],
+                                [
+                                    174.91138594188502,
+                                    -41.046617709462446,
+                                    26.829811096191406
+                                ],
+                                [
+                                    175.18946838378906,
+                                    -41.205047607421875,
+                                    19.964221954345703
+                                ],
+                                [
+                                    175.40528869628906,
+                                    -40.98984909057617,
+                                    19.964221954345703
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2294,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 10, row: 5",
+                        "DipDeg": 12.476646423339844,
+                        "Rake": 90.0,
+                        "LowDepth": 23.259916305541992,
+                        "UpDepth": 16.778667449951172,
+                        "DipDir": 308.53372,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 19.121795654296875,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.7827911376953,
+                                    -40.83600997924805,
+                                    16.778667449951172
+                                ],
+                                [
+                                    175.51110584343246,
+                                    -40.671583849071446,
+                                    23.259916305541992
+                                ],
+                                [
+                                    175.28747955788648,
+                                    -40.88232060809323,
+                                    23.259916305541992
+                                ],
+                                [
+                                    175.56002807617188,
+                                    -41.046749114990234,
+                                    16.778667449951172
+                                ],
+                                [
+                                    175.7827911376953,
+                                    -40.83600997924805,
+                                    16.778667449951172
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2303,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 11, row: 5",
+                        "DipDeg": 11.943114280700684,
+                        "Rake": 90.0,
+                        "LowDepth": 22.3046817779541,
+                        "UpDepth": 16.096467971801758,
+                        "DipDir": 315.39514,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 22.371601104736328,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.09288024902344,
+                                    -40.673648834228516,
+                                    16.096467971801758
+                                ],
+                                [
+                                    175.84917720005018,
+                                    -40.48546436591509,
+                                    22.3046817779541
+                                ],
+                                [
+                                    175.59476462075207,
+                                    -40.67444275414881,
+                                    22.3046817779541
+                                ],
+                                [
+                                    175.8391571044922,
+                                    -40.86262893676758,
+                                    16.096467971801758
+                                ],
+                                [
+                                    176.09288024902344,
+                                    -40.673648834228516,
+                                    16.096467971801758
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2312,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 12, row: 5",
+                        "DipDeg": 11.83970832824707,
+                        "Rake": 90.0,
+                        "LowDepth": 22.23667335510254,
+                        "UpDepth": 16.08144187927246,
+                        "DipDir": 308.3431,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 21.03591537475586,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.3324432373047,
+                                    -40.440391540527344,
+                                    16.08144187927246
+                                ],
+                                [
+                                    176.06098930955056,
+                                    -40.27626120158629,
+                                    22.23667335510254
+                                ],
+                                [
+                                    175.83967774235066,
+                                    -40.487509128419326,
+                                    22.23667335510254
+                                ],
+                                [
+                                    176.1119842529297,
+                                    -40.65164184570312,
+                                    16.08144187927246
+                                ],
+                                [
+                                    176.3324432373047,
+                                    -40.440391540527344,
+                                    16.08144187927246
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2321,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 13, row: 5",
+                        "DipDeg": 12.976344108581543,
+                        "Rake": 90.0,
+                        "LowDepth": 22.625112533569336,
+                        "UpDepth": 15.888649940490723,
+                        "DipDir": 301.56354,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 14.57779312133789,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.5037078857422,
+                                    -40.18413162231445,
+                                    15.888649940490723
+                                ],
+                                [
+                                    176.21108281671465,
+                                    -40.04614616385166,
+                                    22.625112533569336
+                                ],
+                                [
+                                    176.02466648237487,
+                                    -40.2758070072932,
+                                    22.625112533569336
+                                ],
+                                [
+                                    176.3182830810547,
+                                    -40.41379547119141,
+                                    15.888649940490723
+                                ],
+                                [
+                                    176.5037078857422,
+                                    -40.18413162231445,
+                                    15.888649940490723
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2330,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 14, row: 5",
+                        "DipDeg": 14.104839324951172,
+                        "Rake": 90.0,
+                        "LowDepth": 23.431241989135742,
+                        "UpDepth": 16.12033462524414,
+                        "DipDir": 302.96228,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 9.233569145202637,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.65821838378906,
+                                    -39.94578552246094,
+                                    16.12033462524414
+                                ],
+                                [
+                                    176.3724487617988,
+                                    -39.80306740061453,
+                                    23.431241989135742
+                                ],
+                                [
+                                    176.17948715562324,
+                                    -40.0291655006746,
+                                    23.431241989135742
+                                ],
+                                [
+                                    176.46620178222656,
+                                    -40.1718864440918,
+                                    16.12033462524414
+                                ],
+                                [
+                                    176.65821838378906,
+                                    -39.94578552246094,
+                                    16.12033462524414
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 2339,
+                        "FaultName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.; col: 15, row: 5",
+                        "DipDeg": 15.342194557189941,
+                        "Rake": 90.0,
+                        "LowDepth": 25.567790985107422,
+                        "UpDepth": 17.630292892456055,
+                        "DipDir": 305.0905,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 11.878658294677734,
+                        "ParentID": 558,
+                        "ParentName": "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+                        "SlipRateStdDev": 0.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.79440307617188,
+                                    -39.70296096801758,
+                                    17.630292892456055
+                                ],
+                                [
+                                    176.51829094083573,
+                                    -39.553063211665005,
+                                    25.567790985107422
+                                ],
+                                [
+                                    176.31530608923157,
+                                    -39.77349674005223,
+                                    25.567790985107422
+                                ],
+                                [
+                                    176.59230041503906,
+                                    -39.92339706420899,
+                                    17.630292892456055
+                                ],
+                                [
+                                    176.79440307617188,
+                                    -39.70296096801758,
+                                    17.630292892456055
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1201,
+                        "FaultName": "Opouawe - Uruti, Subsection 2",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.18644555792383,
+                                    -41.782549445401976,
+                                    0.0
+                                ],
+                                [
+                                    175.194,
+                                    -41.7804,
+                                    0.0
+                                ],
+                                [
+                                    175.3090941088848,
+                                    -41.76082033921077,
+                                    0.0
+                                ],
+                                [
+                                    175.23476181477108,
+                                    -41.62257117491803,
+                                    13.9
+                                ],
+                                [
+                                    175.1196451242502,
+                                    -41.642150819224995,
+                                    13.9
+                                ],
+                                [
+                                    175.1120882018085,
+                                    -41.644300262816955,
+                                    13.9
+                                ],
+                                [
+                                    175.18644555792383,
+                                    -41.782549445401976,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1202,
+                        "FaultName": "Opouawe - Uruti, Subsection 3",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.3090941088848,
+                                    -41.76082033921077,
+                                    0.0
+                                ],
+                                [
+                                    175.3753,
+                                    -41.7495,
+                                    0.0
+                                ],
+                                [
+                                    175.43321093941518,
+                                    -41.74537351649371,
+                                    0.0
+                                ],
+                                [
+                                    175.35889644464913,
+                                    -41.60712436519712,
+                                    13.9
+                                ],
+                                [
+                                    175.30098075165725,
+                                    -41.61125084523222,
+                                    13.9
+                                ],
+                                [
+                                    175.23476181477108,
+                                    -41.62257117491803,
+                                    13.9
+                                ],
+                                [
+                                    175.3090941088848,
+                                    -41.76082033921077,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1203,
+                        "FaultName": "Opouawe - Uruti, Subsection 4",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.43321093941518,
+                                    -41.74537351649371,
+                                    0.0
+                                ],
+                                [
+                                    175.451,
+                                    -41.74410000000001,
+                                    0.0
+                                ],
+                                [
+                                    175.5143,
+                                    -41.7321,
+                                    0.0
+                                ],
+                                [
+                                    175.55340233828855,
+                                    -41.71896108336242,
+                                    0.0
+                                ],
+                                [
+                                    175.47911824627874,
+                                    -41.580711954273475,
+                                    13.9
+                                ],
+                                [
+                                    175.44000078916315,
+                                    -41.593850859866095,
+                                    13.9
+                                ],
+                                [
+                                    175.3766869720835,
+                                    -41.60585084977462,
+                                    13.9
+                                ],
+                                [
+                                    175.35889644464913,
+                                    -41.60712436519712,
+                                    13.9
+                                ],
+                                [
+                                    175.43321093941518,
+                                    -41.74537351649371,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1204,
+                        "FaultName": "Opouawe - Uruti, Subsection 5",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.55340233828855,
+                                    -41.71896108336242,
+                                    0.0
+                                ],
+                                [
+                                    175.66824456539342,
+                                    -41.680264750707025,
+                                    0.0
+                                ],
+                                [
+                                    175.5940049424929,
+                                    -41.54201565412128,
+                                    13.9
+                                ],
+                                [
+                                    175.47911824627874,
+                                    -41.580711954273475,
+                                    13.9
+                                ],
+                                [
+                                    175.55340233828855,
+                                    -41.71896108336242,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1205,
+                        "FaultName": "Opouawe - Uruti, Subsection 6",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.66824456539342,
+                                    -41.680264750707025,
+                                    0.0
+                                ],
+                                [
+                                    175.7829485574884,
+                                    -41.64145423404461,
+                                    0.0
+                                ],
+                                [
+                                    175.70875344749726,
+                                    -41.503205170018916,
+                                    13.9
+                                ],
+                                [
+                                    175.5940049424929,
+                                    -41.54201565412128,
+                                    13.9
+                                ],
+                                [
+                                    175.66824456539342,
+                                    -41.680264750707025,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1206,
+                        "FaultName": "Opouawe - Uruti, Subsection 7",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.7829485574884,
+                                    -41.64145423404461,
+                                    0.0
+                                ],
+                                [
+                                    175.89751426356102,
+                                    -41.60252982637905,
+                                    0.0
+                                ],
+                                [
+                                    175.82336370937082,
+                                    -41.464280794969774,
+                                    13.9
+                                ],
+                                [
+                                    175.70875344749726,
+                                    -41.503205170018916,
+                                    13.9
+                                ],
+                                [
+                                    175.7829485574884,
+                                    -41.64145423404461,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1207,
+                        "FaultName": "Opouawe - Uruti, Subsection 8",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    175.89751426356102,
+                                    -41.60252982637905,
+                                    0.0
+                                ],
+                                [
+                                    175.9724,
+                                    -41.577,
+                                    0.0
+                                ],
+                                [
+                                    176.01565816261228,
+                                    -41.573775556848965,
+                                    0.0
+                                ],
+                                [
+                                    175.94154046640944,
+                                    -41.43552654950898,
+                                    13.9
+                                ],
+                                [
+                                    175.8982786215507,
+                                    -41.43875098996201,
+                                    13.9
+                                ],
+                                [
+                                    175.82336370937082,
+                                    -41.464280794969774,
+                                    13.9
+                                ],
+                                [
+                                    175.89751426356102,
+                                    -41.60252982637905,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1208,
+                        "FaultName": "Opouawe - Uruti, Subsection 9",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.01565816261228,
+                                    -41.573775556848965,
+                                    0.0
+                                ],
+                                [
+                                    176.0647,
+                                    -41.5701,
+                                    0.0
+                                ],
+                                [
+                                    176.13351366340225,
+                                    -41.54519199948337,
+                                    0.0
+                                ],
+                                [
+                                    176.0594285827772,
+                                    -41.40694301604866,
+                                    13.9
+                                ],
+                                [
+                                    175.99058650047357,
+                                    -41.431850995735175,
+                                    13.9
+                                ],
+                                [
+                                    175.94154046640944,
+                                    -41.43552654950898,
+                                    13.9
+                                ],
+                                [
+                                    176.01565816261228,
+                                    -41.573775556848965,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1209,
+                        "FaultName": "Opouawe - Uruti, Subsection 10",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.13351366340225,
+                                    -41.54519199948337,
+                                    0.0
+                                ],
+                                [
+                                    176.2112,
+                                    -41.517,
+                                    0.0
+                                ],
+                                [
+                                    176.2437377148868,
+                                    -41.500468680914985,
+                                    0.0
+                                ],
+                                [
+                                    176.1697035717885,
+                                    -41.36221973484153,
+                                    13.9
+                                ],
+                                [
+                                    176.13714704201033,
+                                    -41.378751040122495,
+                                    13.9
+                                ],
+                                [
+                                    176.0594285827772,
+                                    -41.40694301604866,
+                                    13.9
+                                ],
+                                [
+                                    176.13351366340225,
+                                    -41.54519199948337,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1210,
+                        "FaultName": "Opouawe - Uruti, Subsection 11",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.2437377148868,
+                                    -41.500468680914985,
+                                    0.0
+                                ],
+                                [
+                                    176.3475819073734,
+                                    -41.447591030692536,
+                                    0.0
+                                ],
+                                [
+                                    176.27360784076555,
+                                    -41.309342128726165,
+                                    13.9
+                                ],
+                                [
+                                    176.1697035717885,
+                                    -41.36221973484153,
+                                    13.9
+                                ],
+                                [
+                                    176.2437377148868,
+                                    -41.500468680914985,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1211,
+                        "FaultName": "Opouawe - Uruti, Subsection 12",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.3475819073734,
+                                    -41.447591030692536,
+                                    0.0
+                                ],
+                                [
+                                    176.45125682282284,
+                                    -41.39462015042643,
+                                    0.0
+                                ],
+                                [
+                                    176.37734277787914,
+                                    -41.25637129257322,
+                                    13.9
+                                ],
+                                [
+                                    176.27360784076555,
+                                    -41.309342128726165,
+                                    13.9
+                                ],
+                                [
+                                    176.3475819073734,
+                                    -41.447591030692536,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1212,
+                        "FaultName": "Opouawe - Uruti, Subsection 13",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.45125682282284,
+                                    -41.39462015042643,
+                                    0.0
+                                ],
+                                [
+                                    176.55476275517373,
+                                    -41.341556365378054,
+                                    0.0
+                                ],
+                                [
+                                    176.48090867634647,
+                                    -41.20330755164372,
+                                    13.9
+                                ],
+                                [
+                                    176.37734277787914,
+                                    -41.25637129257322,
+                                    13.9
+                                ],
+                                [
+                                    176.45125682282284,
+                                    -41.39462015042643,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1213,
+                        "FaultName": "Opouawe - Uruti, Subsection 14",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 13.9,
+                        "UpDepth": 0.0,
+                        "DipDir": 338.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.5,
+                        "ParentID": 331,
+                        "ParentName": "Opouawe - Uruti",
+                        "SlipRateStdDev": 1.0
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.55476275517373,
+                                    -41.341556365378054,
+                                    0.0
+                                ],
+                                [
+                                    176.6581,
+                                    -41.28840000000002,
+                                    0.0
+                                ],
+                                [
+                                    176.58430583102628,
+                                    -41.15015123038984,
+                                    13.9
+                                ],
+                                [
+                                    176.48090867634647,
+                                    -41.20330755164372,
+                                    13.9
+                                ],
+                                [
+                                    176.55476275517373,
+                                    -41.341556365378054,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1666,
+                        "FaultName": "Uruti North, Subsection 2",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 11.2,
+                        "UpDepth": 0.0,
+                        "DipDir": 332.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.0,
+                        "ParentID": 475,
+                        "ParentName": "Uruti North",
+                        "SlipRateStdDev": 0.5
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.71379438828814,
+                                    -41.09769008662103,
+                                    0.0
+                                ],
+                                [
+                                    176.63937876349698,
+                                    -40.99158059342972,
+                                    11.2
+                                ],
+                                [
+                                    176.54277442931922,
+                                    -41.00039049937708,
+                                    11.2
+                                ],
+                                [
+                                    176.6172,
+                                    -41.106500000000004,
+                                    0.0
+                                ],
+                                [
+                                    176.71379438828814,
+                                    -41.09769008662103,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "FaultID": 1665,
+                        "FaultName": "Uruti North, Subsection 1",
+                        "DipDeg": 40.0,
+                        "Rake": 90.0,
+                        "LowDepth": 11.2,
+                        "UpDepth": 0.0,
+                        "DipDir": 332.1,
+                        "AseismicSlipFactor": 0.0,
+                        "CouplingCoeff": 1.0,
+                        "SlipRate": 1.0,
+                        "ParentID": 475,
+                        "ParentName": "Uruti North",
+                        "SlipRateStdDev": 0.5
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    176.78983228432625,
+                                    -41.05731746428176,
+                                    0.0
+                                ],
+                                [
+                                    176.71546218145883,
+                                    -40.95120800512141,
+                                    11.2
+                                ],
+                                [
+                                    176.6948061371961,
+                                    -40.97229052307393,
+                                    11.2
+                                ],
+                                [
+                                    176.6599865084333,
+                                    -40.989690508402816,
+                                    11.2
+                                ],
+                                [
+                                    176.63937876349698,
+                                    -40.99158059342972,
+                                    11.2
+                                ],
+                                [
+                                    176.71379438828814,
+                                    -41.09769008662103,
+                                    0.0
+                                ],
+                                [
+                                    176.7344,
+                                    -41.095800000000004,
+                                    0.0
+                                ],
+                                [
+                                    176.7692,
+                                    -41.0784,
+                                    0.0
+                                ],
+                                [
+                                    176.78983228432625,
+                                    -41.05731746428176,
+                                    0.0
+                                ]
+                            ]
+                        ]
+                    }
+                }
+            ]
+        }
+
+        mapboxgl.accessToken ='pk.eyJ1IjoiYmlsbHNhbmRzaW5ndXBzIiwiYSI6ImNsenEzY3hkejB0bDUya29naGZuOWU4N3cifQ.mFTVG9-uKovMEcGVFp4h5A';
+
+        const map = (window.map = new mapboxgl.Map({
+            container: 'map',
+            style:
+                'https://api.maptiler.com/maps/basic/style.json?key=1GtAyVRS3FCxxi0NJdw4',
+            zoom: 7,
+            center: [175.57716369628906,
+                -41.351207733154304,],
+            pitch: 0,
+            maxPitch: 85,
+            antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+        }));
+
+        // parameters to ensure the model is georeferenced correctly on the map
+        const modelOrigin = [148.9819, -35.39847];
+        const modelAltitude = 0;
+        const modelRotate = [Math.PI / 2, 0, 0];
+
+        const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+            modelOrigin,
+            modelAltitude
+        );
+
+        // transformation parameters to position, rotate and scale the 3D model onto the map
+        const modelTransform = {
+            translateX: modelAsMercatorCoordinate.x,
+            translateY: modelAsMercatorCoordinate.y,
+            translateZ: modelAsMercatorCoordinate.z,
+            rotateX: modelRotate[0],
+            rotateY: modelRotate[1],
+            rotateZ: modelRotate[2],
+            /* Since our 3D model is in real world meters, a scale transform needs to be
+            * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+            */
+            scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+        };
+
+        const THREE = window.THREE;
+
+        var currentGroup;
+
+        const ELEVEATION = 1000 * modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
+        const DEPTH = -1000 * modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
+
+        const elevationType = DEPTH;
+
+        var maxElevation = 0;
+
+
+        function vertex([longitude, latitude, elevation = 0]) {
+
+            const mercatorCoord = mapboxgl.MercatorCoordinate.fromLngLat(
+                [longitude, latitude]
+            );
+
+            maxElevation = Math.max(maxElevation, elevation);
+
+            return new THREE.Vector3(mercatorCoord.x, mercatorCoord.y, elevation * elevationType);
+        }
+
+        function lineCoords(line, material) {
+            const ps = line.map(p => vertex(p));
+            const geometry = new THREE.BufferGeometry().setFromPoints(ps);
+            currentGroup.add(new THREE.Line(geometry, material));
+        }
+
+        function linestring(linestring, material) {
+            lineCoords(linestring.coordinates, material);
+        }
+
+        function multiLinestring(multiLinestring, material) {
+            for (const line of multiLinestring.coordinates) {
+                lineCoords(line, material);
+            }
+        }
+
+        function pushTriangle(vertices, point) {
+            const { x, y, z } = point;
+            vertices.push(x);
+            vertices.push(y);
+            vertices.push(z);
+        }
+
+        // this only works for opensha-style polygons (extruded from a trace)
+        // ignores holes
+        function polygon(polygon, material) {
+            const ps = polygon.geometry.coordinates[0].map(p => vertex(p));
+            // very specific to how opensha encodes polygons
+            const trace = ps.slice(1, (ps.length - 1) / 2 + 1);
+            const bottom = ps.slice((ps.length - 1) / -2).reverse();
+
+            const vertices = [];
+            for (var i = 1; i < trace.length; i++) {
+                pushTriangle(vertices, trace[i - 1]);
+                pushTriangle(vertices, bottom[i - 1]);
+                pushTriangle(vertices, bottom[i]);
+
+                // create triangle in opposite direction to make it visible from the other side
+                pushTriangle(vertices, bottom[i - 1]);
+                pushTriangle(vertices, trace[i - 1]);
+                pushTriangle(vertices, bottom[i]);
+
+                pushTriangle(vertices, bottom[i]);
+                pushTriangle(vertices, trace[i]);
+                pushTriangle(vertices, trace[i - 1]);
+
+                // create triangle in opposite direction to make it visible from the other side
+                pushTriangle(vertices, trace[i]);
+                pushTriangle(vertices, bottom[i]);
+                pushTriangle(vertices, trace[i - 1]);
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            geometry.geoJsonProperties = polygon.properties;
+            //geometry.userData = polygon.properties;
+            const mesh = new THREE.Mesh(geometry, material)
+            currentGroup.add(mesh);
+
+            const outline = new THREE.BufferGeometry().setFromPoints(ps);
+            currentGroup.add(new THREE.Line(outline, new THREE.LineBasicMaterial({ color: 0xaaaaaa })));
+        }
+
+        function parseGeoJsonFeature(geoJsonFeature) {
+            if (geoJsonFeature.geometry.type === 'LineString') {
+                linestring(geoJsonFeature.geometry, new THREE.LineBasicMaterial({ color: 0xaaaaaa }));
+            } else if (geoJsonFeature.geometry.type === 'MultiLineString') {
+                multiLinestring(geoJsonFeature.geometry, new THREE.LineBasicMaterial({ color: 0xaaaaaa }));
+            } else if (geoJsonFeature.geometry.type === 'Polygon') {
+                polygon(geoJsonFeature, new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+            }
+        }
+
+        function parseGeoJson(geoJson) {
+            currentGroup = new THREE.Group();
+            for (const feature of geoJson.features) {
+                parseGeoJsonFeature(feature);
+            }
+            return currentGroup;
+        }
+
+        const rupture = parseGeoJson(geojson);
+        //       rupture.translateZ(maxElevation * -elevationType);
+
+        const NEAR = 0.000000001;
+        const FAR = 1000000000;
+
+        // https://stackoverflow.com/questions/10830293/decompose-projection-matrix44-to-left-right-bottom-top-near-and-far-boundary
+        function decomposeProjectionMatrix(m) {
+            const near = m.elements[14] / (m.elements[10] - 1);
+            const far = m.elements[14] / (m.elements[10] + 1);
+            const bottom = near * (m.elements[9] - 1) / m.elements[5];
+            const top = near * (m.elements[9] + 1) / m.elements[5];
+            const left = near * (m.elements[8] - 1) / m.elements[0];
+            const right = near * (m.elements[8] + 1) / m.elements[0];
+            return [near, far, bottom, top, left, right];
+        }
+
+        var printed = false;
+
+        // configuration of the custom layer for a 3D model per the CustomLayerInterface
+        const customLayer = {
+            id: '3d-model',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd(map, gl) {
+                this.camera = new THREE.Camera();
+                this.scene = new THREE.Scene();
+
+                // this.camera.near = 0.00001;
+                // this.camera.far = 1000000;
+
+                // create two three.js lights to illuminate the model
+                const directionalLight = new THREE.DirectionalLight(0xffffff);
+                directionalLight.position.set(0, -70, 100).normalize();
+                this.scene.add(directionalLight);
+
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff);
+                directionalLight2.position.set(0, 70, 100).normalize();
+                this.scene.add(directionalLight2);
+
+
+                this.scene.add(rupture);
+                this.map = map;
+
+                // use the MapLibre GL JS map canvas for three.js
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: map.getCanvas(),
+                    context: gl,
+                    antialias: true
+                });
+
+                this.renderer.autoClear = false;
+            },
+            render(gl, matrix) {
+
+                const m = new THREE.Matrix4().fromArray(matrix);
+                var [near, far, bottom, top, left, right] = decomposeProjectionMatrix(m);
+                const reconstructed = new THREE.Matrix4().makePerspective(left, right, top, bottom, near, far);
+                reconstructed.elements[11] = m.elements[11];
+                reconstructed.elements[12] = m.elements[12];
+                reconstructed.elements[13] = m.elements[13];
+                reconstructed.elements[15] = m.elements[15];
+
+                if (!printed) {
+                    console.log([near, far, bottom, top, left, right]);
+                    console.log(reconstructed);
+                    console.log(m);
+                    printed = true;
+                }
+          //      console.log([near, far]);
+              //  near = -0.0000000001;
+               // far = -1;
+                const c = - (far + near) / (far - near) ;
+                const d = - 2 * far * near / (far - near);
+
+
+                m.elements[10] = c;
+                m.elements[14] = d;
+                this.camera.projectionMatrix = m;
+                this.renderer.resetState();
+                this.renderer.render(this.scene, this.camera);
+                this.map.triggerRepaint();
+            }
+        };
+
+        map.on('style.load', () => {
+            map.addLayer(customLayer);
+        });
+    </script>
+</body>
+
+</html>
