@@ -157,6 +157,8 @@ public class UCRuptureTester {
         PlausibilityResult r0 = ruptureTester.filters.get(0).apply(jumps[0], true);
         PlausibilityResult r1 = ruptureTester.filters.get(1).apply(jumps[0], true);
 
+        ruptureTester.saveCache();
+
         System.out.println("--------------");
         System.out.println(jumps[0].distance);
         System.out.println(r0);
@@ -164,10 +166,10 @@ public class UCRuptureTester {
 
         SimpleGeoJsonBuilder geoJson = new SimpleGeoJsonBuilder();
         for (FaultSection section : jumps[0].fromRupture.buildOrderedSectionList()) {
-            geoJson.addFaultSectionPerimeter(section);
+            geoJson.addFaultSectionPolygon(section);
         }
         for (FaultSection section : jumps[0].toRupture.buildOrderedSectionList()) {
-            geoJson.addFaultSectionPerimeter(section);
+            geoJson.addFaultSectionPolygon(section);
         }
         geoJson.toJSON("/tmp/rsqsimRup0.geojson");
     }
