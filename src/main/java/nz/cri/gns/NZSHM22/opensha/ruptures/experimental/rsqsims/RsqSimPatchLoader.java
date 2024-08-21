@@ -56,7 +56,7 @@ public class RsqSimPatchLoader {
     List<SubductionSection> hikurangi;
     List<SubductionSection> puysegur;
 
-    final NztmConverter utmConverter;
+    final CoordinateConverter coordinateConverter;
 
     public List<Patch> patches = new ArrayList<>();
 
@@ -137,17 +137,20 @@ public class RsqSimPatchLoader {
         }
     }
 
-    public RsqSimPatchLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) throws FactoryException {
+    public RsqSimPatchLoader(File zfaultDeepenIn,
+                             CoordinateConverter coordinateConverter,
+                             File znamesDeepenIn,
+                             File rupSet,
+                             File solution) throws FactoryException {
         this.zfaultDeepenIn = zfaultDeepenIn;
         this.znamesDeepenIn = znamesDeepenIn;
         this.rupSet = rupSet;
         this.solution = solution;
-        utmConverter = new NztmConverter();
+        this.coordinateConverter = coordinateConverter;
     }
 
-    static Location toLatLon(double easting, double northing, double depth) {
-        Location loc = UtmConverter.convertToLatLng(easting, northing, 59, true);
-        return new Location(loc.lat, loc.lon, Math.abs(depth) / 1000);
+    Location toLatLon(double easting, double northing, double depth) {
+        return coordinateConverter.toWGS84(easting, northing, Math.abs(depth) / 1000);
     }
 
     Patch loadGeometry(String line) {
@@ -329,7 +332,7 @@ public class RsqSimPatchLoader {
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
-        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.UTM(59, false), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
         loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadGeometry();
         loader.loadNames();
@@ -393,9 +396,9 @@ public class RsqSimPatchLoader {
         builder.toJSON("/tmp/nzshm22_red.geojson");
     }
 
-    public static void main(String[] args) throws IOException, FactoryException {
+    public static void processCanterbury(String[] args) throws IOException, FactoryException {
         String fileName = "C:\\rsqsimsCatalogue\\fromAndyH\\whole_nz_faults_2500_tapered_slip.flt";
-        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), null, null, null);
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.NZTM(), null, null, null);
         //loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadGeometry();
 //            loader.loadNames();
@@ -403,7 +406,7 @@ public class RsqSimPatchLoader {
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
         patches.stream().filter(Objects::nonNull)
                 .filter(p -> p.getMaxLat() < -40.41483321429752)
-             //   .filter(p -> p.getMaxLat() > -42.41483321429752)
+                .filter(p -> p.getMaxLat() > -42.41483321429752)
 //                .filter(p -> p.parentId==115 || p.parentId == 3)
 //                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR) && p.section != null)
 //            .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR))
@@ -411,5 +414,10 @@ public class RsqSimPatchLoader {
                 //  .filter(p -> !p.sections.isEmpty())
                 .forEach(p -> builder.addFeature(p.toFeature()));
         builder.toJSON("/tmp/andy.geojson");
+    }
+
+    public static void main(String[] args) throws FactoryException, IOException {
+        // process_rundir5469(args);
+        processCanterbury(args);
     }
 }
