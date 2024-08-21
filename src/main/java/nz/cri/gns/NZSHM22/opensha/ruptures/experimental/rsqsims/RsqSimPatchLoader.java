@@ -2,6 +2,8 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.util.FactoryException;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -53,6 +55,8 @@ public class RsqSimPatchLoader {
 
     List<SubductionSection> hikurangi;
     List<SubductionSection> puysegur;
+
+    final NztmConverter utmConverter;
 
     public List<Patch> patches = new ArrayList<>();
 
@@ -133,11 +137,12 @@ public class RsqSimPatchLoader {
         }
     }
 
-    public RsqSimPatchLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) {
+    public RsqSimPatchLoader(File zfaultDeepenIn, File znamesDeepenIn, File rupSet, File solution) throws FactoryException {
         this.zfaultDeepenIn = zfaultDeepenIn;
         this.znamesDeepenIn = znamesDeepenIn;
         this.rupSet = rupSet;
         this.solution = solution;
+        utmConverter = new NztmConverter();
     }
 
     static Location toLatLon(double easting, double northing, double depth) {
@@ -319,7 +324,7 @@ public class RsqSimPatchLoader {
         polys = solution.getModule(PolygonFaultGridAssociations.class);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void process_rundir5469(String[] args) throws IOException, FactoryException {
         String fileName = "C:\\rsqsimsCatalogue\\rundir5469\\zfault_Deepen.in";
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
@@ -364,11 +369,11 @@ public class RsqSimPatchLoader {
         List<FaultSection> sections = eventLoader.toFaultSections(events.get(100));
         SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
 
-        for(Patch patch: events.get(100).getPatches()) {
+        for (Patch patch : events.get(100).getPatches()) {
             builder3.addFeature(patch.toFeature());
         }
 
-        for(FaultSection section:sections) {
+        for (FaultSection section : sections) {
             FeatureProperties props = builder3.addFaultSectionPerimeter(section);
             builder3.setLineColour(props, "blue");
         }
@@ -386,5 +391,25 @@ public class RsqSimPatchLoader {
                     builder.setLineWidth(props, 5);
                 });
         builder.toJSON("/tmp/nzshm22_red.geojson");
+    }
+
+    public static void main(String[] args) throws IOException, FactoryException {
+        String fileName = "C:\\rsqsimsCatalogue\\fromAndyH\\whole_nz_faults_2500_tapered_slip.flt";
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), null, null, null);
+        //loader.loadSolutionPolygons();
+        List<Patch> patches = loader.loadGeometry();
+//            loader.loadNames();
+//            loader.loadRupSet();
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        patches.stream().filter(Objects::nonNull)
+                .filter(p -> p.getMaxLat() < -40.41483321429752)
+             //   .filter(p -> p.getMaxLat() > -42.41483321429752)
+//                .filter(p -> p.parentId==115 || p.parentId == 3)
+//                .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR) && p.section != null)
+//            .filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR))
+                //.filter(p -> p.zname.equals(RSQSIMS_HIKURANGI))
+                //  .filter(p -> !p.sections.isEmpty())
+                .forEach(p -> builder.addFeature(p.toFeature()));
+        builder.toJSON("/tmp/andy.geojson");
     }
 }
