@@ -19,7 +19,6 @@ import java.io.*;
 import java.util.*;
 
 
-
 public class RsqSimPatchLoader {
 
     public final static String RSQSIMS_HIKURANGI = "Hikurangi";
@@ -30,13 +29,13 @@ public class RsqSimPatchLoader {
     final File rupSet;
     final File solution;
 
+    final PatchesFile patchesFile;
+
     Map<String, List<FaultSection>> nameToSection;
     PolygonFaultGridAssociations polys;
 
     List<SubductionSection> hikurangi;
     List<SubductionSection> puysegur;
-
-    final CoordinateConverter coordinateConverter;
 
     public List<Patch> patches = new ArrayList<>();
 
@@ -76,7 +75,7 @@ public class RsqSimPatchLoader {
     }
 
     public RsqSimPatchLoader(File zfaultDeepenIn,
-
+                             PatchesFile patchesFile,
                              File znamesDeepenIn,
                              File rupSet,
                              File solution) throws FactoryException {
@@ -84,12 +83,15 @@ public class RsqSimPatchLoader {
         this.znamesDeepenIn = znamesDeepenIn;
         this.rupSet = rupSet;
         this.solution = solution;
-        this.coordinateConverter = coordinateConverter;
+        this.patchesFile = patchesFile;
     }
 
 
-
-
+    public List<Patch> loadPatches() throws IOException {
+        patches = patchesFile.loadPatches();
+        patches.forEach(p -> patchLookup.put(p.id, p));
+        return patches;
+    }
 
 
     public void loadNames() throws IOException {
@@ -231,7 +233,8 @@ public class RsqSimPatchLoader {
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
-        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.UTM(59, false), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
         loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadPatches();
         loader.loadNames();
@@ -297,7 +300,9 @@ public class RsqSimPatchLoader {
 
     public static void processCanterbury(String[] args) throws IOException, FactoryException {
         String fileName = "C:\\rsqsimsCatalogue\\fromAndyH\\whole_nz_faults_2500_tapered_slip.flt";
-        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.NZTM(), null, null, null);
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.NZTM());
+
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, null, null, null);
         //loader.loadSolutionPolygons();
         List<Patch> patches = loader.loadPatches();
 //            loader.loadNames();
