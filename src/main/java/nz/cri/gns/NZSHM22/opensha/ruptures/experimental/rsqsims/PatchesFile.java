@@ -59,7 +59,7 @@ public class PatchesFile {
         Location l3 = toLatLon(values[6], values[7], values[8]);
         Patch patch = null;
         try {
-            patch = Patch.create(id, l1, l2, l3, values[9], values[10]);
+            patch = Patch.create(id, l1, l2, l3, values[9], values[10], parts);
         } catch (Exception x) {
             //x.printStackTrace();
             System.err.println("error at line " + id + " " + x.getMessage());
