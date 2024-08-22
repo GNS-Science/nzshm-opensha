@@ -22,21 +22,21 @@ public class RsqSimEventLoader {
 
     public static class Event {
         public final int id;
-        public List<RsqSimPatchLoader.Patch> patches = new ArrayList<>();
+        public List<Patch> patches = new ArrayList<>();
         public List<FaultSection> sections;
 
         public Event(int id) {
             this.id = id;
         }
 
-        public List<RsqSimPatchLoader.Patch> getPatches() {
+        public List<Patch> getPatches() {
             return patches;
         }
 
         boolean isJointRupture() {
             boolean hasSubduction = false;
             boolean hasCrustal = false;
-            for (RsqSimPatchLoader.Patch patch : patches) {
+            for (Patch patch : patches) {
                 if (patch.zname.equals(RsqSimPatchLoader.RSQSIMS_HIKURANGI) || patch.zname.equals(RsqSimPatchLoader.RSQSIMS_PUYSEGUR)) {
                     hasSubduction = true;
                 } else {
@@ -67,7 +67,7 @@ public class RsqSimEventLoader {
 
         public Map<FaultSection, Integer> getSectionFillCount() {
             Map<FaultSection, Integer> result = new HashMap<>();
-            for (RsqSimPatchLoader.Patch patch : patches) {
+            for (Patch patch : patches) {
                 for (FaultSection section : patch.sections) {
                     result.compute(section, (key, value) -> Objects.isNull(value) ? 1 : value + 1);
                 }
@@ -119,7 +119,7 @@ public class RsqSimEventLoader {
                 }
                 event = new Event(eid);
             }
-            RsqSimPatchLoader.Patch patch = patchLoader.getPatch(pid);
+            Patch patch = patchLoader.getPatch(pid);
             Preconditions.checkState(Objects.nonNull(patch));
             event.patches.add(patch);
         }

@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
-import org.opengis.geometry.DirectPosition;
 import org.opengis.util.FactoryException;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
@@ -19,25 +18,7 @@ import java.awt.geom.Area;
 import java.io.*;
 import java.util.*;
 
-/**
- * Loads geometry as specified in https://zenodo.org/records/5534462
- * <p>
- * Geometry File (ASCII): zfault_Deepen.in
- * <p>
- * ASCII file listing patch (triangular) geometry for the simulated faults
- * in a UTM coordinate system (zone 11S). The primary columns are:
- * <p>
- * * /x1, y1, z1/ - UTM coordinates of the first vertex
- * * /x2, y2, z2/ - UTM coordinates of the second vertex
- * * /x3, y3, z3/ - UTM coordinates of the third vertex
- * * /rake/ - Direction of the motion of the hanging wall relative to the
- * footwall (in degrees, following the convention of Aki & Richards, 2002)
- * * /slip_rate/ - Long-term average slip rate (in m/s)
- * <p>
- * The first line in the file (excluding comment lines that start with '#')
- * is the patch with ID=1, the second ID=2, etc. Additional metadata
- * columns may exist in each line beyond those listed and can be ignored.
- */
+
 
 public class RsqSimPatchLoader {
 
@@ -48,7 +29,6 @@ public class RsqSimPatchLoader {
     final File znamesDeepenIn;
     final File rupSet;
     final File solution;
-    int nextId = 0;
 
     Map<String, List<FaultSection>> nameToSection;
     PolygonFaultGridAssociations polys;
@@ -64,48 +44,6 @@ public class RsqSimPatchLoader {
 
     public Patch getPatch(int id) {
         return patchLookup.get(id);
-    }
-
-    public static class Patch {
-        public final LocationList locations;
-        public final int id;
-        public final double rake;
-        public final double slip;
-
-        public String zname;
-
-        public List<FaultSection> sections = new ArrayList<>();
-
-        public double getMaxLat() {
-            return locations.stream().mapToDouble(l -> l.lat).max().getAsDouble();
-        }
-
-        public Patch(int id, LocationList locations, double rake, double slip) {
-            this.id = id;
-            this.rake = rake;
-            this.slip = slip;
-            this.locations = locations;
-        }
-
-        public static Patch create(int id, Location a, Location b, Location c, double rake, double slip) {
-            LocationList locs = new LocationList();
-            locs.add(a);
-            locs.add(b);
-            locs.add(c);
-            return new Patch(id, locs, rake, slip);
-        }
-
-        public Feature toFeature() {
-            LocationList list = new LocationList();
-            list.addAll(locations);
-            list.add(locations.first());
-            Geometry geometry = new Geometry.LineString(list);
-            FeatureProperties properties = new FeatureProperties();
-            properties.set("rake", rake);
-            properties.set("slip", slip);
-            return new Feature(id, geometry, new FeatureProperties());
-        }
-
     }
 
     public static class SubductionSection {
@@ -138,7 +76,7 @@ public class RsqSimPatchLoader {
     }
 
     public RsqSimPatchLoader(File zfaultDeepenIn,
-                             CoordinateConverter coordinateConverter,
+
                              File znamesDeepenIn,
                              File rupSet,
                              File solution) throws FactoryException {
@@ -149,49 +87,10 @@ public class RsqSimPatchLoader {
         this.coordinateConverter = coordinateConverter;
     }
 
-    Location toLatLon(double easting, double northing, double depth) {
-        return coordinateConverter.toWGS84(easting, northing, Math.abs(depth) / 1000);
-    }
 
-    Patch loadGeometry(String line) {
-        String[] parts = line.split(" ");
-        Preconditions.checkArgument(parts.length >= 11, "Line must have at least 11 elements");
-        double[] values = new double[11];
-        for (int i = 0; i < 11; i++) {
-            Preconditions.checkArgument(!parts[i].isEmpty());
-            values[i] = Double.parseDouble(parts[i]);
-        }
 
-        Location l1 = toLatLon(values[0], values[1], values[2]);
-        Location l2 = toLatLon(values[3], values[4], values[5]);
-        Location l3 = toLatLon(values[6], values[7], values[8]);
-        Patch patch = null;
-        try {
-            patch = Patch.create(nextId, l1, l2, l3, values[9], values[10]);
-        } catch (Exception x) {
-            //x.printStackTrace();
-            System.err.println("error at line " + nextId + " " + x.getMessage());
-        }
-        nextId++;
-        return patch;
-    }
 
-    public List<Patch> loadGeometry() throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(zfaultDeepenIn));
 
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.isEmpty() || line.startsWith("#")) {
-                continue;
-            }
-            Patch patch = loadGeometry(line);
-            patches.add(patch);
-            patchLookup.put(patch.id, patch);
-        }
-
-        reader.close();
-        return patches;
-    }
 
     public void loadNames() throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(znamesDeepenIn));
@@ -334,7 +233,7 @@ public class RsqSimPatchLoader {
         String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
         RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.UTM(59, false), new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
         loader.loadSolutionPolygons();
-        List<Patch> patches = loader.loadGeometry();
+        List<Patch> patches = loader.loadPatches();
         loader.loadNames();
         loader.loadRupSet();
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
@@ -400,7 +299,7 @@ public class RsqSimPatchLoader {
         String fileName = "C:\\rsqsimsCatalogue\\fromAndyH\\whole_nz_faults_2500_tapered_slip.flt";
         RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), new CoordinateConverter.NZTM(), null, null, null);
         //loader.loadSolutionPolygons();
-        List<Patch> patches = loader.loadGeometry();
+        List<Patch> patches = loader.loadPatches();
 //            loader.loadNames();
 //            loader.loadRupSet();
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
