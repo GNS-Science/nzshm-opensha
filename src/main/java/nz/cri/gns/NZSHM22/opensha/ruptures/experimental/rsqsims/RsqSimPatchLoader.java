@@ -300,22 +300,43 @@ public class RsqSimPatchLoader {
 
     public static void processCanterbury(String[] args) throws IOException, FactoryException {
 
-        Map<Integer, List<Integer>> patchids = USMappingsFile.read("C:\\rsqsimsCatalogue\\fromAndyH\\puysegur_discretized_trimmed_dict.json");
+        String mappingsFile = null;
+        String rupSetFile = null;
+        String outputFile = null;
+
+        String set = "puysegur";
+
+        if(set.equals("puysegur")) {
+            mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\puysegur_discretized_trimmed_dict.json";
+            rupSetFile = "C:\\Users\\user\\GNS\\rupture sets\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip";
+            outputFile = "/tmp/puysegur_patchmatches.json";
+        } else if(set.equals("hikurangi")) {
+            mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\hikkerm_discretized_trimmed_dict.json";
+            rupSetFile = "C:\\Users\\user\\GNS\\rupture sets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
+            outputFile = "/tmp/hikurangi_patchmatches.json";
+        } else if (set.equals("crustal")) {
+            mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\rsqsim_crustal_discretized_trimmed_dict.json";
+            rupSetFile = "C:\\Users\\user\\GNS\\rupture sets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+            outputFile = "/tmp/crustal_patchmatches.json";
+        }
+
+        Map<Integer, List<Integer>> patchids = USMappingsFile.read(mappingsFile);
 
         String fileName = "C:\\rsqsimsCatalogue\\fromAndyH\\whole_nz_faults_2500_tapered_slip.flt";
         PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.NZTM());
 
         RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, null, null, null);
         List<Patch> patches = loader.loadPatches();
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File("C:\\Users\\user\\GNS\\rupture sets\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip"));
+        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(rupSetFile));
 
         List<String> geojsons = new ArrayList<>();
 
         rupSet.getFaultSectionDataList().forEach(section -> {
             SimpleGeoJsonBuilder patchBuilder = new SimpleGeoJsonBuilder();
-            patchBuilder.addFaultSectionPerimeter(section);
+            FeatureProperties props = patchBuilder.addFaultSectionPerimeter(section);
+            patchBuilder.setLineColour(props, "red");
             if(patchids.get(section.getSectionId()) == null) {
-                System.out.println("no pacthes for " + section.getSectionId());
+                System.out.println("no patches for " + section.getSectionId());
             } else {
                 patchids.get(section.getSectionId()).forEach(patchId -> {
                     patchBuilder.addFeature(
@@ -325,7 +346,7 @@ public class RsqSimPatchLoader {
             geojsons.add(patchBuilder.toJSON());
         });
 
-        BufferedWriter out = new BufferedWriter(new FileWriter("/tmp/patchMatches.json"));
+        BufferedWriter out = new BufferedWriter(new FileWriter(outputFile));
         out.write("[");
         out.write(String.join(",\n", geojsons));
         out.write("]");
