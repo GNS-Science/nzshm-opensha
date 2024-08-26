@@ -339,8 +339,9 @@ public class RsqSimPatchLoader {
                 System.out.println("no patches for " + section.getSectionId());
             } else {
                 patchids.get(section.getSectionId()).forEach(patchId -> {
-                    patchBuilder.addFeature(
+                    FeatureProperties p = patchBuilder.addFeature(
                             loader.patchLookup.get(patchId+1).toFeature());
+                    patchBuilder.setLineColour(p, "black");
                 });
             }
             geojsons.add(patchBuilder.toJSON());
