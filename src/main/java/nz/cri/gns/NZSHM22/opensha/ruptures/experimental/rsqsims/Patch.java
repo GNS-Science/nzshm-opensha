@@ -48,9 +48,22 @@ public class Patch {
         list.add(locations.first());
         Geometry geometry = new Geometry.LineString(list);
         FeatureProperties properties = new FeatureProperties();
+        properties.set("patch_id", id);
         properties.set("rake", rake);
         properties.set("slip", slip);
-        return new Feature(id, geometry, new FeatureProperties());
+        return new Feature(id, geometry, properties);
+    }
+
+    public Feature toPolygonFeature() {
+        LocationList list = new LocationList();
+        list.addAll(locations);
+        list.add(locations.first());
+        Geometry geometry = new Geometry.Polygon(list);
+        FeatureProperties properties = new FeatureProperties();
+        properties.set("patch_id", id);
+        properties.set("rake", rake);
+        properties.set("slip", slip);
+        return new Feature(id, geometry, properties);
     }
 
 }

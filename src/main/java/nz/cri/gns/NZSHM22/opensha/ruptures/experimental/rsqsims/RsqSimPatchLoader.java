@@ -304,7 +304,7 @@ public class RsqSimPatchLoader {
         String rupSetFile = null;
         String outputFile = null;
 
-        String set = "puysegur";
+        String set = "crustal";
 
         if(set.equals("puysegur")) {
             mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\puysegur_discretized_trimmed_dict.json";
@@ -333,15 +333,15 @@ public class RsqSimPatchLoader {
 
         rupSet.getFaultSectionDataList().forEach(section -> {
             SimpleGeoJsonBuilder patchBuilder = new SimpleGeoJsonBuilder();
-            FeatureProperties props = patchBuilder.addFaultSectionPerimeter(section);
-            patchBuilder.setLineColour(props, "red");
+            FeatureProperties props = patchBuilder.addFaultSectionPolygon(section);
+            patchBuilder.setPolygonColour(props, "rgba(255, 0, 0, 0.8)");
             if(patchids.get(section.getSectionId()) == null) {
                 System.out.println("no patches for " + section.getSectionId());
             } else {
                 patchids.get(section.getSectionId()).forEach(patchId -> {
                     FeatureProperties p = patchBuilder.addFeature(
-                            loader.patchLookup.get(patchId+1).toFeature());
-                    patchBuilder.setLineColour(p, "black");
+                            loader.patchLookup.get(patchId+1).toPolygonFeature());
+                    patchBuilder.setPolygonColour(p, "#d5f024");
                 });
             }
             geojsons.add(patchBuilder.toJSON());
