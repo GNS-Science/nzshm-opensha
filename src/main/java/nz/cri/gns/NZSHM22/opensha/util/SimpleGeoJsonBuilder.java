@@ -116,6 +116,11 @@ public class SimpleGeoJsonBuilder {
         return props;
     }
 
+    public FeatureProperties setPolygonColour(FeatureProperties props, String cssColour) {
+        props.set(FeatureProperties.FILL_COLOR_PROP, cssColour);
+        return props;
+    }
+
     public FeatureProperties setLineColour(FeatureProperties props, String cssColour){
         props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
         return props;
