@@ -421,7 +421,8 @@ public class RsqSimPatchLoader {
 
         PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
         RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
-        loader.loadSolutionPolygons();
+        //loader.loadSolutionPolygons();
+        loader.loadPatches();
         loader.loadNames();
         loader.loadRupSetNewBruce();
 
@@ -459,20 +460,32 @@ public class RsqSimPatchLoader {
                 .filter(event -> event.jump != null) // check if there's a single crustal rupture
                 .collect(Collectors.toList());
 
-        System.out.println(ruptures.size() + " single crustal joitn ruptures");
+        System.out.println(ruptures.size() + " single crustal joint ruptures");
 
-        List<FaultSection> sections = eventLoader.toFaultSections(events.get(100));
-        SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
+        List<String> gjs = new ArrayList<>();
+        for(RsqSimEventLoader.Event event : List.of(ruptures.get(0), ruptures.get(1))) {
+            SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
 
-        for (Patch patch : events.get(100).getPatches()) {
-            builder3.addFeature(patch.toFeature());
+            for (FaultSection section : event.sections) {
+                FeatureProperties props = builder3.addFaultSectionPolygon(section);
+                builder3.setPolygonColour(props, "red");
+                builder3.setLineColour(props, "red");
+            }
+            for(Patch patch: event.getPatches()) {
+                FeatureProperties props = builder3.addFeature(patch.toPolygonFeature());
+                builder3.setPolygonColour(props, "green");
+            }
+            gjs.add(builder3.toJSON());
         }
 
-        for (FaultSection section : sections) {
-            FeatureProperties props = builder3.addFaultSectionPerimeter(section);
-            builder3.setLineColour(props, "blue");
-        }
-        builder3.toJSON("/tmp/joint-rupture.geojson");
+        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/BruceRuptures5883.json"));
+        List<String> someRuptures = List.of(gjs.get(0), gjs.get(1));
+        writer.write("[");
+        writer.write(String.join(",\n", someRuptures));
+        writer.write("]");
+        writer.close();
+
+
     }
 
     public static void main1(String[] args) throws IOException {
