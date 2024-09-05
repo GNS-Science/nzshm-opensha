@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class USMappingsFile {
+public class UCMappingsFile {
 
     static Map<Integer, List<Integer>> read(String fileName) throws FileNotFoundException {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));

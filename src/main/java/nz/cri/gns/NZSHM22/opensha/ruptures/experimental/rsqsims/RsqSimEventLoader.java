@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.*;
@@ -24,6 +25,7 @@ public class RsqSimEventLoader {
         public final int id;
         public List<Patch> patches = new ArrayList<>();
         public List<FaultSection> sections;
+        public MultiRuptureJump jump;
 
         public Event(int id) {
             this.id = id;
@@ -33,6 +35,10 @@ public class RsqSimEventLoader {
             return patches;
         }
 
+        /**
+         * Returns true if the event has subduction and crustal patches.
+         * @return
+         */
         boolean isJointRupture() {
             boolean hasSubduction = false;
             boolean hasCrustal = false;
@@ -49,6 +55,10 @@ public class RsqSimEventLoader {
             return false;
         }
 
+        /**
+         * Returns true if the rupture has crustal and subduction sections
+         * @return
+         */
         boolean isOpenShaJointRupture() {
             boolean hasSubduction = false;
             boolean hasCrustal = false;
