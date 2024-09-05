@@ -15,12 +15,17 @@ public class Patch {
     public final int id;
     public final double rake;
     public final double slip;
+    public int sectionIdFromZname=-1;
 
     public String zname;
 
     public final String[] row;
 
     public List<FaultSection> sections = new ArrayList<>();
+
+    public int getNameSectionId() {
+        return sectionIdFromZname;
+    }
 
     public double getMaxLat() {
         return locations.stream().mapToDouble(l -> l.lat).max().getAsDouble();
