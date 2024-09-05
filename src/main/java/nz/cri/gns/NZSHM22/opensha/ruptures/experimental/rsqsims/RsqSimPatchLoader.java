@@ -17,6 +17,7 @@ import org.opensha.sha.faultSurface.RuptureSurface;
 import java.awt.geom.Area;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class RsqSimPatchLoader {
@@ -28,6 +29,8 @@ public class RsqSimPatchLoader {
     final File znamesDeepenIn;
     final File rupSet;
     final File solution;
+    FaultSystemRupSet loadedRupSet;
+
 
     final PatchesFile patchesFile;
 
@@ -101,6 +104,10 @@ public class RsqSimPatchLoader {
         while ((line = reader.readLine()) != null) {
             line = line.substring(4, line.length() - 3);
             patches.get(index).zname = line;
+            String[] lineParts = line.split(" ");
+            if (lineParts.length > 1) {
+                patches.get(index).sectionIdFromZname = Integer.parseInt(lineParts[0]);
+            }
             index++;
         }
         Preconditions.checkState(index == patches.size());
@@ -122,6 +129,7 @@ public class RsqSimPatchLoader {
 
     Map<FaultSection, Integer> patchCountPerSection = new HashMap<>();
 
+    // oakley XXX
     public void addSectionToPatch(Patch patch, FaultSection section) {
         patch.sections.add(section);
         patchCountPerSection.compute(section, (key, value) -> Objects.isNull(value) ? 1 : value + 1);
@@ -147,6 +155,39 @@ public class RsqSimPatchLoader {
         public String toString() {
             return "" + count;
         }
+    }
+
+    /**
+     * For Bruce's rundir5883, where crustal patches have the subsection id in the zname
+     *
+     * @throws IOException
+     */
+    public void loadRupSetNewBruce() throws IOException {
+        loadedRupSet = FaultSystemRupSet.load(this.rupSet);
+        hikurangi = new ArrayList<>();
+        puysegur = new ArrayList<>();
+        // load up the lists needed by findSubductionSections()
+        loadedRupSet.getFaultSectionDataList().forEach(
+                s -> {
+                    if (s.getSectionName().startsWith("Hikurangi")) {
+                        hikurangi.add(new SubductionSection(s));
+                    }
+                    if (s.getSectionName().startsWith("Puysegur")) {
+                        puysegur.add(new SubductionSection(s));
+                    }
+                }
+        );
+
+        // crustal sections should be matched directly by id
+        patches.forEach(p -> {
+            if (p.sectionIdFromZname != -1) {
+                addSectionToPatch(p, loadedRupSet.getFaultSectionData(p.sectionIdFromZname));
+            }
+        });
+        //subduction is done geometrically
+        patches.stream()
+                .filter(p -> p.zname.equals(RSQSIMS_HIKURANGI) || p.zname.equals(RSQSIMS_PUYSEGUR))
+                .forEach(this::findSubductionSections);
     }
 
     public void loadRupSet() throws IOException {
@@ -228,6 +269,33 @@ public class RsqSimPatchLoader {
         polys = solution.getModule(PolygonFaultGridAssociations.class);
     }
 
+    public void writeMappingsToFile(String outputFile) throws IOException {
+        List<String> geojsons = new ArrayList<>();
+
+        Map<Integer, List<Patch>> bySection = patches.stream().collect(Collectors.groupingBy(Patch::getNameSectionId));
+
+        bySection.keySet().forEach(sectionId -> {
+            if (sectionId == -1) {
+                return;
+            }
+            SimpleGeoJsonBuilder patchBuilder = new SimpleGeoJsonBuilder();
+            FeatureProperties props = patchBuilder.addFaultSectionPolygon(loadedRupSet.getFaultSectionData(sectionId));
+            patchBuilder.setPolygonColour(props, "rgba(255, 0, 0, 0.8)");
+            bySection.get(sectionId).forEach(patch -> {
+                FeatureProperties p = patchBuilder.addFeature(
+                        patch.toPolygonFeature());
+                patchBuilder.setPolygonColour(p, "#d5f024");
+            });
+            geojsons.add(patchBuilder.toJSON());
+        });
+
+        BufferedWriter out = new BufferedWriter(new FileWriter(outputFile));
+        out.write("[");
+        out.write(String.join(",\n", geojsons));
+        out.write("]");
+        out.close();
+    }
+
     public static void process_rundir5469(String[] args) throws IOException, FactoryException {
         String fileName = "C:\\rsqsimsCatalogue\\rundir5469\\zfault_Deepen.in";
         String namesFileName = "C:\\rsqsimsCatalogue\\rundir5469\\znames_Deepen.in";
@@ -285,6 +353,77 @@ public class RsqSimPatchLoader {
         builder3.toJSON("/tmp/joint-rupture.geojson");
     }
 
+    /**
+     * Processes Bruce's rundir5883
+     *
+     * @param args
+     * @throws IOException
+     * @throws FactoryException
+     */
+    public static void process_rundir5883(String[] args) throws IOException, FactoryException {
+        String fileName = "C:\\rsqsimsCatalogue\\rundir5883\\zfault_Deepen.in";
+        String namesFileName = "C:\\rsqsimsCatalogue\\rundir5883\\znames_Deepen.in";
+        String rupSetFileName = "C:\\Users\\user\\Dropbox\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip";//"C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip";
+        String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        loader.loadSolutionPolygons();
+        List<Patch> patches = loader.loadPatches();
+        loader.loadNames();
+        loader.loadRupSetNewBruce();
+
+        loader.writeMappingsToFile("/tmp/bruceNewCrustal.geojson");
+
+        SimpleGeoJsonBuilder patchesGeoJson = new SimpleGeoJsonBuilder();
+        patches.stream().filter(p -> p.zname.equals(RSQSIMS_PUYSEGUR)).forEach(p -> {
+            FeatureProperties props = patchesGeoJson.addFeature(p.toPolygonFeature());
+            patchesGeoJson.setPolygonColour(props, "blue");
+        });
+        patchesGeoJson.toJSON("/tmp/bruceNewPuysegurPatches.geojson");
+
+        SimpleGeoJsonBuilder patchesGeoJson2 = new SimpleGeoJsonBuilder();
+        patches.stream().filter(p -> p.zname.equals(RSQSIMS_HIKURANGI)).forEach(p -> {
+            FeatureProperties props = patchesGeoJson2.addFeature(p.toPolygonFeature());
+            patchesGeoJson2.setPolygonColour(props, "blue");
+        });
+        patchesGeoJson2.toJSON("/tmp/bruceNewHikurangiPatches.geojson");
+
+//
+//        SimpleGeoJsonBuilder builder2 = new SimpleGeoJsonBuilder();
+//        loader.puysegur.forEach(s ->
+//        {
+//            FeatureProperties props = builder2.addFaultSectionPerimeter(s.section);
+//            builder2.setLineColour(props, "red");
+//        });
+//        loader.hikurangi.forEach(s ->
+//        {
+//            FeatureProperties props = builder2.addFaultSectionPerimeter(s.section);
+//            builder2.setLineColour(props, "red");
+//
+//        });
+//        builder2.toJSON("/tmp/puysegurregions.geojson");
+//
+//        RsqSimEventLoader eventLoader = new RsqSimEventLoader(new File("C:\\rsqsimsCatalogue\\rundir5469"), loader);
+//        eventLoader.loadEvents();
+//
+//        List<RsqSimEventLoader.Event> events = eventLoader.getJointRuptures();
+//
+//        System.out.println("Total joint ruptures " + eventLoader.events.size() + ", reconstructed joint ruptures " + events.size());
+//
+//        List<FaultSection> sections = eventLoader.toFaultSections(events.get(100));
+//        SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
+//
+//        for (Patch patch : events.get(100).getPatches()) {
+//            builder3.addFeature(patch.toFeature());
+//        }
+//
+//        for (FaultSection section : sections) {
+//            FeatureProperties props = builder3.addFaultSectionPerimeter(section);
+//            builder3.setLineColour(props, "blue");
+//        }
+//        builder3.toJSON("/tmp/joint-rupture.geojson");
+    }
+
     public static void main1(String[] args) throws IOException {
         String fileName = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(fileName));
@@ -306,11 +445,11 @@ public class RsqSimPatchLoader {
 
         String set = "crustal";
 
-        if(set.equals("puysegur")) {
+        if (set.equals("puysegur")) {
             mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\puysegur_discretized_trimmed_dict.json";
             rupSetFile = "C:\\Users\\user\\GNS\\rupture sets\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip";
             outputFile = "/tmp/puysegur_patchmatches.json";
-        } else if(set.equals("hikurangi")) {
+        } else if (set.equals("hikurangi")) {
             mappingsFile = "C:\\rsqsimsCatalogue\\fromAndyH\\hikkerm_discretized_trimmed_dict.json";
             rupSetFile = "C:\\Users\\user\\GNS\\rupture sets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
             outputFile = "/tmp/hikurangi_patchmatches.json";
@@ -335,12 +474,12 @@ public class RsqSimPatchLoader {
             SimpleGeoJsonBuilder patchBuilder = new SimpleGeoJsonBuilder();
             FeatureProperties props = patchBuilder.addFaultSectionPolygon(section);
             patchBuilder.setPolygonColour(props, "rgba(255, 0, 0, 0.8)");
-            if(patchids.get(section.getSectionId()) == null) {
+            if (patchids.get(section.getSectionId()) == null) {
                 System.out.println("no patches for " + section.getSectionId());
             } else {
                 patchids.get(section.getSectionId()).forEach(patchId -> {
                     FeatureProperties p = patchBuilder.addFeature(
-                            loader.patchLookup.get(patchId+1).toPolygonFeature());
+                            loader.patchLookup.get(patchId + 1).toPolygonFeature());
                     patchBuilder.setPolygonColour(p, "#d5f024");
                 });
             }
@@ -372,6 +511,7 @@ public class RsqSimPatchLoader {
 
     public static void main(String[] args) throws FactoryException, IOException {
         // process_rundir5469(args);
-        processCanterbury(args);
+        process_rundir5883(args);
+        //processCanterbury(args);
     }
 }
