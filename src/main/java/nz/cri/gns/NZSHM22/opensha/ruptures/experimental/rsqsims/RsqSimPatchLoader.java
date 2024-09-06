@@ -10,6 +10,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.RuptureSurface;
@@ -30,7 +31,7 @@ public class RsqSimPatchLoader {
     final File znamesDeepenIn;
     final File rupSet;
     final File solution;
-    FaultSystemRupSet loadedRupSet;
+    public FaultSystemRupSet loadedRupSet;
 
 
     final PatchesFile patchesFile;
@@ -404,6 +405,42 @@ public class RsqSimPatchLoader {
                 5);
     }
 
+    Map<Integer, Integer> calculateParticipation(List<RsqSimEventLoader.Event> events) {
+        Map<Integer, Integer> result = new HashMap<>();
+        for (RsqSimEventLoader.Event event : events) {
+            for (FaultSection section : event.sections) {
+                result.compute(section.getSectionId(), (key, value) -> value == null ? 1 : value + 1);
+            }
+        }
+        return result;
+    }
+
+    public void writeParticipationRates(List<RsqSimEventLoader.Event> events) {
+        Map<Integer, Integer> participation = calculateParticipation(events);
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        for (FaultSection section : loadedRupSet.getFaultSectionDataList()) {
+            FeatureProperties props = builder.addFaultSectionPolygon(section);
+            Integer part = participation.get(section.getSectionId());
+            props.set("participation", Objects.nonNull(part) ? part : 0);
+        }
+        builder.toJSON("/tmp/bruce5883participation.geojson");
+
+        builder = new SimpleGeoJsonBuilder();
+        for (FaultSection section : loadedRupSet.getFaultSectionDataList()) {
+            if(!section.getSectionName().contains("row:")) {
+                Integer part = participation.get(section.getSectionId());
+
+                if(part!=null && part >0) {
+
+                    FeatureProperties props = builder.addFaultSectionPolygon(section);
+
+                    props.set("participation", Objects.nonNull(part) ? part : 0);
+                }
+            }
+        }
+        builder.toJSON("/tmp/bruce5883participationCrustal.geojson");
+    }
+
     /**
      * Processes Bruce's rundir5883
      *
@@ -452,7 +489,7 @@ public class RsqSimPatchLoader {
         List<RsqSimEventLoader.Event> ruptures = events.stream()
                 .peek(event -> {
                     List<ClusterRupture> rs = aggregator.makeRuptures(event);
-                    if(aggregator.allConnected(rs)) {
+                    if (aggregator.allConnected(rs)) {
                         event.jump = makeJump(rs);
                     }
 
@@ -462,8 +499,17 @@ public class RsqSimPatchLoader {
 
         System.out.println(ruptures.size() + " single crustal joint ruptures");
 
+        loader.writeParticipationRates(ruptures);
+
+        CoulombTester tester = new CoulombTester(loader.loadedRupSet, "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
+        tester.setupStiffness();
+        //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
+        //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
+        List<RsqSimEventLoader.Event> passes = ruptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
+
         List<String> gjs = new ArrayList<>();
-        for(RsqSimEventLoader.Event event : List.of(ruptures.get(0), ruptures.get(1))) {
+        List<String> gjsRupturesOnly = new ArrayList<>();
+        for (RsqSimEventLoader.Event event : passes) {// List.of(ruptures.get(0), ruptures.get(1))) {
             SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
 
             for (FaultSection section : event.sections) {
@@ -471,17 +517,27 @@ public class RsqSimPatchLoader {
                 builder3.setPolygonColour(props, "red");
                 builder3.setLineColour(props, "red");
             }
-            for(Patch patch: event.getPatches()) {
+            gjsRupturesOnly.add(builder3.toJSON());
+            for (Patch patch : event.getPatches()) {
                 FeatureProperties props = builder3.addFeature(patch.toPolygonFeature());
                 builder3.setPolygonColour(props, "green");
             }
             gjs.add(builder3.toJSON());
         }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/BruceRuptures5883.json"));
+        BufferedWriter writer = null;
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceRuptures5883.json"));
         List<String> someRuptures = List.of(gjs.get(0), gjs.get(1));
         writer.write("[");
         writer.write(String.join(",\n", someRuptures));
+        writer.write("]");
+        writer.close();
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceRupturesOnly5883.json"));
+
+        writer.write("[");
+        writer.write(String.join(",\n", gjsRupturesOnly));
         writer.write("]");
         writer.close();
 
