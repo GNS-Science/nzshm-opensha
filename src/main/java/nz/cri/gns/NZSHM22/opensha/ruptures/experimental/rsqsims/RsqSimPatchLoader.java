@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint.ManipulatedClusterRupture;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opengis.util.FactoryException;
 import org.opensha.commons.geo.LocationList;
@@ -10,10 +11,12 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.RuptureSurface;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 import java.awt.geom.Area;
 import java.io.*;
@@ -427,10 +430,10 @@ public class RsqSimPatchLoader {
 
         builder = new SimpleGeoJsonBuilder();
         for (FaultSection section : loadedRupSet.getFaultSectionDataList()) {
-            if(!section.getSectionName().contains("row:")) {
+            if (!section.getSectionName().contains("row:")) {
                 Integer part = participation.get(section.getSectionId());
 
-                if(part!=null && part >0) {
+                if (part != null && part > 0) {
 
                     FeatureProperties props = builder.addFaultSectionPolygon(section);
 
@@ -501,11 +504,23 @@ public class RsqSimPatchLoader {
 
         loader.writeParticipationRates(ruptures);
 
-        CoulombTester tester = new CoulombTester(loader.loadedRupSet, "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
+        CoulombTester tester = new CoulombTester(loader.loadedRupSet, "C:\\tmp\\stiffnessCaches"); // "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
         tester.setupStiffness();
         //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
         //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
         List<RsqSimEventLoader.Event> passes = ruptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
+        System.out.println("passes: " + passes.size());
+
+        List<ClusterRupture> clusterRuptures = ruptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
+
+        FaultSystemRupSet resultRupSet = FaultSystemRupSet.builderForClusterRups(
+                        loader.loadedRupSet.getFaultSectionDataList(),
+                        clusterRuptures)
+                .forScalingRelationship(ScalingRelationships.SHAW_2009_MOD)
+                .addModule(tester.stiffness)
+                .build();
+
+        resultRupSet.write(new File("/tmp/rupSetBruceRundir5883.zip"));
 
         List<String> gjs = new ArrayList<>();
         List<String> gjsRupturesOnly = new ArrayList<>();
