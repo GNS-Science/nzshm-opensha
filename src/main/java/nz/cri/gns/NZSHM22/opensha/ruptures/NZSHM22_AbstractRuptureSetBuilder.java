@@ -150,7 +150,15 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException ;
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
+        Preconditions.checkState(this.downDipFile == null);
         this.faultModel = faultModel;
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setSubductionFaultModelFile(String fileName, String faultName) {
+        Preconditions.checkState(this.faultModel == null);
+        this.downDipFile = new File(fileName);
+        this.downDipFaultName = faultName;
         return this;
     }
 
