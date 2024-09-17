@@ -20,6 +20,7 @@ import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 import java.awt.geom.Area;
 import java.io.*;
+import java.nio.BufferOverflowException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -302,6 +303,52 @@ public class RsqSimPatchLoader {
 //        out.close();
 //    }
 
+    public void writeMappingsToCsv(String outputFile, String outputFile2) throws IOException {
+
+        Map<Integer, List<Patch>> bySection = new HashMap<>();
+        patches.forEach(patch -> {
+            patch.sections.forEach(section -> {
+                bySection.compute(section.getSectionId(), (key, value) -> {
+                    if (value == null) {
+                        value = new ArrayList<>();
+                    }
+                    value.add(patch);
+                    return value;
+                });
+            });
+        });
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+        bySection.keySet().stream().sorted().forEach(sectionId -> {
+            try {
+                writer.write(sectionId + ", " + loadedRupSet.getFaultSectionDataList().get(sectionId).getSectionName() + ", ");
+                List<Patch> patches = bySection.get(sectionId);
+                if (patches != null) {
+                    String patchIds = patches.stream().map(p -> p.id + "").collect(Collectors.joining(", "));
+                    writer.write(patchIds);
+                }
+                writer.write("\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        writer.close();
+
+        BufferedWriter writer2 = new BufferedWriter(new FileWriter(outputFile2));
+        patches.stream().sorted(Comparator.comparing(p -> p.id)).forEach(patch -> {
+            try {
+                writer2.write(patch.id + ", ");
+                String sectionIds = patch.sections.stream().map(s -> s.getSectionId() + "").collect(Collectors.joining(", "));
+                writer2.write(sectionIds);
+                writer2.write("\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        writer2.close();
+    }
+
+
     public void writeMappingsToFile(String outputFile, Predicate<FaultSection> sectionFilter) throws IOException {
 
         Map<Integer, List<Patch>> bySection = new HashMap<>();
@@ -466,6 +513,8 @@ public class RsqSimPatchLoader {
         loader.loadNames();
         loader.loadRupSetNewBruce();
 
+        loader.writeMappingsToCsv("/tmp/bruce_rundir5883_sectionToPatches.csv", "/tmp/bruce_rundir5883_patchToSections.csv");
+
         // patches debug files
         loader.writeMappingsToFile("/tmp/bruceNewCrustal.geojson",
                 section -> !section.getSectionName().startsWith("Hikurangi") && !section.getSectionName().startsWith("Hikurangi"));
@@ -510,6 +559,17 @@ public class RsqSimPatchLoader {
         //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
         List<RsqSimEventLoader.Event> passes = ruptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
         System.out.println("passes: " + passes.size());
+
+        List<int[]> stats = ruptures.parallelStream().map(event -> tester.getStats(event.jump)).collect(Collectors.toList());
+        BufferedWriter statsWriter = new BufferedWriter(new FileWriter("/tmp/coulombStats.csv"));
+        for (int[] stat : stats) {
+            for (int value : stat) {
+                statsWriter.write(value + ", ");
+            }
+            statsWriter.write("\n");
+        }
+        statsWriter.close();
+
 
         List<ClusterRupture> clusterRuptures = ruptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
 
