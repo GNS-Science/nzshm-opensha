@@ -23,8 +23,8 @@ public class CoulombTester implements Closeable{
     String stiffnessCache;
     FaultSystemRupSet rupSet;
     final SectionDistanceAzimuthCalculator disAzCalc;
-    StiffnessCalcModule stiffness;
-    List<MultiRuptureCoulombFilter> filters = new ArrayList<>();
+    public StiffnessCalcModule stiffness;
+    public List<MultiRuptureCoulombFilter> filters = new ArrayList<>();
     BufferedWriter writer = null;
 
     public CoulombTester(FaultSystemRupSet rupSet, String stiffnessCache) throws IOException {
