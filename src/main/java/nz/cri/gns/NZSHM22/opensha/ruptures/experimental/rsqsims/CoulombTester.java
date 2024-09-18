@@ -47,7 +47,7 @@ public class CoulombTester implements Closeable{
         }
     }
 
-    void setupStiffness() {
+    public void setupStiffness() {
 
         stiffness = new StiffnessCalcModule(rupSet, 2, new File(stiffnessCache));
 
