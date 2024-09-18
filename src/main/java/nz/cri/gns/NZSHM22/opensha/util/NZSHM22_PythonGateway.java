@@ -359,4 +359,8 @@ public class NZSHM22_PythonGateway {
     public static RupSetScalingRelationship getScalingRelationship(String name){
         return NZSHM22_ScalingRelationshipNode.createRelationShip(name);
     }
+
+    public static FaultSystemRupSet loadRupSet(String fileName) throws IOException {
+        return FaultSystemRupSet.load(new File(fileName));
+    }
 }
