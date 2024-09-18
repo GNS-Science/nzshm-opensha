@@ -68,7 +68,7 @@ public class CoulombTester implements Closeable{
     }
 
     public int[] getStats(MultiRuptureJump jump) {
-        return filters.get(0).collectStats(jump);
+        return null; //return filters.get(0).collectStats(jump);
     }
 
     public List<PlausibilityResult> applyCoulomb(MultiRuptureJump jump) {
