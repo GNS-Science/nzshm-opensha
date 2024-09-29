@@ -560,7 +560,7 @@ public class RsqSimPatchLoader {
         List<RsqSimEventLoader.Event> passes = ruptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
         System.out.println("passes: " + passes.size());
 
-        List<int[]> stats = ruptures.parallelStream().map(event -> tester.getStats(event.jump)).collect(Collectors.toList());
+        List<int[]> stats = ruptures.stream().map(event -> tester.getStats(event.jump)).collect(Collectors.toList());
         BufferedWriter statsWriter = new BufferedWriter(new FileWriter("/tmp/coulombStats.csv"));
         for (int[] stat : stats) {
             for (int value : stat) {
