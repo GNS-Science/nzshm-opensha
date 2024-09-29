@@ -7,6 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -188,6 +189,19 @@ public class ManipulatedClusterRupture extends ClusterRupture {
         ManipulatedClusterRupture crustal = makeFromSections(sections.stream().filter(ManipulatedClusterRupture::isCrustal).collect(Collectors.toList()));
         ManipulatedClusterRupture subduction = makeFromSections(sections.stream().filter(ManipulatedClusterRupture::isSubduction).collect(Collectors.toList()));
         return splay(subduction, crustal);
+    }
+
+    /**
+     * Splits a MultiRuptureJump into two separate ruptures so that we can apply Coulomb filters
+     * @param jump
+     * @return
+     */
+    public static MultiRuptureJump reconstructJump(ClusterRupture rupture) {
+        List<FaultSection> fromSections = Arrays.stream(rupture.clusters).flatMap(c -> c.subSects.stream()).collect(Collectors.toList());
+        List<FaultSection> toSections = rupture.splays.values().asList().get(0).buildOrderedSectionList();
+        ClusterRupture fromRupture = ManipulatedClusterRupture.makeFromSections(fromSections);
+        ClusterRupture toRupture = ManipulatedClusterRupture.makeFromSections(toSections);
+        return new MultiRuptureJump(fromSections.get(0), fromRupture, toSections.get(0), toRupture, 10 );
     }
 
 }

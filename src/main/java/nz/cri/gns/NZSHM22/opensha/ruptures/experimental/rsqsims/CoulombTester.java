@@ -1,8 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint.ManipulatedClusterRupture;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.StiffnessCalcModule;
@@ -17,6 +19,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 public class CoulombTester implements Closeable{
 
@@ -47,6 +50,15 @@ public class CoulombTester implements Closeable{
         }
     }
 
+    public List<MultiRuptureCoulombFilter> getFilters() {
+        return filters;
+    }
+
+    public List<MultiRuptureJump> getJumps(FaultSystemRupSet rupSet) {
+        ClusterRuptures ruptures = rupSet.requireModule(ClusterRuptures.class);
+        return ruptures.getAll().stream().map(ManipulatedClusterRupture::reconstructJump).collect(Collectors.toList());
+    }
+
     public void setupStiffness() {
 
         stiffness = new StiffnessCalcModule(rupSet, 2, new File(stiffnessCache));
@@ -68,7 +80,7 @@ public class CoulombTester implements Closeable{
     }
 
     public int[] getStats(MultiRuptureJump jump) {
-        return null; //return filters.get(0).collectStats(jump);
+        return filters.get(1).collectStats(jump);
     }
 
     public List<PlausibilityResult> applyCoulomb(MultiRuptureJump jump) {
