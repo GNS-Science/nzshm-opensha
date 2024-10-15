@@ -15,13 +15,14 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.Plausib
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.coulomb.ParentCoulombCompatibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
-public class CoulombTester implements Closeable{
+public class CoulombTester implements Closeable {
 
     String stiffnessCache;
     FaultSystemRupSet rupSet;
@@ -45,7 +46,7 @@ public class CoulombTester implements Closeable{
 
     @Override
     public void close() throws IOException {
-        if(writer != null) {
+        if (writer != null) {
             writer.close();
         }
     }
@@ -102,5 +103,31 @@ public class CoulombTester implements Closeable{
         return List.of(r0, r1, result);
     }
 
+    /**
+     * helper function to fill the cache with subduction->subduction stiffness
+     *
+     * @param args
+     */
+    public static void main(String[] args) throws IOException {
+        FaultSystemRupSet rupSet1 = FaultSystemRupSet.load(new File("C:\\Users\\user\\GNS\\science-playground\\WORKDIR\\rupSetBruceRundir5883.zip"));
+      //  CoulombTester tester = new CoulombTester(rupSet1, "C:\\Users\\user\\GNS\\science-playground\\WORKDIR\\stiffnessCaches");
+          CoulombTester tester = new CoulombTester(rupSet1, "/tmp/stiffnessCaches");
+        tester.setupStiffness();
+        AggregatedStiffnessCalculator aggCalc = tester.getFilters().get(1).getAggCalc();
 
+        List<List<? extends FaultSection>> sections = rupSet1.getFaultSectionDataList().stream().filter(s -> s.getSectionName().startsWith("Puysegur")).map(List::of).collect(Collectors.toList());
+
+        System.out.println("section count: " + sections.size());
+
+        sections.stream().parallel().forEach(section -> {
+            sections.forEach(fromSection -> {
+                aggCalc.calc(fromSection, section);
+            });
+            System.out.print(".");
+        });
+
+        tester.saveCache();
+
+
+    }
 }

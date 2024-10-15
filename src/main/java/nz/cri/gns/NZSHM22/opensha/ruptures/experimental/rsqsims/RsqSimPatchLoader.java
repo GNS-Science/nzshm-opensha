@@ -584,7 +584,12 @@ public class RsqSimPatchLoader {
 
         List<String> gjs = new ArrayList<>();
         List<String> gjsRupturesOnly = new ArrayList<>();
-        for (RsqSimEventLoader.Event event : passes) {// List.of(ruptures.get(0), ruptures.get(1))) {
+        List<String> filteredGeoJson = new ArrayList<>();
+        Set<RsqSimEventLoader.Event> passFilter = new HashSet<>(passes);
+        int ruptureId = 0;
+        for (RsqSimEventLoader.Event event : ruptures) {// List.of(ruptures.get(0), ruptures.get(1))) {
+
+            boolean isPass = passFilter.contains(event);
             SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
 
             for (FaultSection section : event.sections) {
@@ -592,12 +597,22 @@ public class RsqSimPatchLoader {
                 builder3.setPolygonColour(props, "red");
                 builder3.setLineColour(props, "red");
             }
-            gjsRupturesOnly.add(builder3.toJSON());
+            if (isPass) {
+                gjsRupturesOnly.add(builder3.toJSON());
+            }
             for (Patch patch : event.getPatches()) {
                 FeatureProperties props = builder3.addFeature(patch.toPolygonFeature());
                 builder3.setPolygonColour(props, "green");
             }
-            gjs.add(builder3.toJSON());
+            if (isPass) {
+                gjs.add(builder3.toJSON());
+            }
+            if (ruptureId == 264) {
+                filteredGeoJson.add(builder3.toJSON());
+                System.out.println("event : " + event.id);
+            }
+
+            ruptureId++;
         }
 
         BufferedWriter writer = null;
@@ -613,6 +628,13 @@ public class RsqSimPatchLoader {
 
         writer.write("[");
         writer.write(String.join(",\n", gjsRupturesOnly));
+        writer.write("]");
+        writer.close();
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceFilteredRuptures5883.json"));
+
+        writer.write("[");
+        writer.write(String.join(",\n", filteredGeoJson));
         writer.write("]");
         writer.close();
 
