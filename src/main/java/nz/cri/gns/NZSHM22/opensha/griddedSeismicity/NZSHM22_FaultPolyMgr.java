@@ -4,6 +4,8 @@ import com.google.common.collect.*;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
+import org.opensha.commons.util.io.archive.ArchiveInput;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ArchivableModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -344,12 +346,12 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
     }
 
     @Override
-    public void writeToArchive(ZipOutputStream zout, String entryPrefix) throws IOException {
-        new Precomputed(this).writeToArchive(zout, entryPrefix);
+    public void writeToArchive(ArchiveOutput out, String entryPrefix) throws IOException {
+        new Precomputed(this).writeToArchive(out, entryPrefix);
     }
 
     @Override
-    public void initFromArchive(ZipFile zip, String entryPrefix) throws IOException {
+    public void initFromArchive(ArchiveInput in, String entryPrefix) throws IOException {
         throw new IllegalStateException("Should be loaded back in via the Precomputed class");
     }
 

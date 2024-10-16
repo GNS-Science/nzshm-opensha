@@ -15,6 +15,7 @@ import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
@@ -421,7 +422,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		File file = new File(path);
 		CSVFile<String> ratesCSV;
 		if (path.endsWith(".zip")) {
-			ZipFile zipFile = new ZipFile(file);
+			ArchiveInput.ZipFileInput zipFile = new ArchiveInput.ZipFileInput(file);
 			ratesCSV = CSV_BackedModule.loadFromArchive(zipFile, "solution/", "rates.csv");
 		} else {
 			ratesCSV = CSVFile.readFile(file, false);

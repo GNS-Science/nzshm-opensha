@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -442,11 +443,11 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 	}
 
 	@Override
-	public void writeToArchive(ZipOutputStream zout, String entryPrefix) throws IOException {
+	public void writeToArchive(ArchiveOutput zout, String entryPrefix) throws IOException {
     	super.writeToArchive(zout, entryPrefix);
 
 		FileBackedModule.initEntry(zout, entryPrefix, "regional_inversion_target_mfds.json");
-		BufferedOutputStream out = new BufferedOutputStream(zout);
+		BufferedOutputStream out = new BufferedOutputStream(zout.getOutputStream());
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		OutputStreamWriter writer = new OutputStreamWriter(out);
 		JsonWriter json = gson.newJsonWriter(writer);
