@@ -2,11 +2,10 @@ package nz.cri.gns.NZSHM22.opensha.timeDependent;
 
 import com.google.gson.GsonBuilder;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
-import nz.cri.gns.NZSHM22.opensha.erf.FaultSystemSolutionERF;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
-import org.opensha.sha.earthquake.param.MagDependentAperiodicityOptions;
+import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 import java.io.File;
 import java.io.IOException;

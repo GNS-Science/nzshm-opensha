@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.erf.FaultSystemSolutionERF;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.Site;
@@ -27,6 +26,7 @@ import org.opensha.sha.imr.AttenRelRef;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
+import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 /**
  * Creates a NZSHM22_HazardCalculator
