@@ -7,6 +7,7 @@ import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class NZSHM22_PolygonisedDistributedModel implements FileBackedModule {
     }
 
     @Override
-    public void writeToStream(BufferedOutputStream out) throws IOException {
+    public void writeToStream(OutputStream out) throws IOException {
         CSVFile<Double> csv = griddedData.toCsv();
         originalGriddedData.addToCsv(csv);
         csv.addColumn(mMins);
