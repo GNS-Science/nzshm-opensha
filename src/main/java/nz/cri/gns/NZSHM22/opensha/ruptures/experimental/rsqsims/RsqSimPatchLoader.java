@@ -641,6 +641,158 @@ public class RsqSimPatchLoader {
 
     }
 
+    /**
+     * Processes Bruce's rundir5883
+     *
+     * @param args
+     * @throws IOException
+     * @throws FactoryException
+     */
+    public static void process_rundir5942(String[] args) throws IOException, FactoryException {
+        String runDirVersion = "rundir5942";
+        String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
+        String fileName = basePath + "zfault_Deepen.in";
+        String namesFileName = basePath + "znames_Deepen.in";
+        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
+        String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
+
+        // load and match patches
+
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
+        RsqSimPatchLoader loader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName), new File(solutionFileName));
+        //loader.loadSolutionPolygons();
+        loader.loadPatches();
+        loader.loadNames();
+        loader.loadRupSetNewBruce();
+
+        loader.writeMappingsToCsv("/tmp/bruce_" + runDirVersion + "_sectionToPatches.csv", "/tmp/bruce_" + runDirVersion + "_patchToSections.csv");
+
+        // patches debug files
+        loader.writeMappingsToFile("/tmp/bruceNewCrustal"+runDirVersion+".geojson",
+                section -> !section.getSectionName().startsWith("Hikurangi") && !section.getSectionName().startsWith("Hikurangi"));
+
+        loader.writeMappingsToFile("/tmp/bruceNewPuysegur"+runDirVersion+".geojson",
+                section -> section.getSectionName().startsWith("Puysegur"));
+
+        loader.writeMappingsToFile("/tmp/bruceNewHikurangi"+runDirVersion+".geojson",
+                section -> section.getSectionName().startsWith("Hikurangi"));
+
+
+        // ruptures
+
+        RsqSimEventLoader eventLoader = new RsqSimEventLoader(new File(basePath), loader);
+        eventLoader.loadEvents();
+
+        List<RsqSimEventLoader.Event> events = eventLoader.getJointRuptures();
+
+        System.out.println("Total joint ruptures " + eventLoader.events.size() + ", reconstructed joint ruptures " + events.size());
+        SectionDistanceAzimuthCalculator disAzCalc = new SectionDistanceAzimuthCalculator(loader.loadedRupSet.getFaultSectionDataList());
+
+        ClusterAggregator aggregator = new ClusterAggregator(disAzCalc, 5);
+
+        List<RsqSimEventLoader.Event> ruptures = events.stream()
+                .peek(event -> {
+                    List<ClusterRupture> rs = aggregator.makeRuptures(event);
+                    if (aggregator.allConnected(rs)) {
+                        event.jump = makeJump(rs);
+                    }
+
+                })// turn into rupture pairs
+                .filter(event -> event.jump != null) // check if there's a single crustal rupture
+                .collect(Collectors.toList());
+
+        System.out.println(ruptures.size() + " single crustal joint ruptures");
+
+        loader.writeParticipationRates(ruptures);
+
+        CoulombTester tester = new CoulombTester(loader.loadedRupSet, "C:\\tmp\\stiffnessCaches"); // "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
+        tester.setupStiffness();
+        //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
+        //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
+        List<RsqSimEventLoader.Event> passes = ruptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
+        System.out.println("passes: " + passes.size());
+
+        List<int[]> stats = ruptures.stream().map(event -> tester.getStats(event.jump)).collect(Collectors.toList());
+        BufferedWriter statsWriter = new BufferedWriter(new FileWriter("/tmp/coulombStats_"+runDirVersion+".csv"));
+        for (int[] stat : stats) {
+            for (int value : stat) {
+                statsWriter.write(value + ", ");
+            }
+            statsWriter.write("\n");
+        }
+        statsWriter.close();
+
+
+        List<ClusterRupture> clusterRuptures = ruptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
+
+        FaultSystemRupSet resultRupSet = FaultSystemRupSet.builderForClusterRups(
+                        loader.loadedRupSet.getFaultSectionDataList(),
+                        clusterRuptures)
+                .forScalingRelationship(ScalingRelationships.SHAW_2009_MOD)
+                .addModule(tester.stiffness)
+                .build();
+
+        resultRupSet.write(new File("/tmp/rupSetBruce_"+runDirVersion+".zip"));
+
+        List<String> gjs = new ArrayList<>();
+        List<String> gjsRupturesOnly = new ArrayList<>();
+        List<String> filteredGeoJson = new ArrayList<>();
+        Set<RsqSimEventLoader.Event> passFilter = new HashSet<>(passes);
+        int ruptureId = 0;
+        for (RsqSimEventLoader.Event event : ruptures) {// List.of(ruptures.get(0), ruptures.get(1))) {
+
+            boolean isPass = passFilter.contains(event);
+            SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
+
+            for (FaultSection section : event.sections) {
+                FeatureProperties props = builder3.addFaultSectionPolygon(section);
+                builder3.setPolygonColour(props, "red");
+                builder3.setLineColour(props, "red");
+            }
+            if (isPass) {
+                gjsRupturesOnly.add(builder3.toJSON());
+            }
+            for (Patch patch : event.getPatches()) {
+                FeatureProperties props = builder3.addFeature(patch.toPolygonFeature());
+                builder3.setPolygonColour(props, "green");
+            }
+            if (isPass) {
+                gjs.add(builder3.toJSON());
+            }
+            if (ruptureId == 264) {
+                filteredGeoJson.add(builder3.toJSON());
+                System.out.println("event : " + event.id);
+            }
+
+            ruptureId++;
+        }
+
+        BufferedWriter writer = null;
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceRuptures_"+runDirVersion+".json"));
+        List<String> someRuptures = List.of(gjs.get(0), gjs.get(1));
+        writer.write("[");
+        writer.write(String.join(",\n", someRuptures));
+        writer.write("]");
+        writer.close();
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceRupturesOnly_"+runDirVersion+".json"));
+
+        writer.write("[");
+        writer.write(String.join(",\n", gjsRupturesOnly));
+        writer.write("]");
+        writer.close();
+
+        writer = new BufferedWriter(new FileWriter("/tmp/BruceFilteredRuptures_"+runDirVersion+".json"));
+
+        writer.write("[");
+        writer.write(String.join(",\n", filteredGeoJson));
+        writer.write("]");
+        writer.close();
+
+
+    }
+
     public static void main1(String[] args) throws IOException {
         String fileName = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
         FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(fileName));
@@ -729,6 +881,7 @@ public class RsqSimPatchLoader {
     public static void main(String[] args) throws FactoryException, IOException {
         // process_rundir5469(args);
         process_rundir5883(args);
+      //  process_rundir5942(args);
         //processCanterbury(args);
     }
 }

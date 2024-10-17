@@ -108,11 +108,24 @@ public class RsqSimEventLoader {
                 .collect(Collectors.toList());
     }
 
+    public static File findFile(File path, String... candidateNames) throws FileNotFoundException{
+        for(String fileName:candidateNames) {
+            File file = new File(path, fileName);
+            if(file.exists()) {
+                return file;
+            }
+        }
+        throw new FileNotFoundException("Could not find candidate files");
+    }
+
 
     public List<Event> loadEvents() throws IOException {
 
-        List<Integer> eList = loadCatalogFile(new File(runDir, ".eList"));
-        List<Integer> pList = loadCatalogFile(new File(runDir, ".pList"));
+        File eListFile = findFile(runDir, ".eList", "eList");
+        File pListFile = findFile(runDir, ".pList", "pList");
+
+        List<Integer> eList = loadCatalogFile(eListFile);
+        List<Integer> pList = loadCatalogFile(pListFile);
 
         Preconditions.checkState(eList.size() == pList.size());
 
