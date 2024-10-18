@@ -84,6 +84,25 @@ public class CoulombTester implements Closeable {
         return filters.get(1).collectStats(jump);
     }
 
+    public void writeStats(List<RsqSimEventLoader.Event> events, String fileName) throws IOException {
+        int ruptureId = 0;
+        SelfStiffnessCoulombFilter selfStiffness = new SelfStiffnessCoulombFilter(stiffness);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write("rupture_id, event_id, FractCoulomb_pass, NetCoulomb_pass," + selfStiffness.statsHeader());
+            writer.newLine();
+
+            for (RsqSimEventLoader.Event event : events) {
+                PlausibilityResult filter0 = filters.get(0).apply(event.jump, false);
+                PlausibilityResult filter1 = filters.get(0).apply(event.jump, false);
+
+
+                writer.write(ruptureId + ", " + event.id + ", " + filter0.isPass() + ", " + filter1.isPass() + ", " + selfStiffness.stats(event));
+writer.newLine();
+                ruptureId++;
+            }
+        }
+    }
+
     public List<PlausibilityResult> applyCoulomb(MultiRuptureJump jump) {
         PlausibilityResult r0 = filters.get(0).apply(jump, false);
         PlausibilityResult r1 = filters.get(1).apply(jump, false);
@@ -110,8 +129,8 @@ public class CoulombTester implements Closeable {
      */
     public static void main(String[] args) throws IOException {
         FaultSystemRupSet rupSet1 = FaultSystemRupSet.load(new File("C:\\Users\\user\\GNS\\science-playground\\WORKDIR\\rupSetBruceRundir5883.zip"));
-      //  CoulombTester tester = new CoulombTester(rupSet1, "C:\\Users\\user\\GNS\\science-playground\\WORKDIR\\stiffnessCaches");
-          CoulombTester tester = new CoulombTester(rupSet1, "/tmp/stiffnessCaches");
+        //  CoulombTester tester = new CoulombTester(rupSet1, "C:\\Users\\user\\GNS\\science-playground\\WORKDIR\\stiffnessCaches");
+        CoulombTester tester = new CoulombTester(rupSet1, "/tmp/stiffnessCaches");
         tester.setupStiffness();
         AggregatedStiffnessCalculator aggCalc = tester.getFilters().get(1).getAggCalc();
 

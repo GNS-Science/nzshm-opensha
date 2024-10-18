@@ -1,6 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import org.opensha.commons.geo.json.FeatureProperties;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.faultSurface.FaultSection;
 
@@ -37,6 +40,7 @@ public class RsqSimEventLoader {
 
         /**
          * Returns true if the event has subduction and crustal patches.
+         *
          * @return
          */
         boolean isJointRupture() {
@@ -57,6 +61,7 @@ public class RsqSimEventLoader {
 
         /**
          * Returns true if the rupture has crustal and subduction sections
+         *
          * @return
          */
         boolean isOpenShaJointRupture() {
@@ -108,10 +113,10 @@ public class RsqSimEventLoader {
                 .collect(Collectors.toList());
     }
 
-    public static File findFile(File path, String... candidateNames) throws FileNotFoundException{
-        for(String fileName:candidateNames) {
+    public static File findFile(File path, String... candidateNames) throws FileNotFoundException {
+        for (String fileName : candidateNames) {
             File file = new File(path, fileName);
-            if(file.exists()) {
+            if (file.exists()) {
                 return file;
             }
         }
@@ -170,9 +175,47 @@ public class RsqSimEventLoader {
         return result;
     }
 
-//    public static void main(String[] args) throws IOException {
-//        RsqSimEventLoader loader = new RsqSimEventLoader(null);
-//        loader.loadCatalogFile(new File("C:\\rsqsimsCatalogue\\rundir5469\\.eList"));
-//
-//    }
+    Map<Integer, Integer> calculateParticipation(List<RsqSimEventLoader.Event> events) {
+        Map<Integer, Integer> result = new HashMap<>();
+        for (RsqSimEventLoader.Event event : events) {
+            for (FaultSection section : event.sections) {
+                result.compute(section.getSectionId(), (key, value) -> value == null ? 1 : value + 1);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * writes debug GeoJSON files to show how often each section participates in a rupture.
+     *
+     * @param events
+     * @param rupSet
+     */
+    public void writeParticipationRates(List<RsqSimEventLoader.Event> events, FaultSystemRupSet rupSet, String baseOutput) {
+        Map<Integer, Integer> participation = calculateParticipation(events);
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            FeatureProperties props = builder.addFaultSectionPolygon(section);
+            Integer part = participation.get(section.getSectionId());
+            props.set("participation", Objects.nonNull(part) ? part : 0);
+        }
+        builder.toJSON(baseOutput + "participation.geojson");
+
+        builder = new SimpleGeoJsonBuilder();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            if (!section.getSectionName().contains("row:")) {
+                Integer part = participation.get(section.getSectionId());
+
+                if (part != null && part > 0) {
+
+                    FeatureProperties props = builder.addFaultSectionPolygon(section);
+
+                    props.set("participation", part);
+                }
+            }
+        }
+        builder.toJSON(baseOutput + "participationCrustal.geojson");
+    }
+
+
 }

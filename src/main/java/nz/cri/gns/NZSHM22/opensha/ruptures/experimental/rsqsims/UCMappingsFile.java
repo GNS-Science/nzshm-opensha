@@ -10,9 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Reads a U Canterbury mapping file from section id to patch id.
+ * Section id is for crustal, Puysegur, or Hikurangi rupture set.
+ * An index offset can be used to move this into the combined rupture set id space.
+ */
 public class UCMappingsFile {
 
-    static Map<Integer, List<Integer>> read(String fileName) throws FileNotFoundException {
+    static Map<Integer, List<Integer>> read(String fileName, int sectionOffset) throws FileNotFoundException {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
 
         Gson gson = new Gson();
@@ -24,7 +29,7 @@ public class UCMappingsFile {
             int key = Integer.parseInt(k);
             List<Double> ps = (List<Double>) json.get(k);
             List<Integer> patches = ps.stream().map(Double::intValue).collect(Collectors.toList());
-            result.put(key, patches);
+            result.put(key + sectionOffset, patches);
         });
         return result;
     }
