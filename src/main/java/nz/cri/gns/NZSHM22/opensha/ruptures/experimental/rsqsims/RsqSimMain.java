@@ -41,11 +41,11 @@ public class RsqSimMain implements Closeable {
     public RsqSimMain(String baseInputDir, String rundirVersion, SourceType sourceType, String baseOutputDir) throws IOException {
         this.sourceType = sourceType;
         this.runDirVersion = rundirVersion;
-       this.outputDir = baseOutputDir + "/" + sourceType+"_" + runDirVersion + "/";
+        this.outputDir = baseOutputDir + "/" + sourceType + "_" + runDirVersion + "/";
         Files.createDirectories(Paths.get(outputDir));
-       this.baseOutputPath = outputDir + runDirVersion + "_";
+        this.baseOutputPath = outputDir + runDirVersion + "_";
         this.basePath = baseInputDir + "/" + runDirVersion + "/";
-        log = new BufferedWriter(new FileWriter(outputDir+"log.txt"));
+        log = new BufferedWriter(new FileWriter(outputDir + "log.txt"));
     }
 
     public void log(String line) throws IOException {
@@ -172,8 +172,7 @@ public class RsqSimMain implements Closeable {
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
-        //processBruce5942();
-        processCanterbury();
-
+        processBruce5942();
+//        processCanterbury();
     }
 }
