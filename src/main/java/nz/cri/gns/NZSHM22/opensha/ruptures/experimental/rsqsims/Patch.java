@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
-import org.opensha.commons.geo.Location;
-import org.opensha.commons.geo.LocationList;
+import org.opensha.commons.geo.*;
 import org.opensha.commons.geo.json.Feature;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.geo.json.Geometry;
@@ -15,7 +14,8 @@ public class Patch {
     public final int id;
     public final double rake;
     public final double slip;
-    public int sectionIdFromZname=-1;
+    public final double area;
+    public int sectionIdFromZname = -1;
 
     public String zname;
 
@@ -31,20 +31,21 @@ public class Patch {
         return locations.stream().mapToDouble(l -> l.lat).max().getAsDouble();
     }
 
-    public Patch(int id, LocationList locations, double rake, double slip, String[] row) {
+    public Patch(int id, LocationList locations, double rake, double slip, double area, String[] row) {
         this.id = id;
         this.rake = rake;
         this.slip = slip;
         this.locations = locations;
         this.row = row;
+        this.area = area;
     }
 
-    public static Patch create(int id, Location a, Location b, Location c, double rake, double slip, String[] row) {
+    public static Patch create(int id, Location a, Location b, Location c, double rake, double slip, double area, String[] row) {
         LocationList locs = new LocationList();
         locs.add(a);
         locs.add(b);
         locs.add(c);
-        return new Patch(id, locs, rake, slip, row);
+        return new Patch(id, locs, rake, slip, area, row);
     }
 
     public Feature toFeature() {

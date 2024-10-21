@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import org.opensha.commons.geo.Location;
+import org.opensha.commons.geo.PlaneUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -54,12 +55,23 @@ public class PatchesFile {
             values[i] = Double.parseDouble(parts[i]);
         }
 
+        // calculating triangle area
+        // we're assuming that the coordinates are in an orthographic coordinate system in meters (such as UTM)
+        double[] ab = new double[]{values[3] - values[0], values[4] - values[1], values[5] - values[2]};
+        double[] ac = new double[]{values[6] - values[0], values[7] - values[1], values[8] - values[2]};
+        double[] crossProduct = PlaneUtils.getCrossProduct(ab, ac, false);
+        double area = PlaneUtils.getMagnitude(crossProduct) / 2;
+
+//        double[] cb = new double[]{values[6] - values[3], values[7] - values[4], values[8] - values[5]};
+//
+//        System.out.println(id +": " + PlaneUtils.getMagnitude(ab) + ", " + PlaneUtils.getMagnitude(ac)+", " + PlaneUtils.getMagnitude(cb) + ", " + area);
+
         Location l1 = toLatLon(values[0], values[1], values[2]);
         Location l2 = toLatLon(values[3], values[4], values[5]);
         Location l3 = toLatLon(values[6], values[7], values[8]);
         Patch patch = null;
         try {
-            patch = Patch.create(id, l1, l2, l3, values[9], values[10], parts);
+            patch = Patch.create(id, l1, l2, l3, values[9], values[10], area, parts);
         } catch (Exception x) {
             //x.printStackTrace();
             System.err.println("error at line " + id + " " + x.getMessage());

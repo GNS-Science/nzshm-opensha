@@ -80,11 +80,11 @@ public class RsqSimEventLoader {
             return false;
         }
 
-        public Map<FaultSection, Integer> getSectionFillCount() {
-            Map<FaultSection, Integer> result = new HashMap<>();
+        public Map<FaultSection, Double> getSectionFillArea() {
+            Map<FaultSection, Double> result = new HashMap<>();
             for (Patch patch : patches) {
                 for (FaultSection section : patch.sections) {
-                    result.compute(section, (key, value) -> Objects.isNull(value) ? 1 : value + 1);
+                    result.compute(section, (key, value) -> patch.area + (Objects.isNull(value) ? 0 : value));
                 }
             }
             return result;
@@ -92,12 +92,11 @@ public class RsqSimEventLoader {
 
     }
 
-
     public List<FaultSection> toFaultSections(Event event) {
         List<FaultSection> sections = new ArrayList<>();
-        Map<FaultSection, Integer> eventFill = event.getSectionFillCount();
-        for (FaultSection section : eventFill.keySet()) {
-            double fillRatio = eventFill.get(section) / (double) patchLoader.patchCountPerSection.get(section);
+        Map<FaultSection, Double> fillArea = event.getSectionFillArea();
+        for (FaultSection section : fillArea.keySet()) {
+            double fillRatio = fillArea.get(section) / section.getArea(false);
             if (fillRatio > 0.5) {
                 sections.add(section);
             }

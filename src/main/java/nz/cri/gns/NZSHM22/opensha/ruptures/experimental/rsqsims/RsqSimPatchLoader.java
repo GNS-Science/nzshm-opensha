@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint.ManipulatedClusterRupture;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opengis.util.FactoryException;
+import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.geo.json.FeatureProperties;
@@ -37,7 +38,6 @@ public class RsqSimPatchLoader {
     final File znamesDeepenIn;
     final File rupSet;
     public FaultSystemRupSet loadedRupSet;
-
 
     final PatchesFile patchesFile;
 
@@ -134,8 +134,25 @@ public class RsqSimPatchLoader {
 
     Map<FaultSection, Integer> patchCountPerSection = new HashMap<>();
 
-    // oakley XXX
     public void addSectionToPatch(Patch patch, FaultSection section) {
+
+        // reject patches that are too low or too high
+        // only do this if the section has a big enough dip, otherwise it might be too restrictive.
+        // only do this for crustal. subduction is modelled too coarsely by Bruce
+        if (!section.getSectionName().contains("row:") && section.getAveDip() > 20) {
+            boolean keep = false;
+            for (Location location : patch.locations) {
+                if (location.depth > section.getOrigAveUpperDepth() &&
+                        location.depth < section.getAveLowerDepth()) {
+                    keep = true;
+                    break;
+                }
+            }
+            if (!keep) {
+                return;
+            }
+        }
+
         patch.sections.add(section);
         patchCountPerSection.compute(section, (key, value) -> Objects.isNull(value) ? 1 : value + 1);
     }
@@ -200,9 +217,9 @@ public class RsqSimPatchLoader {
 
         patchIds.keySet().forEach(sectionId -> {
             patchIds.get(sectionId).forEach(patchId -> {
-                Patch patch = patches.get(patchId -1);
+                Patch patch = patches.get(patchId - 1);
                 Preconditions.checkState(patch.id == patchId);
-              addSectionToPatch(patch, loadedRupSet.getFaultSectionData(sectionId));
+                addSectionToPatch(patch, loadedRupSet.getFaultSectionData(sectionId));
             });
         });
 
@@ -213,6 +230,13 @@ public class RsqSimPatchLoader {
         loadRupSetCanterbury(basePath + "rsqsim_crustal_discretized_trimmed_dict.json", 0);
         loadRupSetCanterbury(basePath + "hikkerm_discretized_trimmed_dict.json", 2596);
         loadRupSetCanterbury(basePath + "puysegur_discretized_trimmed_dict.json", 2325);
+    }
+
+    /**
+     * At this stage, we have basic patch->sections mappings based on section id or others. Now we check that
+     */
+    public void cleanMappings() {
+
     }
 
     public void loadRupSet() throws IOException {
@@ -574,6 +598,34 @@ public class RsqSimPatchLoader {
         process_bruce("rundir5942");
     }
 
+
+    /**
+     * Processes Bruce's rundir5883
+     *
+     * @throws IOException
+     * @throws FactoryException
+     */
+    public static RsqSimPatchLoader getBrucePatches(String runDirVersion) throws IOException, FactoryException {
+        String outputDir = "/tmp/bruce_" + runDirVersion + "/";
+        Files.createDirectories(Paths.get(outputDir));
+        String baseOutputPath = outputDir + runDirVersion + "_";
+
+        String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
+        String fileName = basePath + "zfault_Deepen.in";
+        String namesFileName = basePath + "znames_Deepen.in";
+        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
+
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
+        RsqSimPatchLoader patchLoader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName));
+        patchLoader.loadPatches();
+        patchLoader.loadNames();
+        patchLoader.loadRupSetNewBruce();
+
+        patchLoader.writeDebugMappings(baseOutputPath);
+
+        return patchLoader;
+    }
+
     /**
      * Processes Bruce's rundir5883
      *
@@ -581,31 +633,15 @@ public class RsqSimPatchLoader {
      * @throws FactoryException
      */
     public static void process_bruce(String runDirVersion) throws IOException, FactoryException {
-//        String runDirVersion = "rundir5942";
-//        String runDirVersion = "rundir5883";
 
         String outputDir = "/tmp/bruce_" + runDirVersion + "/";
         Files.createDirectories(Paths.get(outputDir));
         String baseOutputPath = outputDir + runDirVersion + "_";
 
-
         String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
-        String fileName = basePath + "zfault_Deepen.in";
-        String namesFileName = basePath + "znames_Deepen.in";
-        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
-//        String solutionFileName = "C:\\Users\\user\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NjUzOTY2Mg==.zip";
 
         // load and match patches
-
-        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
-        RsqSimPatchLoader patchLoader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName));
-        //loader.loadSolutionPolygons();
-        patchLoader.loadPatches();
-        patchLoader.loadNames();
-        patchLoader.loadRupSetNewBruce();
-
-        patchLoader.writeDebugMappings(baseOutputPath);
-
+        RsqSimPatchLoader patchLoader = getBrucePatches(runDirVersion);
 
         // ruptures
 
@@ -763,16 +799,17 @@ public class RsqSimPatchLoader {
 //    }
 
     public static void checkSectionEquality(List<? extends FaultSection> superSet, List<? extends FaultSection> subSet, int startIndex) {
-        for(int i = 0; i < subSet.size(); i++) {
+        for (int i = 0; i < subSet.size(); i++) {
             FaultSection a = superSet.get(i + startIndex);
             FaultSection b = subSet.get(i);
             boolean matches = a.getSectionName().equals(b.getSectionName());
-            Preconditions.checkState(matches, i + ": " + (i+startIndex) + " " + a.getSectionName() + " : " + b.getSectionName());
+            Preconditions.checkState(matches, i + ": " + (i + startIndex) + " " + a.getSectionName() + " : " + b.getSectionName());
         }
     }
 
     /**
      * This is to verify that we can use our combined rupset with the Canterbury data.
+     *
      * @throws IOException
      */
     public static void checkRupSetMatches() throws IOException {
@@ -783,8 +820,8 @@ public class RsqSimPatchLoader {
 
         Preconditions.checkState(rupSetPuy.getNumSections() + rupSetHik.getNumSections() + rupSetCru.getNumSections() == rupSetCombined.getNumSections());
 
-        int cruStart= 0;
-        int hikStart=2596;
+        int cruStart = 0;
+        int hikStart = 2596;
         int puyStart = 2325;
 
         checkSectionEquality(rupSetCombined.getFaultSectionDataList(), rupSetCru.getFaultSectionDataList(), cruStart);
@@ -794,9 +831,9 @@ public class RsqSimPatchLoader {
 
     public static void main(String[] args) throws FactoryException, IOException {
         //process_rundir5469(args);
-    //    process_rundir5883();
-        //process_rundir5942();
-        processCanterburyAll("fromAndyH");
+        //    process_rundir5883();
+        process_rundir5942();
+        //processCanterburyAll("fromAndyH");
 
         //checkRupSetMatches();
     }
