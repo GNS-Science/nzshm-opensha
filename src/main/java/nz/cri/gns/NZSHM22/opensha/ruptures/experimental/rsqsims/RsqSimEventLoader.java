@@ -2,9 +2,12 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import org.apache.poi.ss.formula.functions.Even;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.*;
@@ -47,7 +50,7 @@ public class RsqSimEventLoader {
             boolean hasSubduction = false;
             boolean hasCrustal = false;
             for (Patch patch : patches) {
-                if (patch.zname.equals(RsqSimPatchLoader.RSQSIMS_HIKURANGI) || patch.zname.equals(RsqSimPatchLoader.RSQSIMS_PUYSEGUR)) {
+                if(!patch.sections.isEmpty() && patch.sections.get(0).getSectionName().contains("row:")){
                     hasSubduction = true;
                 } else {
                     hasCrustal = true;
@@ -112,6 +115,40 @@ public class RsqSimEventLoader {
                 .collect(Collectors.toList());
     }
 
+    public static MultiRuptureJump makeJump(List<ClusterRupture> ruptures) {
+        return new MultiRuptureJump(
+                ruptures.get(0).clusters[0].startSect,
+                ruptures.get(0),
+                ruptures.get(1).clusters[0].startSect,
+                ruptures.get(1),
+                5);
+    }
+
+    /**
+     * Filters input down to single crustal joint ruptures.
+     * Side effect: event.jump is populated.
+     * @param events
+     * @return
+     */
+    public List<Event> makeSingleJointRuptures(List<Event> events) {
+        SectionDistanceAzimuthCalculator disAzCalc = new SectionDistanceAzimuthCalculator(patchLoader.loadedRupSet.getFaultSectionDataList());
+
+        ClusterAggregator aggregator = new ClusterAggregator(disAzCalc, 5);
+
+        List<RsqSimEventLoader.Event> singleCrustalJointRuptures = events.stream()
+                .peek(event -> {
+                    List<ClusterRupture> rs = aggregator.makeRuptures(event);
+                    if (aggregator.allConnected(rs)) {
+                        event.jump = makeJump(rs);
+                    }
+
+                })// turn into rupture pairs
+                .filter(event -> event.jump != null) // check if there's a single crustal rupture
+                .collect(Collectors.toList());
+
+        return singleCrustalJointRuptures;
+    }
+
     public static File findFile(File path, String... candidateNames) throws FileNotFoundException {
         for (String fileName : candidateNames) {
             File file = new File(path, fileName);
@@ -119,14 +156,14 @@ public class RsqSimEventLoader {
                 return file;
             }
         }
-        throw new FileNotFoundException("Could not find candidate files");
+        throw new FileNotFoundException("Could not find candidate files in " + path + " first candidate: " + candidateNames[0]);
     }
 
 
     public List<Event> loadEvents() throws IOException {
 
-        File eListFile = findFile(runDir, ".eList", "eList");
-        File pListFile = findFile(runDir, ".pList", "pList");
+        File eListFile = findFile(runDir, ".eList", "eList", "whole_nz.eList");
+        File pListFile = findFile(runDir, ".pList", "pList", "whole_nz.pList");
 
         List<Integer> eList = loadCatalogFile(eListFile);
         List<Integer> pList = loadCatalogFile(pListFile);

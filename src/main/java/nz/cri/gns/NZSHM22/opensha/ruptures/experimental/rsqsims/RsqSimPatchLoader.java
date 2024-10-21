@@ -498,25 +498,6 @@ public class RsqSimPatchLoader {
 //        builder3.toJSON("/tmp/joint-rupture.geojson");
 //    }
 
-    public static MultiRuptureJump makeJump(List<ClusterRupture> ruptures) {
-        return new MultiRuptureJump(
-                ruptures.get(0).clusters[0].startSect,
-                ruptures.get(0),
-                ruptures.get(1).clusters[0].startSect,
-                ruptures.get(1),
-                5);
-    }
-
-    /**
-     * Processes Bruce's rundir5883
-     *
-     * @param args
-     * @throws IOException
-     * @throws FactoryException
-     */
-    public static void process_rundir5883() throws IOException, FactoryException {
-        process_bruce("rundir5883");
-    }
 
     public void writeDebugMappings(String baseOutputPath) throws IOException {
         writeMappingsToCsv(
@@ -532,70 +513,14 @@ public class RsqSimPatchLoader {
 
         writeMappingsToFile(baseOutputPath + "mappingsHikurangi.geojson",
                 section -> section.getSectionName().startsWith("Hikurangi"));
-    }
 
-
-    public static void writeDebugGeoJSON(List<RsqSimEventLoader.Event> singleCrustalJointRuptures, List<RsqSimEventLoader.Event> passes, String baseOutput) throws IOException {
-        List<String> gjs = new ArrayList<>();
-        List<String> gjsRupturesOnly = new ArrayList<>();
-        List<String> filteredGeoJson = new ArrayList<>();
-        Set<RsqSimEventLoader.Event> passFilter = new HashSet<>(passes);
-        int ruptureId = 0;
-        for (RsqSimEventLoader.Event event : singleCrustalJointRuptures) {// List.of(ruptures.get(0), ruptures.get(1))) {
-
-            boolean isPass = passFilter.contains(event);
-            SimpleGeoJsonBuilder builder3 = new SimpleGeoJsonBuilder();
-
-            for (FaultSection section : event.sections) {
-                FeatureProperties props = builder3.addFaultSectionPolygon(section);
-                builder3.setPolygonColour(props, "red");
-                builder3.setLineColour(props, "red");
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        for (Patch patch: patches) {
+            if(patch.locations.get(0).lat < -44) {
+                builder.addFeature(patch.toPolygonFeature());
             }
-            if (isPass) {
-                gjsRupturesOnly.add(builder3.toJSON());
-            }
-            for (Patch patch : event.getPatches()) {
-                FeatureProperties props = builder3.addFeature(patch.toPolygonFeature());
-                builder3.setPolygonColour(props, "green");
-            }
-            if (isPass) {
-                gjs.add(builder3.toJSON());
-            }
-            if (ruptureId == 264) {
-                filteredGeoJson.add(builder3.toJSON());
-                System.out.println("event : " + event.id);
-            }
-
-            ruptureId++;
         }
-
-        BufferedWriter writer = null;
-
-        writer = new BufferedWriter(new FileWriter(baseOutput + "ruptures.json"));
-        List<String> someRuptures = List.of(gjs.get(0), gjs.get(1));
-        writer.write("[");
-        writer.write(String.join(",\n", someRuptures));
-        writer.write("]");
-        writer.close();
-
-        writer = new BufferedWriter(new FileWriter(baseOutput + "rupturesOnly.json"));
-
-        writer.write("[");
-        writer.write(String.join(",\n", gjsRupturesOnly));
-        writer.write("]");
-        writer.close();
-
-        writer = new BufferedWriter(new FileWriter(baseOutput + "filteredRuptures.json"));
-
-        writer.write("[");
-        writer.write(String.join(",\n", filteredGeoJson));
-        writer.write("]");
-        writer.close();
-
-    }
-
-    public static void process_rundir5942() throws FactoryException, IOException {
-        process_bruce("rundir5942");
+        builder.toJSON(baseOutputPath + "patches.geojson");
     }
 
 
@@ -605,12 +530,8 @@ public class RsqSimPatchLoader {
      * @throws IOException
      * @throws FactoryException
      */
-    public static RsqSimPatchLoader getBrucePatches(String runDirVersion) throws IOException, FactoryException {
-        String outputDir = "/tmp/bruce_" + runDirVersion + "/";
-        Files.createDirectories(Paths.get(outputDir));
-        String baseOutputPath = outputDir + runDirVersion + "_";
+    public static RsqSimPatchLoader getBrucePatches(String basePath) throws IOException, FactoryException {
 
-        String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
         String fileName = basePath + "zfault_Deepen.in";
         String namesFileName = basePath + "znames_Deepen.in";
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
@@ -621,109 +542,22 @@ public class RsqSimPatchLoader {
         patchLoader.loadNames();
         patchLoader.loadRupSetNewBruce();
 
-        patchLoader.writeDebugMappings(baseOutputPath);
-
         return patchLoader;
     }
 
-    /**
-     * Processes Bruce's rundir5883
-     *
-     * @throws IOException
-     * @throws FactoryException
-     */
-    public static void process_bruce(String runDirVersion) throws IOException, FactoryException {
-
-        String outputDir = "/tmp/bruce_" + runDirVersion + "/";
-        Files.createDirectories(Paths.get(outputDir));
-        String baseOutputPath = outputDir + runDirVersion + "_";
-
-        String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
-
-        // load and match patches
-        RsqSimPatchLoader patchLoader = getBrucePatches(runDirVersion);
-
-        // ruptures
-
-        RsqSimEventLoader eventLoader = new RsqSimEventLoader(new File(basePath), patchLoader);
-        eventLoader.loadEvents();
-
-        List<RsqSimEventLoader.Event> events = eventLoader.getJointRuptures();
-
-        System.out.println("Total joint ruptures " + eventLoader.events.size() + ", reconstructed joint ruptures " + events.size());
-        SectionDistanceAzimuthCalculator disAzCalc = new SectionDistanceAzimuthCalculator(patchLoader.loadedRupSet.getFaultSectionDataList());
-
-        ClusterAggregator aggregator = new ClusterAggregator(disAzCalc, 5);
-
-        List<RsqSimEventLoader.Event> singleCrustalJointRuptures = events.stream()
-                .peek(event -> {
-                    List<ClusterRupture> rs = aggregator.makeRuptures(event);
-                    if (aggregator.allConnected(rs)) {
-                        event.jump = makeJump(rs);
-                    }
-
-                })// turn into rupture pairs
-                .filter(event -> event.jump != null) // check if there's a single crustal rupture
-                .collect(Collectors.toList());
-
-        System.out.println(singleCrustalJointRuptures.size() + " single crustal joint ruptures");
-
-        eventLoader.writeParticipationRates(singleCrustalJointRuptures, patchLoader.loadedRupSet, baseOutputPath);
-
-        CoulombTester tester = new CoulombTester(patchLoader.loadedRupSet, "C:\\tmp\\stiffnessCaches"); // "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
-        tester.setupStiffness();
-        //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
-        //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
-        List<RsqSimEventLoader.Event> passes = singleCrustalJointRuptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
-        System.out.println("passes: " + passes.size());
-
-        List<ClusterRupture> clusterRuptures = singleCrustalJointRuptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
-
-        FaultSystemRupSet resultRupSet = FaultSystemRupSet.builderForClusterRups(
-                        patchLoader.loadedRupSet.getFaultSectionDataList(),
-                        clusterRuptures)
-                .forScalingRelationship(ScalingRelationships.SHAW_2009_MOD)
-                .addModule(tester.stiffness)
-                .build();
-        resultRupSet.write(new File(baseOutputPath + "rupset.zip"));
-
-        tester.writeStats(singleCrustalJointRuptures, baseOutputPath + "filterStats.csv");
-
-        writeDebugGeoJSON(singleCrustalJointRuptures, passes, baseOutputPath);
-
-    }
-
-    public static void main1(String[] args) throws IOException {
-        String fileName = "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File(fileName));
-        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
-        rupSet.getFaultSectionDataList().stream()//.filter(s -> s.getParentSectionId() < 100).
-                .forEach(s -> {
-                    FeatureProperties props = builder.addFaultSection(s);
-                    builder.setLineColour(props, "red");
-                    builder.setLineWidth(props, 5);
-                });
-        builder.toJSON("/tmp/nzshm22_red.geojson");
-    }
-
-    public static void processCanterburyAll(String runDirVersion) throws IOException, FactoryException {
-        String outputDir = "/tmp/andy_" + runDirVersion + "/";
-        Files.createDirectories(Paths.get(outputDir));
-        String baseOutputPath = outputDir + runDirVersion + "_";
-
-        String basePath = "C:\\rsqsimsCatalogue\\" + runDirVersion + "\\";
+    public static RsqSimPatchLoader getCanterburyPatches(String basePath) throws IOException, FactoryException {
         String fileName = basePath + "whole_nz_faults_2500_tapered_slip.flt";
         String namesFileName = basePath + "znames_Deepen.in";
 
         String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
 
-        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
+        PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.NZTM());
         RsqSimPatchLoader patchLoader = new RsqSimPatchLoader(new File(fileName), patchesFile, new File(namesFileName), new File(rupSetFileName));
         patchLoader.loadPatches();
 
         patchLoader.loadRupSetCanterbury(basePath);
 
-
+return patchLoader;
     }
 
 //    public static void processCanterbury(String[] args) throws IOException, FactoryException {
@@ -832,8 +666,8 @@ public class RsqSimPatchLoader {
     public static void main(String[] args) throws FactoryException, IOException {
         //process_rundir5469(args);
         //    process_rundir5883();
-        process_rundir5942();
-        //processCanterburyAll("fromAndyH");
+       // process_rundir5942();
+       // processCanterburyAll("fromAndyH");
 
         //checkRupSetMatches();
     }
