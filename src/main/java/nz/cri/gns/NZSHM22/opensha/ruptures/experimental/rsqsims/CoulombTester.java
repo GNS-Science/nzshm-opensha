@@ -80,8 +80,26 @@ public class CoulombTester implements Closeable {
         stiffness.checkUpdateStiffnessCache();
     }
 
-    public int[] getStats(MultiRuptureJump jump) {
-        return filters.get(1).collectStats(jump);
+    public String testSelfStiffnessFilter(List<RsqSimEventLoader.Event> events) {
+        SelfStiffnessCoulombFilter selfStiffness = new SelfStiffnessCoulombFilter(stiffness);
+        int selfsub = 0;
+        int selfCru = 0;
+        int selfAll = 0;
+        for(RsqSimEventLoader.Event event : events) {
+            double[] stats = selfStiffness.statsData(event);
+            if(stats[0]>0) {
+                selfsub++;
+            }
+            if(stats[1]>0) {
+                selfCru++;
+            }
+            if(stats[2]>0) {
+                selfAll++;
+            }
+        }
+
+        return "self stiffness > 0:: all->sub: "+selfsub+" all->cru: "+selfCru+" all->all: "+selfAll;
+
     }
 
     public void writeStats(List<RsqSimEventLoader.Event> events, String fileName) throws IOException {
@@ -97,7 +115,7 @@ public class CoulombTester implements Closeable {
 
 
                 writer.write(ruptureId + ", " + event.id + ", " + filter0.isPass() + ", " + filter1.isPass() + ", " + selfStiffness.stats(event));
-writer.newLine();
+                writer.newLine();
                 ruptureId++;
             }
         }

@@ -144,6 +144,8 @@ public class RsqSimMain implements Closeable {
         List<RsqSimEventLoader.Event> passes = singleCrustalJointRuptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
         log("passes: " + passes.size());
 
+        log(tester.testSelfStiffnessFilter(singleCrustalJointRuptures));
+
         List<ClusterRupture> clusterRuptures = singleCrustalJointRuptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
 
         FaultSystemRupSet resultRupSet = FaultSystemRupSet.builderForClusterRups(
@@ -172,7 +174,7 @@ public class RsqSimMain implements Closeable {
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
-        processBruce5942();
-//        processCanterbury();
+//        processBruce5942();
+        processCanterbury();
     }
 }

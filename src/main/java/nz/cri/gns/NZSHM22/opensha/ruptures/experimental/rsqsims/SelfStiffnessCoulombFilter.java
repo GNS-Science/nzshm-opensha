@@ -8,6 +8,7 @@ import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,6 +40,11 @@ public class SelfStiffnessCoulombFilter {
     }
 
     public String stats(RsqSimEventLoader.Event event) {
+        double[] stats = statsData(event);
+        return Arrays.stream(stats).mapToObj(fmt3::format).collect(Collectors.joining(", "));
+    }
+
+    public double[] statsData(RsqSimEventLoader.Event event) {
         List<FaultSection> fromSections = event.jump.fromRupture.buildOrderedSectionList();
         List<FaultSection> toSections = event.jump.toRupture.buildOrderedSectionList();
         List<FaultSection> allSections = event.sections;
@@ -47,10 +53,7 @@ public class SelfStiffnessCoulombFilter {
         double to = stiffnessCalculator.calc(allSections, toSections);
         double self = stiffnessCalculator.calc(allSections, allSections);
 
-        String line = Stream.of(from, to, self).map(fmt3::format).collect(Collectors.joining(", "));
-
-        return line;
-
+        return new double[]{from, to, self};
     }
 
 }
