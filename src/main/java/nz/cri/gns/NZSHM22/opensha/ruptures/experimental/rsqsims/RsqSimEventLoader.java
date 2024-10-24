@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
 import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
-import org.apache.poi.ss.formula.functions.Even;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -20,6 +19,7 @@ public class RsqSimEventLoader {
 
     final File runDir;
     final RsqSimPatchLoader patchLoader;
+    final List<Event> jointEvents = new ArrayList<>();
     final List<Event> events = new ArrayList<>();
 
     public RsqSimEventLoader(File runDir, RsqSimPatchLoader patchLoader) {
@@ -108,7 +108,7 @@ public class RsqSimEventLoader {
     }
 
     public List<Event> getJointRuptures() {
-        return events.stream()
+        return jointEvents.stream()
                 .filter(Event::isJointRupture)
                 .peek(event -> event.sections = toFaultSections(event))
                 .filter(Event::isOpenShaJointRupture)
@@ -178,8 +178,9 @@ public class RsqSimEventLoader {
             int eid = eList.get(i);
             int pid = pList.get(i);
             if (event.id != eid) {
+                events.add(event);
                 if (event.isJointRupture()) {
-                    events.add(event);
+                    jointEvents.add(event);
                 }
                 event = new Event(eid);
             }
@@ -188,7 +189,7 @@ public class RsqSimEventLoader {
             event.patches.add(patch);
         }
 
-        System.out.println("Identified " + events.size() + " joint ruptures");
+        System.out.println("Identified " + jointEvents.size() + " joint ruptures");
         return events;
     }
 

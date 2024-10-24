@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims;
 
+import gov.usgs.earthquake.nshmp.Faults;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.StiffnessCalcModule;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
@@ -44,16 +45,24 @@ public class SelfStiffnessCoulombFilter {
         return Arrays.stream(stats).mapToObj(fmt3::format).collect(Collectors.joining(", "));
     }
 
+    public double calc(FaultSection a, FaultSection b) {
+        return stiffnessCalculator.calc(List.of(a), List.of(b));
+    }
+
     public double[] statsData(RsqSimEventLoader.Event event) {
-        List<FaultSection> fromSections = event.jump.fromRupture.buildOrderedSectionList();
-        List<FaultSection> toSections = event.jump.toRupture.buildOrderedSectionList();
+//        List<FaultSection> fromSections = event.jump.fromRupture.buildOrderedSectionList();
+//        List<FaultSection> toSections = event.jump.toRupture.buildOrderedSectionList();
+//        List<FaultSection> allSections = event.sections;
+
+        List<FaultSection> fromSections = event.sections.stream().filter(s -> s.getSectionName().contains("row:")).collect(Collectors.toList());
+        List<FaultSection> toSections = event.sections.stream().filter(s -> !s.getSectionName().contains("row:")).collect(Collectors.toList());
         List<FaultSection> allSections = event.sections;
 
         double from = stiffnessCalculator.calc(allSections, fromSections);
         double to = stiffnessCalculator.calc(allSections, toSections);
-        double self = stiffnessCalculator.calc(allSections, allSections);
+       // double self = stiffnessCalculator.calc(allSections, allSections);
 
-        return new double[]{from, to, self};
+        return new double[]{from, to, 0};
     }
 
 }

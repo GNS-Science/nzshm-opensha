@@ -113,6 +113,17 @@ public class RsqSimMain implements Closeable {
 
     }
 
+    public void fillStiffnessCache(CoulombTester tester, List<RsqSimEventLoader.Event> events) {
+        SelfStiffnessCoulombFilter selfStiffness = new SelfStiffnessCoulombFilter(tester.stiffness);
+        events.stream().flatMap(event ->
+                        event.sections.stream().flatMap(s ->
+                                event.sections.stream().map(s2 ->
+                                        new FaultSection[]{s, s2})))
+                .parallel()
+                .forEach(ab -> selfStiffness.calc(ab[0], ab[1]));
+        tester.stiffness.checkUpdateStiffnessCache();
+    }
+
     public void process() throws IOException, FactoryException {
 
         // load and match patches
@@ -125,26 +136,33 @@ public class RsqSimMain implements Closeable {
         // ruptures
 
         RsqSimEventLoader eventLoader = new RsqSimEventLoader(new File(basePath), patchLoader);
-        eventLoader.loadEvents();
+        List<RsqSimEventLoader.Event> events = eventLoader.loadEvents();
 
-        List<RsqSimEventLoader.Event> events = eventLoader.getJointRuptures();
+        log("- events: "+events.size());
 
-        log("Total joint ruptures " + eventLoader.events.size() + ", reconstructed joint ruptures " + events.size());
+        events = eventLoader.getJointRuptures();
+
+        log("- joint events " + eventLoader.jointEvents.size() );
+        log("- reconstructed joint ruptures " + events.size());
 
         List<RsqSimEventLoader.Event> singleCrustalJointRuptures = eventLoader.makeSingleJointRuptures(events);
 
-        log(singleCrustalJointRuptures.size() + " single crustal joint ruptures");
+        log("- single crustal joint ruptures " + singleCrustalJointRuptures.size());
 
         eventLoader.writeParticipationRates(singleCrustalJointRuptures, patchLoader.loadedRupSet, baseOutputPath);
 
         CoulombTester tester = new CoulombTester(patchLoader.loadedRupSet, "C:\\tmp\\stiffnessCaches"); // "C:\\Users\\user\\GNS\\rupture sets\\stiffnessCache-nzshm22_complete_merged\\");
         tester.setupStiffness();
+
+        fillStiffnessCache(tester, events);
+
+        log("- self stiffness > 0 joint ruptures: " + tester.testSelfStiffnessFilter(events));
+        log("- self stiffness > 0 single crustal joint ruptures: " + tester.testSelfStiffnessFilter(singleCrustalJointRuptures));
+
         //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
         //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
         List<RsqSimEventLoader.Event> passes = singleCrustalJointRuptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
-        log("passes: " + passes.size());
-
-        log(tester.testSelfStiffnessFilter(singleCrustalJointRuptures));
+        log("- original filter passes: " + passes.size());
 
         List<ClusterRupture> clusterRuptures = singleCrustalJointRuptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
 
@@ -174,7 +192,7 @@ public class RsqSimMain implements Closeable {
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
-//        processBruce5942();
-        processCanterbury();
+        processBruce5942();
+//        processCanterbury();
     }
 }

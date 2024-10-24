@@ -6,6 +6,7 @@ import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.ConcurrentCounter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.StiffnessCalcModule;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.impl.MultiRuptureCoulombFilter;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 public class CoulombTester implements Closeable {
 
     String stiffnessCache;
-    FaultSystemRupSet rupSet;
+    public FaultSystemRupSet rupSet;
     final SectionDistanceAzimuthCalculator disAzCalc;
     public StiffnessCalcModule stiffness;
     public List<MultiRuptureCoulombFilter> filters = new ArrayList<>();
@@ -81,24 +82,36 @@ public class CoulombTester implements Closeable {
     }
 
     public String testSelfStiffnessFilter(List<RsqSimEventLoader.Event> events) {
-        SelfStiffnessCoulombFilter selfStiffness = new SelfStiffnessCoulombFilter(stiffness);
-        int selfsub = 0;
-        int selfCru = 0;
-        int selfAll = 0;
-        for(RsqSimEventLoader.Event event : events) {
-            double[] stats = selfStiffness.statsData(event);
-            if(stats[0]>0) {
-                selfsub++;
-            }
-            if(stats[1]>0) {
-                selfCru++;
-            }
-            if(stats[2]>0) {
-                selfAll++;
-            }
-        }
 
-        return "self stiffness > 0:: all->sub: "+selfsub+" all->cru: "+selfCru+" all->all: "+selfAll;
+        SelfStiffnessCoulombFilter selfStiffness = new SelfStiffnessCoulombFilter(stiffness);
+
+        System.out.println("start");
+
+
+        ConcurrentCounter selfsub = new ConcurrentCounter();
+        ConcurrentCounter selfCru = new ConcurrentCounter();
+        ConcurrentCounter selfAll = new ConcurrentCounter();
+        ConcurrentCounter selfBoth = new ConcurrentCounter();
+
+        events.parallelStream().forEach(
+                event -> {
+                    double[] stats = selfStiffness.statsData(event);
+                    if(stats[0]>0) {
+                        selfsub.inc();
+                    }
+                    if(stats[1]>0) {
+                        selfCru.inc();
+                    }
+                    if(stats[2]>0) {
+                        selfAll.inc();
+                    }
+                    if(stats[0]>0 && stats[1]>0) {
+                        selfBoth.inc();
+                    }
+                }
+        );
+
+        return "all->sub: "+selfsub.get()+" all->cru: "+selfCru.get()+" both: " +selfBoth.get();
 
     }
 
