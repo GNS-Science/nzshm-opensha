@@ -7,10 +7,13 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SlipRateFactors;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 import java.io.File;
@@ -18,6 +21,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 
 public class NZSHM22_InversionFaultSystemRuptSetTest {
 
@@ -78,23 +82,31 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
     }
 
     @Test
-    public void testRegionSlipScaling() throws URISyntaxException, IOException {
+    public void testRegionSlipScaling() throws URISyntaxException, IOException, DocumentException {
         NZSHM22_InversionFaultSystemRuptSet rupSet = modularRupSet();
 
-        double[] original = rupSet.getModule(SectSlipRates.class).getSlipRates().clone();
+        double[] expected = rupSet.getModule(SectSlipRates.class).getSlipRates().clone();
         NZSHM22_SlipRateFactors factors = new NZSHM22_SlipRateFactors(0.3, 0.4);
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(factors);
+        branch.setValue(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
 
         NZSHM22_InversionFaultSystemRuptSet.applySlipRateFactor(rupSet, branch);
         double[] actual = rupSet.getModule(SectSlipRates.class).getSlipRates().clone();
 
-        for(int i =0; i < original.length; i++){
-            original[i]*= 0.3;
+        FaultSectionList parents = new FaultSectionList();
+        NZSHM22_FaultModels.CFM_1_0A_DOM_ALL.fetchFaultSections(parents);
+        List<? extends FaultSection> sections = rupSet.getFaultSectionDataList();
+
+        for(int i =0; i < expected.length; i++){
+            NZFaultSection parent = ((NZFaultSection) parents.get(sections.get(i).getParentSectionId()));
+            if(parent.getDomainNo().equals(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL.getTvzDomain())){
+                expected[i] *= 0.4;
+            } else {
+                expected[i] *= 0.3;
+            }
         }
 
-        // TODO use a rupture set that also has TVZ sections
-        assertArrayEquals(original, actual, 0);
-
+        assertArrayEquals(expected, actual, 0);
     }
 }
