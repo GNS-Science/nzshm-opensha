@@ -1,25 +1,18 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import com.google.common.base.Preconditions;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.function.Predicate;
 
 /**
  * This class provides specialisatations needed to override some UCERF3 defaults
@@ -93,13 +86,13 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		if (factors == null || (factors.getSansFactor() < 0 && factors.getTvzFactor() < 0)) {
 			return;
 		}
-		TvzDomainSections tvz = rupSet.getModule(TvzDomainSections.class);
+		TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 
 		if (factors.getTvzFactor() >= 0) {
 			for (int i = 0; i < slipRates.length; i++) {
-				if (tvz.isInRegion(i)) {
+				if (tvzSections.isInRegion(i)) {
 					slipRates[i] *= factors.getTvzFactor();
 				}
 			}
@@ -107,7 +100,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		if (factors.getSansFactor() >= 0) {
 			for (int i = 0; i < slipRates.length; i++) {
-				if (!tvz.isInRegion(i)) {
+				if (!tvzSections.isInRegion(i)) {
 					slipRates[i] *= factors.getSansFactor();
 				}
 			}
