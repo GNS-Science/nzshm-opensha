@@ -169,7 +169,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     protected Set<Integer> createSamplerExclusions() {
         Set<Integer> exclusions = super.createSamplerExclusions();
         if (enableMinMaxSampler) {
-            NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+            TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
             for (int r = 0; r < rupSet.getNumRuptures(); r++) {
                 double mag = rupSet.getMagForRup(r);
                 boolean inTvz = tvzSections.isInRegion(rupSet.getSectionsIndicesForRup(r));

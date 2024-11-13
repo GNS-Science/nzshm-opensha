@@ -1,41 +1,53 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.opensha.commons.data.CSVFile;
-import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.awt.geom.Area;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public abstract class RegionSections implements CSV_BackedModule {
+
+public class TvzDomainSections implements CSV_BackedModule {
 
     protected Set<Integer> sections;
 
-    public RegionSections() {
+    public TvzDomainSections() {
     }
 
-    public RegionSections(FaultSystemRupSet rupSet, GriddedRegion region) {
-        IntPredicate regionFilter = createRegionFilter(rupSet, region);
+    public TvzDomainSections(FaultSystemRupSet rupSet) {
+        NZSHM22_LogicTreeBranch branch = rupSet.requireModule(NZSHM22_LogicTreeBranch.class);
+        Predicate<FaultSection> filter = createTvzFilter(branch);
         sections = rupSet.getFaultSectionDataList().stream()
+                .filter(filter)
                 .map(FaultSection::getSectionId)
-                .filter(regionFilter::test)
                 .collect(Collectors.toSet());
     }
 
-    protected static IntPredicate createRegionFilter(FaultSystemRupSet rupSet, GriddedRegion region) {
-        Area area = region.getShape();
-        PolygonFaultGridAssociations polyMgr = rupSet.getModule(PolygonFaultGridAssociations.class);
-        return s -> {
-            Area sectionArea = polyMgr.getPoly(s).getShape();
-            sectionArea.intersect(area);
-            return !sectionArea.isEmpty();
+    protected static Predicate<FaultSection> createTvzFilter(NZSHM22_LogicTreeBranch branch) {
+        NZSHM22_FaultModels faultModel = branch.getValue(NZSHM22_FaultModels.class);
+        Preconditions.checkState(faultModel != null);
+        Preconditions.checkState(faultModel.getTvzDomain() != null);
+        FaultSectionList sectionList = new FaultSectionList();
+        try {
+            faultModel.fetchFaultSections(sectionList);
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
+
+        return section -> {
+            NZFaultSection parent = (NZFaultSection) sectionList.get(section.getParentSectionId());
+            Preconditions.checkState(parent.getSectionId() == section.getParentSectionId());
+            return parent.getDomainNo().equals(faultModel.getTvzDomain());
         };
     }
 
@@ -77,5 +89,11 @@ public abstract class RegionSections implements CSV_BackedModule {
     public String getFileName(){
         return getName() + ".csv";
     }
+
+    @Override
+    public String getName() {
+        return "TvzDomainSections";
+    }
+
 
 }

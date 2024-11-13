@@ -88,45 +88,18 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 	}
 
-	/**
-	 * Returns a predicate that can tell whether a fault section is in the TVZ based on the TVZ domain of the
-	 * fault model.
-	 * @param branch
-	 * @return
-	 */
-    protected static Predicate<FaultSection> getTvzFilter(NZSHM22_LogicTreeBranch branch) {
-        NZSHM22_FaultModels faultModel = branch.getValue(NZSHM22_FaultModels.class);
-        Preconditions.checkState(faultModel != null);
-		Preconditions.checkState(faultModel.getTvzDomain() != null);
-        FaultSectionList sectionList = new FaultSectionList();
-        try {
-            faultModel.fetchFaultSections(sectionList);
-        } catch (Exception x) {
-            throw new RuntimeException(x);
-        }
-
-        return section -> {
-            NZFaultSection parent = (NZFaultSection) sectionList.get(section.getParentSectionId());
-			Preconditions.checkState(parent.getSectionId() == section.getParentSectionId());
-            return parent.getDomainNo().equals(faultModel.getTvzDomain());
-        };
-    }
-
 	protected static void applySlipRateFactor(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
 		NZSHM22_SlipRateFactors factors = branch.getValue(NZSHM22_SlipRateFactors.class);
 		if (factors == null || (factors.getSansFactor() < 0 && factors.getTvzFactor() < 0)) {
 			return;
 		}
-
-		List<? extends FaultSection> sections = rupSet.getFaultSectionDataList();
-		Predicate<FaultSection> isTvzSection = getTvzFilter(branch);
-
+		TvzDomainSections tvz = rupSet.getModule(TvzDomainSections.class);
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 
 		if (factors.getTvzFactor() >= 0) {
 			for (int i = 0; i < slipRates.length; i++) {
-				if (isTvzSection.test(sections.get(i))) {
+				if (tvz.isInRegion(i)) {
 					slipRates[i] *= factors.getTvzFactor();
 				}
 			}
@@ -134,7 +107,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		if (factors.getSansFactor() >= 0) {
 			for (int i = 0; i < slipRates.length; i++) {
-				if (!isTvzSection.test(sections.get(i))) {
+				if (!tvz.isInRegion(i)) {
 					slipRates[i] *= factors.getSansFactor();
 				}
 			}
@@ -206,7 +179,9 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		} else if (regime == FaultRegime.CRUSTAL) {
 			addModule(faultPolyMgr(this, branch));
-			addModule(new NZSHM22_TvzSections(this));
+			if (branch.hasValue(NZSHM22_FaultModels.class)) {
+				addModule(new TvzDomainSections(this));
+			}
 			applySlipRateFactor(this, branch);
 		}
 	}
