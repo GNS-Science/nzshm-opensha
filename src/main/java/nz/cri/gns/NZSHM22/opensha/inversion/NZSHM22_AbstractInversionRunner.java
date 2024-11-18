@@ -799,6 +799,11 @@ public abstract class NZSHM22_AbstractInversionRunner {
 					numThreads, subCompletionCriteria);
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+
+		if(completionCriteria instanceof LoggingCompletionCriteria) {
+			((LoggingCompletionCriteria) completionCriteria).setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+		}
+
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		if (reweightTargetQuantity != null) {
 			tsa = new ReweightEvenFitSimulatedAnnealing((ThreadedSimulatedAnnealing)tsa, reweightTargetQuantity);
