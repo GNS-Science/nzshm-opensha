@@ -1,9 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.zip.ZipFile;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
@@ -59,6 +59,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected long inversionSecs = 60;
 	protected long selectionInterval = 10;
 	protected Long selectionIterations = null;
+
+	protected String logStates = null;
 
 	private Integer inversionNumSolutionAverages = 1; // 1 means no averaging
 	private Integer inversionThreadsPerSelector = 1;
@@ -133,6 +135,28 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	}
 
 	protected boolean repeatable = false;
+
+
+	/**
+	 * Enables logging of all inversion state values.
+	 * To log at each step, set the following values:
+	 *         runner.setIterationCompletionCriteria(1000);               // 1000 iterations in total
+	 *         runner.setSelectionIterations(1);                          // log at each iteration
+	 *         runner.setRepeatable(true);                                // make repeatable and single-threaded
+	 *         runner.setEnableInversionStateLogging("/tmp/stateLog/");   // enable logging to the specified directory
+	 *         runner.setInversionAveraging(false);                       // disable averaging
+	 *
+	 * Logs will be broken up into zip files that contain up to 500MB of data each when uncompressed. Data will be in
+	 * headerless CSV files apart from meta.csv which has a header in each CSV file. See zip file names for the
+	 * iteration range contained. See meta.csv for exact iteration for each row. Each CSV file will have a row for each
+	 * iteration - unless empty.
+	 * @param basePath where to log to
+	 * @return this runner
+	 */
+	public NZSHM22_AbstractInversionRunner setEnableInversionStateLogging(String basePath) {
+		this.logStates = basePath;
+		return this;
+	}
 
 	/**
 	 * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
@@ -712,6 +736,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		
 		CompletionCriteria completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
 
+		if (logStates != null) {
+			completionCriteria = new LoggingCompletionCriteria(completionCriteria, logStates, 500);
+		}
+
 		// Bring up window to track progress
 		// criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
 		// 0.1d);
@@ -801,9 +829,15 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// From CLI metadata Analysis
 		initialState = Arrays.copyOf(initialState, initialState.length);
 
+	//	tsa.setCheckPointCriteria(new TimeCompletionCriteria(1),new File("/tmp/checkpoint/"));
+
 		tsa.iterate(progress);
 
 		tsa.shutdown();
+
+		if (completionCriteria instanceof Closeable) {
+			((Closeable)completionCriteria).close();
+		}
 
 		// now assemble the solution
 		double[] solution_raw = tsa.getBestSolution();
