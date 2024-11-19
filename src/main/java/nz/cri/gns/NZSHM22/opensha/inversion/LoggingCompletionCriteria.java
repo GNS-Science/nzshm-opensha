@@ -1,6 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.collect.ImmutableList;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.AnnealingProgress;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompletionCriteria;
 
 import java.io.*;
@@ -50,13 +53,23 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         solutionLog.close();
     }
 
+    public void setConstraintRanges(List<ConstraintRange> constraintRanges) {
+        AnnealingProgress progress =  AnnealingProgress.forConstraintRanges(constraintRanges);
+        String energiesHeader = String.join("," , progress.getEnergyTypes());
+        solutionLog.addHeader("energy", energiesHeader+"\n");
+    }
+
     protected static class InversionStateLog implements Closeable {
 
         MultiZipLog log;
 
         public InversionStateLog(String basePath, int maxMB) {
             log = new MultiZipLog(basePath, "inversionState", ((long) maxMB) * 1024 * 1024);
-            log.addHeader("meta", "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
+            addHeader("meta", "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
+        }
+
+        public void addHeader(String file, String header) {
+            log.addHeader(file, header);
         }
 
         public void log(InversionState state) {
