@@ -21,12 +21,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
 	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc and CFM Domains
 	// depth filtering: nothing shallower than 3.9
-	CFM_1_0A_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_all.xml"),
-	CFM_1_0A_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_no_tvz.xml"),
+	CFM_1_0A_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_all.xml", "4"),
+	CFM_1_0A_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0A_no_tvz.xml", "4"),
 
 	// CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with depths scaled from Dfc and CFM Domains
-	CFM_1_0_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_all.xml"),
-	CFM_1_0_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_no_tvz.xml"),
+	CFM_1_0_DOM_ALL("CFM 1.0 all NZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_all.xml", "4"),
+	CFM_1_0_DOM_SANSTVZ("CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains", "cfm_1_0_domain_no_tvz.xml", "4"),
 
 	// CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults, with shallower TVZ depths
 	CFM_0_9D_ALL_D90("CFM 0.9revD all NZ faults, depth 90, with shallower TVZ depths", "cfm_0_9d_d90_all.xml"),
@@ -108,6 +108,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 	private final String fileName;
 	private final boolean crustal;
 	private final int id;
+	private final String tvzDomain;
 
 	private Map<String, List<Integer>> namedFaultsMapAlt;
 
@@ -116,6 +117,15 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 		this.fileName = fileName;
 		this.crustal = true;
 		this.id = -1;
+		this.tvzDomain = null;
+	}
+
+	NZSHM22_FaultModels(String modelName, String fileName, String tvzDomain) {
+		this.modelName = modelName;
+		this.fileName = fileName;
+		this.crustal = true;
+		this.id = -1;
+		this.tvzDomain = tvzDomain;
 	}
 
 	NZSHM22_FaultModels(String modelName, String fileName, int subductionId) {
@@ -123,6 +133,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 		this.fileName = fileName;
 		this.crustal = false;
 		this.id = subductionId;
+		this.tvzDomain = null;
 	}
 
 	public InputStream getStream(String fileName) {
@@ -209,6 +220,10 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
 	public int getParentSectionId() {
 		return id;
+	}
+
+	public String getTvzDomain() {
+		return tvzDomain;
 	}
 
 	@Override

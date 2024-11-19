@@ -6,17 +6,23 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
+import java.util.List;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 
 public class NZSHM22_InversionRunner_IntegrationTest {
@@ -40,21 +46,51 @@ public class NZSHM22_InversionRunner_IntegrationTest {
                 }
             }
         }
-        Files.deleteIfExists(tempFolder.toPath());
+        try {
+            Files.deleteIfExists(tempFolder.toPath());
+        } catch (DirectoryNotEmptyException x) {
+            // if there are rupture sets in the temp folder, it might not be possible to delete them right away
+            x.printStackTrace();
+        }
+    }
+
+    public static FaultSystemRupSet createRupSet(NZSHM22_FaultModels faultModel, RupSetScalingRelationship scalingRelationship, List<List<Integer>> sectionForRups) throws DocumentException, IOException {
+        FaultSectionList sections = new FaultSectionList();
+        faultModel.fetchFaultSections(sections);
+        // simulate subsections exactly the same size as the parents
+        sections.forEach(section -> {
+            section.setParentSectionId(section.getSectionId());
+            section.setParentSectionName(section.getSectionName());
+        });
+
+        NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
+        branch.setValue(faultModel);
+        branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
+
+        return FaultSystemRupSet.builder(sections, sectionForRups)
+                .forScalingRelationship(scalingRelationship)
+                .addModule(branch)
+                .build();
     }
 
 
-    public NZSHM22_AbstractInversionRunner buildRunner() throws URISyntaxException {
-
+    public NZSHM22_AbstractInversionRunner buildRunner() throws URISyntaxException, DocumentException, IOException {
         SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_ScalingRelationshipNode.createRelationShip("SimplifiedScalingRelationship");
         scaling.setupCrustal(4, 4.1);
+        FaultSystemRupSet rupSet = createRupSet(
+                NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
+                scaling,
+                List.of(List.of(0, 1),
+                        List.of(5, 6, 7, 8, 9)));
+        File rupSetFile = new File(tempFolder, "buildRunnerRupSet.zip");
+        rupSet.write(rupSetFile);
 
         return new NZSHM22_CrustalInversionRunner()
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
                 .setInversionSeconds(1)
                 .setSelectionInterval(1)
-                .setScalingRelationship(scaling, true)
-                .setRuptureSetFile(new File(alpineVernonRupturesUrl.toURI()))
+                .setScalingRelationship(scaling, false)
+                .setRuptureSetFile(rupSetFile)
                 //.setGutenbergRichterMFDWeights(100.0, 1000.0)
                 //.setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)

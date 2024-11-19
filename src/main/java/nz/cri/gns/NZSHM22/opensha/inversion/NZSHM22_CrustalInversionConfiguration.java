@@ -49,7 +49,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
 		GriddedRegion tvzRegion = regions.getTvzRegion();
 		GriddedRegion sansTvzRegion = regions.getSansTvzRegion();
 
-		NZSHM22_TvzSections tvzSections = rupSet.getModule(NZSHM22_TvzSections.class);
+		TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
 		IntPredicate tvzFilter = tvzSections::isInRegion;
 
 		RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);

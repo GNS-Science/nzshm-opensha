@@ -67,7 +67,7 @@ public class InversionFilter {
                 PolygonFaultGridAssociations.class,
                 SectSlipRates.class,
                 LogicTreeBranch.class,
-                NZSHM22_TvzSections.class,
+                TvzDomainSections.class,
                 ModSectMinMags.class,
                 PaleoseismicConstraintData.class);
 

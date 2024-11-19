@@ -6,7 +6,6 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
@@ -87,13 +86,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		if (factors == null || (factors.getSansFactor() < 0 && factors.getTvzFactor() < 0)) {
 			return;
 		}
-
-		RegionSections tvzSections = new RegionSections(rupSet, new NewZealandRegions.NZ_TVZ_GRIDDED()){
-			@Override
-			public String getName() {
-				return null;
-			}
-		};
+		TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
 		SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
 		double[] slipRates = origSlips.getSlipRates();
 
@@ -179,7 +172,9 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
 		} else if (regime == FaultRegime.CRUSTAL) {
 			addModule(faultPolyMgr(this, branch));
-			addModule(new NZSHM22_TvzSections(this));
+			if (branch.hasValue(NZSHM22_FaultModels.class)) {
+				addModule(new TvzDomainSections(this));
+			}
 			applySlipRateFactor(this, branch);
 		}
 	}
