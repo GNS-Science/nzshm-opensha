@@ -9,7 +9,9 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.GitVersion;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -567,12 +569,15 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         System.out.println("Built " + countDF.format(ruptures.size()) + " ruptures in " + timeDF.format(secs)
                 + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(ruptures.size(), millis));
 
+        BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
+        buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
 
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+                        .addModule(buildInfo)
                         .build();
 
         return rupSet;
