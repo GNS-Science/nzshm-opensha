@@ -874,8 +874,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		printRuptureExclusionStats(zeroRates, "rates_");
 
-		BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha").getAbsoluteFile(), "/build"));
-		buildInfo.addExtra(new GitVersion(new File("").getAbsoluteFile(), "/nzshm-build"));
+		BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
+		buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
