@@ -15,6 +15,7 @@ import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.commons.util.GitVersion;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -23,6 +24,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
@@ -872,8 +874,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		printRuptureExclusionStats(zeroRates, "rates_");
 
+		BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha").getAbsoluteFile(), "/build"));
+		buildInfo.addExtra(new GitVersion(new File("").getAbsoluteFile(), "/nzshm-build"));
+
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
+		solution.addModule(buildInfo);
 		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
 			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
 		}
