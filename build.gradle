@@ -80,6 +80,12 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
     doFirst {->
         writeBuildFiles("nzshm-build")
     }
+    doLast {
+        delete new File(projectDir, "nzshm-build.githash")
+        delete new File(projectDir, "nzshm-build.gitbranch")
+        delete new File(projectDir, "nzshm-build.gitremoteurl")
+        delete new File(projectDir, "nzshm-build.date")
+    }
 
     baseName = project.name + '-all'
     from {
