@@ -569,15 +569,12 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         System.out.println("Built " + countDF.format(ruptures.size()) + " ruptures in " + timeDF.format(secs)
                 + " secs = " + timeDF.format(mins) + " mins. Total rate: " + rupRate(ruptures.size(), millis));
 
-        BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
-        buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
-
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
-                        .addModule(buildInfo)
+                        .addModule(createBuildInfo())
                         .build();
 
         return rupSet;
