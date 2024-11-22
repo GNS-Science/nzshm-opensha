@@ -78,7 +78,7 @@ dependencies {
 task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
 
     doFirst {->
-        writeBuildFiles("nzshm-build")
+        writeBuildFiles("/nzshm-build")
     }
     doLast {
         delete new File(projectDir, "nzshm-build.githash")
@@ -92,6 +92,12 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
         configurations.apiResolvable.collect { it.isDirectory() ? it : zipTree(it).matching {
             exclude { it.path.contains('META-INF') }
         }}
+    }
+    from(project.projectDir) {
+        include 'nzshm-build.githash'
+        include 'nzshm-build.gitbranch'
+        include 'nzshm-build.gitremoteurl'
+        include 'nzshm-build.date'
     }
 
     // include compiled source from this project

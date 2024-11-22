@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.*;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -874,12 +875,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		}
 		printRuptureExclusionStats(zeroRates, "rates_");
 
-		BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
-		buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
-
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
-		solution.addModule(buildInfo);
+		solution.addModule(NZSHM22_AbstractRuptureSetBuilder.createBuildInfo());
 		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
 			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
 		}
