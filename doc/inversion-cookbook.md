@@ -18,7 +18,7 @@ These are the parameters to control inversion execution:
 
 Iteration will run until at least one `completion criteria` is met. Iteration is broken up into `rounds`. 
 
-At each round, iteration splits up into a pre-determined number (`inversionThreadsPerSelector`) of threads that all independently iterate from the same start state. Each thread runs until one `sub-completion criteria` is met for that thread. The best result of all threads is used to seed the threads at the next round - or as the result of the overall iteration if at the end of a round a `completion criteria` is met.
+At each round, iteration splits up into a pre-determined number of threads that all independently iterate from the same start state. Each thread runs until one `sub completion criteria` is met for that thread. The best result of all threads is used to seed the threads at the next round - or as the result of the overall iteration if at the end of a round a `completion criteria` is met.
 
 ### Completion Criteria
 
@@ -29,7 +29,7 @@ These criteria determine the overall length of the inversion. All three criteria
 
 ### Sub Completion Criteria
 
-The length of each `round` is controlled by a sub completion criteria. Only of them can be set.
+The length of each `round` is controlled by a sub completion criteria. Only one of them can be set.
 - `setSelectionInterval()` minimum round duration.
 - `setSelectionIterations()` the minimum number of iterations.
 
@@ -86,9 +86,9 @@ This inversion runs for a minimum of 2 minutes with 2 rounds at a minimum of 1 m
 
 
 
-# Scenarios
+## Scenarios
 
-## Repeatable Runs
+### Repeatable Runs
 
 Calling `setRepeatable(true)` on an inversion runner will do the following:
 - Disable time-base completion criteria and time-based sub completion criteria
@@ -101,6 +101,21 @@ Make sure you set deterministic completion criteria. For example:
         runner.setRepeatable(true);
         runner.setIterationCompletionCriteria(100);
         runner.setSelectionIterations(10);
+```
+
+### Log Inversion State
+
+`setEnableInversionStateLogging()` enables detailed logging of inversion state values for each round.
+
+If you want to log at each iteration step, make each round exactly one iteration long:
+
+```Java
+        runner.setIterationCompletionCriteria(10);
+        runner.setSelectionIterations(1);
+        runner.setRepeatable(true);
+        // log state to /tmp/stateLog
+        runner.setEnableInversionStateLogging("/tmp/stateLog/");
+        runner.setInversionAveraging(false);
 ```
 
 
