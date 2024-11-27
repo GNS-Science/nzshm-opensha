@@ -1,10 +1,12 @@
 # Inversion Cookbook
 
+# TODO: check what subduction inversion does
+
 ## Generic Inversion Execution
 
 The inversion will run until at least one `completion criteria` is met. Inversion is broken up into `rounds`. 
 
-At each round, iteration splits up into a pre-determined number of threads that all independently iterate from the same start state. Each thread runs until one `selectron completion criteria` is met for that thread. The best result of all threads is used to seed the threads at the next round - or as the result of the overall inversion if at the end of a round a `completion criteria` is met.
+At each round, iteration splits up into a pre-determined number of threads that all independently iterate from the same start state. Each thread runs until one `selection completion criteria` is met for that thread. The best result of all threads is used to seed the threads at the next round - or as the result of the overall inversion if at the end of a round a `completion criteria` is met.
 
 ```
 repeat until completion criteria {
@@ -150,6 +152,29 @@ repeat until <5 minutes> {
                     iterate, take best result            
                 }
             }
+        }
+    }
+}
+```
+
+## Reweighting
+
+Reweighting can be enabled with
+
+- `setReweightTargetQuantity()` in Java, and
+- `reweight: True` in `runzi`
+
+If `reweight` is enabled in `runzi`, this is equivalent to `setReweightTargetQuantity(MAD)` in Java.
+
+Reweighting changes the structure of inversion execution yet again. A simplified equivalent is
+
+```
+repeat until completion criteria {
+    reweight before running threads (unless this is the first round)
+    take best result of threads
+    thread = {
+        repeat until selection completion criteria {
+            iterate, take best result            
         }
     }
 }
