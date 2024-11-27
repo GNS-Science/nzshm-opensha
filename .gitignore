@@ -39,3 +39,7 @@ bin/**
 .ParameterRunner.config
 src/main/java/nz/cri/gns/NZSHM22/opensha/util/OakleyRunner.java
 derby.log
+nzshm-build.date
+nzshm-build.gitbranch
+nzshm-build.githash
+nzshm-build.gitremoteurl
