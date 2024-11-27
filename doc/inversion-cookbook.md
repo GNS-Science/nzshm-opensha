@@ -1,7 +1,5 @@
 # Inversion Cookbook
 
-# TODO: check what subduction inversion does
-
 ## Generic Inversion Execution
 
 The inversion will run until at least one `completion criteria` is met. Inversion is broken up into `rounds`. 
