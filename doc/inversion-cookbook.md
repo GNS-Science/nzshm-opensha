@@ -20,19 +20,19 @@ repeat until completion criteria {
 ### Completion Criteria
 
 These criteria determine the overall length of the inversion. All three criteria can be set up, and the inversion will end when one of them is satisfied at the beginning of a round.
-- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration.
-- `setIterationCompletionCriteria()` sets a minimum number of iterations.
-- `setEnergyChangeCompletionCriteria()` sets an energy change condition.
+- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration in minutes. runzi: `max_inversion_time`
+- `setIterationCompletionCriteria()` sets a minimum number of iterations. (no runzi equivalent)
+- `setEnergyChangeCompletionCriteria()` sets an energy change condition. runzi: `completion_energy`
 
 ### Selection Completion Criteria
 
 The length of each `round` is controlled by a selection completion criteria. Only one of them can be set.
-- `setSelectionInterval()` minimum round duration.
-- `setSelectionIterations()` the minimum number of iterations.
+- `setSelectionInterval()` minimum round duration. runzi: `selection_interval_secs`
+- `setSelectionIterations()` the minimum number of iterations. (no runzi equivalent)
 
 ### Parallelism
 
-The number of threads to use each round can be specified with `setNumThreadsPerSelector()`.
+The number of threads to use each round can be specified with `setNumThreadsPerSelector()`. runzi: `threads_per_selector`
 
 ### Examples:
 ```Java
