@@ -41,7 +41,6 @@ public class SmokeTest {
         File solutionFile = new File(dir, "solution.zip");
         File mfdDir = new File(dir, "MFDPlots");
 
-        testAzimuthalRuptures(ruptureSetFile);
         testRupSetReportPageGen(ruptureSetFile);
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
@@ -77,44 +76,6 @@ public class SmokeTest {
         testSubductionInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
         testHazard(solutionFile, "EXCLUDE");
-    }
-
-    public void sanityCheckAzimuthalRuptureSet(FaultSystemRupSet rupSet) {
-        assertEquals(1278, rupSet.getNumRuptures());
-        assertEquals(145, rupSet.getSlipRateForAllSections().length);
-        assertEquals(145, rupSet.getSlipRateStdDevForAllSections().length);
-
-        // sanity check first rupture
-        assertEquals("Acton", rupSet.getFaultSectionData(0).getParentSectionName());
-        assertEquals(2.0e-4, rupSet.getSlipRateForSection(0), 0.0000000001);
-        assertEquals(1.5e-4, rupSet.getSlipRateStdDevForSection(0), 0.0000000001);
-        assertEquals(6.890572888121233, rupSet.getMagForRup(0), 0.0000000001);
-    }
-
-    public void testAzimuthalRuptures(File file) throws DocumentException, IOException {
-
-        NZSHM22_PythonGateway.NZSHM22_CachedAzimuthalRuptureSetBuilder builder = NZSHM22_PythonGateway.getAzimuthalRuptureSetBuilder();
-
-        SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
-        scaling.setupCrustal(4, 4.1);
-
-        FaultSystemRupSet rupSet = builder
-                .setThinningFactor(0.2)
-                .setIdRangeFilter(0, 40)
-                .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
-                .setScalingRelationship(scaling)
-                .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
-                .buildRuptureSet();
-
-        builder.writeRuptureSet(file.getAbsolutePath());
-
-        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
-        //branch.clearValue(NZSHM22_ScalingRelationshipNode.class);
-        branch.getValue(NZSHM22_ScalingRelationshipNode.class).setRecalc(false); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(file, branch);
-
-        sanityCheckAzimuthalRuptureSet(rupSet);
-        sanityCheckAzimuthalRuptureSet(loadedRupSet);
     }
 
     public void sanityCheckCoulombRuptureSet(FaultSystemRupSet rupSet) {

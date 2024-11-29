@@ -24,7 +24,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
-import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AzimuthalRuptureSetBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import py4j.GatewayServer;
 
@@ -40,13 +39,6 @@ public class NZSHM22_PythonGateway {
     static CachedSubductionInversionRunner subductionInversionRunner;
     static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
     static NZSHM22_GridHazardCalculator gridHazCalc;
-
-
-    public static NZSHM22_CachedAzimuthalRuptureSetBuilder getAzimuthalRuptureSetBuilder(){
-        NZSHM22_CachedAzimuthalRuptureSetBuilder azBuilder = new NZSHM22_CachedAzimuthalRuptureSetBuilder();
-        builder = azBuilder;
-        return azBuilder;
-    }
 
     public static NZSHM22_CachedCoulombRuptureSetBuilder getCoulombRuptureSetBuilder(){
         NZSHM22_CachedCoulombRuptureSetBuilder coulBuilder = new NZSHM22_CachedCoulombRuptureSetBuilder();
@@ -143,79 +135,7 @@ public class NZSHM22_PythonGateway {
     }
 
     /**
-     * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
-     */
-    public static class NZSHM22_CachedAzimuthalRuptureSetBuilder extends NZSHM22_AzimuthalRuptureSetBuilder {
-        FaultSystemRupSet ruptureSet;
-
-        /**
-         * Chooses a known fault model.
-         * @param faultModel the name of a known fault model
-         * @return this object
-         */
-        public NZSHM22_CachedAzimuthalRuptureSetBuilder setFaultModel(String faultModel){
-            setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
-            return this;
-        }
-
-        /**
-         *
-         * @param permutationStrategyClass one of 'DOWNDIP', 'POINTS', 'UCERF3'
-         * @return this
-         */
-        public NZSHM22_CachedAzimuthalRuptureSetBuilder setPermutationStrategy(String permutationStrategyClass) {
-
-            setPermutationStrategy(RupturePermutationStrategy.valueOf(permutationStrategyClass));
-            return this;
-        }
-
-        /**
-         * Sets the FaultModel file for all crustal faults
-         *
-         * @param fsdFileName the XML FaultSection data file containing source fault
-         *                    information
-         * @return this builder
-         */
-        public NZSHM22_CachedAzimuthalRuptureSetBuilder setFaultModelFile(String fsdFileName) {
-            setFaultModelFile(new File(fsdFileName));
-            return this;
-        }
-
-//        /**
-//         * Sets the subduction fault. At the moment, only one fault can be set.
-//         *
-//         * @param faultName The name fo the fault.
-//         * @param fileName  the CSV file containing all sections.
-//         * @return this builder
-//         */
-//        public NZSHM22_CachedAzimuthalRuptureSetBuilder setSubductionFault(String faultName, String fileName) {
-//            setSubductionFault(faultName, new File(fileName));
-//            return this;
-//        }
-
-        /**
-         * Caches the results of the build
-         */
-        @Override
-        public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
-            ruptureSet = super.buildRuptureSet();
-            return ruptureSet;
-        }
-
-        /**
-         * Write the cached rupture set to disk.
-         *
-         * @param rupSetFileName
-         * @throws IOException
-         */
-        public void writeRuptureSet(String rupSetFileName) throws IOException {
-            File rupSetFile = new File(rupSetFileName);
-            ruptureSet.write(rupSetFile);
-        }
-    }
-
-    /**
-     * Provide a little help for python clients using NZSHM22_AzimuthalRuptureSetBuilder
+     * Provide a little help for python clients
      */
     public static class NZSHM22_CachedCoulombRuptureSetBuilder extends NZSHM22_CoulombRuptureSetBuilder {
         FaultSystemRupSet ruptureSet;
