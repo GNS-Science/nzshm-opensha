@@ -77,7 +77,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected NZSHM22_DeformationModel deformationModel = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
-	protected List<CompletionCriteria> completionCriterias = new ArrayList<>();
 	private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
 	private IterationCompletionCriteria iterationCompletionCriteria = null;
 	
@@ -726,15 +725,16 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// column compress it for fast annealing
 		inversionInputGenerator.columnCompress();
 
+		List<CompletionCriteria> completionCriterias = new ArrayList<>();
 		// inversion completion criteria (how long it will run)
-		if(!repeatable)
-			this.completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
+		if (!repeatable)
+			completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
 		if (!(this.energyChangeCompletionCriteria == null))
-			this.completionCriterias.add(this.energyChangeCompletionCriteria);
+			completionCriterias.add(this.energyChangeCompletionCriteria);
 		if (!(this.iterationCompletionCriteria == null))
-			this.completionCriterias.add(this.iterationCompletionCriteria);
+			completionCriterias.add(this.iterationCompletionCriteria);
 		
-		CompletionCriteria completionCriteria = new CompoundCompletionCriteria(this.completionCriterias);
+		CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
 		if (logStates != null) {
 			completionCriteria = new LoggingCompletionCriteria(completionCriteria, logStates, 500);
@@ -746,57 +746,48 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// ....
 		ProgressTrackingCompletionCriteria progress = new ProgressTrackingCompletionCriteria(completionCriteria);
 
-		// this is the "sub completion criteria" - the amount of time (or iterations)
-		// between solution selection/synchronization
-		CompletionCriteria subCompletionCriteria;
-
+		List<CompletionCriteria> subCompletionCriteriaList = new ArrayList<>();
 		if (selectionIterations != null) {
-			subCompletionCriteria = new IterationCompletionCriteria(selectionIterations);
-		} else {
-			subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
+			subCompletionCriteriaList.add(new IterationCompletionCriteria(selectionIterations));
 		}
+		if (!repeatable){
+			subCompletionCriteriaList.add(TimeCompletionCriteria.getInSeconds(selectionInterval));
+		}
+		// this is the "sub completion criteria" - the amount of time and/or iterations
+		// between solution selection/synchronization
+		CompletionCriteria subCompletionCriteria = new CompoundCompletionCriteria(subCompletionCriteriaList);
 
 		initialState = inversionInputGenerator.getInitialSolution();
 
-		int numThreads = this.inversionNumSolutionAverages * this.inversionThreadsPerSelector;
-
-		if(repeatable){
-			numThreads = 1;
+		if (repeatable){
 			inversionThreadsPerSelector = 1;
+			inversionNumSolutionAverages = 1;
 		}
 
-		if (this.inversionAveragingEnabled) {
-			Preconditions.checkState(inversionThreadsPerSelector <= numThreads);
+		if (inversionAveragingEnabled) {
 
-			CompletionCriteria avgSubCompletionCriteria;
-
-			if(repeatable){
-				avgSubCompletionCriteria = new IterationCompletionCriteria(inversionAveragingIterations);
-			}else {
-				avgSubCompletionCriteria = TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs);
+			List<CompletionCriteria> criteriaList = new ArrayList<>();
+			if (inversionAveragingIterations != null) {
+				criteriaList.add(new IterationCompletionCriteria(inversionAveragingIterations));
 			}
-
-			int threadsLeft = numThreads;
+			if (inversionAveragingIntervalSecs != null && !repeatable) {
+				criteriaList.add(TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs));
+			}
+			CompletionCriteria avgSubCompletionCriteria = new CompoundCompletionCriteria(criteriaList);
 
 			// arrange lower-level (actual worker) SAs
 			List<SimulatedAnnealing> tsas = new ArrayList<>();
-			while (threadsLeft > 0) {
-				int myThreads = Integer.min(threadsLeft, inversionThreadsPerSelector);
-				if (myThreads > 1)
-					tsas.add(new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
-							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
-							myThreads, subCompletionCriteria));
-				else
-					tsas.add(new SerialSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
-							inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq()));
-				threadsLeft -= myThreads;
+			for (int i = 0; i < inversionNumSolutionAverages; i++) {
+				tsas.add(new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
+						inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
+						inversionThreadsPerSelector, subCompletionCriteria));
 			}
 			tsa = new ThreadedSimulatedAnnealing(tsas, avgSubCompletionCriteria);
 			tsa.setAverage(true);
 		} else {
 			tsa = new ThreadedSimulatedAnnealing(inversionInputGenerator.getA(), inversionInputGenerator.getD(),
 					inversionInputGenerator.getInitialSolution(), 0d, inversionInputGenerator.getA_ineq(), inversionInputGenerator.getD_ineq(),
-					numThreads, subCompletionCriteria);
+					inversionThreadsPerSelector, subCompletionCriteria);
 		}
 		progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 
@@ -806,10 +797,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 		if (reweightTargetQuantity != null) {
-			tsa = new ReweightEvenFitSimulatedAnnealing((ThreadedSimulatedAnnealing)tsa, reweightTargetQuantity);
+			tsa = new ReweightEvenFitSimulatedAnnealing(tsa, reweightTargetQuantity);
 		}
 
-		if(repeatable) {
+		if (repeatable) {
 			tsa.setRandom(new Random(1));
 		}
 
