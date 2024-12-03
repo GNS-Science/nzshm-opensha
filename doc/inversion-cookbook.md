@@ -1,5 +1,23 @@
 # Inversion Cookbook
 
+For reference, NZSHM22 set these values to
+
+```java
+runner
+        
+.setEnergyChangeCompletionCriteria(0, 0, 1)
+.setInversionSeconds(120*60)
+  
+.setSelectionInterval(1)
+.setNumThreadsPerSelector(4)
+  
+.setInversionAveraging(true)
+.setNumSolutionAverages(4)
+.setInversionAveragingIntervalSecs(30)
+  
+.setReweightTargetQuantity("MAD")
+```
+
 ## Generic Inversion Execution
 
 The inversion will run until at least one `completion criteria` is met. Inversion is broken up into `rounds`. 
@@ -44,7 +62,6 @@ The number of threads to use each round can be specified with `setNumThreadsPerS
         runner.setSelectionIterations(10);
         // turn off averaging for this example
         runner.setInversionAveraging(false);
-        runner.setNumSolutionAverages(1);
 ```
 
 These settings will result in 20 rounds of 1 thread with 10 iterations.
@@ -69,7 +86,6 @@ repeat until <200 iterations> {
         runner.setSelectionIterations(6);
         // turn off averaging for this example
         runner.setInversionAveraging(false);
-        runner.setNumSolutionAverages(1);
 ```
 
 These settings will result in 4 rounds (6 * 4 >= 20). Each round will have 3 threads, each running 6 iterations.
@@ -84,7 +100,6 @@ Completion criteria can also be time based:
         runner.setSelectionInterval(60);
         // disable averaging
         runner.setInversionAveraging(false);
-        runner.setNumSolutionAverages(1);
 ```
 
 This inversion runs for a minimum of 2 minutes with 2 rounds at a minimum of 1 minute each. On my machine, it ran for 2:02 minutes with 195,534,181 iterations. The iteration count is based on the maximum iterations of the 3 threads of each round. Note that this only counts the iterations for one thread in each round. This is consistent with the previous example. For my example run, in the first round, the maximum iterations a thread achieved was 97,074,670, and in the second round it was 98,459,511 resulting in 195,534,181. 
