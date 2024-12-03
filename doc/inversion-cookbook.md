@@ -20,19 +20,19 @@ repeat until completion criteria {
 ### Completion Criteria
 
 These criteria determine the overall length of the inversion. All three criteria can be set up, and the inversion will end when one of them is satisfied at the beginning of a round.
-- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration in minutes. runzi: `max_inversion_time`
-- `setIterationCompletionCriteria()` sets a minimum number of iterations. (no runzi equivalent)
-- `setEnergyChangeCompletionCriteria()` sets an energy change condition. runzi: `completion_energy`
+- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration.
+- `setIterationCompletionCriteria()` sets a minimum number of iterations.
+- `setEnergyChangeCompletionCriteria()` sets an energy change condition.
 
 ### Selection Completion Criteria
 
-The length of each `round` is controlled by a selection completion criteria. Only one of them can be set.
-- `setSelectionInterval()` minimum round duration. runzi: `selection_interval_secs`
-- `setSelectionIterations()` the minimum number of iterations. (no runzi equivalent)
+The length of each `round` is controlled by selection completion criteria. Both can be set up, and each thread will end when one of them is satisfied at the beginning of an iteration step.
+- `setSelectionInterval()` minimum round duration.
+- `setSelectionIterations()` the minimum number of iterations.
 
 ### Parallelism
 
-The number of threads to use each round can be specified with `setNumThreadsPerSelector()`. runzi: `threads_per_selector`
+The number of threads to use each round can be specified with `setNumThreadsPerSelector()`.
 
 ### Examples:
 ```Java
@@ -102,7 +102,9 @@ repeat until <2 minutes> {
 
 ## Averaging
 
-Averaging runs multiple copies of the inversion rounds in parallel and averages the results. The execution structure is now:
+Averaging runs multiple copies of the inversion rounds in parallel and averages the results. Average completion criteria can be set up together, and an averaging round ends when at least one of them is met.
+
+The execution structure is now:
 
 ```
 repeat until completion criteria {
@@ -119,6 +121,11 @@ repeat until completion criteria {
     }
 }
 ```
+
+- `setInversionAveraging()` when set to true, averaging is enabled
+- `setNumSolutionAverages()` sets the number of parallel averaging rounds
+- `setInversionAveragingIntervalSecs()` sets a minimum duration
+- `setInversionAveragingIterations()` sets a minimum iteration count
 
 Example:
 
@@ -137,8 +144,6 @@ The first three lines of this example set up completion criteria as in the time-
 
 The last three lines set up averaging with 5 threads that run for 100 seconds each.
 
-This is what the structure looks like:
-
 ```
 repeat until <5 minutes> {
     average the results of <5> threads
@@ -155,9 +160,9 @@ repeat until <5 minutes> {
 }
 ```
 
-## Reweighting
+## Re-weighting
 
-Reweighting can be enabled with
+Re-weighting can be enabled with
 
 - `setReweightTargetQuantity()` in Java, and
 - `reweight: True` in `runzi`
@@ -214,9 +219,6 @@ If you want to log at each iteration step, make each round exactly one iteration
 
 # Oddness:
 
-- subCompletionCriteria are exclusive, while completionCriteria can all be set up at the same time
 - inconsistent naming of completionCriteria functions
   - `setInversionMinutes()` vs `setSelectionInterval()`
   - `setInversionMinutes()` vs `setIterationCompletionCriteria()`
-- turning averaging off doesn't prevent `inversionNumSolutionAverages` from influencing thread count
-- 
