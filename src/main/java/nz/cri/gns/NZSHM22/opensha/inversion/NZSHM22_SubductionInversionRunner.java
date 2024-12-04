@@ -56,7 +56,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
 		NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
 		setupLTB(branch);
-		rupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupSetFile, branch);
+		rupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(getRupSetInput(), branch);
 
 		InversionModels inversionModel = branch.getValue(InversionModels.class);
 

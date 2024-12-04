@@ -1,84 +1,62 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
-import com.google.common.collect.Sets;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
 public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
 
-    public boolean hasRuptureWithFaults(Set<Integer> faults, FaultSystemRupSet rupSet) {
-
-        for (List<Integer> sections : rupSet.getSectionIndicesForAllRups()) {
+    /**
+     * Turns all ruptures into sets of parent ids
+     * @param rupSet
+     * @return
+     */
+    public static List<Set<Integer>> toParentIds(FaultSystemRupSet rupSet) {
+        List<Set<Integer>> parentIds = new ArrayList<>();
+        for(List<Integer> rupture:rupSet.getSectionIndicesForAllRups()) {
             Set<Integer> parents = new HashSet<>();
-            for (int s : sections) {
-                parents.add(rupSet.getFaultSectionData(s).getParentSectionId());
+            for(Integer sectionId: rupture) {
+                parents.add(rupSet.getFaultSectionData(sectionId).getParentSectionId());
             }
-            if (parents.equals(faults)) {
-                return true;
-            }
+            parentIds.add(parents);
         }
-        return false;
+
+        return parentIds;
     }
 
-    @Test
-    public void testRuptureSetSlipRateMethods() throws IOException, DocumentException {
-
-            FaultSystemRupSet ruptureSet =
-                new NZSHM22_CoulombRuptureSetBuilder()
-                        .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
-                        .buildRuptureSet();
-
-        assertEquals(1192, ruptureSet.getNumRuptures());
-        assertEquals(68, ruptureSet.getSlipRateForAllSections().length);
-        assertEquals(68, ruptureSet.getSlipRateStdDevForAllSections().length);
-        
-        assertEquals("HopeConwayOS", ruptureSet.getFaultSectionData(11).getParentSectionName());
-
-        assertEquals(new Float(0.0214), new Float(ruptureSet.getSlipRateForSection(11)));
-        assertEquals(new Float(2.3), new Float(ruptureSet.getFaultSectionData(11).getOrigSlipRateStdDev()));
-        assertEquals(new Float(0.0023), new Float(ruptureSet.getSlipRateStdDevForSection(11)));
-    }
-    
-    @Test
-    public void testCantBuildKaikoura2016() throws IOException, DocumentException {
-
-        Set<Integer> kaikouraFaults = Sets.newHashSet(95, 132, 136, 149, 162, 178, 189, 245, 310, 387, 400);
-
-        FaultSystemRupSet ruptureSet =
-                new NZSHM22_CoulombRuptureSetBuilder()
-                        .setFaultModelFile(new File("src/integration/resources/KAIK2016.xml"))
-                        .buildRuptureSet();
-
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("/tmp/testCantBuildKaikoura2016.zip"));        
-        assertFalse(hasRuptureWithFaults(kaikouraFaults, ruptureSet));
+    public Set<Integer> getMostParents(FaultSystemRupSet rupSet){
+        List<Set<Integer>> parents = toParentIds(rupSet);
+        parents.sort(Comparator.comparing(Set::size));
+        return parents.get(parents.size()-1);
     }
 
     @Test
     public void testAlpineVernon() throws IOException, DocumentException {
-        Set<Integer> faults = Sets.newHashSet( 23, 24, 130, 50, 48, 46, 585);
-
+        Set<Integer> faults = Set.of(35, 123, 30, 31);
         FaultSystemRupSet ruptureSet =
                 new NZSHM22_CoulombRuptureSetBuilder()
-                        .setFaultModelFile(new File("src/integration/resources/alpine-vernon.xml"))
+                        .setFaultModel(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ)
+                        .setFaultFilter(faults)
                         .buildRuptureSet();
 
-        //FaultSystemIO.writeRupSet(ruptureSet, new File("./tmp/testAlpineVernon.zip"));
+        assertEquals(87, ruptureSet.getNumRuptures());
 
-        assertEquals(2178, ruptureSet.getNumRuptures());
-        assertTrue(hasRuptureWithFaults(faults, ruptureSet));
+        // we can build a rupture that has at least one of each fault
+        assertEquals(faults, getMostParents(ruptureSet));
 
-        assertEquals(86, ruptureSet.getSlipRateForAllSections().length);
-        assertEquals(86, ruptureSet.getSlipRateStdDevForAllSections().length);
+        assertEquals(18, ruptureSet.getNumSections());
+        assertEquals(18, ruptureSet.getSlipRateForAllSections().length);
+        assertEquals(18, ruptureSet.getSlipRateStdDevForAllSections().length);
+
+        assertEquals("Fowlers", ruptureSet.getFaultSectionData(11).getParentSectionName());
+        assertEquals(5.0E-4, ruptureSet.getSlipRateForSection(11), 0.0000001);
+        assertEquals(0.35,ruptureSet.getFaultSectionData(11).getOrigSlipRateStdDev(), 0.0000001);
+        assertEquals(3.5E-4, ruptureSet.getSlipRateStdDevForSection(11),0.0000001);
     }
-
-
 }

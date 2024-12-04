@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
 	
@@ -93,6 +94,12 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     public NZSHM22_AbstractRuptureSetBuilder setIdRangeFilter(int skipFaultSections, int maxFaultSections) {
         faultFilters.add(new FaultFilter.IdRangeFilter(skipFaultSections, maxFaultSections));
+        return this;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setFaultFilter(Set<Integer> faultIds) {
+        // filter is applied before sub sections are created, so we use the section id is fault id
+        faultFilters.add(section -> faultIds.contains(section.getSectionId()));
         return this;
     }
 

@@ -1,31 +1,20 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
 import static org.junit.Assert.*;
 
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
+import org.dom4j.DocumentException;
 import org.junit.Test;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-import scratch.UCERF3.logicTree.U3LogicTreeBranch;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 public class NZSHM22_LogicTreeBranchTest {
-
-    public FaultSystemRupSet oldSchoolRupSet() throws URISyntaxException, IOException {
-        URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
-        return FaultSystemSolution.load(new File(alpineVernonRupturesUrl.toURI())).getRupSet();
-    }
-
-    public FaultSystemRupSet modularRupSet() throws URISyntaxException, IOException {
-        URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("ModularAlpineVernonInversionSolution.zip");
-        return FaultSystemSolution.load(new File(alpineVernonRupturesUrl.toURI())).getRupSet();
-    }
 
     @Test
     public void testJSON() throws IOException {
@@ -51,38 +40,30 @@ public class NZSHM22_LogicTreeBranchTest {
         assertEquals(json, json2);
     }
 
-    @Test
-    public void testFromOldSchool() throws URISyntaxException, IOException {
-        FaultSystemRupSet rupSet = oldSchoolRupSet();
-        U3LogicTreeBranch originalBranch = rupSet.getModule(U3LogicTreeBranch.class);
-        NZSHM22_LogicTreeBranch nzBranch  = NZSHM22_LogicTreeBranch.crustalFromModuleContainer(rupSet);
-
-        // asserting that an NZ LTB is created with some of the original values copied across
-
-        assertEquals(
-                originalBranch.getValue(ScalingRelationships.class),
-                nzBranch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship());
-
-        assertEquals(
-                originalBranch.getValue(SlipAlongRuptureModels.class),
-                nzBranch.getValue(SlipAlongRuptureModels.class));
-
-        assertEquals(FaultRegime.CRUSTAL, nzBranch.getValue(FaultRegime.class));
+    /**
+     * Create a rupture set with crustal LTB, write and read it from file.
+     */
+    public static FaultSystemRupSet makeRupSet() throws DocumentException, IOException {
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
+        NZSHM22_ScalingRelationshipNode scalingNode = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+        FaultSystemRupSet rupSet = TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, scalingNode);
+        rupSet = NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
+        ArchiveOutput.InMemoryZipOutput output = new ArchiveOutput.InMemoryZipOutput(true);
+        rupSet.getArchive().write(output);
+        return FaultSystemRupSet.load(output.getCompletedInput());
     }
 
     @Test
-    public void testFromModular() throws URISyntaxException, IOException {
-        FaultSystemRupSet rupSet = modularRupSet();
-
-        NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+    public void testFromModular() throws IOException, DocumentException {
+        NZSHM22_LogicTreeBranch branch = makeRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 
         assertEquals(FaultRegime.CRUSTAL, branch.getValue(FaultRegime.class));
         assertEquals(NZSHM22_SpatialSeisPDF.NZSHM22_1346, branch.getValue(NZSHM22_SpatialSeisPDF.class));
         assertEquals(SlipAlongRuptureModels.UNIFORM, branch.getValue(SlipAlongRuptureModels.class));
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
-        scaling.setupCrustal(4, 4.1);
-        assertEquals(
-                scaling,
-                branch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship());
+        scaling.setupCrustal(4, 4);
+        assertTrue(
+                scaling.equals(
+                        branch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship()));
     }
 }

@@ -5,6 +5,7 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 
@@ -49,6 +50,20 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return fromExistingSubductionRuptureSet(rupSet, branch);
 	}
 
+	/**
+	 * Loads a subduction RuptureSet from file.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Recalculates magnitudes if specified by the LTB.
+	 * @param ruptureSetInput
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(ArchiveInput ruptureSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
+		FaultSystemRupSet rupSet = FaultSystemRupSet.load(ruptureSetInput);
+		return fromExistingSubductionRuptureSet(rupSet, branch);
+	}
+
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
 		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
@@ -76,7 +91,25 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 		return fromExistingCrustalSet(FaultSystemRupSet.load(ruptureSetFile), branch);
 	}
 
+	/**
+	 * Loads a RuptureSet from file.
+	 * Strips the RuptureSet of stray U3 modules that are added when loading pre-modular files.
+	 * Recalculates magnitudes if specified by the LTB.
+	 * @param rupSetInput
+	 * @param branch
+	 * @return
+	 * @throws IOException
+	 */
+	public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(ArchiveInput rupSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
+		return fromExistingCrustalSet(FaultSystemRupSet.load(rupSetInput), branch);
+	}
+
 	public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
+		ClusterRuptures ruptures = rupSet.getModule(ClusterRuptures.class);
+		if (ruptures == null) {
+			ruptures = ClusterRuptures.singleStranged(rupSet);
+			rupSet.addModule(ruptures);
+		}
 		rupSet = recalcMags(rupSet, branch);
 		return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
 	}

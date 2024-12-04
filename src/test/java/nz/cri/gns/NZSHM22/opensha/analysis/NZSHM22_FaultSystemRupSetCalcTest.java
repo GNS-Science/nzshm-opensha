@@ -1,8 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.analysis;
 
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
 import org.junit.Test;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -12,10 +10,6 @@ import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +18,8 @@ import static org.junit.Assert.assertTrue;
 
 public class NZSHM22_FaultSystemRupSetCalcTest {
 
-    public NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, IOException {
-        URL url = Thread.currentThread().getContextClassLoader().getResource("RupSetWaiohauNorth.zip");
-        return NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(new File(url.toURI()), NZSHM22_LogicTreeBranch.crustalInversion());
-    }
-
     @Test
-    public void testgetCharSubSeismoOnFaultMFD_forEachSection() throws URISyntaxException, IOException {
+    public void testgetCharSubSeismoOnFaultMFD_forEachSection() {
         List faultSections = new ArrayList<>();
         faultSections.add(mock(FaultSection.class));
         RegionalRupSetData rupSet = mock(RegionalRupSetData.class);

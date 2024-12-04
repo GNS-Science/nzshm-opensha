@@ -215,7 +215,6 @@ public class NZSHM22_GridHazardCalculator {
     public static void main(String[] args) throws DocumentException, IOException {
 
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("src\\test\\resources\\AlpineVernonInversionSolution.zip");
         // builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
         builder.setForecastTimespan(50);
         builder.setLinear(true); // has to be linear to make pofet calc work
