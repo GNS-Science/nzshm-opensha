@@ -34,6 +34,7 @@ public class TestHelpers {
 
     /**
      * Creates a rupture set for tests that are concerned with fault sections rather than ruptures.
+     *
      * @param faultModel
      * @return
      */

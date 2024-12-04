@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import org.dom4j.DocumentException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -47,17 +46,8 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
 
     @Test
     public void testRunReportForInversionSolution() throws IOException, DocumentException {
-        System.out.println("hello");
-        try {
-            Parameters param = Parameters.NZSHM22.INVERSION_CRUSTAL.getParameters();
-        }catch(Exception x) {
-            assertTrue(x.getMessage(), false);
-        }
-
-        FaultSystemSolution solution = null;
-
-            solution = TestHelpers.createCrustalSolution(
-                    TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ, ScalingRelationships.SHAW_2009_MOD));
+        FaultSystemSolution solution = TestHelpers.createCrustalSolution(
+                TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ, ScalingRelationships.SHAW_2009_MOD));
         new NZSHM22_ReportPageGen().setOutputPath(tempFolder.toString())
                 .setName("test")
                 .setSolution(solution)

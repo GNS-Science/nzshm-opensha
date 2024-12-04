@@ -14,14 +14,15 @@ public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
 
     /**
      * Turns all ruptures into sets of parent ids
+     *
      * @param rupSet
      * @return
      */
     public static List<Set<Integer>> toParentIds(FaultSystemRupSet rupSet) {
         List<Set<Integer>> parentIds = new ArrayList<>();
-        for(List<Integer> rupture:rupSet.getSectionIndicesForAllRups()) {
+        for (List<Integer> rupture : rupSet.getSectionIndicesForAllRups()) {
             Set<Integer> parents = new HashSet<>();
-            for(Integer sectionId: rupture) {
+            for (Integer sectionId : rupture) {
                 parents.add(rupSet.getFaultSectionData(sectionId).getParentSectionId());
             }
             parentIds.add(parents);
@@ -30,10 +31,10 @@ public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
         return parentIds;
     }
 
-    public Set<Integer> getMostParents(FaultSystemRupSet rupSet){
+    public Set<Integer> getMostParents(FaultSystemRupSet rupSet) {
         List<Set<Integer>> parents = toParentIds(rupSet);
         parents.sort(Comparator.comparing(Set::size));
-        return parents.get(parents.size()-1);
+        return parents.get(parents.size() - 1);
     }
 
     @Test
@@ -56,7 +57,7 @@ public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
 
         assertEquals("Fowlers", ruptureSet.getFaultSectionData(11).getParentSectionName());
         assertEquals(5.0E-4, ruptureSet.getSlipRateForSection(11), 0.0000001);
-        assertEquals(0.35,ruptureSet.getFaultSectionData(11).getOrigSlipRateStdDev(), 0.0000001);
-        assertEquals(3.5E-4, ruptureSet.getSlipRateStdDevForSection(11),0.0000001);
+        assertEquals(0.35, ruptureSet.getFaultSectionData(11).getOrigSlipRateStdDev(), 0.0000001);
+        assertEquals(3.5E-4, ruptureSet.getSlipRateStdDevForSection(11), 0.0000001);
     }
 }

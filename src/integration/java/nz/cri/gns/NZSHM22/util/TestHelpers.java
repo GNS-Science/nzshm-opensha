@@ -38,6 +38,7 @@ public class TestHelpers {
 
     /**
      * Creates a rupture set for tests that are concerned with fault sections rather than ruptures.
+     *
      * @param faultModel
      * @return
      */
@@ -74,23 +75,24 @@ public class TestHelpers {
 
     /**
      * Creates a solution similar to NZSHM22, but repeatable and without averaging
+     *
      * @param rupSet
      * @return
      * @throws IOException
      * @throws DocumentException
      */
     public static FaultSystemSolution createCrustalSolution(FaultSystemRupSet rupSet) throws IOException, DocumentException {
-            ArchiveOutput.InMemoryZipOutput output = new ArchiveOutput.InMemoryZipOutput(true);
-            rupSet.getArchive().write(output);
-            ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
-            NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner();
-            parameterRunner.setUpCrustalInversionRunner(runner);
-            runner.setRuptureSetArchiveInput(output.getCompletedInput());
-            runner.setIterationCompletionCriteria(1);
-            runner.setSelectionIterations(2);
-            runner.setRepeatable(true);
-            runner.setInversionAveraging(false);
-            return runner.runInversion();
+        ArchiveOutput.InMemoryZipOutput output = new ArchiveOutput.InMemoryZipOutput(true);
+        rupSet.getArchive().write(output);
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
+        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner();
+        parameterRunner.setUpCrustalInversionRunner(runner);
+        runner.setRuptureSetArchiveInput(output.getCompletedInput());
+        runner.setIterationCompletionCriteria(1);
+        runner.setSelectionIterations(2);
+        runner.setRepeatable(true);
+        runner.setInversionAveraging(false);
+        return runner.runInversion();
     }
 
     public static ArchiveInput archiveInput(FaultSystemRupSet rupSet) throws IOException {
