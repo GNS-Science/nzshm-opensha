@@ -45,7 +45,7 @@ These criteria determine the overall length of the inversion. All three criteria
 ### Selection Completion Criteria
 
 The length of each `round` is controlled by selection completion criteria. Both can be set up, and each thread will end when one of them is satisfied at the beginning of an iteration step.
-- `setSelectionInterval()` minimum round duration.
+- `setSelectionInterval()` minimum round duration in seconds.
 - `setSelectionIterations()` the minimum number of iterations.
 
 ### Parallelism
