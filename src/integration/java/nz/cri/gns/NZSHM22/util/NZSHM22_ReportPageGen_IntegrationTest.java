@@ -4,22 +4,23 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import org.dom4j.DocumentException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 
 public class NZSHM22_ReportPageGen_IntegrationTest {
 
-    private static URL alpineVernonInversionSolutionUrl;
     private static File tempFolder;
 
     @BeforeClass
     public static void setUp() throws IOException {
-        alpineVernonInversionSolutionUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
         tempFolder = Files.createTempDirectory("_NZSHM22_RupSetDiagnosticsReport").toFile();
         System.setProperty("java.awt.headless", "true");
     }
@@ -44,10 +45,12 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
     }
 
     @Test
-    public void testRunReportForInversionSolution() throws IOException {
+    public void testRunReportForInversionSolution() throws IOException, DocumentException {
+        FaultSystemSolution solution = TestHelpers.createCrustalSolution(
+                TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ, ScalingRelationships.SHAW_2009_MOD));
         new NZSHM22_ReportPageGen().setOutputPath(tempFolder.toString())
                 .setName("test")
-                .setSolution(alpineVernonInversionSolutionUrl.getFile().toString())
+                .setSolution(solution)
                 .setPlotLevel(null)
                 .addPlot("SolMFDPlot")
                 .generatePage();

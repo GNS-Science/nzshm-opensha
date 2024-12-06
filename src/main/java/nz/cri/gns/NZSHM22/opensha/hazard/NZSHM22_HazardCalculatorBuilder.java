@@ -12,6 +12,7 @@ import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.param.Parameter;
+import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.calc.params.MaxDistanceParam;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -34,7 +35,7 @@ import scratch.UCERF3.erf.FaultSystemSolutionERF;
 public class NZSHM22_HazardCalculatorBuilder {
 
     // config
-    File solutionFile;
+    ArchiveInput solutionFile;
     Double forecastTimespan;
     Double maxDistance; // in km, default is 200
     boolean linear = false;
@@ -49,7 +50,11 @@ public class NZSHM22_HazardCalculatorBuilder {
      * @return this builder
      */
     public NZSHM22_HazardCalculatorBuilder setSolutionFile(File solutionFile) {
-        this.solutionFile = solutionFile;
+        try {
+            this.solutionFile = new ArchiveInput.ZipFileInput(solutionFile);
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
         return this;
     }
 
@@ -61,6 +66,11 @@ public class NZSHM22_HazardCalculatorBuilder {
      */
     public NZSHM22_HazardCalculatorBuilder setSolutionFile(String solutionFileName) {
         return setSolutionFile(new File(solutionFileName));
+    }
+
+    public NZSHM22_HazardCalculatorBuilder setSolution(ArchiveInput archiveInput) {
+        this.solutionFile = archiveInput;
+        return this;
     }
 
     /**

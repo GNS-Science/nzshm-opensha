@@ -74,6 +74,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
 	protected File rupSetFile;
+	protected ArchiveInput rupSetInput;
 	protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
 	protected NZSHM22_DeformationModel deformationModel = null;
 	protected List<InversionConstraint> constraints = new ArrayList<>();
@@ -423,10 +424,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		return inversionInputGenerator;
 	}
 
-	public NZSHM22_AbstractInversionRunner setRuptureSetFile(String ruptureSetFileName)
-			throws IOException, DocumentException {
-		File rupSetFile = new File(ruptureSetFileName);
-		this.setRuptureSetFile(rupSetFile);
+	public NZSHM22_AbstractInversionRunner setRuptureSetFile(String ruptureSetFileName) {
+		this.rupSetFile = new File(ruptureSetFileName);
 		return this;
 	}
 
@@ -439,6 +438,21 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) {
 		this.rupSetFile = ruptureSetFile;
 		return this;
+	}
+
+	public NZSHM22_AbstractInversionRunner setRuptureSetArchiveInput(ArchiveInput archiveInput) {
+		this.rupSetInput = archiveInput;
+		return this;
+	}
+
+	public ArchiveInput getRupSetInput() throws IOException {
+		if (rupSetInput != null) {
+			return rupSetInput;
+		}
+		if (rupSetFile != null) {
+			return new ArchiveInput.ZipFileInput(rupSetFile);
+		}
+		throw new IllegalStateException("no rupture set specified");
 	}
 
 	public double[] loadRates(String path) throws IOException {

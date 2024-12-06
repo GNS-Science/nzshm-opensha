@@ -198,7 +198,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
 
-        rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(rupSetFile, branch);
+        rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 

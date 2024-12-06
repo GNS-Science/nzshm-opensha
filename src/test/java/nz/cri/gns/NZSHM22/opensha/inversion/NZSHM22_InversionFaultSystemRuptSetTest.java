@@ -10,6 +10,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SlipRateFactors;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -17,26 +18,17 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
 public class NZSHM22_InversionFaultSystemRuptSetTest {
 
-    public File modularRupSetFile() throws URISyntaxException {
-        URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("ModularAlpineVernonInversionSolution.zip");
-        return new File(alpineVernonRupturesUrl.toURI());
-    }
-
-    public FaultSystemRupSet modularRupSet() throws URISyntaxException, IOException {
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(modularRupSetFile());
-        NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
-        branch.setValue(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
-        rupSet.addModule(branch);
-        return rupSet;
+    public static FaultSystemRupSet modularRupSet() throws DocumentException, IOException {
+        NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
+        NZSHM22_ScalingRelationshipNode scalingNode = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+        FaultSystemRupSet rupSet = TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, scalingNode);
+        return NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
     }
 
     @Test
@@ -62,7 +54,7 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
     }
 
     @Test
-    public void recalcMagsTest() throws URISyntaxException, IOException {
+    public void recalcMagsTest() throws IOException, DocumentException {
         FaultSystemRupSet rupSet =  modularRupSet();
 
         // orgMags were calculated with SimplifiedScalingRelationship: crustal, 4.0, 4.1
@@ -79,7 +71,7 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
 
         // to recreate original values
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
-        scaling.setupCrustal(4.0, 4.1);
+        scaling.setupCrustal(4.0, 4.0);
         scalingNode.setScalingRelationship(scaling);
         branch.setValue(scalingNode);
         rupSet = NZSHM22_InversionFaultSystemRuptSet.recalcMags(rupSet, branch);

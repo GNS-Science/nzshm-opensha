@@ -1,45 +1,37 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
 import static org.junit.Assert.*;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.faultSurface.FaultSection;
 
 import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
 import java.util.*;
 
 public class NZSHM22_DeformationModelsTest {
 
-    protected NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, DocumentException, IOException {
-        URL alpineVernonRupturesUrl = Thread.currentThread().getContextClassLoader().getResource("AlpineVernonInversionSolution.zip");
-        FaultSystemRupSet rupSet = FaultSystemSolution.load(new File(alpineVernonRupturesUrl.toURI())).getRupSet();
-        return NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, NZSHM22_LogicTreeBranch.crustalInversion());
-    }
-
     @Test
-    public void testApplyTo() throws DocumentException, URISyntaxException, IOException {
-        NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
+    public void testApplyTo() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
         assertEquals(0, s.getSectionId());
-        assertEquals(27, s.getOrigAveSlipRate(), 0.00000001);
-        assertEquals(0.027, ruptSet.getSlipRateForSection(0), 0.0000001);
-        assertEquals(0.027, ruptSet.getSlipRateForSection(1), 0.0000001);
+        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(2.0E-4, ruptSet.getSlipRateForSection(0), 0.0000001);
+        assertEquals(2.0E-5, ruptSet.getSlipRateForSection(1), 0.0000001);
 
-        NZSHM22_DeformationModel.DeformationHelper helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
+        NZSHM22_DeformationModel.DeformationHelper helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+            // We bypass loading a file by overriding this method.
             public InputStream getStream() {
-                try {
-                    URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
-                    return new FileInputStream(new File(url.toURI()));
-                } catch (Exception x) {
-                    throw new RuntimeException(x);
+                // simulate a deformationFile where each slip and stdev for each section is equal to the section id
+                StringBuilder builder = new StringBuilder();
+                for (int id = 0; id < ruptSet.getNumSections(); id++) {
+                    builder.append(id + "," + id + "," + id + "," + id + "\n");
                 }
+                String data = builder.toString();
+                return new ByteArrayInputStream(data.getBytes());
             }
         };
 
@@ -55,13 +47,9 @@ public class NZSHM22_DeformationModelsTest {
         }
 
         // Testing that we check the length
-        helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
+        helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
             public List<SlipDeformation> getDeformations() {
-                List<SlipDeformation> result = new ArrayList<>();
-                for (int i = 0; i < ruptSet.getNumSections() + 1; i++) {
-                    result.add(new SlipDeformation());
-                }
-                return result;
+                return new ArrayList<>();
             }
         };
 
@@ -73,12 +61,14 @@ public class NZSHM22_DeformationModelsTest {
         }
         assertEquals("Deformation model length does not match number of sections.", message);
 
-        // Testing that we check the length
-        helper = new NZSHM22_DeformationModel.DeformationHelper("vernonDeformation.dat") {
+        // Testing that we check the parent section id
+        helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
             public List<SlipDeformation> getDeformations() {
                 List<SlipDeformation> result = new ArrayList<>();
                 for (int i = 0; i < ruptSet.getNumSections(); i++) {
-                    result.add(new SlipDeformation());
+                    SlipDeformation deformation = new SlipDeformation();
+                    deformation.sectionId = i;
+                    result.add(deformation);
                 }
                 return result;
             }
@@ -97,7 +87,7 @@ public class NZSHM22_DeformationModelsTest {
     @Test
     public void testLoad() {
         for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
-            System.out.println(model.name());
+            // System.out.println(model.name());
             model.load();
         }
     }
@@ -106,7 +96,7 @@ public class NZSHM22_DeformationModelsTest {
     public void testDuplicateFileNames() {
         Set<String> seen = new HashSet<>();
         for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
-            System.out.println(model.name());
+            // System.out.println(model.name());
             assert (!seen.contains(model.getFileName()));
             seen.add(model.getFileName());
         }
@@ -116,11 +106,11 @@ public class NZSHM22_DeformationModelsTest {
         StringBuilder s = new StringBuilder();
         BufferedReader in = new BufferedReader(new InputStreamReader(model.helper.getStream()));
         String line;
-        do{
+        do {
             line = in.readLine();
             s.append(line);
             s.append('\n');
-        }while (line != null);
+        } while (line != null);
         return s.toString();
     }
 
@@ -128,7 +118,7 @@ public class NZSHM22_DeformationModelsTest {
     public void testDuplicateFiles() throws IOException {
         Map<String, NZSHM22_DeformationModel> hashes = new HashMap<>();
         for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
-            if(model == NZSHM22_DeformationModel.FAULT_MODEL){
+            if (model == NZSHM22_DeformationModel.FAULT_MODEL) {
                 continue;
             }
             System.out.println(model.name());

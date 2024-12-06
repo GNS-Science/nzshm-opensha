@@ -24,12 +24,18 @@ public class NZSHM22_ReportPageGen {
     List<AbstractRupSetPlot> plots = null;
     boolean fillSurfaces = false;
     FaultSystemRupSet rupSet = null;
+    FaultSystemSolution solution = null;
 
     public NZSHM22_ReportPageGen() {
     }
 
     public NZSHM22_ReportPageGen setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public NZSHM22_ReportPageGen setSolution(FaultSystemSolution solution) {
+        this.solution = solution;
         return this;
     }
 
@@ -173,7 +179,7 @@ public class NZSHM22_ReportPageGen {
     		System.err.println("Warning: Execution environment has only " + available + " processors allocated. Report threading is disabled.");
     	}
     	
-        FaultSystemSolution solution = FaultSystemSolution.load(new File(solutionPath));
+        FaultSystemSolution solution = this.solution != null? this.solution : FaultSystemSolution.load(new File(solutionPath));
         addNamedFaults(solution.getRupSet());
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
 

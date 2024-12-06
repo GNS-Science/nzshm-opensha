@@ -5,10 +5,13 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.io.archive.ArchiveInput;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ModuleArchive;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +30,16 @@ public class TestHelpers {
         archive = new ModuleArchive<>(new ZipFile(file), module.getClass());
 
         return archive.getModule(module.getClass());
+    }
+
+    /**
+     * Creates a rupture set for tests that are concerned with fault sections rather than ruptures.
+     *
+     * @param faultModel
+     * @return
+     */
+    public static FaultSystemRupSet createRupSetForSections(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
+        return makeRupSet(faultModel, ScalingRelationships.SHAW_2009_MOD);
     }
 
     public static FaultSystemRupSet makeRupSet(NZSHM22_FaultModels faultModel, RupSetScalingRelationship scalingRelationship) throws DocumentException, IOException {
@@ -54,6 +67,12 @@ public class TestHelpers {
                 .forScalingRelationship(scalingRelationship)
                 .addModule(branch)
                 .build();
+    }
+
+    public static ArchiveInput archiveInput(FaultSystemRupSet rupSet) throws IOException {
+        ArchiveOutput.InMemoryZipOutput out = new ArchiveOutput.InMemoryZipOutput(true);
+        rupSet.getArchive().write(out);
+        return out.getCompletedInput();
     }
 
 }
