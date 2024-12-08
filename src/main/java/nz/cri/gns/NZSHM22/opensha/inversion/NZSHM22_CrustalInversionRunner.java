@@ -14,11 +14,15 @@ import com.google.common.base.Preconditions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
+import scratch.UCERF3.utils.FaultSectionDataWriter;
+import scratch.UCERF3.utils.U3FaultSystemIO;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -200,6 +204,24 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         rupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
 
+        rupSet.removeRuptures();
+       // rupSet.getFaultSectionDataList().forEach(s -> s.setSectionName(s.getSectionName().replace("Subsection ", "")));
+        Set<String> names = new HashSet<>();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+
+            section.setSectionName(section.getSectionId() + " " + section.getSectionName());
+        }
+      //  Preconditions.checkState(names.size() == rupSet.getNumSections());
+        U3FaultSystemIO.writeRupSet(rupSet, new File("/tmp/NZSHM_crustal_u3_use_this_instead.zip"));
+
+        List<String> metaData = new ArrayList<>();
+        metaData.add("NZSHM22 crustal fault sub sections");
+        metaData.add("fault_model: CFM_1_0A_DOM_SANSTVZ");
+        metaData.add("depth_scaling_tvz: 0.667");
+        metaData.add("depth_scaling_sans: 0.8");
+
+        FaultSectionDataWriter.writeSectionsToFile(rupSet.getFaultSectionDataList(), metaData, new File("/tmp/asciitest.txt"), false);
+
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 
         // this contains all inversion weights
@@ -226,8 +248,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
 
         solutionMfdsV2 = ((NZSHM22_CrustalInversionTargetMFDs) inversionConfiguration.getInversionTargetMfds())
-                .getReportingMFDConstraintComponentsV2();        
-        
+                .getReportingMFDConstraintComponentsV2();
+
         // set up slip rate config
         inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
         inversionConfiguration.setUnmodifiedSlipRateStdvs(this.unmodifiedSlipRateStdvs);

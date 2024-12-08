@@ -7,14 +7,12 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.MultiRuptureJump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +49,14 @@ public class ManipulatedClusterRupture extends ClusterRupture {
             return ((DownDipFaultSubSectionCluster) cluster).last();
         }
         return cluster.subSects.get(cluster.subSects.size() - 1);
+    }
+
+    static boolean isCrustal(FaultSection section) {
+        return !section.getSectionName().contains("row:");
+    }
+
+    static boolean isSubduction(FaultSection section) {
+        return section.getSectionName().contains("row:");
     }
 
     static ImmutableList<Jump> makeInternalJumps(
@@ -120,6 +126,14 @@ public class ManipulatedClusterRupture extends ClusterRupture {
         return new ManipulatedClusterRupture(ruptureA.clusters, ruptureA.internalJumps, newSplays, newUnique, ruptureA.internalUnique);
     }
 
+    public static ManipulatedClusterRupture splay(
+            ClusterRupture rupture,
+            ClusterRupture splayRupture) {
+        Jump jump = new Jump(rupture.clusters[0].startSect, rupture.clusters[0], splayRupture.clusters[0].startSect, splayRupture.clusters[0], 5);
+        return splay(rupture, splayRupture, jump);
+    }
+
+
     /**
      * Safely reverses ruptures that may have a subduction cluster.
      *
@@ -136,6 +150,58 @@ public class ManipulatedClusterRupture extends ClusterRupture {
         Collections.reverse(jumps);
 
         return new ManipulatedClusterRupture(clusterList.toArray(new FaultSubsectionCluster[0]), ImmutableList.copyOf(jumps), rupture.unique);
+    }
+
+    public static ManipulatedClusterRupture makeFromClusters(List<FaultSubsectionCluster> clusters) {
+        FaultSubsectionCluster[] clusterArray = clusters.toArray(new FaultSubsectionCluster[]{});
+        List<Jump> jumps = new ArrayList<>();
+        UniqueRupture uniqueRupture = clusters.stream().map(UniqueRupture::forClusters).reduce(UniqueRupture::add).get();
+
+        for (int c = 1; c < clusterArray.length; c++) {
+            FaultSubsectionCluster fromCluster = clusterArray[c - 1];
+            FaultSection from = last(fromCluster);
+            FaultSubsectionCluster toCluster = clusterArray[c];
+            FaultSection to = first(toCluster);
+            double distance = 5;
+            jumps.add(new Jump(from, fromCluster, to, toCluster, distance));
+        }
+
+        return new ManipulatedClusterRupture(clusterArray, ImmutableList.copyOf(jumps), uniqueRupture);
+    }
+
+    public static ManipulatedClusterRupture makeFromSections(List<FaultSection> sections) {
+        List<FaultSubsectionCluster> clusters = sections.stream()
+                .collect(Collectors.groupingBy(FaultSection::getParentSectionId))
+                .values().stream()
+                .peek(list -> list.sort(Comparator.comparing(FaultSection::getSectionId)))
+                .map(FaultSubsectionCluster::new)
+                .collect(Collectors.toList());
+        return makeFromClusters(clusters);
+    }
+
+    /**
+     * Can be used if we get a list of jumbled FaultSections from RSQSim data
+     *
+     * @param sections
+     * @return
+     */
+    public static ClusterRupture makeRupture(List<FaultSection> sections) {
+        ManipulatedClusterRupture crustal = makeFromSections(sections.stream().filter(ManipulatedClusterRupture::isCrustal).collect(Collectors.toList()));
+        ManipulatedClusterRupture subduction = makeFromSections(sections.stream().filter(ManipulatedClusterRupture::isSubduction).collect(Collectors.toList()));
+        return splay(subduction, crustal);
+    }
+
+    /**
+     * Splits a MultiRuptureJump into two separate ruptures so that we can apply Coulomb filters
+     * @param jump
+     * @return
+     */
+    public static MultiRuptureJump reconstructJump(ClusterRupture rupture) {
+        List<FaultSection> fromSections = Arrays.stream(rupture.clusters).flatMap(c -> c.subSects.stream()).collect(Collectors.toList());
+        List<FaultSection> toSections = rupture.splays.values().asList().get(0).buildOrderedSectionList();
+        ClusterRupture fromRupture = ManipulatedClusterRupture.makeFromSections(fromSections);
+        ClusterRupture toRupture = ManipulatedClusterRupture.makeFromSections(toSections);
+        return new MultiRuptureJump(fromSections.get(0), fromRupture, toSections.get(0), toRupture, 10 );
     }
 
 }

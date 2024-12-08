@@ -722,7 +722,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 	 */
 	public FaultSystemSolution runInversion() throws IOException, DocumentException {
 
-		UCERF3InversionConfiguration.setMagNorm(8.1);
+		//UCERF3InversionConfiguration.setMagNorm(8.1);
 
 		configure();
 		validateConfig();
