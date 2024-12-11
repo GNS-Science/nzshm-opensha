@@ -145,11 +145,11 @@ public class RsqSimMain implements Closeable {
         log("- joint events " + eventLoader.jointEvents.size());
         log("- reconstructed joint ruptures " + events.size());
 
-        List<RsqSimEventLoader.Event> singleCrustalJointRuptures = eventLoader.makeSingleJointRuptures(events);
+        List<RsqSimEventLoader.Event> allSingleCrustalJointRuptures = eventLoader.makeSingleJointRuptures(events);
 
-        log("- single crustal joint ruptures " + singleCrustalJointRuptures.size());
+        log("- single crustal joint ruptures " + allSingleCrustalJointRuptures.size());
 
-        singleCrustalJointRuptures = singleCrustalJointRuptures.stream().filter(event ->
+        List<RsqSimEventLoader.Event> singleCrustalJointRuptures = allSingleCrustalJointRuptures.stream().filter(event ->
                 event.sections.stream()
                         .filter(s -> !s.getSectionName().contains("row:"))
                         .mapToDouble(s -> s.getArea(false))
@@ -170,7 +170,7 @@ public class RsqSimMain implements Closeable {
 
         //  List<List<PlausibilityResult>> stiffness = ruptures.parallelStream().map(r -> r.jump).map(tester::applyCoulomb).collect(Collectors.toList());
         //System.out.println("passes: " +stiffness.stream().map(s -> s.get(2).isPass()).filter(p -> p).count());
-        List<RsqSimEventLoader.Event> passes = singleCrustalJointRuptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
+        List<RsqSimEventLoader.Event> passes = allSingleCrustalJointRuptures.parallelStream().filter(event -> tester.applyCoulomb(event.jump).get(2).isPass()).collect(Collectors.toList());
         log("- original filter passes: " + passes.size());
 
         List<ClusterRupture> clusterRuptures = singleCrustalJointRuptures.stream().map(event -> ManipulatedClusterRupture.makeRupture(event.sections)).collect(Collectors.toList());
@@ -201,7 +201,7 @@ public class RsqSimMain implements Closeable {
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
- //       processBruce5942();
-       processCanterbury();
+  //     processBruce5942();
+      processCanterbury();
     }
 }
