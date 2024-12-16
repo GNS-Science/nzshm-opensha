@@ -760,16 +760,16 @@ public abstract class NZSHM22_AbstractInversionRunner {
 		// ....
 		ProgressTrackingCompletionCriteria progress = new ProgressTrackingCompletionCriteria(completionCriteria);
 
-		List<CompletionCriteria> subCompletionCriteriaList = new ArrayList<>();
-		if (selectionIterations != null) {
-			subCompletionCriteriaList.add(new IterationCompletionCriteria(selectionIterations));
-		}
-		if (!repeatable){
-			subCompletionCriteriaList.add(TimeCompletionCriteria.getInSeconds(selectionInterval));
-		}
 		// this is the "sub completion criteria" - the amount of time and/or iterations
 		// between solution selection/synchronization
-		CompletionCriteria subCompletionCriteria = new CompoundCompletionCriteria(subCompletionCriteriaList);
+		// Note: since OpenSHA breaks if the subcompletionCriteria is a compound completion criteria, we only allow
+		// one criteria here. See https://github.com/GNS-Science/nzshm-opensha/issues/360
+		CompletionCriteria subCompletionCriteria;
+		if (selectionIterations != null) {
+			subCompletionCriteria = new IterationCompletionCriteria(selectionIterations);
+		} else {
+			subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
+		}
 
 		initialState = inversionInputGenerator.getInitialSolution();
 
