@@ -38,14 +38,14 @@ repeat until completion criteria {
 ### Completion Criteria
 
 These criteria determine the overall length of the inversion. All three criteria can be set up, and the inversion will end when one of them is satisfied at the beginning of a round.
-- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration.
+- `setInversionMinutes()` or `setInversionSeconds()` sets a minimum duration, default 60 seconds.
 - `setIterationCompletionCriteria()` sets a minimum number of iterations.
 - `setEnergyChangeCompletionCriteria()` sets an energy change condition.
 
 ### Selection Completion Criteria
 
-The length of each `round` is controlled by selection completion criteria. Both can be set up, and each thread will end when one of them is satisfied at the beginning of an iteration step.
-- `setSelectionInterval()` minimum round duration in seconds.
+The length of each `round` is controlled by selection completion criteria. Only one selection criteria can be set up, and each thread will end when the criteria is satisfied at the beginning of an iteration step. If selection iterations are set up, the selection interval will be ignored.
+- `setSelectionInterval()` minimum round duration in seconds, default 10 seconds.
 - `setSelectionIterations()` the minimum number of iterations.
 
 ### Parallelism
