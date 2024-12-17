@@ -7,10 +7,12 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.GitVersion;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
@@ -152,6 +154,12 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             description += filter.toDescription();
         }
         return description;
+    }
+
+    public static BuildInfoModule createBuildInfo() throws IOException {
+        BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
+        buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
+        return buildInfo;
     }
     
     public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException ;

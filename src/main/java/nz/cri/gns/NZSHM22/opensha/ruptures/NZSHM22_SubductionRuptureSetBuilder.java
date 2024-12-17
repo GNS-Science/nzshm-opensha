@@ -280,6 +280,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
                         .addModule(getPlausibilityConfig().getDistAzCalc())
                         .addModule(getPlausibilityConfig())
                         .addModule(getLogicTreeBranch(FaultRegime.SUBDUCTION))
+                        .addModule(createBuildInfo())
                         .build();
 
         return rupSet;

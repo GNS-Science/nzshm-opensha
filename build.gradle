@@ -5,6 +5,8 @@ sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 compileJava.options.encoding = "UTF-8"
 
+apply from: '../opensha/build-git.gradle'
+
 dependencies {
     /* no remote repo */
     implementation files('python/share/py4j/py4j0.10.9.1.jar', //Py4j jar installed locally  via `pip install py4j`
@@ -74,11 +76,28 @@ dependencies {
 }
 
 task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
+
+    doFirst {->
+        writeBuildFiles("/nzshm-build")
+    }
+    doLast {
+        delete new File(projectDir, "nzshm-build.githash")
+        delete new File(projectDir, "nzshm-build.gitbranch")
+        delete new File(projectDir, "nzshm-build.gitremoteurl")
+        delete new File(projectDir, "nzshm-build.date")
+    }
+
     baseName = project.name + '-all'
     from {
         configurations.apiResolvable.collect { it.isDirectory() ? it : zipTree(it).matching {
             exclude { it.path.contains('META-INF') }
         }}
+    }
+    from(project.projectDir) {
+        include 'nzshm-build.githash'
+        include 'nzshm-build.gitbranch'
+        include 'nzshm-build.gitremoteurl'
+        include 'nzshm-build.date'
     }
 
     // include compiled source from this project

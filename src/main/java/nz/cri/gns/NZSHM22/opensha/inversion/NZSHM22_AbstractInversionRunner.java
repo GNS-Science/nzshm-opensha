@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.*;
 
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
@@ -15,6 +16,7 @@ import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
+import org.opensha.commons.util.GitVersion;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -23,6 +25,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
+import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
@@ -874,6 +877,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
 		solution = new FaultSystemSolution(rupSet, solution_adjusted);
 		solution.addModule(progress.getProgress());
+		solution.addModule(NZSHM22_AbstractRuptureSetBuilder.createBuildInfo());
 		if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
 			solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
 		}
