@@ -1,16 +1,18 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 import java.awt.geom.Point2D;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +21,15 @@ import static org.junit.Assert.*;
 public class NZSHM22_SubductionInversionTargetMFDsTest {
 
     public static NZSHM22_InversionFaultSystemRuptSet loadRupSet() throws URISyntaxException, DocumentException, IOException {
-        URL first100 = Thread.currentThread().getContextClassLoader().getResource("RupSet_Az_FM(CFM_0_9_SANSTVZ_D90)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_mxFS(100)_mxAzCh(60.0)_mxCmAzCh(560.0)_mxJpDs(5.0)_mxTtAzCh(60.0)_thFc(0.2).zip");
-        return NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(new File(first100.toURI()), NZSHM22_LogicTreeBranch.subductionInversion());
+        FaultSystemRupSet rupSet = TestHelpers.createRupSet(
+                NZSHM22_FaultModels.SBD_0_2_HKR_LR_30,
+                ScalingRelationships.TMG_SUB_2017,
+                List.of(
+                        List.of(1,2,3,4,5,6,7,8,9),
+                        List.of(4,5,6,10,11,12)
+                ));
+        NZSHM22_LogicTreeBranch ltb  = NZSHM22_LogicTreeBranch.subductionInversion();
+        return NZSHM22_InversionFaultSystemRuptSet.fromExistingSubductionRuptureSet(rupSet, ltb);
     }
 
     public static List<Double> getPoints(EvenlyDiscretizedFunc func) {
@@ -44,7 +53,8 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
 
         assertEquals("targetOnFaultSupraSeisMFD", actualConstraint.getName());
         assertNull(actualConstraint.getRegion());
-        assertEquals(List.of(5.05, 1.0E-20, 5.1499999999999995, 1.0E-20, 5.25, 1.0E-20, 5.35, 1.0E-20, 5.45, 1.0E-20, 5.55, 1.0E-20, 5.65, 1.0E-20, 5.75, 1.0E-20, 5.85, 1.0E-20, 5.95, 1.0E-20, 6.05, 1.0E-20, 6.15, 1.0E-20, 6.25, 1.0E-20, 6.35, 1.0E-20, 6.45, 1.0E-20, 6.55, 1.0E-20, 6.65, 1.0E-20, 6.75, 1.0E-20, 6.85, 1.0E-20, 6.95, 1.0E-20, 7.05, 9.884813984399915E-4, 7.15, 7.673058353801398E-4, 7.25, 5.956189422862039E-4, 7.35, 4.6234748655909656E-4, 7.45, 3.58895903322022E-4, 7.55, 2.785919101235696E-4, 7.65, 2.1625616694949997E-4, 7.75, 1.6786822604772256E-4, 7.85, 1.3030722644311824E-4, 7.95, 1.0115060880235229E-4, 8.05, 7.85178684280625E-5, 8.15, 6.094926897111459E-5, 8.25, 4.731169429945435E-5, 8.35, 0.0, 8.45, 0.0, 8.55, 0.0, 8.65, 0.0, 8.75, 0.0, 8.85, 0.0, 8.95, 0.0, 9.05, 0.0, 9.15, 0.0, 9.25, 0.0, 9.35, 0.0, 9.45, 0.0, 9.55, 0.0, 9.65, 0.0),
+        System.out.println(getPoints(actualConstraint));
+        assertEquals(List.of(5.05, 1.0E-20, 5.1499999999999995, 1.0E-20, 5.25, 1.0E-20, 5.35, 1.0E-20, 5.45, 1.0E-20, 5.55, 1.0E-20, 5.65, 1.0E-20, 5.75, 1.0E-20, 5.85, 1.0E-20, 5.95, 1.0E-20, 6.05, 1.0E-20, 6.15, 1.0E-20, 6.25, 1.0E-20, 6.35, 1.0E-20, 6.45, 1.0E-20, 6.55, 1.0E-20, 6.65, 1.0E-20, 6.75, 1.0E-20, 6.85, 1.0E-20, 6.95, 1.0E-20, 7.05, 9.896157257580686E-4, 7.15, 7.681863536901102E-4, 7.25, 5.963024420854573E-4, 7.35, 4.6287805130748323E-4, 7.45, 3.59307752678142E-4, 7.55, 2.7891160699874317E-4, 7.65, 0.0, 7.75, 0.0, 7.85, 0.0, 7.95, 0.0, 8.05, 0.0, 8.15, 0.0, 8.25, 0.0, 8.35, 0.0, 8.45, 0.0, 8.55, 0.0, 8.65, 0.0, 8.75, 0.0, 8.85, 0.0, 8.95, 0.0, 9.05, 0.0, 9.15, 0.0, 9.25, 0.0, 9.35, 0.0, 9.45, 0.0, 9.55, 0.0, 9.65, 0.0),
                 getPoints(actualConstraint));
     }
 }
