@@ -53,7 +53,7 @@ jobs:
         ./gradlew localTests integrationTest
 
     - name: Fail on changes
-      run: git --no-pager diff --exit-code \\ {echo "::error title=Linting::Please run gradle task spotlessApply before pushing."; exit 1;}
+      run: git --no-pager diff --exit-code || {echo "::error title=Linting::Please run gradle task spotlessApply before pushing."; exit 1;}
 
     - name: Set version env var
       if: startsWith(github.ref, 'refs/tags/release')
