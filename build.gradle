@@ -1,6 +1,7 @@
 plugins {
     id 'pmd'
     id 'com.diffplug.spotless' version '6.13.0'
+    id 'jacoco'
 }
 
 apply plugin: 'java-library'
@@ -174,3 +175,13 @@ spotless {
         googleJavaFormat().aosp()
     }
 }
+
+jacocoTestReport {
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+
