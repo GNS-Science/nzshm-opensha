@@ -45,6 +45,10 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
 
+    - uses: axel-op/googlejavaformat-action@v3
+      with:
+        args: "--set-exit-if-changed"
+
     - name: Build with Gradle
       run: |
         cd main
