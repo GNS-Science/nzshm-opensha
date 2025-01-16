@@ -1,3 +1,7 @@
+plugins {
+    id 'pmd'
+    id 'com.diffplug.spotless' version '6.13.0'
+}
 
 apply plugin: 'java-library'
 
@@ -156,3 +160,17 @@ task localTests(type: Test, dependsOn: testClasses) {
     // also exclude all test classes ending in "_FT" (e.g. for "functional test")
 }
 
+// PMD enforces Java best practices https://docs.pmd-code.org/latest/pmd_rules_java.html
+pmd {
+    // We have hundreds of failures at the moment. Set this to false once it's fixed.
+    ignoreFailures = true
+}
+
+// spotless enforces Java style rules
+spotless {
+    java {
+        removeUnusedImports()
+        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
+        googleJavaFormat().aosp()
+    }
+}
