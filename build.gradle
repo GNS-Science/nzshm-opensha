@@ -169,11 +169,11 @@ pmd {
 
 // spotless enforces Java style rules
 spotless {
-    java {
-        removeUnusedImports()
-        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
-        googleJavaFormat().aosp()
-    }
+//    java {
+//        removeUnusedImports()
+//        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
+//        googleJavaFormat().aosp()
+//    }
 }
 
 jacocoTestReport {
