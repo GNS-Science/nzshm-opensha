@@ -50,7 +50,9 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew check -x test
-        ./gradlew localTests integrationTest jacocoTestReport
+        ./gradlew localTests integrationTest
+        ./gradlew jacocoTestReport
+        ls -la ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
 
     - name: Add coverage to PR
       id: jacoco
