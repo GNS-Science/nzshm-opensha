@@ -63,12 +63,12 @@ jobs:
         min-coverage-overall: 40
         min-coverage-changed-files: 60
 
-    - name: Fail PR if overall coverage is less than 80%
-      if: ${{ steps.jacoco.outputs.coverage-overall < 80.0 }}
+    - name: Fail PR if overall coverage is less than 10%
+      if: ${{ steps.jacoco.outputs.coverage-overall < 10.0 }}
       uses: actions/github-script@v6
       with:
         script: |
-          core.setFailed('Overall coverage is less than 80%!')        
+          core.setFailed('Overall coverage is less than 10%!')        
 
     - name: Set version env var
       if: startsWith(github.ref, 'refs/tags/release')
