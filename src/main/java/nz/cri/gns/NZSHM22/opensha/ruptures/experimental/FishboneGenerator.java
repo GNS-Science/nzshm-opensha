@@ -3,6 +3,13 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 import com.bbn.openmap.geo.Geo;
 import com.bbn.openmap.geo.Rotation;
 import com.google.common.base.Preconditions;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import org.jfree.data.Range;
@@ -16,18 +23,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.RuptureSurface;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-
-/**
- * Generates fishbone plots for joint ruptures. Experimental.
- */
+/** Generates fishbone plots for joint ruptures. Experimental. */
 public class FishboneGenerator {
 
     public static class FishbonePlot {
@@ -39,9 +35,12 @@ public class FishboneGenerator {
             sectChars = new ArrayList<>();
         }
 
-        public static void plotRotatedSection(FishboneGeometry.RotatedSection sect, List<XY_DataSet> funcs,
-                                             List<PlotCurveCharacterstics> chars, PlotCurveCharacterstics traceChar,
-                                             PlotCurveCharacterstics outlineChar) {
+        public static void plotRotatedSection(
+                FishboneGeometry.RotatedSection sect,
+                List<XY_DataSet> funcs,
+                List<PlotCurveCharacterstics> chars,
+                PlotCurveCharacterstics traceChar,
+                PlotCurveCharacterstics outlineChar) {
             if (sect.section.getAveDip() < 90d) {
                 DefaultXY_DataSet xy = new DefaultXY_DataSet();
                 for (Geo g : sect.rotatedSurface) {
@@ -60,9 +59,12 @@ public class FishboneGenerator {
             chars.add(traceChar);
         }
 
-        public static void plotSection(FishboneGeometry.RotatedSection sect, List<XY_DataSet> funcs,
-                                       List<PlotCurveCharacterstics> chars, PlotCurveCharacterstics traceChar,
-                                       PlotCurveCharacterstics outlineChar) {
+        public static void plotSection(
+                FishboneGeometry.RotatedSection sect,
+                List<XY_DataSet> funcs,
+                List<PlotCurveCharacterstics> chars,
+                PlotCurveCharacterstics traceChar,
+                PlotCurveCharacterstics outlineChar) {
             if (sect.section.getAveDip() < 90d) {
                 DefaultXY_DataSet xy = new DefaultXY_DataSet();
                 for (Location g : sect.surface) {
@@ -82,8 +84,7 @@ public class FishboneGenerator {
         }
 
         protected void plotFishboneComponent(
-                FishboneGeometry.RotatedSection section,
-                PlotCurveCharacterstics traceChar) {
+                FishboneGeometry.RotatedSection section, PlotCurveCharacterstics traceChar) {
             DefaultXY_DataSet xy = new DefaultXY_DataSet();
             for (int s = 0; s < section.surface.size(); s++) {
                 Geo g = section.rotatedSurface.get(s);
@@ -97,10 +98,10 @@ public class FishboneGenerator {
 
         public void plotFishbone(FishboneGeometry geometry) {
 
-            PlotCurveCharacterstics subductionChar = new PlotCurveCharacterstics(
-                    PlotLineType.SOLID, 1f, Color.RED);
-            PlotCurveCharacterstics outlineChar = new PlotCurveCharacterstics(
-                    PlotLineType.SOLID, 1f, Color.GRAY);
+            PlotCurveCharacterstics subductionChar =
+                    new PlotCurveCharacterstics(PlotLineType.SOLID, 1f, Color.RED);
+            PlotCurveCharacterstics outlineChar =
+                    new PlotCurveCharacterstics(PlotLineType.SOLID, 1f, Color.GRAY);
 
             for (FishboneGeometry.RotatedSection section : geometry.sections) {
                 if (section.crossesPlane) {
@@ -114,13 +115,13 @@ public class FishboneGenerator {
         }
 
         public void plotDebugSlice(FishboneGeometry geometry) {
-            PlotCurveCharacterstics traceChar = new PlotCurveCharacterstics(
-                    PlotLineType.SOLID, 3f, Color.RED);
-            PlotCurveCharacterstics outlineChar = new PlotCurveCharacterstics(
-                    PlotLineType.SOLID, 1f, Color.GRAY);
+            PlotCurveCharacterstics traceChar =
+                    new PlotCurveCharacterstics(PlotLineType.SOLID, 3f, Color.RED);
+            PlotCurveCharacterstics outlineChar =
+                    new PlotCurveCharacterstics(PlotLineType.SOLID, 1f, Color.GRAY);
 
-            PlotCurveCharacterstics greytraceChar = new PlotCurveCharacterstics(
-                    PlotLineType.SOLID, 3f, Color.GRAY);
+            PlotCurveCharacterstics greytraceChar =
+                    new PlotCurveCharacterstics(PlotLineType.SOLID, 3f, Color.GRAY);
 
             for (FishboneGeometry.RotatedSection section : geometry.sections) {
                 plotSection(section, sectFuncs, sectChars, greytraceChar, outlineChar);
@@ -133,7 +134,8 @@ public class FishboneGenerator {
             }
         }
 
-        public static void plot(File outDior, String prefix, PlotSpec spec, boolean isLatLon) throws IOException {
+        public static void plot(File outDior, String prefix, PlotSpec spec, boolean isLatLon)
+                throws IOException {
             DataUtils.MinMaxAveTracker latTrack = new DataUtils.MinMaxAveTracker();
             DataUtils.MinMaxAveTracker lonTrack = new DataUtils.MinMaxAveTracker();
             for (PlotElement xy : spec.getPlotElems()) {
@@ -173,7 +175,6 @@ public class FishboneGenerator {
 
             PlotUtils.writePlots(outDior, prefix, gp, width, isLatLon, true, false, false);
         }
-
     }
 
     public static class FishboneGeometry {
@@ -183,19 +184,24 @@ public class FishboneGenerator {
         public double latitudeOrigin;
 
         public FishboneGeometry(ClusterRupture rupture, int slice) {
-            FaultSection pivot = ((DownDipFaultSubSectionCluster) rupture.clusters[0]).getTraceSections().get(slice);
+            FaultSection pivot =
+                    ((DownDipFaultSubSectionCluster) rupture.clusters[0])
+                            .getTraceSections()
+                            .get(slice);
             Location first = pivot.getFaultTrace().first();
             Location last = pivot.getFaultTrace().last();
 
             double azimuth = LocationUtils.azimuth(first, last);
-            this.rotation = new Rotation(new Geo(first.lat, first.lon), Math.toRadians(azimuth + 90));
+            this.rotation =
+                    new Rotation(new Geo(first.lat, first.lon), Math.toRadians(azimuth + 90));
 
             Geo lastRot = rotation.rotate(new Geo(last.lat, last.lon));
             this.longitudePlane = first.lon + ((lastRot.getLongitude() - first.lon) / 2);
             this.latitudeOrigin = first.lat;
-            this.sections = rupture.buildOrderedSectionList().stream().
-                    map(RotatedSection::new).
-                    collect(Collectors.toList());
+            this.sections =
+                    rupture.buildOrderedSectionList().stream()
+                            .map(RotatedSection::new)
+                            .collect(Collectors.toList());
         }
 
         public Geo rotate(Location location) {
@@ -229,19 +235,20 @@ public class FishboneGenerator {
                 this.section = section;
                 RuptureSurface surface = section.getFaultSurface(1, false, false);
                 this.surface = surface.getPerimeter();
-                rotatedSurface = this.surface.stream().
-                        map(FishboneGeometry.this::rotate).
-                        collect(Collectors.toList());
-                rotatedTrace = section.getFaultTrace().stream().
-                        map(FishboneGeometry.this::rotate).
-                        collect(Collectors.toList());
+                rotatedSurface =
+                        this.surface.stream()
+                                .map(FishboneGeometry.this::rotate)
+                                .collect(Collectors.toList());
+                rotatedTrace =
+                        section.getFaultTrace().stream()
+                                .map(FishboneGeometry.this::rotate)
+                                .collect(Collectors.toList());
                 this.crossesPlane = crossesPlane(rotatedSurface);
             }
 
             public double getLatitudeOrigin() {
                 return FishboneGeometry.this.latitudeOrigin;
             }
-
         }
     }
 
@@ -253,10 +260,16 @@ public class FishboneGenerator {
         FishbonePlot overviewPlot = new FishbonePlot();
         overviewPlot.plotDebugSlice(geometry);
 
-        return new PlotSpec(overviewPlot.sectFuncs, overviewPlot.sectChars, "fishbone debug", "Longitude", "Latitude");
+        return new PlotSpec(
+                overviewPlot.sectFuncs,
+                overviewPlot.sectChars,
+                "fishbone debug",
+                "Longitude",
+                "Latitude");
     }
 
-    public static void plotTopDownDebug(ClusterRupture rupture, int slice, File path, String prefix) throws IOException {
+    public static void plotTopDownDebug(ClusterRupture rupture, int slice, File path, String prefix)
+            throws IOException {
         PlotSpec spec = buildTopDownDebug(rupture, slice);
         FishbonePlot.plot(path, prefix, spec, true);
     }
@@ -269,28 +282,35 @@ public class FishboneGenerator {
         FishbonePlot fishbonePlot = new FishbonePlot();
         fishbonePlot.plotFishbone(geometry);
 
-        return new PlotSpec(fishbonePlot.sectFuncs, fishbonePlot.sectChars, "Fishbone", "Horizontal Distance (km)", "Elevation (km)");
+        return new PlotSpec(
+                fishbonePlot.sectFuncs,
+                fishbonePlot.sectChars,
+                "Fishbone",
+                "Horizontal Distance (km)",
+                "Elevation (km)");
     }
 
-    public static void plotFishbone(ClusterRupture rupture, int slice, File path, String prefix) throws IOException {
+    public static void plotFishbone(ClusterRupture rupture, int slice, File path, String prefix)
+            throws IOException {
         PlotSpec spec = buildFishbone(rupture, slice);
         FishbonePlot.plot(path, prefix, spec, false);
     }
 
     /**
-     * Generates a fishbone plot and a corresponding debug plot for each section in the topmost row of the subduction
-     * cluster.
+     * Generates a fishbone plot and a corresponding debug plot for each section in the topmost row
+     * of the subduction cluster.
+     *
      * @param rupture a joint rupture
      * @param path output directory
      * @param prefix output file prefix
      * @throws IOException
      */
-    public static void plotAll(ClusterRupture rupture, File path, String prefix) throws IOException {
+    public static void plotAll(ClusterRupture rupture, File path, String prefix)
+            throws IOException {
         DownDipFaultSubSectionCluster cluster = (DownDipFaultSubSectionCluster) rupture.clusters[0];
         for (int s = 0; s < cluster.getTraceSections().size(); s++) {
             plotFishbone(rupture, s, path, prefix + s);
-            plotTopDownDebug(rupture, s, path, prefix +"debug"+ s);
+            plotTopDownDebug(rupture, s, path, prefix + "debug" + s);
         }
     }
-
 }

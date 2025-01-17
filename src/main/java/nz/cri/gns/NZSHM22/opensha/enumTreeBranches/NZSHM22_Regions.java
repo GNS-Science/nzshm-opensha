@@ -4,12 +4,11 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
-
-import java.io.IOException;
 
 @JsonAdapter(NZSHM22_Regions.Adapter.class)
 public class NZSHM22_Regions implements LogicTreeNode {
@@ -17,8 +16,7 @@ public class NZSHM22_Regions implements LogicTreeNode {
     protected GriddedRegion sansTvzRegion;
     protected GriddedRegion tvzRegion;
 
-    public NZSHM22_Regions() {
-    }
+    public NZSHM22_Regions() {}
 
     public NZSHM22_Regions(GriddedRegion sans, GriddedRegion tvz) {
         this.sansTvzRegion = sans;

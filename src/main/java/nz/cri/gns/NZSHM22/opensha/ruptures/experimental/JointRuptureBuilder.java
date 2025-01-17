@@ -1,5 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint.ManipulatedClusterRupture;
@@ -8,16 +10,14 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 /**
- * Takes a rupture set with subduction and crustal ruptures and creates a new rupture set with joint ruptures.
- * <p>
- * Creates sequential joint rupture sets. In this case, sequential means that subduction clusters are part of a string
- * of clusters. See JointRuptureBuilderParallel for creating more realistic ruptures.
+ * Takes a rupture set with subduction and crustal ruptures and creates a new rupture set with joint
+ * ruptures.
+ *
+ * <p>Creates sequential joint rupture sets. In this case, sequential means that subduction clusters
+ * are part of a string of clusters. See JointRuptureBuilderParallel for creating more realistic
+ * ruptures.
  */
-
 public class JointRuptureBuilder {
     final List<ClusterRupture> ruptures;
     final SectionDistanceAzimuthCalculator distAzCalc;
@@ -57,28 +57,38 @@ public class JointRuptureBuilder {
         this.jumps = new OneToManyMap<>();
         possibleJumps.stream()
                 .filter(j -> j.fromSection instanceof DownDipFaultSection)
-                .forEach(j -> jumps.append(j.fromSection.getSectionId(), j.toSection.getSectionId()));
+                .forEach(
+                        j ->
+                                jumps.append(
+                                        j.fromSection.getSectionId(), j.toSection.getSectionId()));
         possibleJumps.stream()
                 .filter(j -> j.toSection instanceof DownDipFaultSection)
-                .forEach(j -> jumps.append(j.toSection.getSectionId(), j.fromSection.getSectionId()));
-
+                .forEach(
+                        j ->
+                                jumps.append(
+                                        j.toSection.getSectionId(), j.fromSection.getSectionId()));
 
         // fill targetRuptures with all non-pure-subduction ruptures that can be jumped to
         targetRuptures = new OneToManyMap<>();
         ruptures.stream()
-                .filter(r -> r.clusters.length > 1 || !(r.clusters[0] instanceof DownDipFaultSubSectionCluster))
+                .filter(
+                        r ->
+                                r.clusters.length > 1
+                                        || !(r.clusters[0]
+                                                instanceof DownDipFaultSubSectionCluster))
                 .filter(r -> r.clusters[0].subSects.size() >= crustalMinCount)
-                .forEach(r -> {
-                    int startID = first(r).getSectionId();
-                    if (jumps.values.contains(startID)) {
-                        targetRuptures.append(startID, r);
-                    }
+                .forEach(
+                        r -> {
+                            int startID = first(r).getSectionId();
+                            if (jumps.values.contains(startID)) {
+                                targetRuptures.append(startID, r);
+                            }
 
-                    int endId = last(r).getSectionId();
-                    if (jumps.values.contains(endId)) {
-                        targetRuptures.append(endId, r);
-                    }
-                });
+                            int endId = last(r).getSectionId();
+                            if (jumps.values.contains(endId)) {
+                                targetRuptures.append(endId, r);
+                            }
+                        });
     }
 
     public void stats(List<FaultSection> subSections) {
@@ -90,15 +100,23 @@ public class JointRuptureBuilder {
                 for (Integer to : jumps.get(from)) {
                     targets.addAll(targetRuptures.get(to));
                 }
-                System.out.println("" + fromSection.getParentSectionId() + ":" + fromSection.getSectionId() + " r " + fromSection.getRowIndex() + " count " + targets.size());
+                System.out.println(
+                        ""
+                                + fromSection.getParentSectionId()
+                                + ":"
+                                + fromSection.getSectionId()
+                                + " r "
+                                + fromSection.getRowIndex()
+                                + " count "
+                                + targets.size());
             }
         }
     }
 
     class JointJump {
-        final public int target;
-        final public ClusterRupture rupture;
-        final public ClusterRupture origin;
+        public final int target;
+        public final ClusterRupture rupture;
+        public final ClusterRupture origin;
 
         public JointJump(int target, ClusterRupture rupture) {
             this.origin = null;
@@ -116,63 +134,88 @@ public class JointRuptureBuilder {
     protected List<ClusterRupture> joinRuptures(ClusterRupture subductionRupture) {
         List<ClusterRupture> jointRuptures = new ArrayList<>();
 
-
         jointRuptures.addAll(
                 jumps.get(first(subductionRupture).getSectionId()).stream()
-                        .flatMap(target -> targetRuptures.get(target).stream()
-                                .map(crustal -> new JointJump(target, crustal)))
+                        .flatMap(
+                                target ->
+                                        targetRuptures.get(target).stream()
+                                                .map(crustal -> new JointJump(target, crustal)))
                         .parallel()
-                        .map(jump -> {
-                            if (first(jump.rupture).getSectionId() == jump.target) {
-                                // crustal = ManipulatedClusterRupture.reverse(crustal);
-                                return null;
-                            }
-                            return ManipulatedClusterRupture.join(jump.rupture, subductionRupture, distAzCalc);
-                        }).filter(Objects::nonNull).collect(Collectors.toList()));
-
+                        .map(
+                                jump -> {
+                                    if (first(jump.rupture).getSectionId() == jump.target) {
+                                        // crustal = ManipulatedClusterRupture.reverse(crustal);
+                                        return null;
+                                    }
+                                    return ManipulatedClusterRupture.join(
+                                            jump.rupture, subductionRupture, distAzCalc);
+                                })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()));
 
         List<ClusterRupture> candidates = new ArrayList<>(jointRuptures);
         candidates.add(subductionRupture);
 
         jointRuptures.addAll(
-                candidates.stream().flatMap(
-                                c -> jumps.get(last(c).getSectionId()).stream()
-                                        .flatMap(target -> targetRuptures.get(target).stream()
-                                                .map(crustal -> new JointJump(c, target, crustal)))
-
-
-                        ).parallel()
-                        .map(jump -> {
-                            try {
-                                if (first(jump.rupture).getSectionId() != jump.target) {
-                                    // crustal = ManipulatedClusterRupture.reverse(crustal);
-                                    return null;
-                                }
-                                return ManipulatedClusterRupture.join(jump.origin, jump.rupture, distAzCalc);
-                            } catch (IllegalStateException x) {
-                                // this can happen if we have created a circular rupture.
-                                // we need to find a more elegant way of detecting this.
-                                return null;
-                            }
-                        })
+                candidates.stream()
+                        .flatMap(
+                                c ->
+                                        jumps.get(last(c).getSectionId()).stream()
+                                                .flatMap(
+                                                        target ->
+                                                                targetRuptures.get(target).stream()
+                                                                        .map(
+                                                                                crustal ->
+                                                                                        new JointJump(
+                                                                                                c,
+                                                                                                target,
+                                                                                                crustal))))
+                        .parallel()
+                        .map(
+                                jump -> {
+                                    try {
+                                        if (first(jump.rupture).getSectionId() != jump.target) {
+                                            // crustal = ManipulatedClusterRupture.reverse(crustal);
+                                            return null;
+                                        }
+                                        return ManipulatedClusterRupture.join(
+                                                jump.origin, jump.rupture, distAzCalc);
+                                    } catch (IllegalStateException x) {
+                                        // this can happen if we have created a circular rupture.
+                                        // we need to find a more elegant way of detecting this.
+                                        return null;
+                                    }
+                                })
                         .filter(Objects::nonNull)
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
 
         return jointRuptures;
     }
 
     public List<ClusterRupture> build(int parentId) {
 
-        List<ClusterRupture> subductionRuptures = ruptures.stream()
-                .filter(r -> r.getTotalNumClusters() == 1)
-                .filter(r -> r.clusters[0].parentSectionID == parentId)
-                .filter(r -> r.clusters[0].subSects.size() >= subductionMinCount && r.clusters[0].subSects.size() <= subductionMaxCount)
-                .filter(r -> jumps.containsKey(first(r).getSectionId()) || jumps.containsKey(last(r).getSectionId()))
-                .collect(Collectors.toList());
+        List<ClusterRupture> subductionRuptures =
+                ruptures.stream()
+                        .filter(r -> r.getTotalNumClusters() == 1)
+                        .filter(r -> r.clusters[0].parentSectionID == parentId)
+                        .filter(
+                                r ->
+                                        r.clusters[0].subSects.size() >= subductionMinCount
+                                                && r.clusters[0].subSects.size()
+                                                        <= subductionMaxCount)
+                        .filter(
+                                r ->
+                                        jumps.containsKey(first(r).getSectionId())
+                                                || jumps.containsKey(last(r).getSectionId()))
+                        .collect(Collectors.toList());
 
-
-        System.out.println("Generating joint ruptures from " + subductionRuptures.size() + " subduction ruptures and " + jumps.values.size() + " jump targets for parent ID " + parentId);
+        System.out.println(
+                "Generating joint ruptures from "
+                        + subductionRuptures.size()
+                        + " subduction ruptures and "
+                        + jumps.values.size()
+                        + " jump targets for parent ID "
+                        + parentId);
         List<ClusterRupture> jointRuptures = new ArrayList<>();
         for (ClusterRupture rupture : subductionRuptures) {
             jointRuptures.addAll(joinRuptures(rupture));

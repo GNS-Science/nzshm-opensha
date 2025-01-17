@@ -4,11 +4,10 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
-
-import java.io.IOException;
 
 @JsonAdapter(NZSHM22_SlipRateFactors.Adapter.class)
 public class NZSHM22_SlipRateFactors implements LogicTreeNode {
@@ -16,8 +15,7 @@ public class NZSHM22_SlipRateFactors implements LogicTreeNode {
     protected double tvzFactor;
     protected double sansFactor;
 
-    public NZSHM22_SlipRateFactors() {
-    }
+    public NZSHM22_SlipRateFactors() {}
 
     public NZSHM22_SlipRateFactors(double sansFactor, double tvzFactor) {
         this.tvzFactor = tvzFactor;
@@ -93,7 +91,8 @@ public class NZSHM22_SlipRateFactors implements LogicTreeNode {
 
     public static class Level extends LogicTreeLevel.AdapterBackedLevel {
         public Level() {
-            super("NZSHM22_SlipRateFactors",
+            super(
+                    "NZSHM22_SlipRateFactors",
                     "NZSHM22_SlipRateFactors",
                     NZSHM22_SlipRateFactors.class);
         }

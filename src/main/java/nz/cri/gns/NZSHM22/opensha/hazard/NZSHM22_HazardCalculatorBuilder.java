@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.hazard;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
-
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GridSourceGenerator;
 import org.dom4j.DocumentException;
@@ -29,9 +28,7 @@ import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.imr.param.IntensityMeasureParams.SA_Param;
 import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
-/**
- * Creates a NZSHM22_HazardCalculator
- */
+/** Creates a NZSHM22_HazardCalculator */
 public class NZSHM22_HazardCalculatorBuilder {
 
     // config
@@ -39,7 +36,7 @@ public class NZSHM22_HazardCalculatorBuilder {
     Double forecastTimespan;
     Double maxDistance; // in km, default is 200
     boolean linear = false;
-    double intensityMeasurePeriod = 1; //default is SA with 1 second
+    double intensityMeasurePeriod = 1; // default is SA with 1 second
     IncludeBackgroundOption backgroundOption = IncludeBackgroundOption.INCLUDE;
     ScalarIMR gmpe = null;
 
@@ -85,9 +82,10 @@ public class NZSHM22_HazardCalculatorBuilder {
     }
 
     /**
-     * Sets the GMPE
-     * Defaults to ASK_2104
-     * @param gmpe one of the values of the AttenRelRef enum, or one of Bradley_2010, Bradley_2010_int, Bradley_2010_Chch
+     * Sets the GMPE Defaults to ASK_2104
+     *
+     * @param gmpe one of the values of the AttenRelRef enum, or one of Bradley_2010,
+     *     Bradley_2010_int, Bradley_2010_Chch
      * @return this builder
      */
     public NZSHM22_HazardCalculatorBuilder setGMPE(String gmpe) {
@@ -132,23 +130,24 @@ public class NZSHM22_HazardCalculatorBuilder {
 
     /**
      * Sets the period of the intensity measure. If 0, the intensity measure is set to PGA,
-     * otherwise to SA.
-     * Legal values are
-     * [0, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 10.0]
+     * otherwise to SA. Legal values are [0, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25,
+     * 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 10.0]
+     *
      * @param seconds period in seconds.
      * @return this builder.
      */
     public NZSHM22_HazardCalculatorBuilder setIntensityMeasurePeriod(double seconds) {
         intensityMeasurePeriod = seconds;
-        return this;        
+        return this;
     }
-    
+
     /**
      * Sets to background option. Legal values are INCLUDE, EXCLUDE, ONLY
+     *
      * @param backgroundOption
      * @return this builder
      */
-    public NZSHM22_HazardCalculatorBuilder setBackgroundOption(String backgroundOption){
+    public NZSHM22_HazardCalculatorBuilder setBackgroundOption(String backgroundOption) {
         this.backgroundOption = IncludeBackgroundOption.valueOf(backgroundOption);
         return this;
     }
@@ -159,8 +158,7 @@ public class NZSHM22_HazardCalculatorBuilder {
         fss.getRupSet().addModule(branch);
         fss.removeModuleInstances(GridSourceProvider.class);
         fss.addAvailableModule(
-                () -> new NZSHM22_GridSourceGenerator(fss),
-                GridSourceProvider.class);
+                () -> new NZSHM22_GridSourceGenerator(fss), GridSourceProvider.class);
         return fss;
     }
 
@@ -174,12 +172,12 @@ public class NZSHM22_HazardCalculatorBuilder {
         }
         erf.getParameter(IncludeBackgroundParam.NAME).setValue(backgroundOption);
         erf.updateForecast();
-//        System.out.println("ERF has " + erf.getNumSources() + " sources");
+        //        System.out.println("ERF has " + erf.getNumSources() + " sources");
         return erf;
     }
 
     protected ScalarIMR setUpGmpe() {
-        if(gmpe == null){
+        if (gmpe == null) {
             setGMPE("ASK_2014");
         }
         gmpe.setParamDefaults();
@@ -219,25 +217,27 @@ public class NZSHM22_HazardCalculatorBuilder {
             Site site = new Site(new Location(lat, lon));
 
             // simplest: use GMPE defaults
-//		site.addParameterList(gmpe.getSiteParams());
+            //		site.addParameterList(gmpe.getSiteParams());
 
             // need to clone it if you're going to have multiple sites in memory at once
 
-//            System.out.println("Site parameters:");
+            //            System.out.println("Site parameters:");
             for (Parameter<?> siteParam : gmpe.getSiteParams()) {
 
                 siteParam = (Parameter<?>) siteParam.clone();
                 // custom Vs30
-//            if (siteParam.getName().equals(Vs30_Param.NAME))
-//                // set Vs30 to 600 m/s
-//                ((Parameter<Double>) siteParam).setValue(new Double(600d));
+                //            if (siteParam.getName().equals(Vs30_Param.NAME))
+                //                // set Vs30 to 600 m/s
+                //                ((Parameter<Double>) siteParam).setValue(new Double(600d));
                 site.addParameter(siteParam);
-//                System.out.println(siteParam.getName() + ": " + siteParam.getValue());
+                //                System.out.println(siteParam.getName() + ": " +
+                // siteParam.getValue());
             }
 
             // x-values for the hazard curve
-            DiscretizedFunc xValues = new IMT_Info().getDefaultHazardCurve(gmpe.getIntensityMeasure());
-//            System.out.println("Default x-values:\n" + xValues);
+            DiscretizedFunc xValues =
+                    new IMT_Info().getDefaultHazardCurve(gmpe.getIntensityMeasure());
+            //            System.out.println("Default x-values:\n" + xValues);
 
             // need natural log x-values for curve calculation
             DiscretizedFunc logHazCurve = new ArbitrarilyDiscretizedFunc();
@@ -247,36 +247,41 @@ public class NZSHM22_HazardCalculatorBuilder {
             HazardCurveCalculator calc = new HazardCurveCalculator();
 
             if (maxDistance != null) {
-                calc.getAdjustableParams().getParameter(Double.class, MaxDistanceParam.NAME).setValue(maxDistance);
+                calc.getAdjustableParams()
+                        .getParameter(Double.class, MaxDistanceParam.NAME)
+                        .setValue(maxDistance);
             }
 
             // Calculate the curve
-//            System.out.println("Calculating hazard curve");
+            //            System.out.println("Calculating hazard curve");
             // this actually stores the y-values directly in logHazCurve
             calc.getHazardCurve(logHazCurve, site, gmpe, erf);
 
             if (linear) {
                 // can convert back to linear if you want
                 DiscretizedFunc linearHazCurve = new ArbitrarilyDiscretizedFunc();
-                for (Point2D pt : logHazCurve)
-                    linearHazCurve.set(Math.exp(pt.getX()), pt.getY());
+                for (Point2D pt : logHazCurve) linearHazCurve.set(Math.exp(pt.getX()), pt.getY());
                 return linearHazCurve;
             } else {
                 return logHazCurve;
             }
 
             // this was a 50 year curve, if you want to pull out the 2% value you can do this
-//        double imlAt2percent = linearHazCurve.getFirstInterpolatedX_inLogXLogYDomain(0.02);
-//        System.out.println("2% in " + (float) erf.getTimeSpan().getDuration() + " yr hazard: " + imlAt2percent);
+            //        double imlAt2percent =
+            // linearHazCurve.getFirstInterpolatedX_inLogXLogYDomain(0.02);
+            //        System.out.println("2% in " + (float) erf.getTimeSpan().getDuration() + " yr
+            // hazard: " + imlAt2percent);
         }
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-//        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
-//                .setLinear(true)
-//                .setForecastTimespan(50);
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip")
+        //
+        // builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjI0NTZaeXhVeQ==.zip")
+        //                .setLinear(true)
+        //                .setForecastTimespan(50);
+        builder.setSolutionFile(
+                        "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTAwMDE3.zip")
                 .setLinear(true)
                 .setForecastTimespan(50)
                 .setIntensityMeasurePeriod(10)
@@ -287,6 +292,5 @@ public class NZSHM22_HazardCalculatorBuilder {
 
         System.out.println(calculator.calc(-41.288889, 174.777222));
         System.out.println(calculator.tabulariseCalc(-41.288889, 174.777222));
-
     }
 }

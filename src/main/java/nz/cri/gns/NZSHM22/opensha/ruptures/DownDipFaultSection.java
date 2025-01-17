@@ -1,6 +1,4 @@
-/**
- *
- */
+/** */
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
@@ -9,18 +7,18 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 
 /**
  * @author chrisbc
- *
  */
 public class DownDipFaultSection extends FaultSectionPrefData {
 
-	/**
-	 * Represents a downdip fault section, that is used in the 2-axes section
-	 * structures used by subduction zones (i.e. the Hikurangi.)
-	 */
-	private static final long serialVersionUID = -4004985886997575136L;
-	private int rowIndex = Integer.MAX_VALUE;
-	private int colIndex = Integer.MAX_VALUE;
-	private DownDipSubSectBuilder builder;
+    /**
+     * Represents a downdip fault section, that is used in the 2-axes section structures used by
+     * subduction zones (i.e. the Hikurangi.)
+     */
+    private static final long serialVersionUID = -4004985886997575136L;
+
+    private int rowIndex = Integer.MAX_VALUE;
+    private int colIndex = Integer.MAX_VALUE;
+    private DownDipSubSectBuilder builder;
 
     private volatile double traceLength = -1;
     private volatile double creepArea = -1;
@@ -31,55 +29,55 @@ public class DownDipFaultSection extends FaultSectionPrefData {
         return this;
     }
 
-    public static DownDipSubSectBuilder getBuilder(FaultSubsectionCluster cluster){
-    	if(cluster.startSect instanceof DownDipFaultSection){
-			return ((DownDipFaultSection) cluster.startSect).getBuilder();
-		}else{
-    		return null;
-		}
-	}
+    public static DownDipSubSectBuilder getBuilder(FaultSubsectionCluster cluster) {
+        if (cluster.startSect instanceof DownDipFaultSection) {
+            return ((DownDipFaultSection) cluster.startSect).getBuilder();
+        } else {
+            return null;
+        }
+    }
 
-	public static boolean isDownDip(FaultSubsectionCluster cluster){
-    	return getBuilder(cluster) != null;
-	}
+    public static boolean isDownDip(FaultSubsectionCluster cluster) {
+        return getBuilder(cluster) != null;
+    }
 
-    public DownDipSubSectBuilder getBuilder(){
+    public DownDipSubSectBuilder getBuilder() {
         return builder;
     }
 
-	/**
-	 * @param rowIndex
-	 * @return
-	 */
-	public DownDipFaultSection setRowIndex(int rowIndex) {
-		this.rowIndex = rowIndex;
-		return this;
-	}
+    /**
+     * @param rowIndex
+     * @return
+     */
+    public DownDipFaultSection setRowIndex(int rowIndex) {
+        this.rowIndex = rowIndex;
+        return this;
+    }
 
-	/**
-	 * @param
-	 * @return rowIndex
-	 */
-	public int getRowIndex() {
-		return this.rowIndex;
-	}
+    /**
+     * @param
+     * @return rowIndex
+     */
+    public int getRowIndex() {
+        return this.rowIndex;
+    }
 
-	/**
-	 * @param colIndex
-	 * @return
-	 */
-	public DownDipFaultSection setColIndex(int colIndex) {
-		this.colIndex = colIndex;
-		return this;
-	}
+    /**
+     * @param colIndex
+     * @return
+     */
+    public DownDipFaultSection setColIndex(int colIndex) {
+        this.colIndex = colIndex;
+        return this;
+    }
 
-	/**
-	 * @param
-	 * @return colIndex
-	 */
-	public int getColIndex() {
-		return this.colIndex;
-	}
+    /**
+     * @param
+     * @return colIndex
+     */
+    public int getColIndex() {
+        return this.colIndex;
+    }
 
     @Override
     public double getTraceLength() {
@@ -103,21 +101,21 @@ public class DownDipFaultSection extends FaultSectionPrefData {
         return noCreepArea;
     }
 
-	public String toString() {
-		String str = "type = DownDipFaultSection\n";
-		str += "rowIndex: " + Integer.toString(this.rowIndex) + "\n";
-		str += "colIndex: " + Integer.toString(this.colIndex) + "\n";
-		str += super.toString();
-		return str;
-	}
+    public String toString() {
+        String str = "type = DownDipFaultSection\n";
+        str += "rowIndex: " + Integer.toString(this.rowIndex) + "\n";
+        str += "colIndex: " + Integer.toString(this.colIndex) + "\n";
+        str += super.toString();
+        return str;
+    }
 
-	@Override
-	public DownDipFaultSection clone() {
-		DownDipFaultSection section = new DownDipFaultSection();
-		section.setFaultSectionPrefData(this);
-		section.setBuilder(builder);
-		section.setRowIndex(rowIndex);
-		section.setColIndex(colIndex);
-		return section;
-	}
+    @Override
+    public DownDipFaultSection clone() {
+        DownDipFaultSection section = new DownDipFaultSection();
+        section.setFaultSectionPrefData(this);
+        section.setBuilder(builder);
+        section.setRowIndex(rowIndex);
+        section.setColIndex(colIndex);
+        return section;
+    }
 }

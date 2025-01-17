@@ -4,17 +4,14 @@ import java.io.*;
 import java.util.HashMap;
 
 /**
- * Helper class that can parse in parameters that are copied and pasted from a toshi webpage.
- * Can be used to reproduce runs.
+ * Helper class that can parse in parameters that are copied and pasted from a toshi webpage. Can be
+ * used to reproduce runs.
  */
-
 public class Parameters extends HashMap<String, String> {
 
-    private final static String RESOURCE_PATH = "/parameters/";
+    private static final String RESOURCE_PATH = "/parameters/";
 
-    /**
-     * NZSHM22 parameters that can be used to reproduce NZSHM22 results.
-     */
+    /** NZSHM22 parameters that can be used to reproduce NZSHM22 results. */
     public enum NZSHM22 {
         INVERSION_CRUSTAL("SW52ZXJzaW9uU29sdXRpb246NjMzMzY3Mw==.txt"),
         INVERSION_HIKURANGI("SW52ZXJzaW9uU29sdXRpb246MTEzMTc0.txt"),
@@ -38,7 +35,6 @@ public class Parameters extends HashMap<String, String> {
         InputStream getStream(String fileName) {
             return getClass().getResourceAsStream(RESOURCE_PATH + fileName);
         }
-
     }
 
     public static Parameters fromFile(File file) throws IOException {
@@ -46,11 +42,10 @@ public class Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Returns a parameters object with the values from the InputStream.
-     * This expects a text stream with parameters divided by newlines.
-     * Keys and values are separated by a tab character.
-     * Lines beginning with a semicolon are ignored.
-     * Lines not separating exactly two strings with a tab are ignored.
+     * Returns a parameters object with the values from the InputStream. This expects a text stream
+     * with parameters divided by newlines. Keys and values are separated by a tab character. Lines
+     * beginning with a semicolon are ignored. Lines not separating exactly two strings with a tab
+     * are ignored.
      *
      * @param in the InputStream
      * @return the Parameters object
@@ -59,14 +54,16 @@ public class Parameters extends HashMap<String, String> {
     public static Parameters fromInputStream(InputStream in) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         Parameters arguments = new Parameters();
-        reader.lines().forEach(line -> {
-            if (!line.startsWith(";")) {
-                String[] kp = line.split("[\t]");
-                if (kp.length == 2) {
-                    arguments.put(kp[0].trim(), kp[1].trim());
-                }
-            }
-        });
+        reader.lines()
+                .forEach(
+                        line -> {
+                            if (!line.startsWith(";")) {
+                                String[] kp = line.split("[\t]");
+                                if (kp.length == 2) {
+                                    arguments.put(kp[0].trim(), kp[1].trim());
+                                }
+                            }
+                        });
         reader.close();
         return arguments;
     }
@@ -85,7 +82,7 @@ public class Parameters extends HashMap<String, String> {
     /**
      * Convenience function to get a double value
      *
-     * @param key          the key
+     * @param key the key
      * @param defaultValue the value to return if the parameter does not exist.
      * @return a double value associated with the key
      */
@@ -141,7 +138,9 @@ public class Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Convenience function to check if a value is set and no zero - mimicking Python's interpretation of truthiness.
+     * Convenience function to check if a value is set and no zero - mimicking Python's
+     * interpretation of truthiness.
+     *
      * @param key
      * @return
      */
@@ -149,4 +148,3 @@ public class Parameters extends HashMap<String, String> {
         return containsKey(key) && Double.parseDouble(get(key)) != 0;
     }
 }
-

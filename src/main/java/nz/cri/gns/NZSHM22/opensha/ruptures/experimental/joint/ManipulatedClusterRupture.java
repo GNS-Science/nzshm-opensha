@@ -3,6 +3,11 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
@@ -11,15 +16,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistance
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.UniqueRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-/**
- * Provides functionality to combine ruptures into a new rupture using join() and splay()
- */
+/** Provides functionality to combine ruptures into a new rupture using join() and splay() */
 public class ManipulatedClusterRupture extends ClusterRupture {
 
     /**
@@ -29,17 +26,26 @@ public class ManipulatedClusterRupture extends ClusterRupture {
      * @param internalJumps
      * @param unique
      */
-    public ManipulatedClusterRupture(FaultSubsectionCluster[] clusters, ImmutableList<Jump> internalJumps, UniqueRupture unique) {
+    public ManipulatedClusterRupture(
+            FaultSubsectionCluster[] clusters,
+            ImmutableList<Jump> internalJumps,
+            UniqueRupture unique) {
         super(clusters, internalJumps, ImmutableMap.of(), unique, unique, true);
     }
 
-    public ManipulatedClusterRupture
-            (FaultSubsectionCluster[] clusters,
-             ImmutableList<Jump> internalJumps,
-             ImmutableMap<Jump, ClusterRupture> splays,
-             UniqueRupture unique,
-             UniqueRupture internalUnique) {
-        super(clusters, internalJumps, splays, unique, internalUnique, splays == null || splays.isEmpty());
+    public ManipulatedClusterRupture(
+            FaultSubsectionCluster[] clusters,
+            ImmutableList<Jump> internalJumps,
+            ImmutableMap<Jump, ClusterRupture> splays,
+            UniqueRupture unique,
+            UniqueRupture internalUnique) {
+        super(
+                clusters,
+                internalJumps,
+                splays,
+                unique,
+                internalUnique,
+                splays == null || splays.isEmpty());
     }
 
     static FaultSection first(FaultSubsectionCluster cluster) {
@@ -72,16 +78,15 @@ public class ManipulatedClusterRupture extends ClusterRupture {
         return ImmutableList.copyOf(jumps);
     }
 
-
     /**
-     * Creates a new rupture by jumping from the last section of ruptureA to the first section of ruptureB
+     * Creates a new rupture by jumping from the last section of ruptureA to the first section of
+     * ruptureB
      *
      * @param ruptureA
      * @param ruptureB
      * @param disAzCalc
      * @return
      */
-
     public static ManipulatedClusterRupture join(
             ClusterRupture ruptureA,
             ClusterRupture ruptureB,
@@ -99,8 +104,8 @@ public class ManipulatedClusterRupture extends ClusterRupture {
     }
 
     /**
-     * Creates a new rupture by taking a splay jump
-     * OpenSHA only allows taking a jump to a cluster, not to a complete rupture.
+     * Creates a new rupture by taking a splay jump OpenSHA only allows taking a jump to a cluster,
+     * not to a complete rupture.
      *
      * @param ruptureA
      * @param ruptureB
@@ -108,16 +113,21 @@ public class ManipulatedClusterRupture extends ClusterRupture {
      * @return
      */
     public static ManipulatedClusterRupture splay(
-            ClusterRupture ruptureA,
-            ClusterRupture ruptureB,
-            Jump jump) {
+            ClusterRupture ruptureA, ClusterRupture ruptureB, Jump jump) {
         ImmutableMap.Builder<Jump, ClusterRupture> splayBuilder = ImmutableMap.builder();
         splayBuilder.putAll(ruptureA.splays);
-        ClusterRupture targetRupture = new ManipulatedClusterRupture(ruptureB.clusters, ruptureB.internalJumps, ruptureB.unique);
+        ClusterRupture targetRupture =
+                new ManipulatedClusterRupture(
+                        ruptureB.clusters, ruptureB.internalJumps, ruptureB.unique);
         splayBuilder.put(jump, targetRupture);
         ImmutableMap<Jump, ClusterRupture> newSplays = splayBuilder.build();
         UniqueRupture newUnique = UniqueRupture.add(ruptureA.unique, ruptureB.unique);
-        return new ManipulatedClusterRupture(ruptureA.clusters, ruptureA.internalJumps, newSplays, newUnique, ruptureA.internalUnique);
+        return new ManipulatedClusterRupture(
+                ruptureA.clusters,
+                ruptureA.internalJumps,
+                newSplays,
+                newUnique,
+                ruptureA.internalUnique);
     }
 
     /**
@@ -129,13 +139,28 @@ public class ManipulatedClusterRupture extends ClusterRupture {
     public static ClusterRupture reverse(ClusterRupture rupture) {
         Preconditions.checkState(rupture.singleStrand, "Can only reverse single strand ruptures");
 
-        List<FaultSubsectionCluster> clusterList = Arrays.stream(rupture.clusters).map(FaultSubsectionCluster::reversed).collect(Collectors.toList());
+        List<FaultSubsectionCluster> clusterList =
+                Arrays.stream(rupture.clusters)
+                        .map(FaultSubsectionCluster::reversed)
+                        .collect(Collectors.toList());
         Collections.reverse(clusterList);
 
-        List<Jump> jumps = rupture.internalJumps.stream().map(j -> new Jump(j.toSection, j.toCluster, j.fromSection, j.fromCluster, j.distance)).collect(Collectors.toList());
+        List<Jump> jumps =
+                rupture.internalJumps.stream()
+                        .map(
+                                j ->
+                                        new Jump(
+                                                j.toSection,
+                                                j.toCluster,
+                                                j.fromSection,
+                                                j.fromCluster,
+                                                j.distance))
+                        .collect(Collectors.toList());
         Collections.reverse(jumps);
 
-        return new ManipulatedClusterRupture(clusterList.toArray(new FaultSubsectionCluster[0]), ImmutableList.copyOf(jumps), rupture.unique);
+        return new ManipulatedClusterRupture(
+                clusterList.toArray(new FaultSubsectionCluster[0]),
+                ImmutableList.copyOf(jumps),
+                rupture.unique);
     }
-
 }

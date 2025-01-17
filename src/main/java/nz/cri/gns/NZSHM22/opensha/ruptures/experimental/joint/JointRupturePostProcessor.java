@@ -1,10 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.FishboneGenerator;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
+import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.FishboneGenerator;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.JointRuptureBuilderParallel;
 import org.dom4j.DocumentException;
 import org.opensha.commons.geo.Location;
@@ -16,20 +21,14 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupCartoonGener
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 /**
  * Can read ruptures from an existing rupture set that contains subduction and crustal ruptures and
- * combines them into joint ruptures.
- * Experimental.
+ * combines them into joint ruptures. Experimental.
  */
 public class JointRupturePostProcessor {
 
-    String rupturesFile = "C:\\Users\\user\\GNS\\nzshm-opensha\\TEST\\ruptures\\rupset-disjointed.zip";
+    String rupturesFile =
+            "C:\\Users\\user\\GNS\\nzshm-opensha\\TEST\\ruptures\\rupset-disjointed.zip";
     double maxJumpDistance = 5;
     int crustalMinCount = 2;
     int subductionMinCount = 1;
@@ -44,12 +43,12 @@ public class JointRupturePostProcessor {
     List<FaultSubsectionCluster> crustalClusters;
     List<FaultSubsectionCluster> subductionClusters;
 
-    public JointRupturePostProcessor() {
-    }
+    public JointRupturePostProcessor() {}
 
     /**
-     * Takes a list of subsections and rebuilds the parent faults as clusters.
-     * Creates separate lists for crustal and subduction faults.
+     * Takes a list of subsections and rebuilds the parent faults as clusters. Creates separate
+     * lists for crustal and subduction faults.
+     *
      * @param subSections
      */
     protected void makeParentClusters(List<FaultSection> subSections) {
@@ -86,7 +85,10 @@ public class JointRupturePostProcessor {
      * @param distAzCalc
      * @param maxJumpDistance
      */
-    public void addCrustalJumps(List<FaultSubsectionCluster> clusters, SectionDistanceAzimuthCalculator distAzCalc, double maxJumpDistance) {
+    public void addCrustalJumps(
+            List<FaultSubsectionCluster> clusters,
+            SectionDistanceAzimuthCalculator distAzCalc,
+            double maxJumpDistance) {
         for (FaultSubsectionCluster from : clusters) {
             for (FaultSubsectionCluster to : clusters) {
                 if (from == to) {
@@ -110,7 +112,6 @@ public class JointRupturePostProcessor {
      * @param to
      * @return
      */
-
     protected Jump shortestJump(FaultSubsectionCluster from, FaultSubsectionCluster to) {
         FaultSection a = null;
         FaultSection b = null;
@@ -131,22 +132,43 @@ public class JointRupturePostProcessor {
 
     /**
      * Returns possible jumps from the from cluster to the clusters in the clusters list.
+     *
      * @param from
      * @param clusters
      * @return
      */
-    protected List<Jump> clusterJumps(FaultSubsectionCluster from, List<FaultSubsectionCluster> clusters) {
-        List<Jump> result = clusters.parallelStream().
-                map(c -> shortestJump(from, c)).
-                filter(j -> j.distance <= maxJumpDistance).
-                collect(Collectors.toList());
+    protected List<Jump> clusterJumps(
+            FaultSubsectionCluster from, List<FaultSubsectionCluster> clusters) {
+        List<Jump> result =
+                clusters.parallelStream()
+                        .map(c -> shortestJump(from, c))
+                        .filter(j -> j.distance <= maxJumpDistance)
+                        .collect(Collectors.toList());
         if (!result.isEmpty()) {
             for (Jump j : result) {
-                System.out.println("from " + j.fromSection.getSectionId() + " to: " + j.toSection.getSectionId() + " d: " + j.distance + " rakes: " + j.fromSection.getAveRake() + ", " + j.toSection.getAveRake() + " dips: " + j.fromSection.getAveDip() + ", " + j.toSection.getAveDip());
+                System.out.println(
+                        "from "
+                                + j.fromSection.getSectionId()
+                                + " to: "
+                                + j.toSection.getSectionId()
+                                + " d: "
+                                + j.distance
+                                + " rakes: "
+                                + j.fromSection.getAveRake()
+                                + ", "
+                                + j.toSection.getAveRake()
+                                + " dips: "
+                                + j.fromSection.getAveDip()
+                                + ", "
+                                + j.toSection.getAveDip());
             }
-            List<Integer> ids = result.stream().map(j -> j.toSection.getSectionId()).collect(Collectors.toList());
+            List<Integer> ids =
+                    result.stream()
+                            .map(j -> j.toSection.getSectionId())
+                            .collect(Collectors.toList());
             List<Double> ds = result.stream().map(j -> j.distance).collect(Collectors.toList());
-            List<Double> rakes = result.stream().map(j -> j.toSection.getAveRake()).collect(Collectors.toList());
+            List<Double> rakes =
+                    result.stream().map(j -> j.toSection.getAveRake()).collect(Collectors.toList());
             System.out.println("hello");
         }
         return result;
@@ -158,12 +180,14 @@ public class JointRupturePostProcessor {
      * @return
      */
     protected List<List<Jump>> clusterJumps() {
-        return subductionClusters.stream().map(c -> clusterJumps(c, crustalClusters)).collect(Collectors.toList());
+        return subductionClusters.stream()
+                .map(c -> clusterJumps(c, crustalClusters))
+                .collect(Collectors.toList());
     }
 
     /**
-     * Calculates the length of a cluster. Has special code for handling subduction clusters so that only the top row
-     * is counted towards length
+     * Calculates the length of a cluster. Has special code for handling subduction clusters so that
+     * only the top row is counted towards length
      *
      * @param cluster a cluster
      * @return the length of the cluster
@@ -171,9 +195,14 @@ public class JointRupturePostProcessor {
     private double calculateLength(FaultSubsectionCluster cluster) {
 
         if (cluster.subSects.get(0) instanceof DownDipFaultSection) {
-            List<DownDipFaultSection> ddCluster = (List<DownDipFaultSection>) (List<?>) cluster.subSects;
-            int minRow = ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
-            return ddCluster.stream().filter(s -> s.getRowIndex() == minRow).mapToDouble(DownDipFaultSection::getTraceLength).sum();
+            List<DownDipFaultSection> ddCluster =
+                    (List<DownDipFaultSection>) (List<?>) cluster.subSects;
+            int minRow =
+                    ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
+            return ddCluster.stream()
+                    .filter(s -> s.getRowIndex() == minRow)
+                    .mapToDouble(DownDipFaultSection::getTraceLength)
+                    .sum();
         }
 
         return cluster.subSects.stream().mapToDouble(FaultSection::getTraceLength).sum();
@@ -188,9 +217,12 @@ public class JointRupturePostProcessor {
         System.out.println("start length " + new Date());
         double[] result = new double[ruptures.size()];
 
-        IntStream.range(0, ruptures.size()).parallel().forEach(r -> {
-            result[r] = calculateLength(ruptures.get(r));
-        });
+        IntStream.range(0, ruptures.size())
+                .parallel()
+                .forEach(
+                        r -> {
+                            result[r] = calculateLength(ruptures.get(r));
+                        });
         System.out.println("end length " + new Date());
 
         return result;
@@ -213,46 +245,58 @@ public class JointRupturePostProcessor {
         this.ruptures = ruptureLoader.ruptures;
         this.subSections = ruptureLoader.subSections;
         this.subductionParents = ruptureLoader.subductionParents;
-//        ClusterRupture rupture = null;
-//        int size = Integer.MAX_VALUE;
-//        int ruptureId = -1;
-//        for (int r = 0; r < ruptures.size(); r++) {
-//            ClusterRupture candidate = ruptures.get(r);
-//            List<FaultSection> sections = candidate.buildOrderedSectionList();
-//            if (includes(sections, 2295) && includes(sections, 2268)) {
-//                if (size > sections.size()) {
-//                    rupture = candidate;
-//                    size = sections.size();
-//                    ruptureId = r;
-//                }
-//            }
-//        }
-//        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
-//        for (FaultSection section : rupture.buildOrderedSectionList()) {
-//            builder.addFaultSection(section);
-//        }
-//        builder.toJSON("/tmp/choseRupture.geojson");
+        //        ClusterRupture rupture = null;
+        //        int size = Integer.MAX_VALUE;
+        //        int ruptureId = -1;
+        //        for (int r = 0; r < ruptures.size(); r++) {
+        //            ClusterRupture candidate = ruptures.get(r);
+        //            List<FaultSection> sections = candidate.buildOrderedSectionList();
+        //            if (includes(sections, 2295) && includes(sections, 2268)) {
+        //                if (size > sections.size()) {
+        //                    rupture = candidate;
+        //                    size = sections.size();
+        //                    ruptureId = r;
+        //                }
+        //            }
+        //        }
+        //        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        //        for (FaultSection section : rupture.buildOrderedSectionList()) {
+        //            builder.addFaultSection(section);
+        //        }
+        //        builder.toJSON("/tmp/choseRupture.geojson");
     }
 
     public void buildRuptureSet() throws DocumentException, IOException {
         load(rupturesFile);
-        System.out.println("Loaded ruptures: " + ruptures.size() + " sections: " + subSections.size());
+        System.out.println(
+                "Loaded ruptures: " + ruptures.size() + " sections: " + subSections.size());
         makeParentClusters(subSections);
-        System.out.println("Crustal clusters: " + crustalClusters.size() + " subduction clusters: " + subductionClusters.size());
+        System.out.println(
+                "Crustal clusters: "
+                        + crustalClusters.size()
+                        + " subduction clusters: "
+                        + subductionClusters.size());
 
         System.out.println("Calculating shortest jumps to subductions");
 
         distCalc = new SectionDistanceAzimuthCalculator(subSections);
 
-
         JointRuptureBuilderParallel jrbp = new JointRuptureBuilderParallel(ruptures, distCalc);
         ClusterRupture splayCandidate = jrbp.makeRuptureSplay(ruptures.get(97653), 5, 3);
 
         if (splayCandidate != null) {
-            RupCartoonGenerator.plotRupture(new File("/tmp/rupcartoons/"), "splays", splayCandidate, "splays galore", false, true);
+            RupCartoonGenerator.plotRupture(
+                    new File("/tmp/rupcartoons/"),
+                    "splays",
+                    splayCandidate,
+                    "splays galore",
+                    false,
+                    true);
             FishboneGenerator.plotAll(splayCandidate, new File("/tmp/rupcartoons/"), "fishbone4");
-//            FishboneGenerator.plotTopDownDebug(splayCandidate, new File("/tmp/rupcartoons/"), "fishbone-debug");
-//            FishboneGenerator.plotFishbone(splayCandidate, new File("/tmp/rupcartoons/"), "fishbone3");
+            //            FishboneGenerator.plotTopDownDebug(splayCandidate, new
+            // File("/tmp/rupcartoons/"), "fishbone-debug");
+            //            FishboneGenerator.plotFishbone(splayCandidate, new
+            // File("/tmp/rupcartoons/"), "fishbone3");
         }
 
         FaultSection firstSection = splayCandidate.clusters[0].subSects.get(0);
@@ -261,77 +305,95 @@ public class JointRupturePostProcessor {
         Location a = firstSection.getFaultTrace().first();
         Location b = firstSection.getFaultTrace().last();
 
-
         addCrustalJumps(crustalClusters, distCalc, 0.5);
 
-        ruptures = JointRuptureBuilderParallel.makeSplays(ruptures.get(97653), crustalClusters, distCalc);
+        ruptures =
+                JointRuptureBuilderParallel.makeSplays(
+                        ruptures.get(97653), crustalClusters, distCalc);
 
-//        List<List<Jump>> jumps = clusterJumps();
+        //        List<List<Jump>> jumps = clusterJumps();
         System.out.println("done");
-//
-//
-//        for (List<Jump> jumps1 : jumps) {
-//            for (Jump jump : jumps1) {
-//                System.out.println("parent " + jump.fromSection.getParentSectionId() + " section " + jump.fromSection.getSectionId() + " row " + ((DownDipFaultSection) jump.fromSection).getRowIndex());
-//            }
-//        }
-//
-//        for (int i = 0; i < jumps.size(); i++) {
-//            JointRuptureBuilder jointRuptureBuilder = new JointRuptureBuilder(
-//                    jumps.get(i),
-//                    ruptures,
-//                    distCalc,
-//                    crustalMinCount,
-//                    subductionMinCount,
-//                    subductionMaxCount
-//            );
-//            jointRuptureBuilder.stats(subSections);
-//            ruptures.addAll(jointRuptureBuilder.build(subductionClusters.get(i).parentSectionID));
-//        }
-//
-//        int printed = 0;
+        //
+        //
+        //        for (List<Jump> jumps1 : jumps) {
+        //            for (Jump jump : jumps1) {
+        //                System.out.println("parent " + jump.fromSection.getParentSectionId() + "
+        // section " + jump.fromSection.getSectionId() + " row " + ((DownDipFaultSection)
+        // jump.fromSection).getRowIndex());
+        //            }
+        //        }
+        //
+        //        for (int i = 0; i < jumps.size(); i++) {
+        //            JointRuptureBuilder jointRuptureBuilder = new JointRuptureBuilder(
+        //                    jumps.get(i),
+        //                    ruptures,
+        //                    distCalc,
+        //                    crustalMinCount,
+        //                    subductionMinCount,
+        //                    subductionMaxCount
+        //            );
+        //            jointRuptureBuilder.stats(subSections);
+        //
+        // ruptures.addAll(jointRuptureBuilder.build(subductionClusters.get(i).parentSectionID));
+        //        }
+        //
+        //        int printed = 0;
 
         System.out.println("ruptures before filtering: " + ruptures.size());
 
-//        int sectionCount = 0;
-//
-//        ruptures = ruptures.stream().filter(rupture -> {
-//            int subCount = 0;
-//            for (FaultSubsectionCluster cluster : rupture.clusters) {
-//                if (cluster instanceof DownDipFaultSubSectionCluster) {
-//                    subCount++;
-//                }
-//            }
-//
-//            return subCount > 1;
-//        }).collect(Collectors.toList());
-//
-//        int maxCount = ruptures.parallelStream().mapToInt(ClusterRupture::getTotalNumSects).max().getAsInt();
+        //        int sectionCount = 0;
+        //
+        //        ruptures = ruptures.stream().filter(rupture -> {
+        //            int subCount = 0;
+        //            for (FaultSubsectionCluster cluster : rupture.clusters) {
+        //                if (cluster instanceof DownDipFaultSubSectionCluster) {
+        //                    subCount++;
+        //                }
+        //            }
+        //
+        //            return subCount > 1;
+        //        }).collect(Collectors.toList());
+        //
+        //        int maxCount =
+        // ruptures.parallelStream().mapToInt(ClusterRupture::getTotalNumSects).max().getAsInt();
 
-//        ruptures = ruptures.stream().filter(r -> r.getTotalNumSects() ==maxCount).collect(Collectors.toList());
+        //        ruptures = ruptures.stream().filter(r -> r.getTotalNumSects()
+        // ==maxCount).collect(Collectors.toList());
 
-//            if(subCount > 1 && printed < 10) {
-//                RupCartoonGenerator.plotRupture(new File ("/tmp/rupcartoons/"), "rupture" + i, rupture, "Rupture " + i, false, true);
-//                System.out.println("yes! " + rupture.clusters.length);
-//                printed++;
-//            }
+        //            if(subCount > 1 && printed < 10) {
+        //                RupCartoonGenerator.plotRupture(new File ("/tmp/rupcartoons/"), "rupture"
+        // + i, rupture, "Rupture " + i, false, true);
+        //                System.out.println("yes! " + rupture.clusters.length);
+        //                printed++;
+        //            }
 
-
-        List<ClusterRupture> filteredRuptures = ruptures.stream().filter(rupture -> {
-            int pos = 0;
-            for (FaultSubsectionCluster cluster : rupture.clusters) {
-                if (cluster instanceof DownDipFaultSubSectionCluster && pos > 0 && pos < rupture.clusters.length - 1) {
-                    return true;
-                }
-                pos++;
-            }
-            return false;
-        }).collect(Collectors.toList());
+        List<ClusterRupture> filteredRuptures =
+                ruptures.stream()
+                        .filter(
+                                rupture -> {
+                                    int pos = 0;
+                                    for (FaultSubsectionCluster cluster : rupture.clusters) {
+                                        if (cluster instanceof DownDipFaultSubSectionCluster
+                                                && pos > 0
+                                                && pos < rupture.clusters.length - 1) {
+                                            return true;
+                                        }
+                                        pos++;
+                                    }
+                                    return false;
+                                })
+                        .collect(Collectors.toList());
 
         System.out.println("ruptures with subduction in the middle: " + filteredRuptures.size());
 
         if (!filteredRuptures.isEmpty()) {
-            RupCartoonGenerator.plotRupture(new File("/tmp/rupcartoons/"), "rupture", filteredRuptures.get(0), "Rupture ", false, true);
+            RupCartoonGenerator.plotRupture(
+                    new File("/tmp/rupcartoons/"),
+                    "rupture",
+                    filteredRuptures.get(0),
+                    "Rupture ",
+                    false,
+                    true);
         }
         System.out.println(" Ruptures after filtering: " + ruptures.size());
 
@@ -339,29 +401,32 @@ public class JointRupturePostProcessor {
         sr.setupCrustal(4.2, 4.2);
 
         System.out.println("building rupset");
-        FaultSystemRupSet rupSet = FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
-                //FaultSystemRupSet.builderForClusterRups(ruptureLoader.subSections, ruptures)
-                .rupLengths(buildLengths(ruptures))
-                .forScalingRelationship(sr)
-//                        .slipAlongRupture(getSlipAlongRuptureModel())
-//                        .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
-//                        .addModule(SectionDistanceAzimuthCalculator.archivableInstance(distAzCalc))
-                .build();
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+                        // FaultSystemRupSet.builderForClusterRups(ruptureLoader.subSections,
+                        // ruptures)
+                        .rupLengths(buildLengths(ruptures))
+                        .forScalingRelationship(sr)
+                        //                        .slipAlongRupture(getSlipAlongRuptureModel())
+                        //
+                        // .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
+                        //
+                        // .addModule(SectionDistanceAzimuthCalculator.archivableInstance(distAzCalc))
+                        .build();
         System.out.println("writing rupset to file");
         rupSet.write(new File("/tmp/joint-splay1.zip"));
 
-//        NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-//        reportPageGen.setName("Combined")
-//                .setRuptureSet(rupSet)
-//                .setOutputPath("/tmp/reports/joinrupset")
-//            //    .setRuptureSet("/tmp/jointrupset.zip");
-//        ;
-//        reportPageGen.generateRupSetPage();
+        //        NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
+        //        reportPageGen.setName("Combined")
+        //                .setRuptureSet(rupSet)
+        //                .setOutputPath("/tmp/reports/joinrupset")
+        //            //    .setRuptureSet("/tmp/jointrupset.zip");
+        //        ;
+        //        reportPageGen.generateRupSetPage();
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
         JointRupturePostProcessor processor = new JointRupturePostProcessor();
         processor.buildRuptureSet();
-
     }
 }

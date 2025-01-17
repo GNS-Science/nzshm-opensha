@@ -1,21 +1,19 @@
 package nz.cri.gns.NZSHM22.opensha.timeDependent;
 
 import com.google.common.base.Preconditions;
-import org.opensha.commons.data.CSVFile;
-import org.opensha.commons.geo.Location;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.erf.utils.ProbabilityModelsCalc;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.geo.Location;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.faultSurface.FaultSection;
+import scratch.UCERF3.erf.utils.ProbabilityModelsCalc;
 
 public enum MREData {
-
     CFM_1_1("ConditionalProbData_CFM1_1.csv");
 
     static final String RESOURCE_PATH = "/timeDependent/";
@@ -52,12 +50,14 @@ public enum MREData {
                 yearsAgo = Integer.parseInt(csvRow.get(YEARS).trim());
                 whole = csvRow.get(WHOLE).trim().equals("Y");
                 if (!whole) {
-                    start = new Location(
-                            Double.parseDouble(csvRow.get(LAT_1)),
-                            Double.parseDouble(csvRow.get(LON_1)));
-                    stop = new Location(
-                            Double.parseDouble(csvRow.get(LAT_2)),
-                            Double.parseDouble(csvRow.get(LON_2)));
+                    start =
+                            new Location(
+                                    Double.parseDouble(csvRow.get(LAT_1)),
+                                    Double.parseDouble(csvRow.get(LON_1)));
+                    stop =
+                            new Location(
+                                    Double.parseDouble(csvRow.get(LAT_2)),
+                                    Double.parseDouble(csvRow.get(LON_2)));
                 }
             }
         }
@@ -87,7 +87,8 @@ public enum MREData {
      * @param solution
      * @return
      */
-    protected static Map<String, List<FaultSection>> reconstructFaults(FaultSystemSolution solution) {
+    protected static Map<String, List<FaultSection>> reconstructFaults(
+            FaultSystemSolution solution) {
         Map<String, List<FaultSection>> faults = new HashMap<>();
         for (FaultSection section : solution.getRupSet().getFaultSectionDataList()) {
             String faultName = unify(section.getParentSectionName());
@@ -97,7 +98,11 @@ public enum MREData {
                 faults.put(faultName, fault);
             } else {
                 // ensure that there are no gaps and that sections are in the correct order
-                Preconditions.checkState(fault.get(fault.size() - 1).getFaultTrace().last().equals(section.getFaultTrace().first()));
+                Preconditions.checkState(
+                        fault.get(fault.size() - 1)
+                                .getFaultTrace()
+                                .last()
+                                .equals(section.getFaultTrace().first()));
             }
             fault.add(section);
         }

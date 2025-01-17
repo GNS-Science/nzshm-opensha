@@ -1,33 +1,30 @@
 package nz.cri.gns.NZSHM22.opensha.faults;
 
-import org.opensha.sha.faultSurface.FaultSection;
-
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import org.opensha.sha.faultSurface.FaultSection;
 
 /**
- * A List that enforces the consistency of FaultSections.
- * Operations that modify the list are not optimised.
- * Read operations are equivalent to ArrayList performance.
+ * A List that enforces the consistency of FaultSections. Operations that modify the list are not
+ * optimised. Read operations are equivalent to ArrayList performance.
  */
 public class FaultSectionList extends ArrayList<FaultSection> {
 
     private int maxId = -1;
     private final Set<Integer> ids;
-    private  FaultSectionList parents;
+    private FaultSectionList parents;
 
-    /**
-     * Creates a new FaultSectionList.
-     */
+    /** Creates a new FaultSectionList. */
     public FaultSectionList() {
         this(null);
     }
 
     /**
      * Creates a new FaultSectionList.
-     * @param parents a list of parent sections. If new sections have a parent, it will
-     *                be checked whether the parent is in the parents list.
+     *
+     * @param parents a list of parent sections. If new sections have a parent, it will be checked
+     *     whether the parent is in the parents list.
      */
     public FaultSectionList(FaultSectionList parents) {
         ids = new HashSet<>();
@@ -36,6 +33,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Creates a new FaultSectionList and adds all elements.
+     *
      * @param elements the elements to be added.
      * @return the new FaultSectionList
      */
@@ -47,17 +45,18 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Adds a new parent section.
+     *
      * @param parent the parent section
      */
-    public void addParent(FaultSection parent){
-        if(parents == null){
+    public void addParent(FaultSection parent) {
+        if (parents == null) {
             parents = new FaultSectionList();
         }
         parents.add(parent);
     }
 
-    public void addParents(FaultSectionList parents){
-        if(this.parents == null){
+    public void addParents(FaultSectionList parents) {
+        if (this.parents == null) {
             this.parents = new FaultSectionList();
         }
         this.parents.addAll(parents);
@@ -68,8 +67,9 @@ public class FaultSectionList extends ArrayList<FaultSection> {
     }
 
     /**
-     * Gets an id that is not used by the sections in this list and that can be used to create any number of new
-     * subsections starting at this id.
+     * Gets an id that is not used by the sections in this list and that can be used to create any
+     * number of new subsections starting at this id.
+     *
      * @return an id not yet used in the list
      */
     public int getSafeId() {
@@ -77,8 +77,9 @@ public class FaultSectionList extends ArrayList<FaultSection> {
     }
 
     /**
-     * Adds a new FaultSection and validates that its dip is reasonable, and that the section is consistent with
-     * previously added sections.
+     * Adds a new FaultSection and validates that its dip is reasonable, and that the section is
+     * consistent with previously added sections.
+     *
      * @param section the section to be added.
      * @return true
      */
@@ -86,19 +87,38 @@ public class FaultSectionList extends ArrayList<FaultSection> {
         if (0 <= section.getParentSectionId()
                 && null != parents
                 && !parents.containsId(section.getParentSectionId())) {
-            System.err.println("Section " + section.getSectionId() + " has unknown parent " + section.getParentSectionId());
+            System.err.println(
+                    "Section "
+                            + section.getSectionId()
+                            + " has unknown parent "
+                            + section.getParentSectionId());
         }
 
         if (ids.contains(section.getSectionId())) {
-            throw new IllegalArgumentException("Section " + section.getSectionId() + " \"" + section.getSectionName() + "\" reuses an id.");
+            throw new IllegalArgumentException(
+                    "Section "
+                            + section.getSectionId()
+                            + " \""
+                            + section.getSectionName()
+                            + "\" reuses an id.");
         }
 
         if (section.getAveDip() <= 0) {
-            throw new IllegalArgumentException("Section " + section.getSectionId() + " \"" + section.getSectionName() + "\" does not have a dip greater than 0.");
+            throw new IllegalArgumentException(
+                    "Section "
+                            + section.getSectionId()
+                            + " \""
+                            + section.getSectionName()
+                            + "\" does not have a dip greater than 0.");
         }
 
         if (section.getAveDip() > 90) {
-            throw new IllegalArgumentException("Section " + section.getSectionId() + " \"" + section.getSectionName() + "\" has a dip greater than 90.");
+            throw new IllegalArgumentException(
+                    "Section "
+                            + section.getSectionId()
+                            + " \""
+                            + section.getSectionName()
+                            + "\" has a dip greater than 90.");
         }
 
         ids.add(section.getSectionId());
@@ -107,8 +127,9 @@ public class FaultSectionList extends ArrayList<FaultSection> {
     }
 
     /**
-     * Adds all sections from the sections collection.
-     * Sections are validated as if added by the add method.
+     * Adds all sections from the sections collection. Sections are validated as if added by the add
+     * method.
+     *
      * @param sections a collection of sections.
      * @return true
      */
@@ -121,6 +142,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Removes the ith FaultSection.
+     *
      * @param i the index of the FaultSection to be removed
      * @return the FaultSection that was removed.
      */
@@ -132,6 +154,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Removes o if it is in this FaultSectionList.
+     *
      * @param o the object to be removed.
      * @return whether an object has been removed from the list.
      */
@@ -160,6 +183,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Removes all FaultSections for which the filter returns true.
+     *
      * @param filter a predicate on a FaultSection
      * @return whether any element has been removed.
      */
@@ -169,6 +193,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Removes all FaultSections that are both in this list and in c.
+     *
      * @param c the FaultSections to remove
      * @return whether any element has been removed.
      */
@@ -178,6 +203,7 @@ public class FaultSectionList extends ArrayList<FaultSection> {
 
     /**
      * Removes all FaultSections that are not in c.
+     *
      * @param c the FaultSections to retain
      * @return whether any element has been removed.
      */

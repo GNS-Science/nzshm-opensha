@@ -1,24 +1,18 @@
 package nz.cri.gns.NZSHM22.inversion;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
@@ -26,8 +20,8 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutoffClosestSectClusterConnectionStrategy;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
@@ -45,8 +39,9 @@ public class InterfaceRuptureSetBuilderTest {
     private static final double grid_disc = 5d;
     private static List<FaultSection> subSections;
 
-    //TODO move this helper to a utils.* class
-    private static FaultSectionPrefData buildFSD(int sectionId, FaultTrace trace, double upper, double lower, double dip) {
+    // TODO move this helper to a utils.* class
+    private static FaultSectionPrefData buildFSD(
+            int sectionId, FaultTrace trace, double upper, double lower, double dip) {
         FaultSectionPrefData fsd = new FaultSectionPrefData();
         fsd.setSectionId(sectionId);
         fsd.setFaultTrace(trace);
@@ -58,28 +53,36 @@ public class InterfaceRuptureSetBuilderTest {
     }
 
     private static FaultSection buildFaultSectionFromCsvRow(int sectionId, List<String> row) {
-        // along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip (deg), top_depth (km), bottom_depth (km),neighbours
-        // [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082, 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]
-        FaultTrace trace = new FaultTrace("SubductionTile_" + (String) row.get(0) + "_" + (String) row.get(1));
-        trace.add(new Location(Float.parseFloat((String) row.get(3)),
-                Float.parseFloat((String) row.get(2)),
-                Float.parseFloat((String) row.get(7)))
-        );
-        trace.add(new Location(Float.parseFloat((String) row.get(5)),    //lat
-                Float.parseFloat((String) row.get(4)),                        //lon
-                Float.parseFloat((String) row.get(7)))                        //top_depth (km)
-        );
+        // along_strike_index, down_dip_index, lon1(deg), lat1(deg), lon2(deg), lat2(deg), dip
+        // (deg), top_depth (km), bottom_depth (km),neighbours
+        // [3, 9, 172.05718990191556, -43.02716092186062, 171.94629898533478, -43.06580050196082,
+        // 12.05019252859843, 36.59042136801586, 38.67810629370413, [(4, 9), (3, 10), (4, 10)]]
+        FaultTrace trace =
+                new FaultTrace("SubductionTile_" + (String) row.get(0) + "_" + (String) row.get(1));
+        trace.add(
+                new Location(
+                        Float.parseFloat((String) row.get(3)),
+                        Float.parseFloat((String) row.get(2)),
+                        Float.parseFloat((String) row.get(7))));
+        trace.add(
+                new Location(
+                        Float.parseFloat((String) row.get(5)), // lat
+                        Float.parseFloat((String) row.get(4)), // lon
+                        Float.parseFloat((String) row.get(7))) // top_depth (km)
+                );
 
-        return buildFSD(sectionId, trace,
-                Float.parseFloat((String) row.get(7)), //top
-                Float.parseFloat((String) row.get(8)), //bottom
-                Float.parseFloat((String) row.get(6))); //dip
+        return buildFSD(
+                sectionId,
+                trace,
+                Float.parseFloat((String) row.get(7)), // top
+                Float.parseFloat((String) row.get(8)), // bottom
+                Float.parseFloat((String) row.get(6))); // dip
     }
-
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        InputStream csvdata = InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
+        InputStream csvdata =
+                InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
         CSVFile<String> csv = CSVFile.readStream(csvdata, false);
 
         FaultSectionPrefData parentSection = new FaultSectionPrefData();
@@ -97,7 +100,10 @@ public class InterfaceRuptureSetBuilderTest {
 
     @Test
     public void testOneSubSectionSetup() throws IOException {
-        System.out.println("Have " + subSections.size() + " sub-sections"); // + parentSection.getSectionName());
+        System.out.println(
+                "Have "
+                        + subSections.size()
+                        + " sub-sections"); // + parentSection.getSectionName());
         assertEquals(9, subSections.size());
     }
 
@@ -109,13 +115,14 @@ public class InterfaceRuptureSetBuilderTest {
         parentSection.setSectionId(10000);
         parentSection.setSectionName("Test SubSect Down-Dip Fault");
 
-        InputStream csvdata = InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
+        InputStream csvdata =
+                InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
 
         //	the builder
-        DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(
-                parentSection.getSectionName(), parentSection, startID, csvdata);
+        DownDipSubSectBuilder downDipBuilder =
+                new DownDipSubSectBuilder(
+                        parentSection.getSectionName(), parentSection, startID, csvdata);
         assertEquals(9, downDipBuilder.getSubSectsList().size());
-
     }
 
     @Test
@@ -128,27 +135,37 @@ public class InterfaceRuptureSetBuilderTest {
         parentSection.setSectionId(10000);
         parentSection.setSectionName("ParentSection 10000 - Test SubSect Down-Dip Fault\"");
 
-        InputStream csvdata = InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
-        DownDipSubSectBuilder downDipBuilder = new DownDipSubSectBuilder(sectName, parentSection, startID, csvdata);
-//        DownDipRegistry downDipRegistry = mock(DownDipRegistry.class);
-//        when(downDipRegistry.getBuilder(downDipBuilder.getParentID())).thenReturn(downDipBuilder);
+        InputStream csvdata =
+                InterfaceRuptureSetBuilderTest.class.getResourceAsStream("patch_4_10.csv");
+        DownDipSubSectBuilder downDipBuilder =
+                new DownDipSubSectBuilder(sectName, parentSection, startID, csvdata);
+        //        DownDipRegistry downDipRegistry = mock(DownDipRegistry.class);
+        //
+        // when(downDipRegistry.getBuilder(downDipBuilder.getParentID())).thenReturn(downDipBuilder);
 
         List<FaultSection> subSections = new ArrayList<>();
         subSections.addAll(downDipBuilder.getSubSectsList());
         assertEquals(9, subSections.size());
 
         for (int s = 0; s < subSections.size(); s++)
-            Preconditions.checkState(subSections.get(s).getSectionId() == s,
-                    "section at index %s has ID %s", s, subSections.get(s).getSectionId());
+            Preconditions.checkState(
+                    subSections.get(s).getSectionId() == s,
+                    "section at index %s has ID %s",
+                    s,
+                    subSections.get(s).getSectionId());
 
         // Azimuths & Distances
-        SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
+        SectionDistanceAzimuthCalculator distAzCalc =
+                new SectionDistanceAzimuthCalculator(subSections);
 
-        // this creates rectangular permutations only for our down-dip fault to speed up rupture building
-        RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
+        // this creates rectangular permutations only for our down-dip fault to speed up rupture
+        // building
+        RuptureGrowingStrategy permutationStrategy =
+                new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
 
         // connection strategy: parent faults connect at closest point, and only when dist <=5 km
-        ClusterConnectionStrategy connectionStrategy = new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);
+        ClusterConnectionStrategy connectionStrategy =
+                new DistCutoffClosestSectClusterConnectionStrategy(subSections, distAzCalc, 5d);
         int maxNumSplays = 0; // don't allow any splays
 
         PlausibilityConfiguration config =
@@ -163,5 +180,4 @@ public class InterfaceRuptureSetBuilderTest {
         System.out.println("Built " + ruptures.size() + " total ruptures");
         assertEquals(36, ruptures.size());
     }
-
 }

@@ -3,6 +3,13 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.reports;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.JointSubductionSpreadPlausibilityFilter;
 import org.apache.commons.math3.stat.StatUtils;
 import org.jfree.data.Range;
@@ -27,25 +34,15 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetMapMaker;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.IntStream;
-
-
 /**
  * Gathers stats and creates reports for possible thinning algorithms for creating joint ruptures.
  * Tries out thinning algorithms for subduction ruptures and for crustal ruptures, and then plots
  * some stats for those datasets and for their combinations.
- * <p>
- * The main gist of this is that thinning needs to reduce the total number of created ruptures so that we reduce
- * the computational impact. We also want to preserve some properties of the original rupture sets such as
- * max and min, spatial distribution, etc.
+ *
+ * <p>The main gist of this is that thinning needs to reduce the total number of created ruptures so
+ * that we reduce the computational impact. We also want to preserve some properties of the original
+ * rupture sets such as max and min, spatial distribution, etc.
  */
-
 public class ThinningStats {
 
     String title;
@@ -77,14 +74,15 @@ public class ThinningStats {
 
     List<String> lines = new ArrayList<>();
 
-    public ThinningStats(FaultSystemRupSet rupSet,
-                         FaultSystemRupSet crustalRupSet,
-                         ReportMetadata meta,
-                         File resourcesDir,
-                         String relPathToResources,
-                         String prefix,
-                         String topLink,
-                         String title) {
+    public ThinningStats(
+            FaultSystemRupSet rupSet,
+            FaultSystemRupSet crustalRupSet,
+            ReportMetadata meta,
+            File resourcesDir,
+            String relPathToResources,
+            String prefix,
+            String topLink,
+            String title) {
         this.rupSet = rupSet;
         this.crustalRupSet = crustalRupSet;
         this.meta = meta;
@@ -99,17 +97,21 @@ public class ThinningStats {
         lines.add("- ruptures loaded " + ruptures.size());
         applyThinning();
         if (crustalRupSet != null) {
-            distCalc = new MultiRupSetDist(rupSet.getFaultSectionDataList(), crustalRupSet.getFaultSectionDataList());
+            distCalc =
+                    new MultiRupSetDist(
+                            rupSet.getFaultSectionDataList(),
+                            crustalRupSet.getFaultSectionDataList());
         }
     }
 
     /**
-     * Apply the thinning algorithms and print their results. Once we're happy with thinning, this is the code that we
-     * need to transfer into rupture generation.
+     * Apply the thinning algorithms and print their results. Once we're happy with thinning, this
+     * is the code that we need to transfer into rupture generation.
      */
     protected void applyThinning() {
         if (rupSet.getFaultSectionDataList().get(0).getSectionName().contains("row:")) {
-            JointSubductionSpreadPlausibilityFilter filter = new JointSubductionSpreadPlausibilityFilter(rupSet.getFaultSectionDataList());
+            JointSubductionSpreadPlausibilityFilter filter =
+                    new JointSubductionSpreadPlausibilityFilter(rupSet.getFaultSectionDataList());
             ruptures.removeIf(r -> !filter.filterByPosition(r, false));
             System.out.println("ruptures after position filtering " + ruptures.size());
             lines.add("- ruptures after position filtering " + ruptures.size());
@@ -127,16 +129,21 @@ public class ThinningStats {
     }
 
     protected List<ClusterRupture> filterCrustal(FaultSystemRupSet crustalRupSet) {
-        List<ClusterRupture> crustalRuptures = crustalRupSet.requireModule(ClusterRuptures.class).getAll();
+        List<ClusterRupture> crustalRuptures =
+                crustalRupSet.requireModule(ClusterRuptures.class).getAll();
         System.out.println("crustal ruptures " + crustalRuptures.size());
         lines.add("- crustal ruptures " + crustalRuptures.size());
-        SectionDistanceAzimuthCalculator crustalDistAzCalc = new SectionDistanceAzimuthCalculator(crustalRupSet.getFaultSectionDataList());
-        JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(crustalDistAzCalc);
-        TotalAzimuthChangeFilter totAzFilter = new TotalAzimuthChangeFilter(azimuthCalc, 10, true, true);
+        SectionDistanceAzimuthCalculator crustalDistAzCalc =
+                new SectionDistanceAzimuthCalculator(crustalRupSet.getFaultSectionDataList());
+        JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc =
+                new JumpAzimuthChangeFilter.SimpleAzimuthCalc(crustalDistAzCalc);
+        TotalAzimuthChangeFilter totAzFilter =
+                new TotalAzimuthChangeFilter(azimuthCalc, 10, true, true);
         crustalRuptures.removeIf(r -> !totAzFilter.apply(r, false).isPass());
         System.out.println("crustal ruptures after azimuth filtering " + crustalRuptures.size());
         lines.add("- crustal ruptures after azimuth filtering " + crustalRuptures.size());
-        U3CompatibleCumulativeRakeChangeFilter rakeChangeFilter = new U3CompatibleCumulativeRakeChangeFilter(10);
+        U3CompatibleCumulativeRakeChangeFilter rakeChangeFilter =
+                new U3CompatibleCumulativeRakeChangeFilter(10);
         crustalRuptures.removeIf(r -> !rakeChangeFilter.apply(r, false).isPass());
         System.out.println("crustal ruptures after rake filtering " + crustalRuptures.size());
         lines.add("- crustal ruptures after rake filtering " + crustalRuptures.size());
@@ -155,8 +162,7 @@ public class ThinningStats {
             setNanColor(inner.getNanColor());
             setBlender(inner.getBlender());
 
-            for (CPTVal val : inner)
-                add((CPTVal) val.clone());
+            for (CPTVal val : inner) add((CPTVal) val.clone());
 
             setPreferredTickInterval(inner.getPreferredTickInterval());
         }
@@ -168,7 +174,6 @@ public class ThinningStats {
             }
             return inner.getColor((float) Math.log10(value));
         }
-
     }
 
     public static class Histogram<T extends Number> extends ArrayList<T> {
@@ -180,7 +185,9 @@ public class ThinningStats {
             super();
             this.title = title;
             this.properties = new HashSet<>(Arrays.asList(properties));
-            Preconditions.checkArgument(this.properties.contains(Properties.CLAMP_TO_RANGE) || this.properties.contains(Properties.TRIM_TO_RANGE));
+            Preconditions.checkArgument(
+                    this.properties.contains(Properties.CLAMP_TO_RANGE)
+                            || this.properties.contains(Properties.TRIM_TO_RANGE));
         }
 
         public Range getRange() {
@@ -212,7 +219,9 @@ public class ThinningStats {
         }
 
         public HistogramFunction getHistogramData(Range range, double delta) {
-            HistogramFunction hist = HistogramFunction.getEncompassingHistogram(range.getLowerBound(), range.getUpperBound(), delta);
+            HistogramFunction hist =
+                    HistogramFunction.getEncompassingHistogram(
+                            range.getLowerBound(), range.getUpperBound(), delta);
 
             for (T value : this) {
                 double dValue = value.doubleValue();
@@ -227,9 +236,9 @@ public class ThinningStats {
                     throw new RuntimeException("Expected range property");
                 }
 
-//                if (properties.contains(Properties.X_LOG)) {
-//                    dValue = Math.log10(dValue);
-//                }
+                //                if (properties.contains(Properties.X_LOG)) {
+                //                    dValue = Math.log10(dValue);
+                //                }
 
                 hist.add(hist.getClosestXIndex(dValue), 1);
             }
@@ -255,7 +264,15 @@ public class ThinningStats {
             return table.build();
         }
 
-        public String plot(double delta, String title, String xAxisLabel, String yAxisLabel, File outputDir, String prefix, String relPathToResources) throws IOException {
+        public String plot(
+                double delta,
+                String title,
+                String xAxisLabel,
+                String yAxisLabel,
+                File outputDir,
+                String prefix,
+                String relPathToResources)
+                throws IOException {
             List<XY_DataSet> funcs = new ArrayList<>();
             Range range = getRange();
             if (range.getLength() / 10 < delta) {
@@ -263,7 +280,10 @@ public class ThinningStats {
                 System.err.println("had to change delta for " + title + " to " + delta);
             }
             HistogramFunction histogramData = getHistogramData(delta);
-            Range xRange = new Range(Math.max(histogramData.getMinX() - delta, 0), histogramData.getMaxX() + delta);
+            Range xRange =
+                    new Range(
+                            Math.max(histogramData.getMinX() - delta, 0),
+                            histogramData.getMaxX() + delta);
             Range yRange = new Range(histogramData.getMinY(), histogramData.getMaxY());
 
             funcs.add(histogramData);
@@ -281,10 +301,14 @@ public class ThinningStats {
 
             return "![" + title + "](" + relPathToResources + "/" + prefix + ".png)";
         }
-
     }
 
-    public List<String> plotRupCountMap(FaultSystemRupSet rupSet, Map<Integer, Integer> rupCountPerSection, File outputDir, String relPathToResources) throws IOException {
+    public List<String> plotRupCountMap(
+            FaultSystemRupSet rupSet,
+            Map<Integer, Integer> rupCountPerSection,
+            File outputDir,
+            String relPathToResources)
+            throws IOException {
         Region reg = GeographicMapMaker.buildBufferedRegion(rupSet.getFaultSectionDataList());
         List<Double> values = new ArrayList<>();
         DataUtils.MinMaxAveTracker minMax = new DataUtils.MinMaxAveTracker();
@@ -311,12 +335,24 @@ public class ThinningStats {
 
         cpt = new LogCPT(cpt);
         plotter.plotSectScalars(values, cpt, "Rupture Participation Count");
-        plotter.plot(outputDir, prefix + "_thinning_participationlog", "Rupture Participation Count (Log)");
+        plotter.plot(
+                outputDir,
+                prefix + "_thinning_participationlog",
+                "Rupture Participation Count (Log)");
 
         MarkdownUtils.TableBuilder table = MarkdownUtils.tableBuilder();
         table.addLine("Rupture Participation Count", "Rupture Participation Count (Log)");
-        table.addLine("![Rupture Participation Count](" + relPathToResources + "/" + prefix + "_thinning_participation.png)",
-                "![Rupture Participation Count](" + relPathToResources + "/" + prefix + "_thinning_participationlog.png)");
+        table.addLine(
+                "![Rupture Participation Count]("
+                        + relPathToResources
+                        + "/"
+                        + prefix
+                        + "_thinning_participation.png)",
+                "![Rupture Participation Count]("
+                        + relPathToResources
+                        + "/"
+                        + prefix
+                        + "_thinning_participationlog.png)");
         return table.build();
     }
 
@@ -342,7 +378,6 @@ public class ThinningStats {
         public static MultiRupSetFaultSection getMultiRupSetFaultSection(FaultSection original) {
             return mapping.get(original);
         }
-
     }
 
     static class MultiRupSetDist {
@@ -366,55 +401,64 @@ public class ThinningStats {
         }
     }
 
-
     protected void generateRupJumps() {
 
         System.out.println("generateRupJumps");
 
         // build map from subduction section to crustal rupture ids
         Map<Integer, Set<Integer>> subSecToRups = new ConcurrentHashMap<>();
-        IntStream.range(0, crustalRuptures.size()).parallel().forEach(cr -> {
-            List<FaultSection> crustalSecs = crustalRuptures.get(cr).buildOrderedSectionList();
-            for (FaultSection crustSec : crustalSecs) {
-                for (FaultSection subSec : rupSet.getFaultSectionDataList()) {
-                    if (distCalc.getDistance(subSec, crustSec) <= 5) {
-                        subSecToRups.compute(subSec.getSectionId(), (id, rups) -> {
-                            rups = rups == null ? new HashSet<>() : rups;
-                            rups.add(cr);
-                            return rups;
+        IntStream.range(0, crustalRuptures.size())
+                .parallel()
+                .forEach(
+                        cr -> {
+                            List<FaultSection> crustalSecs =
+                                    crustalRuptures.get(cr).buildOrderedSectionList();
+                            for (FaultSection crustSec : crustalSecs) {
+                                for (FaultSection subSec : rupSet.getFaultSectionDataList()) {
+                                    if (distCalc.getDistance(subSec, crustSec) <= 5) {
+                                        subSecToRups.compute(
+                                                subSec.getSectionId(),
+                                                (id, rups) -> {
+                                                    rups = rups == null ? new HashSet<>() : rups;
+                                                    rups.add(cr);
+                                                    return rups;
+                                                });
+                                    }
+                                }
+                            }
                         });
-                    }
-                }
-            }
-        });
 
         System.out.println("subRupToCrustRupCount");
 
         subRupToCrustRupCount = new ConcurrentHashMap<>();
         subRupToCrustRupCountWithMinOverlap = new ConcurrentHashMap<>();
-        IntStream.range(0, ruptures.size()).parallel().forEach(r -> {
-            Set<Integer> rupIds = new HashSet<>();
-            Map<Integer, Integer> rupCounts = new HashMap<>();
-            for (FaultSection section : ruptures.get(r).buildOrderedSectionList()) {
-                Set<Integer> rups = subSecToRups.get(section.getSectionId());
-                if (rups != null) {
-                    rupIds.addAll(rups);
-                    for (Integer cr : rupIds) {
-                        rupCounts.compute(cr, (key, count) -> count == null ? 1 : count + 1);
-                    }
-                }
-            }
-            if (!rupIds.isEmpty()) {
-                subRupToCrustRupCount.put(r, rupIds.size());
-                long counts = rupCounts.values().stream().filter(c -> c > 7).count();
-                if (counts > 0) {
-                    subRupToCrustRupCountWithMinOverlap.put(r, (int) counts);
-                }
-            }
-        });
+        IntStream.range(0, ruptures.size())
+                .parallel()
+                .forEach(
+                        r -> {
+                            Set<Integer> rupIds = new HashSet<>();
+                            Map<Integer, Integer> rupCounts = new HashMap<>();
+                            for (FaultSection section : ruptures.get(r).buildOrderedSectionList()) {
+                                Set<Integer> rups = subSecToRups.get(section.getSectionId());
+                                if (rups != null) {
+                                    rupIds.addAll(rups);
+                                    for (Integer cr : rupIds) {
+                                        rupCounts.compute(
+                                                cr, (key, count) -> count == null ? 1 : count + 1);
+                                    }
+                                }
+                            }
+                            if (!rupIds.isEmpty()) {
+                                subRupToCrustRupCount.put(r, rupIds.size());
+                                long counts =
+                                        rupCounts.values().stream().filter(c -> c > 7).count();
+                                if (counts > 0) {
+                                    subRupToCrustRupCountWithMinOverlap.put(r, (int) counts);
+                                }
+                            }
+                        });
 
         System.out.println("done");
-
     }
 
     protected void gatherStats() {
@@ -428,8 +472,10 @@ public class ThinningStats {
             subductionRuptureSizes.add(size);
             for (FaultSection section : sections) {
                 Integer oldCount = subductionRupSizePerSection.get(section.getSectionId(), size);
-                subductionRupSizePerSection.put(section.getSectionId(), size, oldCount == null ? 1 : oldCount + 1);
-                subductionRupCountPerSection.compute(section.getSectionId(), (s, count) -> count == null ? 1 : count + 1);
+                subductionRupSizePerSection.put(
+                        section.getSectionId(), size, oldCount == null ? 1 : oldCount + 1);
+                subductionRupCountPerSection.compute(
+                        section.getSectionId(), (s, count) -> count == null ? 1 : count + 1);
             }
         }
 
@@ -440,7 +486,8 @@ public class ThinningStats {
         Map<Integer, Integer> crustalSectionToRupCount = new HashMap<>();
         for (int r = 0; r < crustalRupSet.getNumRuptures(); r++) {
             for (FaultSection section : crustalRupSet.getFaultSectionDataForRupture(r)) {
-                crustalSectionToRupCount.compute(section.getSectionId(), (s, count) -> count == null ? 1 : count + 1);
+                crustalSectionToRupCount.compute(
+                        section.getSectionId(), (s, count) -> count == null ? 1 : count + 1);
             }
         }
 
@@ -448,23 +495,33 @@ public class ThinningStats {
         crustalRupCountsPerSection = new ConcurrentHashMap<>();
         totalCombinationsPerSection = new ConcurrentHashMap<>();
 
-        rupSet.getFaultSectionDataList().parallelStream().forEach(subductionSection -> {
-            int count = 0;
-            int rupCount = 0;
-            for (FaultSection crustalSection : crustalRupSet.getFaultSectionDataList()) {
-                if (distCalc.getDistance(subductionSection, crustalSection) <= 5) {
-                    count++;
-                    rupCount += crustalSectionToRupCount.get(crustalSection.getSectionId());
-                }
-            }
-            if (count > 0) {
-                jumpCountsPerSection.put(subductionSection.getSectionId(), count);
-            }
-            if (rupCount > 0) {
-                crustalRupCountsPerSection.put(subductionSection.getSectionId(), rupCount);
-                totalCombinationsPerSection.put(subductionSection.getSectionId(), rupCount * subductionRupCountPerSection.get(subductionSection.getSectionId()));
-            }
-        });
+        rupSet.getFaultSectionDataList().parallelStream()
+                .forEach(
+                        subductionSection -> {
+                            int count = 0;
+                            int rupCount = 0;
+                            for (FaultSection crustalSection :
+                                    crustalRupSet.getFaultSectionDataList()) {
+                                if (distCalc.getDistance(subductionSection, crustalSection) <= 5) {
+                                    count++;
+                                    rupCount +=
+                                            crustalSectionToRupCount.get(
+                                                    crustalSection.getSectionId());
+                                }
+                            }
+                            if (count > 0) {
+                                jumpCountsPerSection.put(subductionSection.getSectionId(), count);
+                            }
+                            if (rupCount > 0) {
+                                crustalRupCountsPerSection.put(
+                                        subductionSection.getSectionId(), rupCount);
+                                totalCombinationsPerSection.put(
+                                        subductionSection.getSectionId(),
+                                        rupCount
+                                                * subductionRupCountPerSection.get(
+                                                        subductionSection.getSectionId()));
+                            }
+                        });
 
         generateRupJumps();
     }
@@ -474,17 +531,35 @@ public class ThinningStats {
 
         List<String> lines = new ArrayList<>(this.lines);
 
-        lines.add("These plots show useful data for assessing different thinning options for joint ruptures.");
+        lines.add(
+                "These plots show useful data for assessing different thinning options for joint ruptures.");
 
-        lines.add(subductionRuptureSizes.plot(10, "Rupture Size Count", "Section Count", "Rupture Count", resourcesDir, prefix + "thinning_rupSizes", relPathToResources));
+        lines.add(
+                subductionRuptureSizes.plot(
+                        10,
+                        "Rupture Size Count",
+                        "Section Count",
+                        "Rupture Count",
+                        resourcesDir,
+                        prefix + "thinning_rupSizes",
+                        relPathToResources));
         lines.add("");
         lines.add("The distribution of rupture sizes measured in sections.");
         lines.add("");
         lines.addAll(subductionRuptureSizes.addStats());
 
-        Histogram<Integer> rupCountPerSectionHistogram = new Histogram<>(title, Histogram.Properties.CLAMP_TO_RANGE);
+        Histogram<Integer> rupCountPerSectionHistogram =
+                new Histogram<>(title, Histogram.Properties.CLAMP_TO_RANGE);
         rupCountPerSectionHistogram.addAll(subductionRupCountPerSection.values());
-        lines.add(rupCountPerSectionHistogram.plot(100000, "Ruptures per Section", "Rupture Count", "Section Count", resourcesDir, prefix + "thinning_rupCountPerSection", relPathToResources));
+        lines.add(
+                rupCountPerSectionHistogram.plot(
+                        100000,
+                        "Ruptures per Section",
+                        "Rupture Count",
+                        "Section Count",
+                        resourcesDir,
+                        prefix + "thinning_rupCountPerSection",
+                        relPathToResources));
         lines.add("");
         lines.add("The distribution of the number of ruptures a section is part of.");
         lines.add("");
@@ -492,83 +567,135 @@ public class ThinningStats {
         lines.add("");
 
         lines.add("");
-        lines.addAll(plotRupCountMap(rupSet, subductionRupCountPerSection, resourcesDir, relPathToResources));
+        lines.addAll(
+                plotRupCountMap(
+                        rupSet, subductionRupCountPerSection, resourcesDir, relPathToResources));
         lines.add("");
         lines.add("The same data as the previous histogram, plotted on a map.");
         lines.add("");
 
         if (jumpCountsPerSection != null) {
-            Histogram<Integer> jumpCounts = new Histogram<>("jump counts", Histogram.Properties.CLAMP_TO_RANGE);
+            Histogram<Integer> jumpCounts =
+                    new Histogram<>("jump counts", Histogram.Properties.CLAMP_TO_RANGE);
             jumpCounts.addAll(jumpCountsPerSection.values());
-            lines.add(jumpCounts.plot(1, "Jumps per Section", "Jumps", "Section Count", resourcesDir, prefix + "thinning_jumpCounts", relPathToResources));
+            lines.add(
+                    jumpCounts.plot(
+                            1,
+                            "Jumps per Section",
+                            "Jumps",
+                            "Section Count",
+                            resourcesDir,
+                            prefix + "thinning_jumpCounts",
+                            relPathToResources));
             lines.add("");
-            lines.add("Distribution of jumps to crustal from each subduction section. A jump exists when a crustal section is within 5km of the subduction section.");
+            lines.add(
+                    "Distribution of jumps to crustal from each subduction section. A jump exists when a crustal section is within 5km of the subduction section.");
             lines.add("");
             lines.addAll(jumpCounts.addStats());
             lines.add("");
         }
 
         if (crustalRupCountsPerSection != null) {
-            Histogram<Integer> rupCounts = new Histogram<>("rupture counts", Histogram.Properties.CLAMP_TO_RANGE);
+            Histogram<Integer> rupCounts =
+                    new Histogram<>("rupture counts", Histogram.Properties.CLAMP_TO_RANGE);
             rupCounts.addAll(crustalRupCountsPerSection.values());
-            lines.add(rupCounts.plot(10000, "Crustal Ruptures per Subduction Section", "Crustal Ruptures", "Subduction Section Count", resourcesDir, prefix + "thinning_rupCounts", relPathToResources));
+            lines.add(
+                    rupCounts.plot(
+                            10000,
+                            "Crustal Ruptures per Subduction Section",
+                            "Crustal Ruptures",
+                            "Subduction Section Count",
+                            resourcesDir,
+                            prefix + "thinning_rupCounts",
+                            relPathToResources));
             lines.add("");
-            lines.add("Distribution of jumps to crustal ruptures from each subduction section. A jump exists when a crustal rupture is within 5km of the subduction section.");
+            lines.add(
+                    "Distribution of jumps to crustal ruptures from each subduction section. A jump exists when a crustal rupture is within 5km of the subduction section.");
             lines.add("");
             lines.addAll(rupCounts.addStats());
             lines.add("");
         }
 
         if (totalCombinationsPerSection != null) {
-            Histogram<Integer> combinationCounts = new Histogram<>("total combinations", Histogram.Properties.CLAMP_TO_RANGE);
+            Histogram<Integer> combinationCounts =
+                    new Histogram<>("total combinations", Histogram.Properties.CLAMP_TO_RANGE);
             combinationCounts.addAll(totalCombinationsPerSection.values());
-            lines.add(combinationCounts.plot(1000, "Potential Joint Ruptures Per Subduction Section", "Joint Ruptures", "Subduction Section Count", resourcesDir, prefix + "thinning_jointCounts", relPathToResources));
+            lines.add(
+                    combinationCounts.plot(
+                            1000,
+                            "Potential Joint Ruptures Per Subduction Section",
+                            "Joint Ruptures",
+                            "Subduction Section Count",
+                            resourcesDir,
+                            prefix + "thinning_jointCounts",
+                            relPathToResources));
             lines.add("");
-            lines.add("Distribution of joint ruptures for each subduction section. This plot assumes that the jump sections matter and will include multiple subduction/crustal rupture combinations with different jumps.");
+            lines.add(
+                    "Distribution of joint ruptures for each subduction section. This plot assumes that the jump sections matter and will include multiple subduction/crustal rupture combinations with different jumps.");
             lines.add("");
             lines.addAll(combinationCounts.addStats());
             lines.add("");
         }
         if (subRupToCrustRupCount != null) {
-            Histogram<Integer> combinationCounts = new Histogram<>("rupture combinations", Histogram.Properties.CLAMP_TO_RANGE);
+            Histogram<Integer> combinationCounts =
+                    new Histogram<>("rupture combinations", Histogram.Properties.CLAMP_TO_RANGE);
             combinationCounts.addAll(subRupToCrustRupCount.values());
-            lines.add(combinationCounts.plot(10000, "Potential Joint Ruptures Per Subduction Rupture", "Joint Ruptures", "Subduction Rupture Count", resourcesDir, prefix + "thinning_jointRuptureCounts", relPathToResources));
+            lines.add(
+                    combinationCounts.plot(
+                            10000,
+                            "Potential Joint Ruptures Per Subduction Rupture",
+                            "Joint Ruptures",
+                            "Subduction Rupture Count",
+                            resourcesDir,
+                            prefix + "thinning_jointRuptureCounts",
+                            relPathToResources));
             lines.add("");
-            lines.add("Distribution of joint ruptures for each subduction rupture. This plot assumes that the jump sections do not matter and only counts possible subduction/crustal joint ruptures with no duplicates.");
+            lines.add(
+                    "Distribution of joint ruptures for each subduction rupture. This plot assumes that the jump sections do not matter and only counts possible subduction/crustal joint ruptures with no duplicates.");
             lines.add("");
             lines.addAll(combinationCounts.addStats());
             lines.add("");
         }
 
-//        if (subRupToCrustRupCountWithMinOverlap != null) {
-//            Histogram<Integer> combinationCounts = new Histogram<>("rupture combinations", Histogram.Properties.CLAMP_TO_RANGE);
-//            combinationCounts.addAll(subRupToCrustRupCountWithMinOverlap.values());
-//            lines.add(combinationCounts.plot(10000, "Potential Joint Ruptures Per Subduction Rupture", "Joint Ruptures", "Subduction Rupture Count", resourcesDir, prefix + "thinning_jointRuptureCountsOverlap", relPathToResources));
-//            lines.add("");
-//            lines.add("Distribution of joint ruptures for each subduction rupture. This plot assumes that the jump sections do not matter and only counts possible subduction/crustal joint ruptures with no duplicates.");
-//            lines.add("");
-//            lines.addAll(combinationCounts.addStats());
-//            lines.add("");
-//        }
-
+        //        if (subRupToCrustRupCountWithMinOverlap != null) {
+        //            Histogram<Integer> combinationCounts = new Histogram<>("rupture combinations",
+        // Histogram.Properties.CLAMP_TO_RANGE);
+        //            combinationCounts.addAll(subRupToCrustRupCountWithMinOverlap.values());
+        //            lines.add(combinationCounts.plot(10000, "Potential Joint Ruptures Per
+        // Subduction Rupture", "Joint Ruptures", "Subduction Rupture Count", resourcesDir, prefix +
+        // "thinning_jointRuptureCountsOverlap", relPathToResources));
+        //            lines.add("");
+        //            lines.add("Distribution of joint ruptures for each subduction rupture. This
+        // plot assumes that the jump sections do not matter and only counts possible
+        // subduction/crustal joint ruptures with no duplicates.");
+        //            lines.add("");
+        //            lines.addAll(combinationCounts.addStats());
+        //            lines.add("");
+        //        }
 
         return lines;
     }
 
     public static void main(String[] args) throws IOException {
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.load(
+                        new File(
+                                "C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
         // jumpStats(rupSet, new File("/tmp/rupCartoons"), "jumpstats", "");
 
-
-//        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
-//        ClusterRuptures cRups = rupSet.requireModule(ClusterRuptures.class);
-//
-//        SubductionStats stats = new SubductionStats("Hikurangi");
-//        stats.collectRuptureStats(cRups.getAll(), new File("/tmp/rupcartoons"), "hikurangi", "");
-//
-//        rupSet = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"));
-//        cRups = rupSet.requireModule(ClusterRuptures.class);
-//        stats = new SubductionStats("Crustal");
-//        stats.collectRuptureStats(cRups.getAll(), new File("/tmp/rupcartoons"), "crustal", "");
+        //        FaultSystemRupSet rupSet = FaultSystemRupSet.load(new
+        // File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
+        //        ClusterRuptures cRups = rupSet.requireModule(ClusterRuptures.class);
+        //
+        //        SubductionStats stats = new SubductionStats("Hikurangi");
+        //        stats.collectRuptureStats(cRups.getAll(), new File("/tmp/rupcartoons"),
+        // "hikurangi", "");
+        //
+        //        rupSet = FaultSystemRupSet.load(new
+        // File("C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"));
+        //        cRups = rupSet.requireModule(ClusterRuptures.class);
+        //        stats = new SubductionStats("Crustal");
+        //        stats.collectRuptureStats(cRups.getAll(), new File("/tmp/rupcartoons"), "crustal",
+        // "");
     }
 }

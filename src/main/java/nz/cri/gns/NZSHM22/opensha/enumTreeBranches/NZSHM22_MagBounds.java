@@ -3,11 +3,10 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
-
-import java.io.IOException;
 
 public class NZSHM22_MagBounds implements LogicTreeNode {
 
@@ -20,8 +19,7 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
         MANIPULATE_MFD;
     }
 
-    public NZSHM22_MagBounds() {
-    }
+    public NZSHM22_MagBounds() {}
 
     public NZSHM22_MagBounds(double maxMagSans, double maxMagTvz, MaxMagType type) {
         this.maxMagSans = maxMagSans;
@@ -106,7 +104,6 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
             return bounds;
         }
     }
-
 
     public static class Level extends LogicTreeLevel.AdapterBackedLevel {
         public Level() {

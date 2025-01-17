@@ -6,15 +6,14 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.awt.geom.Area;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.SectionPolygons;
 import org.junit.Test;
 import org.opensha.commons.geo.*;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
-
-import java.awt.geom.Area;
-import java.util.List;
 
 public class FaultSectionPolygonWeightsTest {
 
@@ -39,7 +38,8 @@ public class FaultSectionPolygonWeightsTest {
         return buffer;
     }
 
-    protected FaultSectionPolygonWeights mockWeights(FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
+    protected FaultSectionPolygonWeights mockWeights(
+            FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
         Area buffer = buildPoly(trace, dipDirection, bufferSizeA, bufferSizeB);
         LocationList locs = SectionPolygons.areaToLocLists(buffer).get(0);
         Region poly = new Region(locs, null);
@@ -55,7 +55,8 @@ public class FaultSectionPolygonWeightsTest {
         return new FaultSectionPolygonWeights(polys, section);
     }
 
-    protected List<Location> createTestPoints(FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
+    protected List<Location> createTestPoints(
+            FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
 
         double distance = LocationUtils.horzDistance(trace.first(), trace.last());
         double azimuth = LocationUtils.azimuth(trace.first(), trace.last());
@@ -63,25 +64,44 @@ public class FaultSectionPolygonWeightsTest {
         Location midPoint = LocationUtils.location(trace.first(), v);
 
         LocationList points = new LocationList();
-        points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection, bufferSizeA + 10, 0)));
+        points.add(
+                LocationUtils.location(
+                        midPoint, new LocationVector(dipDirection, bufferSizeA + 10, 0)));
         // subtract a little to make sure we're inside the polygon and don't get a -1 result
-        points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection, bufferSizeA - 0.01, 0)));
-        points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection, bufferSizeA / 2, 0)));
-        points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection, bufferSizeA / 4, 0)));
+        points.add(
+                LocationUtils.location(
+                        midPoint, new LocationVector(dipDirection, bufferSizeA - 0.01, 0)));
+        points.add(
+                LocationUtils.location(
+                        midPoint, new LocationVector(dipDirection, bufferSizeA / 2, 0)));
+        points.add(
+                LocationUtils.location(
+                        midPoint, new LocationVector(dipDirection, bufferSizeA / 4, 0)));
         points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection, 0.01, 0)));
-        //points.add(midPoint);
+        // points.add(midPoint);
         if (bufferSizeB > 0) {
-            points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection - 180, bufferSizeB / 4, 0)));
-            points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection - 180, bufferSizeB / 2, 0)));
+            points.add(
+                    LocationUtils.location(
+                            midPoint, new LocationVector(dipDirection - 180, bufferSizeB / 4, 0)));
+            points.add(
+                    LocationUtils.location(
+                            midPoint, new LocationVector(dipDirection - 180, bufferSizeB / 2, 0)));
             // subtract a little to make sure we're inside the polygon and don't get a -1 result
-            points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection - 180, bufferSizeB - 0.01, 0)));
-            points.add(LocationUtils.location(midPoint, new LocationVector(dipDirection - 180, bufferSizeB + 10, 0)));
+            points.add(
+                    LocationUtils.location(
+                            midPoint,
+                            new LocationVector(dipDirection - 180, bufferSizeB - 0.01, 0)));
+            points.add(
+                    LocationUtils.location(
+                            midPoint, new LocationVector(dipDirection - 180, bufferSizeB + 10, 0)));
         }
         return points;
     }
 
-    protected void testWeights(FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
-        FaultSectionPolygonWeights weights = mockWeights(trace, dipDirection, bufferSizeA, bufferSizeB);
+    protected void testWeights(
+            FaultTrace trace, float dipDirection, double bufferSizeA, double bufferSizeB) {
+        FaultSectionPolygonWeights weights =
+                mockWeights(trace, dipDirection, bufferSizeA, bufferSizeB);
         List<Location> testPoints = createTestPoints(trace, dipDirection, bufferSizeA, bufferSizeB);
         assertEquals(-1, weights.polygonWeight(testPoints.get(0)), 0);
         assertEquals(0.99, weights.polygonWeight(testPoints.get(1)), 0.01);
@@ -132,14 +152,13 @@ public class FaultSectionPolygonWeightsTest {
     }
 
     @Test
-    public void testAzimuthDifference(){
-        assertEquals(0, FaultSectionPolygonWeights.azimuthDifference(0, 0),0);
-        assertEquals(0, FaultSectionPolygonWeights.azimuthDifference(0, 360),0);
-        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(0, 180),0);
-        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(360, 540),0);
-        assertEquals(90, FaultSectionPolygonWeights.azimuthDifference(0, 90),0);
-        assertEquals(90, FaultSectionPolygonWeights.azimuthDifference(270, 0),0);
-        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(270, 90),0);
+    public void testAzimuthDifference() {
+        assertEquals(0, FaultSectionPolygonWeights.azimuthDifference(0, 0), 0);
+        assertEquals(0, FaultSectionPolygonWeights.azimuthDifference(0, 360), 0);
+        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(0, 180), 0);
+        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(360, 540), 0);
+        assertEquals(90, FaultSectionPolygonWeights.azimuthDifference(0, 90), 0);
+        assertEquals(90, FaultSectionPolygonWeights.azimuthDifference(270, 0), 0);
+        assertEquals(180, FaultSectionPolygonWeights.azimuthDifference(270, 90), 0);
     }
-
 }

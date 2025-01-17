@@ -2,6 +2,11 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -11,15 +16,9 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 /**
- * Loads a rupture set from an archive and restores subduction class like
- * DownDipFaultSection and DownDipFaultSubSectionCluster
+ * Loads a rupture set from an archive and restores subduction class like DownDipFaultSection and
+ * DownDipFaultSubSectionCluster
  */
 public class RuptureLoader {
 
@@ -27,35 +26,43 @@ public class RuptureLoader {
     protected Set<Integer> subductionParents;
     protected List<ClusterRupture> ruptures;
 
-    public RuptureLoader() {
-    }
+    public RuptureLoader() {}
 
     protected void makeSectionList(List<? extends FaultSection> sections) {
         subductionParents = new HashSet<>();
         Pattern pattern = Pattern.compile("; col: (\\d+), row: (\\d+)");
-        subSections = sections.stream().map(section -> {
-            Matcher m = pattern.matcher(section.getSectionName());
-            if (m.find()) {
-                DownDipFaultSection ddSection = new DownDipFaultSection();
-                ddSection.setFaultSectionPrefData(section);
-                ddSection.setColIndex(Integer.parseInt(m.group(1)));
-                ddSection.setRowIndex(Integer.parseInt(m.group(2)));
-                subductionParents.add(ddSection.getParentSectionId());
+        subSections =
+                sections.stream()
+                        .map(
+                                section -> {
+                                    Matcher m = pattern.matcher(section.getSectionName());
+                                    if (m.find()) {
+                                        DownDipFaultSection ddSection = new DownDipFaultSection();
+                                        ddSection.setFaultSectionPrefData(section);
+                                        ddSection.setColIndex(Integer.parseInt(m.group(1)));
+                                        ddSection.setRowIndex(Integer.parseInt(m.group(2)));
+                                        subductionParents.add(ddSection.getParentSectionId());
 
-                return ddSection;
-            }
-            return section;
-
-        }).collect(Collectors.toList());
+                                        return ddSection;
+                                    }
+                                    return section;
+                                })
+                        .collect(Collectors.toList());
     }
 
     protected FaultSubsectionCluster translateCluster(FaultSubsectionCluster origCluster) {
-        List<FaultSection> sections = origCluster.subSects.stream().map(s -> {
-            FaultSection section = subSections.get(s.getSectionId());
-            Preconditions.checkState(section.getSectionId() == s.getSectionId());
-            Preconditions.checkState(section.getParentSectionId() == s.getParentSectionId());
-            return section;
-        }).collect(Collectors.toList());
+        List<FaultSection> sections =
+                origCluster.subSects.stream()
+                        .map(
+                                s -> {
+                                    FaultSection section = subSections.get(s.getSectionId());
+                                    Preconditions.checkState(
+                                            section.getSectionId() == s.getSectionId());
+                                    Preconditions.checkState(
+                                            section.getParentSectionId() == s.getParentSectionId());
+                                    return section;
+                                })
+                        .collect(Collectors.toList());
 
         if (subductionParents.contains(origCluster.parentSectionID)) {
             return new DownDipFaultSubSectionCluster(sections, List.of());
@@ -76,7 +83,10 @@ public class RuptureLoader {
     }
 
     protected ClusterRupture translateRupture(ClusterRupture origRupture) {
-        List<FaultSubsectionCluster> clusters = Arrays.stream(origRupture.clusters).map(this::translateCluster).collect(Collectors.toList());
+        List<FaultSubsectionCluster> clusters =
+                Arrays.stream(origRupture.clusters)
+                        .map(this::translateCluster)
+                        .collect(Collectors.toList());
 
         List<Jump> jumps = new ArrayList<>();
 
@@ -89,15 +99,19 @@ public class RuptureLoader {
             FaultSubsectionCluster toCluster = clusters.get(i);
             Preconditions.checkState(clustersEqual(origToCluster, toCluster));
 
-            jumps.add(new Jump(
-                    subSections.get(origJump.fromSection.getSectionId()),
-                    fromCluster,
-                    subSections.get(origJump.toSection.getSectionId()),
-                    toCluster,
-                    origJump.distance));
+            jumps.add(
+                    new Jump(
+                            subSections.get(origJump.fromSection.getSectionId()),
+                            fromCluster,
+                            subSections.get(origJump.toSection.getSectionId()),
+                            toCluster,
+                            origJump.distance));
         }
 
-        return new ManipulatedClusterRupture(clusters.toArray(FaultSubsectionCluster[]::new), ImmutableList.copyOf(jumps), origRupture.unique);
+        return new ManipulatedClusterRupture(
+                clusters.toArray(FaultSubsectionCluster[]::new),
+                ImmutableList.copyOf(jumps),
+                origRupture.unique);
     }
 
     /**

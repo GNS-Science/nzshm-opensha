@@ -1,5 +1,11 @@
 package nz.cri.gns.NZSHM22;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
@@ -15,13 +21,6 @@ import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class SmokeTest {
 
@@ -92,26 +91,31 @@ public class SmokeTest {
 
     public void testCoulombRuptures(File ruptureSetFile) throws DocumentException, IOException {
 
-        NZSHM22_PythonGateway.NZSHM22_CachedCoulombRuptureSetBuilder builder = NZSHM22_PythonGateway.getCoulombRuptureSetBuilder();
+        NZSHM22_PythonGateway.NZSHM22_CachedCoulombRuptureSetBuilder builder =
+                NZSHM22_PythonGateway.getCoulombRuptureSetBuilder();
 
-        SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
+        SimplifiedScalingRelationship scaling =
+                (SimplifiedScalingRelationship)
+                        NZSHM22_PythonGateway.getScalingRelationship(
+                                "SimplifiedScalingRelationship");
         scaling.setupCrustal(4, 4.1);
 
-        FaultSystemRupSet rupSet = builder
-                .setAdaptiveMinDist(6.0d)
-                .setMaxJumpDistance(15d)
-                .setAdaptiveSectFract(0.1f)
-                .setIdRangeFilter(0, 40)
-                .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
-                .setScalingRelationship(scaling)
-                .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
-                .buildRuptureSet();
+        FaultSystemRupSet rupSet =
+                builder.setAdaptiveMinDist(6.0d)
+                        .setMaxJumpDistance(15d)
+                        .setAdaptiveSectFract(0.1f)
+                        .setIdRangeFilter(0, 40)
+                        .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
+                        .setScalingRelationship(scaling)
+                        .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
+                        .buildRuptureSet();
 
         builder.writeRuptureSet(ruptureSetFile.getAbsolutePath());
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(ruptureSetFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet =
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(ruptureSetFile, branch);
 
         sanityCheckCoulombRuptureSet(rupSet);
         sanityCheckCoulombRuptureSet(loadedRupSet);
@@ -123,7 +127,9 @@ public class SmokeTest {
         assertEquals(452, rupSet.getSlipRateStdDevForAllSections().length);
 
         // sanity check first rupture
-        assertEquals("Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge", rupSet.getFaultSectionData(0).getParentSectionName());
+        assertEquals(
+                "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
+                rupSet.getFaultSectionData(0).getParentSectionName());
         assertEquals(1.749000046402216E-6, rupSet.getSlipRateForSection(0), 0.0000000001);
         assertEquals(0, rupSet.getSlipRateStdDevForSection(0), 0.0000000001);
         assertEquals(6.255087804186543, rupSet.getMagForRup(0), 0.0000000001);
@@ -131,85 +137,101 @@ public class SmokeTest {
 
     public void testSubductionRuptures(File rupturesFile) throws DocumentException, IOException {
 
-        NZSHM22_PythonGateway.NZSHM22_CachedSubductionRuptureSetBuilder builder = NZSHM22_PythonGateway.getSubductionRuptureSetBuilder();
+        NZSHM22_PythonGateway.NZSHM22_CachedSubductionRuptureSetBuilder builder =
+                NZSHM22_PythonGateway.getSubductionRuptureSetBuilder();
 
-        SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
+        SimplifiedScalingRelationship scaling =
+                (SimplifiedScalingRelationship)
+                        NZSHM22_PythonGateway.getScalingRelationship(
+                                "SimplifiedScalingRelationship");
         scaling.setupSubduction(3);
 
-        FaultSystemRupSet rupSet = builder
-                .setMaxRuptures(100)
-                .setDownDipAspectRatio(2, 5, 7)
-                .setDownDipPositionCoarseness(0.0)
-                .setDownDipSizeCoarseness(0.0)
-                .setDownDipMinFill(0.5)
-                .setIdRangeFilter(0, 10)
-                .setFaultModel(NZSHM22_FaultModels.SBD_0_4_HKR_LR_30)
-                .setScalingRelationship(NZSHM22_PythonGateway.getScalingRelationship("TMG_SUB_2017"))
-                .setScalingRelationship(scaling)
-                .setSlipAlongRuptureModel(SlipAlongRuptureModels.UNIFORM)
-                .buildRuptureSet();
+        FaultSystemRupSet rupSet =
+                builder.setMaxRuptures(100)
+                        .setDownDipAspectRatio(2, 5, 7)
+                        .setDownDipPositionCoarseness(0.0)
+                        .setDownDipSizeCoarseness(0.0)
+                        .setDownDipMinFill(0.5)
+                        .setIdRangeFilter(0, 10)
+                        .setFaultModel(NZSHM22_FaultModels.SBD_0_4_HKR_LR_30)
+                        .setScalingRelationship(
+                                NZSHM22_PythonGateway.getScalingRelationship("TMG_SUB_2017"))
+                        .setScalingRelationship(scaling)
+                        .setSlipAlongRuptureModel(SlipAlongRuptureModels.UNIFORM)
+                        .buildRuptureSet();
 
         builder.writeRuptureSet(rupturesFile.getAbsolutePath());
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
-        NZSHM22_InversionFaultSystemRuptSet loadedRupSet = NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupturesFile, branch);
+        NZSHM22_InversionFaultSystemRuptSet loadedRupSet =
+                NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupturesFile, branch);
 
         sanityCheckSubductionRuptureSet(rupSet);
         sanityCheckSubductionRuptureSet(loadedRupSet);
     }
 
-    public void testCrustalInversionRunner(File ruptureSetFile, File solutionFile) throws DocumentException, IOException {
+    public void testCrustalInversionRunner(File ruptureSetFile, File solutionFile)
+            throws DocumentException, IOException {
 
-        SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
+        SimplifiedScalingRelationship scaling =
+                (SimplifiedScalingRelationship)
+                        NZSHM22_PythonGateway.getScalingRelationship(
+                                "SimplifiedScalingRelationship");
         scaling.setupCrustal(4, 4.1);
 
-        NZSHM22_PythonGateway.CachedCrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
+        NZSHM22_PythonGateway.CachedCrustalInversionRunner runner =
+                NZSHM22_PythonGateway.getCrustalInversionRunner();
 
-        FaultSystemSolution solution = runner
-                .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
-                .setInversionSeconds(1)
-                .setSelectionInterval(1)
-                .setScalingRelationship(scaling, true)
-                .setRuptureSetFile(ruptureSetFile)
-                //.setGutenbergRichterMFDWeights(100.0, 1000.0)
-                //.setSlipRateConstraint("BOTH", 1000, 1000)
-                .setSlipRateUncertaintyConstraint(1000, 2)
-                .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5)
-                .runInversion();
+        FaultSystemSolution solution =
+                runner.setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
+                        .setInversionSeconds(1)
+                        .setSelectionInterval(1)
+                        .setScalingRelationship(scaling, true)
+                        .setRuptureSetFile(ruptureSetFile)
+                        // .setGutenbergRichterMFDWeights(100.0, 1000.0)
+                        // .setSlipRateConstraint("BOTH", 1000, 1000)
+                        .setSlipRateUncertaintyConstraint(1000, 2)
+                        .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5)
+                        .runInversion();
 
         runner.writeSolution(solutionFile.getAbsolutePath());
 
         FaultSystemSolution loadedSolution = FaultSystemSolution.load(solutionFile);
 
-        assertEquals(solution.getRupSet().getNumRuptures(), loadedSolution.getRateForAllRups().length);
-
+        assertEquals(
+                solution.getRupSet().getNumRuptures(), loadedSolution.getRateForAllRups().length);
     }
 
-    public void testSubductionInversionRunner(File ruptureSetFile, File solutionFile) throws DocumentException, IOException {
+    public void testSubductionInversionRunner(File ruptureSetFile, File solutionFile)
+            throws DocumentException, IOException {
 
-        SimplifiedScalingRelationship scaling = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
+        SimplifiedScalingRelationship scaling =
+                (SimplifiedScalingRelationship)
+                        NZSHM22_PythonGateway.getScalingRelationship(
+                                "SimplifiedScalingRelationship");
         scaling.setupSubduction(3.0);
 
-        NZSHM22_PythonGateway.CachedSubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
+        NZSHM22_PythonGateway.CachedSubductionInversionRunner runner =
+                NZSHM22_PythonGateway.getSubductionInversionRunner();
 
-        FaultSystemSolution solution = runner
-                .setGutenbergRichterMFD(29, 1.05, 8.85, 7.05)
-                .setInversionSeconds(1)
-                .setSelectionInterval(1)
-                .setScalingRelationship(scaling, true)
-                .setRuptureSetFile(ruptureSetFile)
-                //.setGutenbergRichterMFDWeights(100.0, 1000.0)
-                .setUncertaintyWeightedMFDWeights(1000, 0.1, 0.5)
-                .setSlipRateConstraint("BOTH", 1000, 1000)
-                .runInversion();
+        FaultSystemSolution solution =
+                runner.setGutenbergRichterMFD(29, 1.05, 8.85, 7.05)
+                        .setInversionSeconds(1)
+                        .setSelectionInterval(1)
+                        .setScalingRelationship(scaling, true)
+                        .setRuptureSetFile(ruptureSetFile)
+                        // .setGutenbergRichterMFDWeights(100.0, 1000.0)
+                        .setUncertaintyWeightedMFDWeights(1000, 0.1, 0.5)
+                        .setSlipRateConstraint("BOTH", 1000, 1000)
+                        .runInversion();
 
         runner.writeSolution(solutionFile.getAbsolutePath());
 
         FaultSystemSolution loadedSolution = FaultSystemSolution.load(solutionFile);
 
-        assertEquals(solution.getRupSet().getNumRuptures(), loadedSolution.getRateForAllRups().length);
-
+        assertEquals(
+                solution.getRupSet().getNumRuptures(), loadedSolution.getRateForAllRups().length);
     }
 
     public void testSolutionReportPageGen(File solutionFile) throws IOException {
@@ -240,8 +262,10 @@ public class SmokeTest {
         assertTrue(new File(outputDir, "resources/sect_connectivity.png").exists());
     }
 
-    public void testHazard(File solutionFile, String backgroundOption) throws DocumentException, IOException {
-        NZSHM22_HazardCalculatorBuilder builder = NZSHM22_PythonGateway.getHazardCalculatorBuilder();
+    public void testHazard(File solutionFile, String backgroundOption)
+            throws DocumentException, IOException {
+        NZSHM22_HazardCalculatorBuilder builder =
+                NZSHM22_PythonGateway.getHazardCalculatorBuilder();
         builder.setSolutionFile(solutionFile.getAbsolutePath())
                 .setLinear(true)
                 .setGMPE("BSSA_2014")
@@ -254,7 +278,8 @@ public class SmokeTest {
         System.out.println(calculator.calc(-41.288889, 174.777222));
     }
 
-    public void testMFDPlotBuilder(File outputDir, File solutionFile, boolean crustal) throws DocumentException, IOException {
+    public void testMFDPlotBuilder(File outputDir, File solutionFile, boolean crustal)
+            throws DocumentException, IOException {
         MFDPlotBuilder builder = new MFDPlotBuilder();
         if (crustal) {
             builder.setCrustalSolution(solutionFile.getAbsolutePath());
@@ -266,5 +291,4 @@ public class SmokeTest {
 
         assertTrue(new File(outputDir, "small_MFD_plots").exists());
     }
-
 }

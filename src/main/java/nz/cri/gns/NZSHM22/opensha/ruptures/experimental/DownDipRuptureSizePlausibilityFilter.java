@@ -7,10 +7,11 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.Plausib
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
 
 /**
- * Used in MixedRuptureSetBuilder. Ensures that jumps can only go to and from the top row of a subduction cluster.
- * <p>
- * USed to restrict joint ruptures are at least a certain size.
- * Should probably only be kept for the duration of the experimental joint rupture phase.
+ * Used in MixedRuptureSetBuilder. Ensures that jumps can only go to and from the top row of a
+ * subduction cluster.
+ *
+ * <p>USed to restrict joint ruptures are at least a certain size. Should probably only be kept for
+ * the duration of the experimental joint rupture phase.
  */
 public class DownDipRuptureSizePlausibilityFilter implements PlausibilityFilter {
     @Override

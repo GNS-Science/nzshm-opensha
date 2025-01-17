@@ -1,29 +1,26 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
+import static nz.cri.gns.NZSHM22.opensha.calc.Stirling_2021_SimplifiedNZ_FaultRegime.*;
+
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
-
 import java.io.IOException;
-
-import static nz.cri.gns.NZSHM22.opensha.calc.Stirling_2021_SimplifiedNZ_FaultRegime.*;
+import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
 
 /**
  * Implements the simplified relations as provided by Mark Stirling for the 2022 New Zealand NSHM
  *
  * @version 0.0
  */
-
 @JsonAdapter(Stirling_2021_SimplifiedNZ_MagAreaRel.Adapter.class)
 public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
 
-    public final static String NAME = "SimplifiedScalingNZNSHM_2021";
-    /**
-     * Regime is either CRUSTAL or INTERFACE
-     */
+    public static final String NAME = "SimplifiedScalingNZNSHM_2021";
+    /** Regime is either CRUSTAL or INTERFACE */
     protected Stirling_2021_SimplifiedNZ_FaultRegime faultRegime = CRUSTAL;
+
     protected Stirling_2021_SimplifiedNZ_FaultRegime faultType = NONE;
     protected Stirling_2021_SimplifiedNZ_FaultRegime epistemicBound = MEAN;
 
@@ -37,13 +34,15 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         setEpistemicBound(initialEpistemicBound);
     }
 
-    public Stirling_2021_SimplifiedNZ_MagAreaRel(String initialRegime, String initialEpistemicBound) {
+    public Stirling_2021_SimplifiedNZ_MagAreaRel(
+            String initialRegime, String initialEpistemicBound) {
         super();
         setRegime(initialRegime);
         setEpistemicBound(initialEpistemicBound);
     }
 
-    public Stirling_2021_SimplifiedNZ_MagAreaRel(double inititalRake, String initialRegime, String initialEpistemicBound) {
+    public Stirling_2021_SimplifiedNZ_MagAreaRel(
+            double inititalRake, String initialRegime, String initialEpistemicBound) {
         super();
         setRake(inititalRake);
         setRegime(initialRegime);
@@ -73,7 +72,8 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
      * @param epistemic Bound
      */
     public void setEpistemicBound(String epistemicBound) {
-        this.epistemicBound = Stirling_2021_SimplifiedNZ_FaultRegime.fromEpistemicBound(epistemicBound);
+        this.epistemicBound =
+                Stirling_2021_SimplifiedNZ_FaultRegime.fromEpistemicBound(epistemicBound);
     }
 
     public String getEpistemicBound() {
@@ -91,8 +91,8 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
     }
 
     /**
-     * Gives the standard deviation for the magnitude as a function of area for
-     * previously-set rake values
+     * Gives the standard deviation for the magnitude as a function of area for previously-set rake
+     * values
      *
      * @return standard deviation
      */
@@ -124,10 +124,9 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
      *
      * @return C
      */
-
     private double getC4log10A2Mw() {
 
-        //rhat AKA cValue => perhaps, we refactor rhat as cvalue
+        // rhat AKA cValue => perhaps, we refactor rhat as cvalue
         Double rhat = Double.NaN;
         if (faultRegime == CRUSTAL || faultRegime == NONE) {
             if (faultType == NONE || epistemicBound == NONE) {
@@ -165,22 +164,26 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         return rhat;
     }
 
-    /**
-     * Returns the name of the object
-     */
+    /** Returns the name of the object */
     public String getName() {
 
-        return NAME + " " + faultType.toString() + " " + faultRegime.toString() + " " + epistemicBound.toString();
+        return NAME
+                + " "
+                + faultType.toString()
+                + " "
+                + faultRegime.toString()
+                + " "
+                + epistemicBound.toString();
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof Stirling_2021_SimplifiedNZ_MagAreaRel) {
             Stirling_2021_SimplifiedNZ_MagAreaRel other = (Stirling_2021_SimplifiedNZ_MagAreaRel) o;
-            return epistemicBound == other.epistemicBound &&
-                    faultRegime == other.faultRegime &&
-                    faultType == other.faultType &&
-                    (rake == other.rake || (Double.isNaN(rake) && Double.isNaN(other.rake)));
+            return epistemicBound == other.epistemicBound
+                    && faultRegime == other.faultRegime
+                    && faultType == other.faultType
+                    && (rake == other.rake || (Double.isNaN(rake) && Double.isNaN(other.rake)));
         }
         return false;
     }
@@ -188,7 +191,8 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
     public static class Adapter extends TypeAdapter<Stirling_2021_SimplifiedNZ_MagAreaRel> {
 
         @Override
-        public void write(JsonWriter out, Stirling_2021_SimplifiedNZ_MagAreaRel value) throws IOException {
+        public void write(JsonWriter out, Stirling_2021_SimplifiedNZ_MagAreaRel value)
+                throws IOException {
             out.beginObject();
             out.name("type");
             out.value(value.faultType.name());
@@ -196,7 +200,7 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
             out.value(value.faultRegime.name());
             out.name("epistemicBound");
             out.value(value.epistemicBound.name());
-            if(!Double.isNaN(value.rake)) {
+            if (!Double.isNaN(value.rake)) {
                 out.name("rake");
                 out.value(value.rake);
             }
@@ -205,18 +209,22 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
 
         @Override
         public Stirling_2021_SimplifiedNZ_MagAreaRel read(JsonReader in) throws IOException {
-            Stirling_2021_SimplifiedNZ_MagAreaRel result = new Stirling_2021_SimplifiedNZ_MagAreaRel();
+            Stirling_2021_SimplifiedNZ_MagAreaRel result =
+                    new Stirling_2021_SimplifiedNZ_MagAreaRel();
             in.beginObject();
             while (in.hasNext()) {
                 switch (in.nextName()) {
                     case "type":
-                        result.faultType = Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
+                        result.faultType =
+                                Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
                         break;
                     case "regime":
-                        result.faultRegime = Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
+                        result.faultRegime =
+                                Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
                         break;
                     case "epistemicBound":
-                        result.epistemicBound = Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
+                        result.epistemicBound =
+                                Stirling_2021_SimplifiedNZ_FaultRegime.valueOf(in.nextString());
                         break;
                     case "rake":
                         result.rake = in.nextDouble();
@@ -228,5 +236,3 @@ public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         }
     }
 }
-
-

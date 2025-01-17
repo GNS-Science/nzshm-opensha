@@ -1,5 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
@@ -7,17 +11,13 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 /**
- * A rupture set builder that takes a selection of ruptures from one or more rupture sets to create a new rupture set.
- * FaultSections and section parents will be renumbered to suit the new rupture set.
- * The resulting rupture set is bare-bones and intended for joint rupture experimentation.
- * <p>
- * Note: Before adding a rupture or a fault section, the original rupture set has to be set using setRupSet().
+ * A rupture set builder that takes a selection of ruptures from one or more rupture sets to create
+ * a new rupture set. FaultSections and section parents will be renumbered to suit the new rupture
+ * set. The resulting rupture set is bare-bones and intended for joint rupture experimentation.
+ *
+ * <p>Note: Before adding a rupture or a fault section, the original rupture set has to be set using
+ * setRupSet().
  */
 public class RuptureAccumulator {
 
@@ -40,11 +40,12 @@ public class RuptureAccumulator {
     /**
      * Sets the rupture set that sections or ruptures can be added from.
      *
-     * @param rupSet      a rupture set
+     * @param rupSet a rupture set
      * @param oldRuptures the ruptures from that rupture set.
      * @return this accumulator
      */
-    public RuptureAccumulator setRupSet(FaultSystemRupSet rupSet, List<ClusterRupture> oldRuptures) {
+    public RuptureAccumulator setRupSet(
+            FaultSystemRupSet rupSet, List<ClusterRupture> oldRuptures) {
         this.rupSet = rupSet;
         sectionIdMapping = new HashMap<>();
         parentIdMapping = new HashMap<>();
@@ -58,8 +59,8 @@ public class RuptureAccumulator {
     }
 
     /**
-     * Add a FaultSection. This happens automatically when a rupture is added. Call this method before adding ruptures
-     * if you want to add manipulated FaultSections.
+     * Add a FaultSection. This happens automatically when a rupture is added. Call this method
+     * before adding ruptures if you want to add manipulated FaultSections.
      *
      * @param section the FaultSection
      * @return this accumulator
@@ -94,7 +95,10 @@ public class RuptureAccumulator {
      */
     public RuptureAccumulator add(ClusterRupture rupture) {
         int r = ruptureIndex.get(rupture);
-        List<Integer> sections = rupture.buildOrderedSectionList().stream().map(this::add).collect(Collectors.toList());
+        List<Integer> sections =
+                rupture.buildOrderedSectionList().stream()
+                        .map(this::add)
+                        .collect(Collectors.toList());
         sectionForRups.add(sections);
         rakes.add(rupSet.getAveRakeForRup(r));
         lengths.add(rupSet.getLengthForRup(r));
@@ -141,26 +145,33 @@ public class RuptureAccumulator {
      * @return the rupture set
      */
     public FaultSystemRupSet build() {
-        FaultSystemRupSet rupSet = FaultSystemRupSet.builder(sections, sectionForRups)
-                .rupLengths(toDoubleArray(lengths))
-                .rupAreas(toDoubleArray(areas))
-                .rupMags(toDoubleArray(mags))
-                .rupRakes(toDoubleArray(rakes))
-                .build();
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.builder(sections, sectionForRups)
+                        .rupLengths(toDoubleArray(lengths))
+                        .rupAreas(toDoubleArray(areas))
+                        .rupMags(toDoubleArray(mags))
+                        .rupRakes(toDoubleArray(rakes))
+                        .build();
         AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
         rupSet.addModule(aveSlip);
         return rupSet;
     }
 
     public static void main(String[] args) throws IOException {
-        FaultSystemRupSet crustal = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"));
-        FaultSystemRupSet puysegur = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip"));
-        FaultSystemRupSet hikurangi = FaultSystemRupSet.load(new File("C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
-        FaultSystemRupSet result = new RuptureAccumulator().
-                add(crustal).
-                add(puysegur).
-                add(hikurangi).
-                build();
+        FaultSystemRupSet crustal =
+                FaultSystemRupSet.load(
+                        new File(
+                                "C:\\Users\\user\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"));
+        FaultSystemRupSet puysegur =
+                FaultSystemRupSet.load(
+                        new File(
+                                "C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_2_PUY_15)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0)(1).zip"));
+        FaultSystemRupSet hikurangi =
+                FaultSystemRupSet.load(
+                        new File(
+                                "C:\\Users\\user\\Downloads\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip"));
+        FaultSystemRupSet result =
+                new RuptureAccumulator().add(crustal).add(puysegur).add(hikurangi).build();
         result.write(new File("/tmp/nzshm22_complete_merged.zip"));
     }
 }

@@ -5,7 +5,6 @@ import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 
 public enum FaultRegime implements LogicTreeNode {
-
     CRUSTAL,
     SUBDUCTION;
 
@@ -29,7 +28,7 @@ public enum FaultRegime implements LogicTreeNode {
         return null;
     }
 
-    public static LogicTreeLevel<LogicTreeNode> level(){
+    public static LogicTreeLevel<LogicTreeNode> level() {
         return LogicTreeLevel.forEnumUnchecked(FaultRegime.class, "Fault Regime", "Fault Regime");
     }
 }

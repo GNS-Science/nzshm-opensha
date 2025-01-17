@@ -1,18 +1,17 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import static org.junit.Assert.*;
+
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.TMG2017CruScalingRelationship;
 import org.junit.Test;
 import org.opensha.commons.logicTree.JsonAdapterHelper;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-
-import static org.junit.Assert.*;
 
 public class NZSHM22_ScalingRelationshipNodeTest {
 
@@ -23,7 +22,9 @@ public class NZSHM22_ScalingRelationshipNodeTest {
         JsonAdapterHelper.writeAdapterValue(out, node);
         String data1 = dataWriter.toString();
 
-        NZSHM22_ScalingRelationshipNode actual = (NZSHM22_ScalingRelationshipNode) JsonAdapterHelper.readAdapterValue(new JsonReader(new StringReader(data1)));
+        NZSHM22_ScalingRelationshipNode actual =
+                (NZSHM22_ScalingRelationshipNode)
+                        JsonAdapterHelper.readAdapterValue(new JsonReader(new StringReader(data1)));
 
         // can reconstruct node from JSON
         assertEquals(node, actual);

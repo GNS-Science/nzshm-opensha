@@ -1,5 +1,11 @@
 package nz.cri.gns.NZSHM22.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -7,13 +13,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class NZSHM22_ReportPageGen {
 
@@ -26,8 +25,7 @@ public class NZSHM22_ReportPageGen {
     FaultSystemRupSet rupSet = null;
     FaultSystemSolution solution = null;
 
-    public NZSHM22_ReportPageGen() {
-    }
+    public NZSHM22_ReportPageGen() {}
 
     public NZSHM22_ReportPageGen setName(String name) {
         this.name = name;
@@ -61,11 +59,12 @@ public class NZSHM22_ReportPageGen {
 
     /**
      * Sets the plot level.
+     *
      * @param plotLevel
      * @return
      */
     public NZSHM22_ReportPageGen setPlotLevel(String plotLevel) {
-        if(plotLevel == null){
+        if (plotLevel == null) {
             this.plotLevel = null;
         } else {
             this.plotLevel = ReportPageGen.PlotLevel.valueOf(plotLevel);
@@ -76,21 +75,23 @@ public class NZSHM22_ReportPageGen {
     static Map<String, AbstractRupSetPlot> possiblePlots;
     static Map<String, AbstractRupSetPlot> possibleRupSetPlots;
 
-    static{
+    static {
         possiblePlots = new HashMap<>();
-        List<AbstractRupSetPlot> choices = ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
-        for(AbstractRupSetPlot plot : choices){
+        List<AbstractRupSetPlot> choices =
+                ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
+        for (AbstractRupSetPlot plot : choices) {
             possiblePlots.put(plot.getClass().getSimpleName(), plot);
         }
         possibleRupSetPlots = new HashMap<>();
         choices = ReportPageGen.getDefaultRupSetPlots(ReportPageGen.PlotLevel.FULL);
-        for(AbstractRupSetPlot plot : choices){
+        for (AbstractRupSetPlot plot : choices) {
             possibleRupSetPlots.put(plot.getClass().getSimpleName(), plot);
         }
     }
 
     /**
      * Adds a specific Solution plot to the report.
+     *
      * @param plotName
      * @return
      */
@@ -109,6 +110,7 @@ public class NZSHM22_ReportPageGen {
 
     /**
      * Adds a specific RupSet plot to the report.
+     *
      * @param plotName
      * @return
      */
@@ -138,7 +140,6 @@ public class NZSHM22_ReportPageGen {
         plots.add(plot);
         return this;
     }
-
 
     public NZSHM22_ReportPageGen setFillSurfaces(boolean fillSurfaces) {
         this.fillSurfaces = fillSurfaces;
@@ -173,13 +174,19 @@ public class NZSHM22_ReportPageGen {
     }
 
     public void generatePage() throws IOException {
-    	
-    	int available = Runtime.getRuntime().availableProcessors();
-    	if (available <= 1) {
-    		System.err.println("Warning: Execution environment has only " + available + " processors allocated. Report threading is disabled.");
-    	}
-    	
-        FaultSystemSolution solution = this.solution != null? this.solution : FaultSystemSolution.load(new File(solutionPath));
+
+        int available = Runtime.getRuntime().availableProcessors();
+        if (available <= 1) {
+            System.err.println(
+                    "Warning: Execution environment has only "
+                            + available
+                            + " processors allocated. Report threading is disabled.");
+        }
+
+        FaultSystemSolution solution =
+                this.solution != null
+                        ? this.solution
+                        : FaultSystemSolution.load(new File(solutionPath));
         addNamedFaults(solution.getRupSet());
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
 
@@ -187,7 +194,7 @@ public class NZSHM22_ReportPageGen {
         if (plotLevel != null) {
             reportPlots.addAll(ReportPageGen.getDefaultSolutionPlots(plotLevel));
         }
-        if(plots != null){
+        if (plots != null) {
             reportPlots.addAll(plots);
         }
         if (fillSurfaces) {
@@ -201,13 +208,17 @@ public class NZSHM22_ReportPageGen {
         solReport.generatePage();
     }
 
-    public void generateRupSetPage() throws IOException{
+    public void generateRupSetPage() throws IOException {
         int available = Runtime.getRuntime().availableProcessors();
         if (available <= 1) {
-            System.err.println("Warning: Execution environment has only " + available + " processors allocated. Report threading is disabled.");
+            System.err.println(
+                    "Warning: Execution environment has only "
+                            + available
+                            + " processors allocated. Report threading is disabled.");
         }
 
-        FaultSystemRupSet rupSet = this.rupSet != null ? this.rupSet : FaultSystemRupSet.load(new File(solutionPath));
+        FaultSystemRupSet rupSet =
+                this.rupSet != null ? this.rupSet : FaultSystemRupSet.load(new File(solutionPath));
         addNamedFaults(rupSet);
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, rupSet));
 
@@ -215,7 +226,7 @@ public class NZSHM22_ReportPageGen {
         if (plotLevel != null) {
             reportPlots.addAll(ReportPageGen.getDefaultRupSetPlots(plotLevel));
         }
-        if(plots != null){
+        if (plots != null) {
             reportPlots.addAll(plots);
         }
         if (fillSurfaces) {
@@ -231,16 +242,17 @@ public class NZSHM22_ReportPageGen {
 
     public static void main(String[] args) throws IOException {
         NZSHM22_ReportPageGen reportPageGen = new NZSHM22_ReportPageGen();
-//       reportPageGen.setName("Min Mag = 8.05")
-//       	.setOutputPath("/tmp/reports/m8_V2")
-//           .setFillSurfaces(true)
-//           .setPlotLevel("DEFAULT")
-////                .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
-//   		.setSolution("/tmp/inversions/test_sub_m8.zip");
-//       reportPageGen.generatePage();
+        //       reportPageGen.setName("Min Mag = 8.05")
+        //       	.setOutputPath("/tmp/reports/m8_V2")
+        //           .setFillSurfaces(true)
+        //           .setPlotLevel("DEFAULT")
+        ////
+        // .setSolution("/home/chrisbc/DEV/GNS/AWS_S3_DATA/WORKING/downloads/SW52ZXJzaW9uU29sdXRpb246MTUzMzYuMExIQkxw/NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6NTM3MGN3MmJw.zip");
+        //   		.setSolution("/tmp/inversions/test_sub_m8.zip");
+        //       reportPageGen.generatePage();
 
-
-        reportPageGen.setRuptureSet("C:\\tmp\\NZSHM\\disconnectedPuy.zip")
+        reportPageGen
+                .setRuptureSet("C:\\tmp\\NZSHM\\disconnectedPuy.zip")
                 .setName("hello!")
                 .setOutputPath("TEST/reports")
                 .setFillSurfaces(true)

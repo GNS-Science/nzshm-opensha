@@ -1,14 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
+import static org.junit.Assert.*;
+
+import java.io.*;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import org.junit.Test;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
-
-import java.io.*;
-
-import static org.junit.Assert.*;
 
 public class NZSHM22_GriddedDataTest {
 
@@ -16,9 +15,14 @@ public class NZSHM22_GriddedDataTest {
 
     @Test
     public void testNormaliseRegion() {
-        NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
+        NZSHM22_GriddedData data =
+                NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         // create a gridded region that matches the spacing of the grid
-        GriddedRegion region = new GriddedRegion(new NewZealandRegions.NZ_TVZ(), 1.0 / data.getStep(), GriddedRegion.ANCHOR_0_0);
+        GriddedRegion region =
+                new GriddedRegion(
+                        new NewZealandRegions.NZ_TVZ(),
+                        1.0 / data.getStep(),
+                        GriddedRegion.ANCHOR_0_0);
 
         Location testLocation = region.getLocation(5);
         double locationPdf = data.getValue(testLocation);
@@ -36,9 +40,18 @@ public class NZSHM22_GriddedDataTest {
     @Test
     public void testNormaliseMultipleRegions() {
         // note: the regions may not share nodes
-        NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
-        GriddedRegion tvz = new GriddedRegion(new NewZealandRegions.NZ_TVZ(), 1.0 / data.getStep(), GriddedRegion.ANCHOR_0_0);
-        GriddedRegion sansTvz = new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ(), 1.0 / data.getStep(), GriddedRegion.ANCHOR_0_0);
+        NZSHM22_GriddedData data =
+                NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
+        GriddedRegion tvz =
+                new GriddedRegion(
+                        new NewZealandRegions.NZ_TVZ(),
+                        1.0 / data.getStep(),
+                        GriddedRegion.ANCHOR_0_0);
+        GriddedRegion sansTvz =
+                new GriddedRegion(
+                        new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ(),
+                        1.0 / data.getStep(),
+                        GriddedRegion.ANCHOR_0_0);
 
         Location tvzLocation = tvz.getLocation(5);
         double tnzPdf = data.getValue(tvzLocation);
@@ -62,7 +75,6 @@ public class NZSHM22_GriddedDataTest {
 
         assertEquals(sansPdf / sansFraction, data.getValue(sansLocation), tolerance);
         assertEquals(1, data.getFractionInRegion(sansTvz), tolerance);
-
     }
 
     @Test
@@ -82,12 +94,15 @@ public class NZSHM22_GriddedDataTest {
 
     @Test
     public void testUpsampling() {
-        NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
+        NZSHM22_GriddedData data =
+                NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         assertEquals(10, data.getStep(), 0);
 
         NZSHM22_GriddedData upSampled = new NZSHM22_GriddedData(data, 100);
 
-        GriddedRegion nz100 = new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE(), 1.0 / 100, GriddedRegion.ANCHOR_0_0);
+        GriddedRegion nz100 =
+                new GriddedRegion(
+                        new NewZealandRegions.NZ_RECTANGLE(), 1.0 / 100, GriddedRegion.ANCHOR_0_0);
 
         double[] expected = data.getValues(nz100);
         for (int i = 0; i < expected.length; i++) {
@@ -100,11 +115,13 @@ public class NZSHM22_GriddedDataTest {
 
     @Test
     public void testReSampling() {
-        NZSHM22_GriddedData data = NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
+        NZSHM22_GriddedData data =
+                NZSHM22_GriddedData.fromFileNativeStep("seismicityGrids/BEST2FLTOLDNC1246.txt");
         assertEquals(10, data.getStep(), 0);
 
         NZSHM22_GriddedData upSampled = NZSHM22_GriddedData.reSample(data, 40);
-        NZSHM22_GriddedData downSampled = NZSHM22_GriddedData.reSample(upSampled, NZSHM22_GriddedData.STEP);
+        NZSHM22_GriddedData downSampled =
+                NZSHM22_GriddedData.reSample(upSampled, NZSHM22_GriddedData.STEP);
 
         double[] expected = data.getValues(data.getNativeRegion());
         double[] actual = downSampled.getValues(downSampled.getNativeRegion());

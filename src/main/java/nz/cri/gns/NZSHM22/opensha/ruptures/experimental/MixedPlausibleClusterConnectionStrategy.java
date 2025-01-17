@@ -1,5 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
@@ -8,31 +12,27 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Plausible
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-
 /**
- * Drop-in replacement for PlausibleClusterConnectionStrategy that is more efficient when subduction faults are
- * present.
- * The main reason this extends PlausibleClusterConnectionStrategy rather than ClusterConnectionStrategy is that this
- * way we can call buildPossibleConnections(). It's a hack :-(
- * PlausibleClusterConnectionStrategy will vet a possible jump by looking at permutations on the target fault that
- * do not make sense for subduction faults and are magnitudes more expensive at the same time. These permutations
- * do not take into account the DownDipPermutationStrategy and any of its filters.
- * This implementation intercepts building possible connections with subduction faults and will simply create the
- * shortest jump between the two clusters (if within maxJumpDist) without doing any further vetting.
+ * Drop-in replacement for PlausibleClusterConnectionStrategy that is more efficient when subduction
+ * faults are present. The main reason this extends PlausibleClusterConnectionStrategy rather than
+ * ClusterConnectionStrategy is that this way we can call buildPossibleConnections(). It's a hack
+ * :-( PlausibleClusterConnectionStrategy will vet a possible jump by looking at permutations on the
+ * target fault that do not make sense for subduction faults and are magnitudes more expensive at
+ * the same time. These permutations do not take into account the DownDipPermutationStrategy and any
+ * of its filters. This implementation intercepts building possible connections with subduction
+ * faults and will simply create the shortest jump between the two clusters (if within maxJumpDist)
+ * without doing any further vetting.
  */
-
 public class MixedPlausibleClusterConnectionStrategy extends PlausibleClusterConnectionStrategy {
 
     final SectionDistanceAzimuthCalculator distCalc;
 
-    public MixedPlausibleClusterConnectionStrategy(List<? extends FaultSection> subSects,
-                                                   SectionDistanceAzimuthCalculator distCalc, double maxJumpDist, JumpSelector selector,
-                                                   List<PlausibilityFilter> filters) {
+    public MixedPlausibleClusterConnectionStrategy(
+            List<? extends FaultSection> subSects,
+            SectionDistanceAzimuthCalculator distCalc,
+            double maxJumpDist,
+            JumpSelector selector,
+            List<PlausibilityFilter> filters) {
         super(subSects, distCalc, maxJumpDist, selector, filters);
         this.distCalc = distCalc;
     }
@@ -48,21 +48,23 @@ public class MixedPlausibleClusterConnectionStrategy extends PlausibleClusterCon
         String jumpType = "";
         jumpType += jump.fromSection.getParentSectionId() == 10000 ? "sub" : "cru";
         jumpType += jump.toSection.getParentSectionId() == 10000 ? "sub" : "cru";
-        jumpTypeHistogram.compute(jumpType, (k, v) ->
-        {
-            if (v == null) {
-                v = new ArrayList<>();
-            }
-            v.add(jump);
-            return v;
-        });
-
+        jumpTypeHistogram.compute(
+                jumpType,
+                (k, v) -> {
+                    if (v == null) {
+                        v = new ArrayList<>();
+                    }
+                    v.add(jump);
+                    return v;
+                });
     }
 
     @Override
-    protected List<Jump> buildPossibleConnections(FaultSubsectionCluster from, FaultSubsectionCluster to) {
+    protected List<Jump> buildPossibleConnections(
+            FaultSubsectionCluster from, FaultSubsectionCluster to) {
         List<Jump> result;
-        if (from.startSect instanceof DownDipFaultSection || to.startSect instanceof DownDipFaultSection) {
+        if (from.startSect instanceof DownDipFaultSection
+                || to.startSect instanceof DownDipFaultSection) {
             // find the shortest jump between the two clusters
             result = new ArrayList<>();
             FaultSection a = null;

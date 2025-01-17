@@ -1,22 +1,17 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
-/**
- * 
- * 
- * LOWER, UPPER on basis on magnitude.
- */
-
+/** LOWER, UPPER on basis on magnitude. */
 public enum Stirling_2021_SimplifiedNZ_FaultRegime {
-	STRIKE_SLIP,
-	REVERSE_FAULTING,
-	NORMAL_FAULTING,
-	SUBDUCTION_INTERFACE,
-	CRUSTAL,
-	LOWER,
-	MEAN,
-	UPPER,
-	NONE;
-   
+    STRIKE_SLIP,
+    REVERSE_FAULTING,
+    NORMAL_FAULTING,
+    SUBDUCTION_INTERFACE,
+    CRUSTAL,
+    LOWER,
+    MEAN,
+    UPPER,
+    NONE;
+
     public static Stirling_2021_SimplifiedNZ_FaultRegime fromRake(double rake) {
         if (Double.isNaN(rake)) {
             return NONE;
@@ -28,24 +23,24 @@ public enum Stirling_2021_SimplifiedNZ_FaultRegime {
             return NORMAL_FAULTING;
         }
     }
-    
+
     public static Stirling_2021_SimplifiedNZ_FaultRegime fromRegime(String regime) {
-    	if (regime.compareToIgnoreCase("interface")==0){
-    		return SUBDUCTION_INTERFACE;
-    	} else {
-    		return CRUSTAL;
-    	}
+        if (regime.compareToIgnoreCase("interface") == 0) {
+            return SUBDUCTION_INTERFACE;
+        } else {
+            return CRUSTAL;
+        }
     }
-    
+
     public static Stirling_2021_SimplifiedNZ_FaultRegime fromEpistemicBound(String epistemicBound) {
-    	if (epistemicBound.compareToIgnoreCase("lower")==0){
-    		return LOWER;
-		} else if (epistemicBound.compareToIgnoreCase("upper")==0) {
-			return UPPER;
-    	} else if (epistemicBound.compareToIgnoreCase("mean")==0) {
-			return MEAN;
-    	} else {
-    		return NONE;
-    	}
+        if (epistemicBound.compareToIgnoreCase("lower") == 0) {
+            return LOWER;
+        } else if (epistemicBound.compareToIgnoreCase("upper") == 0) {
+            return UPPER;
+        } else if (epistemicBound.compareToIgnoreCase("mean") == 0) {
+            return MEAN;
+        } else {
+            return NONE;
+        }
     }
 }

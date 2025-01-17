@@ -1,11 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import com.google.common.base.Preconditions;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
-import org.opensha.sha.faultSurface.FaultSection;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -15,6 +10,10 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
+import org.opensha.sha.faultSurface.FaultSection;
 
 public class ThinningSubduction {
 
@@ -35,11 +34,16 @@ public class ThinningSubduction {
         for (int r = 0; r < ruptures.size(); r++) {
             ruptureIndices.put(ruptures.get(r), r);
         }
-        extents = ruptures.stream().
-                filter(r -> sectionSelector.test(r.clusters[0].startSect.getSectionName())).
-                map(RuptureExtent::new).
-                collect(Collectors.toList());
-        extent = new Extent(rupSet.getFaultSectionDataList().stream().filter(s -> sectionSelector.test(s.getSectionName())).collect(Collectors.toList()));
+        extents =
+                ruptures.stream()
+                        .filter(r -> sectionSelector.test(r.clusters[0].startSect.getSectionName()))
+                        .map(RuptureExtent::new)
+                        .collect(Collectors.toList());
+        extent =
+                new Extent(
+                        rupSet.getFaultSectionDataList().stream()
+                                .filter(s -> sectionSelector.test(s.getSectionName()))
+                                .collect(Collectors.toList()));
     }
 
     public List<Integer> getIds() {
@@ -50,12 +54,10 @@ public class ThinningSubduction {
         return extents.stream().map(e -> e.rupture).collect(Collectors.toList());
     }
 
-    /**
-     * Not the ideal way to filter
-     */
+    /** Not the ideal way to filter */
     protected boolean filterByPosition(RuptureExtent extent) {
-        return (extent.cols.min % extent.cols.getLength() == 0) &&
-                (extent.rows.min % extent.rows.getLength() == 0);
+        return (extent.cols.min % extent.cols.getLength() == 0)
+                && (extent.rows.min % extent.rows.getLength() == 0);
     }
 
     public void filterByPosition() {
@@ -64,7 +66,8 @@ public class ThinningSubduction {
 
     public void filterBySize(double increase) {
         List<RuptureExtent> result = new ArrayList<>();
-        List<RuptureExtent> sorted = extents.stream().sorted(RuptureExtent.comp).collect(Collectors.toList());
+        List<RuptureExtent> sorted =
+                extents.stream().sorted(RuptureExtent.comp).collect(Collectors.toList());
         int nextSize = Integer.MIN_VALUE;
         int currentSize = Integer.MIN_VALUE;
         for (RuptureExtent extent : sorted) {
@@ -95,10 +98,10 @@ public class ThinningSubduction {
             }
         }
 
-        final static Pattern ROW_COL_PATTERN = Pattern.compile("col: (\\d+), row: (\\d+)");
-        final public MinMax cols = new MinMax();
-        final public MinMax rows = new MinMax();
-        final public List<? extends FaultSection> sections;
+        static final Pattern ROW_COL_PATTERN = Pattern.compile("col: (\\d+), row: (\\d+)");
+        public final MinMax cols = new MinMax();
+        public final MinMax rows = new MinMax();
+        public final List<? extends FaultSection> sections;
 
         public Extent(List<? extends FaultSection> sections) {
             this.sections = sections;
@@ -112,14 +115,14 @@ public class ThinningSubduction {
             }
         }
 
-        public static Comparator<Extent> comp = Comparator
-                .comparingInt((Extent e) -> e.sections.size())
-                .thenComparingInt(e -> e.cols.min)
-                .thenComparingInt(e -> e.rows.min);
+        public static Comparator<Extent> comp =
+                Comparator.comparingInt((Extent e) -> e.sections.size())
+                        .thenComparingInt(e -> e.cols.min)
+                        .thenComparingInt(e -> e.rows.min);
     }
 
     public class RuptureExtent extends Extent {
-        final public ClusterRupture rupture;
+        public final ClusterRupture rupture;
 
         public RuptureExtent(ClusterRupture rupture) {
             super(rupture.buildOrderedSectionList());
@@ -132,24 +135,28 @@ public class ThinningSubduction {
     }
 
     public static void main(String[] args) throws IOException {
-        FaultSystemRupSet combined = FaultSystemRupSet.load(new File("C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip"));
+        FaultSystemRupSet combined =
+                FaultSystemRupSet.load(
+                        new File("C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip"));
 
         List<Integer> crustalIds = ThinningCrustal.filterCrustal(combined);
 
-        ThinningSubduction hikurangiThinning = new ThinningSubduction(combined, s -> s.startsWith("Hikurangi"));
+        ThinningSubduction hikurangiThinning =
+                new ThinningSubduction(combined, s -> s.startsWith("Hikurangi"));
         hikurangiThinning.filterByPosition();
         hikurangiThinning.filterBySize(0.1);
 
         System.out.println("hikurangi after thinning " + hikurangiThinning.getRuptures().size());
 
-        ThinningSubduction puysegurThinning = new ThinningSubduction(combined, s -> s.startsWith("Puysegur"));
+        ThinningSubduction puysegurThinning =
+                new ThinningSubduction(combined, s -> s.startsWith("Puysegur"));
         puysegurThinning.filterByPosition();
         puysegurThinning.filterBySize(0.1);
 
         System.out.println("puysegur after thinning " + puysegurThinning.getRuptures().size());
 
-
-        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/filteredSubductionRuptures.txt"));
+        BufferedWriter writer =
+                new BufferedWriter(new FileWriter("/tmp/filteredSubductionRuptures.txt"));
         for (Integer r : crustalIds) {
             writer.write("" + r);
             writer.newLine();

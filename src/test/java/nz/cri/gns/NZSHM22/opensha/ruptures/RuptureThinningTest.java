@@ -1,28 +1,25 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-
 public class RuptureThinningTest {
 
     @Test
     public void filterRupturesTest() {
-        List<ClusterRupture> actual = RuptureThinning.filterRuptures(Lists.newArrayList(), r -> true);
+        List<ClusterRupture> actual =
+                RuptureThinning.filterRuptures(Lists.newArrayList(), r -> true);
         assertEquals(0, actual.size());
 
         ClusterRupture rupture = mockRupture(4, mockSection(1, 1), mockSection(1, 2));
@@ -97,7 +94,8 @@ public class RuptureThinningTest {
         return mockRupture(numSects, null, null);
     }
 
-    public ClusterRupture mockRupture(int numSects, FaultSection startSection, FaultSection endSection) {
+    public ClusterRupture mockRupture(
+            int numSects, FaultSection startSection, FaultSection endSection) {
         ClusterRupture rupture = mock(ClusterRupture.class);
         when(rupture.getTotalNumSects()).thenReturn(numSects);
         List<FaultSection> sections = Lists.newArrayList(startSection, null, null, endSection);

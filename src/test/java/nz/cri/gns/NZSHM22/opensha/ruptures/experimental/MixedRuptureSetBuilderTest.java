@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -13,132 +15,112 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionClust
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MixedRuptureSetBuilderTest {
-
 
     @Test
     public void testSingleCrustalSection() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockCrustalCluster(30))
-        );
+        MixedRuptureSetBuilder builder = mockBuilder(new MockRupture(mockCrustalCluster(30)));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(30) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(30) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testSingleCrustalCluster() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockCrustalCluster(10, 20, 30))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(new MockRupture(mockCrustalCluster(10, 20, 30)));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(10 + 20 + 30) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(10 + 20 + 30) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testCrustalClusters() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockCrustalCluster(10, 20, 30),
-                        mockCrustalCluster(40, 50, 60))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(
+                        new MockRupture(
+                                mockCrustalCluster(10, 20, 30), mockCrustalCluster(40, 50, 60)));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(10 + 20 + 30 + 40 + 50 + 60) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(10 + 20 + 30 + 40 + 50 + 60) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testSingleDownDipSection() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockDownDipCluster(
-                                mockDownDipRow(0, 10)
-                        ))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(new MockRupture(mockDownDipCluster(mockDownDipRow(0, 10))));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(10) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(10) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testSingleDownDipCluster() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockDownDipCluster(
-                                mockDownDipRow(1, 30, 40),
-                                mockDownDipRow(0, 10, 20), // this is the top row
-                                mockDownDipRow(2, 50, 60)
-                        ))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(
+                        new MockRupture(
+                                mockDownDipCluster(
+                                        mockDownDipRow(1, 30, 40),
+                                        mockDownDipRow(0, 10, 20), // this is the top row
+                                        mockDownDipRow(2, 50, 60))));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(10 + 20) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(10 + 20) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testUnevenDownDipCluster() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockDownDipCluster(
-                                mockDownDipRow(1, 30, 40, 50),
-                                mockDownDipRow(0, 10, 20), // this is the top row
-                                mockDownDipRow(2, 50, 60)
-                        ))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(
+                        new MockRupture(
+                                mockDownDipCluster(
+                                        mockDownDipRow(1, 30, 40, 50),
+                                        mockDownDipRow(0, 10, 20), // this is the top row
+                                        mockDownDipRow(2, 50, 60))));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(10 + 20) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(10 + 20) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testJointRupture() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockCrustalCluster(70, 80, 90),
-                        mockDownDipCluster(
-                                mockDownDipRow(1, 30, 40),
-                                mockDownDipRow(0, 10, 20), // this is the top row
-                                mockDownDipRow(2, 50, 60)
-                        ))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(
+                        new MockRupture(
+                                mockCrustalCluster(70, 80, 90),
+                                mockDownDipCluster(
+                                        mockDownDipRow(1, 30, 40),
+                                        mockDownDipRow(0, 10, 20), // this is the top row
+                                        mockDownDipRow(2, 50, 60))));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{(70 + 80 + 90 + 10 + 20) * 1000}, actual, 0.0000001);
+        assertArrayEquals(new double[] {(70 + 80 + 90 + 10 + 20) * 1000}, actual, 0.0000001);
     }
 
     @Test
     public void testMultipleRupture() {
-        MixedRuptureSetBuilder builder = mockBuilder(
-                new MockRupture(
-                        mockCrustalCluster(70, 80, 90),
-                        mockDownDipCluster(
-                                mockDownDipRow(1, 30, 40),
-                                mockDownDipRow(0, 10, 20), // this is the top row
-                                mockDownDipRow(2, 50, 60)
-                        )),
-                new MockRupture(
-                        mockCrustalCluster(70, 80, 90)
-                ),
-                new MockRupture(
-                        mockDownDipCluster(
-                                mockDownDipRow(1, 30, 40),
-                                mockDownDipRow(0, 10, 20), // this is the top row
-                                mockDownDipRow(2, 50, 60)
-                        ))
-        );
+        MixedRuptureSetBuilder builder =
+                mockBuilder(
+                        new MockRupture(
+                                mockCrustalCluster(70, 80, 90),
+                                mockDownDipCluster(
+                                        mockDownDipRow(1, 30, 40),
+                                        mockDownDipRow(0, 10, 20), // this is the top row
+                                        mockDownDipRow(2, 50, 60))),
+                        new MockRupture(mockCrustalCluster(70, 80, 90)),
+                        new MockRupture(
+                                mockDownDipCluster(
+                                        mockDownDipRow(1, 30, 40),
+                                        mockDownDipRow(0, 10, 20), // this is the top row
+                                        mockDownDipRow(2, 50, 60))));
         double[] actual = builder.buildLengths();
 
-        assertArrayEquals(new double[]{
-                (70 + 80 + 90 + 10 + 20) * 1000,
-                (70 + 80 + 90) * 1000,
-                (10 + 20) * 1000
-        }, actual, 0.0000001);
+        assertArrayEquals(
+                new double[] {
+                    (70 + 80 + 90 + 10 + 20) * 1000, (70 + 80 + 90) * 1000, (10 + 20) * 1000
+                },
+                actual,
+                0.0000001);
     }
 
     static class MockMixedRuptureSetBuilder extends MixedRuptureSetBuilder {
@@ -149,7 +131,6 @@ public class MixedRuptureSetBuilderTest {
 
     static MixedRuptureSetBuilder mockBuilder(ClusterRupture... ruptures) {
         return new MockMixedRuptureSetBuilder(ImmutableList.copyOf(ruptures));
-
     }
 
     static class MockRupture extends ClusterRupture {
@@ -163,7 +144,13 @@ public class MixedRuptureSetBuilderTest {
         }
 
         public MockRupture(FaultSubsectionCluster... clusters) {
-            super(clusters, makeJumps(clusters), ImmutableMap.of(), clusters[0].unique, clusters[0].unique, true);
+            super(
+                    clusters,
+                    makeJumps(clusters),
+                    ImmutableMap.of(),
+                    clusters[0].unique,
+                    clusters[0].unique,
+                    true);
         }
     }
 
@@ -199,6 +186,4 @@ public class MixedRuptureSetBuilderTest {
         }
         return new FaultSubsectionCluster(subSects);
     }
-
-
 }

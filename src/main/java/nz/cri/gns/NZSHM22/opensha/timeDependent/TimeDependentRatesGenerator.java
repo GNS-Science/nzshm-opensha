@@ -1,17 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.timeDependent;
 
 import com.google.gson.GsonBuilder;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
-import scratch.UCERF3.erf.FaultSystemSolutionERF;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
+import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
+import scratch.UCERF3.erf.FaultSystemSolutionERF;
 
 public class TimeDependentRatesGenerator {
 
@@ -40,7 +39,7 @@ public class TimeDependentRatesGenerator {
         return this;
     }
 
-    public TimeDependentRatesGenerator setAperiodicity(String aperiodicity){
+    public TimeDependentRatesGenerator setAperiodicity(String aperiodicity) {
         this.aperiodicity = Aperiodicity.valueOf(aperiodicity);
         return this;
     }
@@ -95,12 +94,12 @@ public class TimeDependentRatesGenerator {
     }
 
     private String getWarning() {
-        return "# Attention\n\n" +
-                "This Inversion Solution archive has been modified\n" +
-                "using the TimeDependentRatesGenerator tool.\n\n" +
-                "That rates in the solution are modified and stored in a backup file:\n" +
-                "    - /solution/rates.csv has the modified rates\n" +
-                "    - /solution/old-rates.csv has the original rates.\n";
+        return "# Attention\n\n"
+                + "This Inversion Solution archive has been modified\n"
+                + "using the TimeDependentRatesGenerator tool.\n\n"
+                + "That rates in the solution are modified and stored in a backup file:\n"
+                + "    - /solution/rates.csv has the modified rates\n"
+                + "    - /solution/old-rates.csv has the original rates.\n";
     }
 
     private void updateSolutionFile(String newRates) throws IOException {
@@ -128,16 +127,27 @@ public class TimeDependentRatesGenerator {
         mreData.apply(solution, currentYear);
         long currentDate = MREData.yearsAgoInMillis(currentYear, 0);
         FaultSystemRupSet rupSet = solution.getRupSet();
-        ProbabilityModelsCalc probabilityModelsCalc = new ProbabilityModelsCalc(solution, erf.getLongTermRateOfFltSysRupInERF(), aperiodicity);
+        ProbabilityModelsCalc probabilityModelsCalc =
+                new ProbabilityModelsCalc(
+                        solution, erf.getLongTermRateOfFltSysRupInERF(), aperiodicity);
         StringBuilder result = new StringBuilder();
         result.append("Rupture Index,Annual Rate\n");
         ModSectMinMags minMags = rupSet.getModule(ModSectMinMags.class);
 
         for (int r = 0; r < rupSet.getNumRuptures(); r++) {
             double rate = solution.getRateForRup(r);
-            boolean rupTooSmall = NZSHM22_FaultSystemRupSetCalc.isRuptureBelowSectMinMag(rupSet, r, minMags);
+            boolean rupTooSmall =
+                    NZSHM22_FaultSystemRupSetCalc.isRuptureBelowSectMinMag(rupSet, r, minMags);
             if (rate > 0 && !rupTooSmall) {
-                double probGain = probabilityModelsCalc.getU3_ProbGainForRup(r, histOpenInterval, false, true, true, currentDate, forecastTimespan);
+                double probGain =
+                        probabilityModelsCalc.getU3_ProbGainForRup(
+                                r,
+                                histOpenInterval,
+                                false,
+                                true,
+                                true,
+                                currentDate,
+                                forecastTimespan);
                 double rupProb = probGain * rate * forecastTimespan;
                 double rupRate = -Math.log(1 - rupProb) / forecastTimespan;
                 result.append(r).append(",").append(rupRate).append("\n");
@@ -163,8 +173,10 @@ public class TimeDependentRatesGenerator {
     public static void main(String[] args) throws IOException {
         TimeDependentRatesGenerator generator =
                 new TimeDependentRatesGenerator()
-                        .setSolutionFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5.zip")
-                        .setOutputFileName("C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5-mre3.zip")
+                        .setSolutionFileName(
+                                "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5.zip")
+                        .setOutputFileName(
+                                "C:\\Users\\volkertj\\Downloads\\NZSHM22_InversionSolution-QXV0b21hdGlvblRhc2s6MTA3MDA5-mre3.zip")
                         .setCurrentYear(2022)
                         .setMREData(MREData.CFM_1_1.name())
                         .setAperiodicity("NZSHM22")

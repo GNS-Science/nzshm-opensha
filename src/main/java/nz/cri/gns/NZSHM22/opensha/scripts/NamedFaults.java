@@ -1,11 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.scripts;
 
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import org.dom4j.DocumentException;
-import org.opensha.commons.data.CSVFile;
-import org.opensha.sha.faultSurface.FaultSection;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,10 +7,16 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import org.dom4j.DocumentException;
+import org.opensha.commons.data.CSVFile;
+import org.opensha.sha.faultSurface.FaultSection;
 
 public class NamedFaults {
 
-    public static void createNamedFaultsFile(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
+    public static void createNamedFaultsFile(NZSHM22_FaultModels faultModel)
+            throws DocumentException, IOException {
 
         FaultSectionList sections = new FaultSectionList();
         faultModel.fetchFaultSections(sections);
@@ -27,15 +27,21 @@ public class NamedFaults {
             ids.put(name, section.getSectionId());
         }
 
-        try (PrintWriter out = new PrintWriter(
-                new FileWriter(new File("src/main/resources/faultModels/" + faultModel.getFileName() + ".FaultsByNameAlt.txt")))) {
-            CSVFile<String> csv = CSVFile.readStream(faultModel.getStream("namedFaultDefinitions.csv"), false);
+        try (PrintWriter out =
+                new PrintWriter(
+                        new FileWriter(
+                                new File(
+                                        "src/main/resources/faultModels/"
+                                                + faultModel.getFileName()
+                                                + ".FaultsByNameAlt.txt")))) {
+            CSVFile<String> csv =
+                    CSVFile.readStream(faultModel.getStream("namedFaultDefinitions.csv"), false);
             boolean first = true;
             for (List<String> row : csv) {
                 if (row.get(0) != null && row.get(0).length() > 0) {
                     if (!first) {
                         out.print("\n");
-                    }else {
+                    } else {
                         first = false;
                     }
                     out.print(row.get(0));
@@ -57,6 +63,5 @@ public class NamedFaults {
     public static void main(String[] args) throws DocumentException, IOException {
         createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         createNamedFaultsFile(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ);
-        
     }
 }
