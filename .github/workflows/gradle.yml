@@ -50,7 +50,7 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew check -x test
-        ./gradlew localTests integrationTest
+        ./gradlew localTests integrationTest jacocoTestReport
 
     - name: Add coverage to PR
       id: jacoco
