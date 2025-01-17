@@ -36,6 +36,7 @@ public class NZSHM22_PythonGateway {
         NZSHM22_CachedCoulombRuptureSetBuilder coulBuilder =
                 new NZSHM22_CachedCoulombRuptureSetBuilder();
         builder = coulBuilder;
+        System.out.println("hello");
         return coulBuilder;
     }
 

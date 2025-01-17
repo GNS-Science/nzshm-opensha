@@ -167,7 +167,7 @@ pmd {
     ignoreFailures = true
 }
 
-// spotless enforces Java style rules
+// spotless enforces Java style rules.
 spotless {
 //    java {
 //        removeUnusedImports()
