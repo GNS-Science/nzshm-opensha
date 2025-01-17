@@ -54,7 +54,7 @@ jobs:
 
     - name: Add coverage to PR
       id: jacoco
-      uses: GNS-Science/jacoco-report@v1.7.1
+      uses: GNS-Science/jacoco-report@76c1ca7a6f09b5411e195d334115919491b6162a
       with:
         paths: |
           ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
