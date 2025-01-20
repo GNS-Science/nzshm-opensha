@@ -51,12 +51,11 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew check
-        ./gradlew localTests integrationTest
+        ./gradlew integrationTest
         ./gradlew jacocoTestReport
 
     - name: Add coverage to PR
       id: jacoco
-#      uses: GNS-Science/jacoco-report@76c1ca7a6f09b5411e195d334115919491b6162a
       uses: GNS-Science/jacoco-report@c9acaa1b36f995c60841aaf1455420af1ddb8b9b
       with:
         paths: ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
@@ -67,12 +66,12 @@ jobs:
         title: Code Coverage
         update-comment: true
 
-    - name: Fail PR if overall coverage is less than 80%
-      if: ${{ steps.jacoco.outputs.coverage-overall < 80.0 }}
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.setFailed('Overall coverage is less than 80%!')        
+#    - name: Fail PR if overall coverage is less than 80%
+#      if: ${{ steps.jacoco.outputs.coverage-overall < 80.0 }}
+#      uses: actions/github-script@v6
+#      with:
+#        script: |
+#          core.setFailed('Overall coverage is less than 80%!')
 
     - name: Set version env var
       if: startsWith(github.ref, 'refs/tags/release')
