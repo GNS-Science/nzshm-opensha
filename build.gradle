@@ -139,13 +139,14 @@ task smokeTest(type: Test) {
 }
 
 test {
-    exclude 'org/opensha/*'
-    exclude '*/DataSuite'
+    // exclude expensive opensha tests unless flag is set on command line
+    if (!providers.gradleProperty("openshaTest").forUseAtConfigurationTime().isPresent()) {
+        project.gradle.startParameter.excludedTaskNames.add("opensha:test")
+    }
     filter {
         includeTestsMatching('*NZSHM22.*')
         includeTestsMatching('*nz.cri.gns.*')
         includeTestsMatching('*UCERF3.inversion.*')
-        getIncludePatterns().remove('*Suite*')
     }
 
     //filter { excludeTestsMatching 'generic.*' }

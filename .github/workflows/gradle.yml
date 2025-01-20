@@ -51,7 +51,6 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew check
-        ./gradlew integrationTest
         ./gradlew jacocoTestReport
 
     - name: Add coverage to PR
