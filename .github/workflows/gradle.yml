@@ -57,6 +57,7 @@ jobs:
     - name: write spotless changes
       id: spotless_commit
       run: |
+        cd main
         if git diff --exit code; then
           echo "changes detected"
         else
