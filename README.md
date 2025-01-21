@@ -42,7 +42,7 @@ Gradle tasks are run with `./gradlew`. Run `./gradlew tasks` for a complete list
 - `integrationTest`: runs integration tests.
 - `smokeTest`: runs Smoke Tests.
 - `jacocoTestReport`: creates a test coverage report. The `test` task needs to be run beforehand for an accurate result. The report can be found in [build/reports/jacoco/test/html](build/reports/jacoco/test/html/index.html)
-- `spotlessApply`: formats the source code to match the style guide.
+- `spotlessApply`: uses the [Spotless plugin](https://github.com/diffplug/spotless/tree/main/plugin-gradle) to format the source code to match the style guide. See below.
 - `pmd`: runs the [PMD source code analyzer](https://docs.pmd-code.org/latest/pmd_rules_java.html) over the Java code.
 
 ## Java Style
