@@ -53,16 +53,6 @@ jobs:
         ./gradlew check
         ./gradlew jacocoTestReport
 
-    - name: write spotless changes
-      id: spotless_commit
-      run: |
-        cd main
-        if git diff --exit-code; then
-          echo "changes detected"
-        else
-          echo "no spotless changes detected"
-        fi
-
     - name: Add coverage to PR
       id: jacoco
       uses: GNS-Science/jacoco-report@c9acaa1b36f995c60841aaf1455420af1ddb8b9b

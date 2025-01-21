@@ -180,6 +180,7 @@ spotless {
 // jacoco generates coverage reports
 jacocoTestReport {
     reports {
+        // XML is require for the github action
         xml.required = true
     }
 }

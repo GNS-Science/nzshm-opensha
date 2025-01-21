@@ -3,10 +3,10 @@
 
 ## Getting started 
 
-Pre-requirements: `git` and `jdk11`   
+Pre-requirements: `git` and `jdk11`
 
  ```bash
-git clone https://github.com/GNS-Science/opensha.git &&/
+git clone https://github.com/GNS-Science/opensha.git &&\
 git clone https://github.com/GNS-Science/nzshm-opensha.git
  ```
 
