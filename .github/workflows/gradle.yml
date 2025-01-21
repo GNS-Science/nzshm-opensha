@@ -51,8 +51,8 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew spotlessApply
-        ./gradlew spotlessCheck
-#        ./gradlew check
+#        ./gradlew spotlessCheck
+        ./gradlew check
 #        ./gradlew jacocoTestReport
 
     - name: write spotless changes
