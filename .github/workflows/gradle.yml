@@ -50,16 +50,8 @@ jobs:
       run: |
         cd main
         chmod +x gradlew
-        ./gradlew spotlessApply
-        if ! git diff --exit-code; then
-          echo "changes detected"
-          git add -A
-          git commit -m "spotless format changes"
-        else
-          echo "no spotless changes detected"
-        fi        
-#        ./gradlew check
-#        ./gradlew jacocoTestReport
+        ./gradlew check
+        ./gradlew jacocoTestReport
 
     - name: write spotless changes
       id: spotless_commit
