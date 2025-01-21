@@ -112,10 +112,10 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
         // (currently used to minimization rates of rups below sectMinMag)
         double minimizationConstraintWt = 10000;
 
-        //		/* *******************************************
-        //		 * MODEL SPECIFIC
-        //		 * ******************************************* */
-        //		// fraction of the minimum rupture rate basis to be used as initial rates
+        //        /* *******************************************
+        //         * MODEL SPECIFIC
+        //         * ******************************************* */
+        //        // fraction of the minimum rupture rate basis to be used as initial rates
         double minimumRuptureRateFraction = 0;
 
         double[] initialRupModel = null;
@@ -146,17 +146,19 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
                 // For water level
                 minimumRuptureRateFraction = 0.0;
 
-                // >>				minimumRuptureRateBasis = UCERF3InversionConfiguration.adjustStartingModel(
-                // >>						UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet,
+                // >>                minimumRuptureRateBasis =
+                // UCERF3InversionConfiguration.adjustStartingModel(
+                // >>
+                // UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet,
                 // targetOnFaultMFD),
-                // >>						mfdConstraints, rupSet, true);
+                // >>                        mfdConstraints, rupSet, true);
 
-                //				initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
-                //				if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0)
+                //                initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
+                //                if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0)
                 // initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet,
                 // true);
 
-                //				initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
+                //                initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
                 if (initialSolution != null) {
                     Preconditions.checkArgument(
                             rupSet.getNumRuptures() == initialSolution.length,
