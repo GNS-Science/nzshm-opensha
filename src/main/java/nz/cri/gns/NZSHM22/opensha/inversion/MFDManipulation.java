@@ -8,7 +8,8 @@ import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
-public class MFDManipulation {
+public class
+MFDManipulation {
 
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
