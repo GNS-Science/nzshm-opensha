@@ -1,17 +1,12 @@
 # nzshm-opensha
 [NZ NSHM Programme](https://www.gns.cri.nz/research-projects/national-seismic-hazard-model/) opensha applications (patterned on the UCERF3 part of https://github.com/opensha/opensha)
 
-## Priorities:
-
- - adapt the NZ Fault model from CFM NZ to suit the opensha tools
- - extend opensha to support subduction interface fault models. This is needed for the (in)famous 'Hikurangi'. 
-
 ## Getting started 
 
 Pre-requirements: `git` and `jdk11`
 
  ```bash
-git clone https://github.com/GNS-Science/opensha.git &&\
+git clone https://github.com/GNS-Science/opensha.git &&/
 git clone https://github.com/GNS-Science/nzshm-opensha.git
  ```
 
@@ -30,24 +25,34 @@ git checkout fix/rup-normalization
  cd nzshm-opensha
  ```
 
-### and build ....
+### and build
 
  ```bash
- .\gradlew build
+ ./gradlew build
  ```
 
-### or test just this code
+## Gradle Tasks
 
-```bash
- .\gradlew localTests --info
-```
- 
-Test reports are found at  `./build/reports/tests/localTests/index.html`
+Gradle tasks are run with `./gradlew`. Run `./gradlew tasks` for a complete list of tasks.
 
-### or test everything (slow....)
-```bash
- .\gradlew test
-```
+- `build`: builds and tests the project.
+- `fatJar`: builds a standalone jar that contains all dependencies.
+- `test`: runs unit tests. The report can be found at [./build/reports/tests/test/index.html](./build/reports/tests/test/index.html)
+   - Run as `./gradlew test -PopenshaTest` to also run `opensha` tests. 
+- `integrationTest`: runs integration tests.
+- `smokeTest`: runs Smoke Tests.
+- `jacocoTestReport`: creates a test coverage report. The `test` task needs to be run beforehand for an accurate result. The report can be found in [build/reports/jacoco/test/html](build/reports/jacoco/test/html/index.html)
+- `spotlessApply`: formats the source code to match the style guide.
+- `pmd`: runs the [PMD source code analyzer](https://docs.pmd-code.org/latest/pmd_rules_java.html) over the Java code.
+
+## Java Style
+
+This repo follows the [AOSP Java code style](https://source.android.com/docs/setup/contribute/code-style). 
+
+There is a gradle task `spotlessCheck` to verify that style guidelines are followed, and a task `spotlessApply` for re-format all Java files to match the style.
+
+For `IntelliJ`, install the [google-java-format](https://plugins.jetbrains.com/plugin/8527-google-java-format) plugin. In the plugin settings, enable the plugin for this project and choose the AOSP style.
+
 
 ### Run or Reproduce NZSHM22 Results
 

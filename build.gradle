@@ -138,6 +138,10 @@ task smokeTest(type: Test) {
     shouldRunAfter test
 }
 
+task pmd(type:GradleBuild) {
+    tasks = ['pmdMain', 'pmdTest', 'pmdIntTest', 'pmdSmokeTest' ]
+}
+
 test {
     // exclude expensive opensha tests unless flag is set on command line
     if (!providers.gradleProperty("openshaTest").forUseAtConfigurationTime().isPresent()) {
@@ -166,17 +170,17 @@ pmd {
 
 // spotless enforces Java style rules.
 spotless {
-//    java {
-//        removeUnusedImports()
-//        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
-//        googleJavaFormat().aosp()
-//    }
+    java {
+        removeUnusedImports()
+        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
+        googleJavaFormat().aosp()
+    }
 }
 
+// jacoco generates coverage reports
 jacocoTestReport {
     reports {
         xml.required = true
-  //      csv.required = true
     }
 }
 
