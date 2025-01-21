@@ -51,6 +51,7 @@ jobs:
         cd main
         chmod +x gradlew
         ./gradlew spotlessApply
+        git diff
         if git diff --exit code; then
           echo "changes detected"
         else
