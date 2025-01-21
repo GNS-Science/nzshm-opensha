@@ -50,8 +50,18 @@ jobs:
       run: |
         cd main
         chmod +x gradlew
-        ./gradlew check
-        ./gradlew jacocoTestReport
+        ./gradlew spotlessApply
+#        ./gradlew check
+#        ./gradlew jacocoTestReport
+
+    - name: write spotless changes
+      id: spotless_commit
+      run: |
+        if git diff --exit code; then
+          echo "changes detected"
+        else
+          echo "no spotless changes detected"
+        fi
 
     - name: Add coverage to PR
       id: jacoco

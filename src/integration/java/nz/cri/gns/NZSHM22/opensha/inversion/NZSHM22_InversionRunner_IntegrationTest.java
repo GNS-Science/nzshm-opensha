@@ -28,7 +28,7 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         return TestHelpers.archiveInput(rupSet);
     }
 
-    public NZSHM22_AbstractInversionRunner     buildRunner() throws DocumentException, IOException {
+    public NZSHM22_AbstractInversionRunner buildRunner() throws DocumentException, IOException {
         return new NZSHM22_CrustalInversionRunner()
                 .setGutenbergRichterMFD(4.0, 0.81, 0.91, 1.05, 7.85)
                 .setInversionSeconds(1)
