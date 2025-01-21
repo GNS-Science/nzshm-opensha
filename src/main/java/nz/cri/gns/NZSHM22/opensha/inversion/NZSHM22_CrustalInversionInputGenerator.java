@@ -183,24 +183,25 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
             }
         }
 
-        //		if (config.getPaleoSlipConstraintWt() > 0d)
-        //			constraints.add(new PaleoSlipInversionConstraint(rupSet,
+        //        if (config.getPaleoSlipConstraintWt() > 0d)
+        //            constraints.add(new PaleoSlipInversionConstraint(rupSet,
         // config.getPaleoSlipConstraintWt(),
-        //					aveSlipConstraints, sectSlipRateReduced));
+        //                    aveSlipConstraints, sectSlipRateReduced));
         ////
-        //		if (config.getRupRateConstraintWt() > 0d) {
-        //			// This is the RupRateConstraintWt for ruptures not in UCERF2
-        //			double zeroRupRateConstraintWt = 0;
-        //			if (config.isAPrioriConstraintForZeroRates())
-        //				zeroRupRateConstraintWt =
+        //        if (config.getRupRateConstraintWt() > 0d) {
+        //            // This is the RupRateConstraintWt for ruptures not in UCERF2
+        //            double zeroRupRateConstraintWt = 0;
+        //            if (config.isAPrioriConstraintForZeroRates())
+        //                zeroRupRateConstraintWt =
         // config.getRupRateConstraintWt()*config.getAPrioriConstraintForZeroRatesWtFactor();
-        //			constraints.add(new APrioriInversionConstraint(config.getRupRateConstraintWt(),
+        //            constraints.add(new
+        // APrioriInversionConstraint(config.getRupRateConstraintWt(),
         // zeroRupRateConstraintWt, config.getA_PrioriRupConstraint()));
-        //		}
+        //        }
 
-        //		// This constrains rates of ruptures that differ by only 1 subsection
-        //		if (config.getRupRateSmoothingConstraintWt() > 0)
-        //			constraints.add(new
+        //        // This constrains rates of ruptures that differ by only 1 subsection
+        //        if (config.getRupRateSmoothingConstraintWt() > 0)
+        //            constraints.add(new
         // RupRateSmoothingInversionConstraint(config.getRupRateSmoothingConstraintWt(), rupSet));
         //
 
@@ -249,11 +250,12 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
                             ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
                             config.getMfdUncertaintyWeightedConstraints()));
 
-        //		// MFD Smoothness Constraint - Constrain participation MFD to be uniform for each fault
+        //        // MFD Smoothness Constraint - Constrain participation MFD to be uniform for each
+        // fault
         // subsection
-        //		if (config.getParticipationSmoothnessConstraintWt() > 0.0)
-        //			constraints.add(new MFDParticipationSmoothnessInversionConstraint(rupSet,
-        //					config.getParticipationSmoothnessConstraintWt(),
+        //        if (config.getParticipationSmoothnessConstraintWt() > 0.0)
+        //            constraints.add(new MFDParticipationSmoothnessInversionConstraint(rupSet,
+        //                    config.getParticipationSmoothnessConstraintWt(),
         // config.getParticipationConstraintMagBinSize()));
 
         // MFD Subsection nucleation MFD constraint
@@ -266,47 +268,51 @@ public class NZSHM22_CrustalInversionInputGenerator extends InversionInputGenera
                             rupSet, config.getNucleationMFDConstraintWt(), MFDConstraints));
         }
 
-        //		// MFD Smoothing constraint - MFDs spatially smooth along adjacent subsections on a
+        //        // MFD Smoothing constraint - MFDs spatially smooth along adjacent subsections on
+        // a
         // parent section (Laplacian smoothing)
-        //		if (config.getMFDSmoothnessConstraintWt() > 0.0 ||
+        //        if (config.getMFDSmoothnessConstraintWt() > 0.0 ||
         // config.getMFDSmoothnessConstraintWtForPaleoParents() > 0.0) {
-        //			if (MFDConstraints == null)
-        //				MFDConstraints = FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
+        //            if (MFDConstraints == null)
+        //                MFDConstraints =
+        // FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
         //
-        //			HashSet<Integer> paleoParentIDs = new HashSet<>();
-        //			// Get list of parent IDs that have a paleo data point (paleo event rate or paleo mean
+        //            HashSet<Integer> paleoParentIDs = new HashSet<>();
+        //            // Get list of parent IDs that have a paleo data point (paleo event rate or
+        // paleo mean
         // slip)
-        //			if (config.getPaleoRateConstraintWt() > 0.0) {
-        //				for (int i=0; i<paleoRateConstraints.size(); i++) {
-        //					int paleoParentID =
+        //            if (config.getPaleoRateConstraintWt() > 0.0) {
+        //                for (int i=0; i<paleoRateConstraints.size(); i++) {
+        //                    int paleoParentID =
         // rupSet.getFaultSectionDataList().get(paleoRateConstraints.get(i).getSectionIndex()).getParentSectionId();
-        //					paleoParentIDs.add(paleoParentID);
-        //				}
-        //			}
+        //                    paleoParentIDs.add(paleoParentID);
+        //                }
+        //            }
 
-        //			if (config.getPaleoSlipConstraintWt() > 0.0) {
-        //				for (int i=0; i<aveSlipConstraints.size(); i++) {
-        //					int paleoParentID =
+        //            if (config.getPaleoSlipConstraintWt() > 0.0) {
+        //                for (int i=0; i<aveSlipConstraints.size(); i++) {
+        //                    int paleoParentID =
         // rupSet.getFaultSectionDataList().get(aveSlipConstraints.get(i).getSubSectionIndex()).getParentSectionId();
-        //					paleoParentIDs.add(paleoParentID);
-        //				}
-        //			}
+        //                    paleoParentIDs.add(paleoParentID);
+        //                }
+        //            }
         //
-        //			constraints.add(new MFDLaplacianSmoothingInversionConstraint(rupSet,
+        //            constraints.add(new MFDLaplacianSmoothingInversionConstraint(rupSet,
         // config.getMFDSmoothnessConstraintWt(),
-        //					config.getMFDSmoothnessConstraintWtForPaleoParents(), paleoParentIDs,
+        //                    config.getMFDSmoothnessConstraintWtForPaleoParents(), paleoParentIDs,
         // MFDConstraints));
-        //		}
+        //        }
 
-        //		// Constraint solution moment to equal deformation-model moment
-        //		if (config.getMomentConstraintWt() > 0.0)
-        //			constraints.add(new TotalMomentInversionConstraint(rupSet,
+        //        // Constraint solution moment to equal deformation-model moment
+        //        if (config.getMomentConstraintWt() > 0.0)
+        //            constraints.add(new TotalMomentInversionConstraint(rupSet,
         // config.getMomentConstraintWt(), rupSet.getTotalReducedMomentRate()));
         //
 
-        //		// Constrain paleoseismically-visible event rates along parent sections to be smooth
-        //		if (config.getEventRateSmoothnessWt() > 0.0)
-        //			constraints.add(new PaleoVisibleEventRateSmoothnessInversionConstraint(rupSet,
+        //        // Constrain paleoseismically-visible event rates along parent sections to be
+        // smooth
+        //        if (config.getEventRateSmoothnessWt() > 0.0)
+        //            constraints.add(new PaleoVisibleEventRateSmoothnessInversionConstraint(rupSet,
         // config.getEventRateSmoothnessWt(), paleoProbabilityModel));
 
         return constraints;
