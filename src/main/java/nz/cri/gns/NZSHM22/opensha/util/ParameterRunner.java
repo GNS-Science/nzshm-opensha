@@ -1,5 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
@@ -11,18 +17,11 @@ import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-
 /**
- * Utility class to populate inversion runners and rupture builders with Parameters.
- * Can be used to make runs repeatable or to reproduce runs from toshi.
- * <p>
- * The code to apply parameters to runners and builders is ported form runzi.
+ * Utility class to populate inversion runners and rupture builders with Parameters. Can be used to
+ * make runs repeatable or to reproduce runs from toshi.
+ *
+ * <p>The code to apply parameters to runners and builders is ported form runzi.
  */
 public class ParameterRunner {
 
@@ -77,15 +76,16 @@ public class ParameterRunner {
             if (Files.notExists(ruptureSetPath)) {
                 System.err.println("Rupture set file does not exist at " + ruptureSetPath);
                 if (arguments.containsKey("rupture_set_file_id")) {
-                    System.err.println("Try to download the rupture set from http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/" + arguments.get("rupture_set_file_id"));
+                    System.err.println(
+                            "Try to download the rupture set from http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/"
+                                    + arguments.get("rupture_set_file_id"));
                 }
             }
         }
     }
 
     /**
-     * Applies the Parameters to a NZSHM22_CoulombRuptureSetBuilder.
-     * Does not run the builder.
+     * Applies the Parameters to a NZSHM22_CoulombRuptureSetBuilder. Does not run the builder.
      *
      * @param builder the builder to be set up.
      */
@@ -102,7 +102,8 @@ public class ParameterRunner {
         if (arguments.get("fault_model").contains("CFM_1_0")) {
             String tvzDomain = "4";
             builder.setScaleDepthIncludeDomain(tvzDomain, arguments.getDouble("depth_scaling_tvz"));
-            builder.setScaleDepthExcludeDomain(tvzDomain, arguments.getDouble("depth_scaling_sans"));
+            builder.setScaleDepthExcludeDomain(
+                    tvzDomain, arguments.getDouble("depth_scaling_sans"));
         }
 
         if (arguments.get("scaling_relationship").equals("SIMPLE_CRUSTAL")) {
@@ -111,16 +112,15 @@ public class ParameterRunner {
             builder.setScalingRelationship(sr);
         }
         // runzi gets this wrong, the types don"t match
-//        if(arguments.get("scaling_relationship").equals("TMG_CRU_2017")) {
-//            TMG2017CruMagAreaRel sr = new TMG2017CruMagAreaRel();
-//            sr.setRake(0.0);
-//            builder.setScalingRelationship(sr);
-//        }
+        //        if(arguments.get("scaling_relationship").equals("TMG_CRU_2017")) {
+        //            TMG2017CruMagAreaRel sr = new TMG2017CruMagAreaRel();
+        //            sr.setRake(0.0);
+        //            builder.setScalingRelationship(sr);
+        //        }
     }
 
     /**
-     * Applies the Parameters to a NZSHM22_SubductionRuptureSetBuilder.
-     * Does not run the builder.
+     * Applies the Parameters to a NZSHM22_SubductionRuptureSetBuilder. Does not run the builder.
      *
      * @param builder
      */
@@ -136,10 +136,10 @@ public class ParameterRunner {
         builder.setSlipAlongRuptureModel(arguments.get("slip_along_rupture_model"));
         builder.setFaultModel(arguments.get("fault_model"));
 
-//        runzi got this wrong, the setter does not exist
-//        if (arguments.containsKey("deformation_model")) {
-//            builder.setDeformationModel(arguments.get("deformation_model"));
-//        }
+        //        runzi got this wrong, the setter does not exist
+        //        if (arguments.containsKey("deformation_model")) {
+        //            builder.setDeformationModel(arguments.get("deformation_model"));
+        //        }
     }
 
     /**
@@ -148,7 +148,8 @@ public class ParameterRunner {
      * @param runner a crustal inversion runner
      * @throws IOException
      */
-    public void setUpCrustalInversionRunner(NZSHM22_CrustalInversionRunner runner) throws IOException {
+    public void setUpCrustalInversionRunner(NZSHM22_CrustalInversionRunner runner)
+            throws IOException {
 
         runner.setSpatialSeisPDF(arguments.get("spatial_seis_pdf"));
         runner.setDeformationModel(arguments.get("deformation_model"));
@@ -157,21 +158,26 @@ public class ParameterRunner {
                 arguments.getDouble("mfd_mag_gt_5_tvz"),
                 arguments.getDouble("mfd_b_value_sans"),
                 arguments.getDouble("mfd_b_value_tvz"),
-                arguments.getDouble("mfd_transition_mag")
-        );
-        if (arguments.get("mfd_equality_weight") != null && arguments.get("mfd_inequality_weight") != null) {
+                arguments.getDouble("mfd_transition_mag"));
+        if (arguments.get("mfd_equality_weight") != null
+                && arguments.get("mfd_inequality_weight") != null) {
             runner.setGutenbergRichterMFDWeights(
                     arguments.getDouble("mfd_equality_weight"),
                     arguments.getDouble("mfd_inequality_weight"));
-        } else if ((arguments.get("mfd_uncertainty_weight") != null && arguments.get("mfd_uncertainty_power") != null) ||
-                (arguments.get("reweight") != null)) {
-            double weight = arguments.get("reweight") != null ? 1 : arguments.getDouble("mfd_uncertainty_weight");
+        } else if ((arguments.get("mfd_uncertainty_weight") != null
+                        && arguments.get("mfd_uncertainty_power") != null)
+                || (arguments.get("reweight") != null)) {
+            double weight =
+                    arguments.get("reweight") != null
+                            ? 1
+                            : arguments.getDouble("mfd_uncertainty_weight");
             runner.setUncertaintyWeightedMFDWeights(
-                    weight, //set default for reweighting
+                    weight, // set default for reweighting
                     arguments.getDouble("mfd_uncertainty_power"),
                     arguments.getDouble("mfd_uncertainty_scalar"));
         } else {
-            throw new IOException("Neither eq/ineq , nor uncertainty weights provided for MFD constraint setup");
+            throw new IOException(
+                    "Neither eq/ineq , nor uncertainty weights provided for MFD constraint setup");
         }
 
         if (arguments.get("enable_tvz_mfd") != null) {
@@ -195,15 +201,20 @@ public class ParameterRunner {
         }
 
         if (arguments.get("slip_use_scaling") != null) {
-            //V3x config
-            double weight = arguments.get("reweight") != null ? 1 : arguments.getDouble("slip_uncertainty_weight");
+            // V3x config
+            double weight =
+                    arguments.get("reweight") != null
+                            ? 1
+                            : arguments.getDouble("slip_uncertainty_weight");
             runner.setSlipRateUncertaintyConstraint(
                     weight, // set default for reweighting
                     arguments.getDouble("slip_uncertainty_scaling_factor"));
 
-
-            runner.setUnmodifiedSlipRateStdvs(!arguments.getBoolean("slip_use_scaling"));// True means no slips scaling and vice - versa
-        } else if (arguments.get("slip_rate_weighting_type") != null && arguments.get("slip_rate_weighting_type").equals("UNCERTAINTY_ADJUSTED")) {
+            runner.setUnmodifiedSlipRateStdvs(
+                    !arguments.getBoolean(
+                            "slip_use_scaling")); // True means no slips scaling and vice - versa
+        } else if (arguments.get("slip_rate_weighting_type") != null
+                && arguments.get("slip_rate_weighting_type").equals("UNCERTAINTY_ADJUSTED")) {
             // Deprecated...
             runner.setSlipRateUncertaintyConstraint(
                     arguments.getInteger("slip_rate_weight"),
@@ -219,9 +230,12 @@ public class ParameterRunner {
         }
 
         if (arguments.get("paleo_rate_constraint") != null) {
-            double weight = arguments.get("reweight") != null ? 1 : arguments.getDouble("paleo_rate_constraint_weight");
+            double weight =
+                    arguments.get("reweight") != null
+                            ? 1
+                            : arguments.getDouble("paleo_rate_constraint_weight");
             runner.setPaleoRateConstraints(
-                    weight, //set default for reweighting
+                    weight, // set default for reweighting
                     arguments.getDouble("paleo_parent_rate_smoothness_constraint_weight"),
                     arguments.get("paleo_rate_constraint"),
                     arguments.get("paleo_probability_model"));
@@ -235,7 +249,8 @@ public class ParameterRunner {
         runner.setGutenbergRichterMFDWeights(
                         arguments.getDouble("mfd_equality_weight"),
                         arguments.getDouble("mfd_inequality_weight"))
-                .setSlipRateConstraint(arguments.get("slip_rate_weighting_type"),
+                .setSlipRateConstraint(
+                        arguments.get("slip_rate_weighting_type"),
                         arguments.getDouble("slip_rate_normalized_weight"),
                         arguments.getDouble("slip_rate_unnormalized_weight"));
 
@@ -262,23 +277,29 @@ public class ParameterRunner {
     }
 
     protected void setUpAbstractInversionRunner(NZSHM22_AbstractInversionRunner runner) {
-        if (arguments.get("scaling_relationship") != null && arguments.get("scaling_recalc_mag") != null) {
-            SimplifiedScalingRelationship sr = (SimplifiedScalingRelationship) NZSHM22_PythonGateway.getScalingRelationship("SimplifiedScalingRelationship");
+        if (arguments.get("scaling_relationship") != null
+                && arguments.get("scaling_recalc_mag") != null) {
+            SimplifiedScalingRelationship sr =
+                    (SimplifiedScalingRelationship)
+                            NZSHM22_PythonGateway.getScalingRelationship(
+                                    "SimplifiedScalingRelationship");
 
             if (arguments.get("scaling_relationship").equals("SIMPLE_CRUSTAL")) {
-                sr.setupCrustal(arguments.getDouble("scaling_c_val_dip_slip"),
+                sr.setupCrustal(
+                        arguments.getDouble("scaling_c_val_dip_slip"),
                         arguments.getDouble("scaling_c_val_strike_slip"));
                 runner.setScalingRelationship(sr, arguments.getBoolean("scaling_recalc_mag"));
             } else if (arguments.get("scaling_relationship").equals("SIMPLE_SUBDUCTION")) {
                 sr.setupSubduction(arguments.getDouble("scaling_c_val"));
                 runner.setScalingRelationship(sr, arguments.getBoolean("scaling_recalc_mag"));
             } else {
-                runner.setScalingRelationship(arguments.get("scaling_relationship"), arguments.getBoolean("scaling_recalc_mag"));
+                runner.setScalingRelationship(
+                        arguments.get("scaling_relationship"),
+                        arguments.getBoolean("scaling_recalc_mag"));
             }
         }
 
-        runner
-                .setInversionSeconds(arguments.getLong("max_inversion_time") * 60)
+        runner.setInversionSeconds(arguments.getLong("max_inversion_time") * 60)
                 .setEnergyChangeCompletionCriteria(0, arguments.getDouble("completion_energy"), 1)
                 .setSelectionInterval(arguments.getInteger("selection_interval_secs"))
                 .setNumThreadsPerSelector(arguments.getInteger("threads_per_selector"))
@@ -303,11 +324,13 @@ public class ParameterRunner {
         solution.write(solutionFile);
     }
 
-    public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_CoulombRuptureSetBuilder builder) throws IOException {
+    public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_CoulombRuptureSetBuilder builder)
+            throws IOException {
         rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
     }
 
-    public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_SubductionRuptureSetBuilder builder) throws IOException {
+    public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_SubductionRuptureSetBuilder builder)
+            throws IOException {
         rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
     }
 
@@ -318,7 +341,8 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemSolution runNZSHM22CrustalInversion() throws IOException, DocumentException {
+    public static FaultSystemSolution runNZSHM22CrustalInversion()
+            throws IOException, DocumentException {
         ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
         NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
         parameterRunner.ensurePaths();
@@ -335,14 +359,17 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemSolution runNZSHM22HikurangiInversion() throws IOException, DocumentException {
-        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_HIKURANGI);
-        NZSHM22_SubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
+    public static FaultSystemSolution runNZSHM22HikurangiInversion()
+            throws IOException, DocumentException {
+        ParameterRunner parameterRunner =
+                new ParameterRunner(Parameters.NZSHM22.INVERSION_HIKURANGI);
+        NZSHM22_SubductionInversionRunner runner =
+                NZSHM22_PythonGateway.getSubductionInversionRunner();
         parameterRunner.ensurePaths();
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
             System.out.println(row);
         }
         return solution;
@@ -355,19 +382,21 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemSolution runNZSHM22PuysegurInversion() throws IOException, DocumentException {
-        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_PUYSEGUR);
-        NZSHM22_SubductionInversionRunner runner = NZSHM22_PythonGateway.getSubductionInversionRunner();
+    public static FaultSystemSolution runNZSHM22PuysegurInversion()
+            throws IOException, DocumentException {
+        ParameterRunner parameterRunner =
+                new ParameterRunner(Parameters.NZSHM22.INVERSION_PUYSEGUR);
+        NZSHM22_SubductionInversionRunner runner =
+                NZSHM22_PythonGateway.getSubductionInversionRunner();
         parameterRunner.ensurePaths();
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row: runner.getTabularSolutionMfds()) {
+        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
             System.out.println(row);
         }
         return solution;
     }
-
 
     /**
      * Builds and saves a rupture set based on Parameters.NZSHM22.RUPSET_CRUSTAL
@@ -376,7 +405,8 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemRupSet buildNZSHM22CoulombCrustalRupset() throws IOException, DocumentException {
+    public static FaultSystemRupSet buildNZSHM22CoulombCrustalRupset()
+            throws IOException, DocumentException {
         ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.RUPSET_CRUSTAL);
         NZSHM22_CoulombRuptureSetBuilder builder = new NZSHM22_CoulombRuptureSetBuilder();
         parameterRunner.ensurePaths();
@@ -394,7 +424,8 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemRupSet buildNZSHM22SubductionRupset(Parameters parameters) throws IOException, DocumentException {
+    public static FaultSystemRupSet buildNZSHM22SubductionRupset(Parameters parameters)
+            throws IOException, DocumentException {
         ParameterRunner parameterRunner = new ParameterRunner(parameters);
         NZSHM22_SubductionRuptureSetBuilder builder = new NZSHM22_SubductionRuptureSetBuilder();
         parameterRunner.ensurePaths();
@@ -411,7 +442,8 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemRupSet buildNZSHM22HikurangiRupset() throws IOException, DocumentException {
+    public static FaultSystemRupSet buildNZSHM22HikurangiRupset()
+            throws IOException, DocumentException {
         Parameters parameters = Parameters.NZSHM22.RUPSET_HIKURANGI.getParameters();
         return buildNZSHM22SubductionRupset(parameters);
     }
@@ -423,7 +455,8 @@ public class ParameterRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public static FaultSystemRupSet buildNZSHM22PuysegurRupset() throws IOException, DocumentException {
+    public static FaultSystemRupSet buildNZSHM22PuysegurRupset()
+            throws IOException, DocumentException {
         Parameters parameters = Parameters.NZSHM22.RUPSET_PUYSEGUR.getParameters();
         return buildNZSHM22SubductionRupset(parameters);
     }

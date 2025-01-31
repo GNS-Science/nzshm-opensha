@@ -1,28 +1,29 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import org.junit.Test;
+
 public class DownDipConstraintTest {
 
     /**
-     * Simulates a rupture based on the tile grid passed and runs the ConnectednessConstraint over it
+     * Simulates a rupture based on the tile grid passed and runs the ConnectednessConstraint over
+     * it
      *
      * @param ruptureGrid a 1/0 grid of sections where 1 denotes a section and 0 denotes no section
      * @return whether the rupture is connected
      */
     protected static boolean apply(DownDipConstraint constraint, int[][] ruptureGrid) {
         int rowCount = ruptureGrid.length;
-        int colCount = Arrays.stream(ruptureGrid).map(col -> col.length).max(Integer::compareTo).get();
+        int colCount =
+                Arrays.stream(ruptureGrid).map(col -> col.length).max(Integer::compareTo).get();
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, ruptureGrid);
         return constraint.apply(builder, 0, 0, rowCount, colCount);
     }
@@ -44,7 +45,6 @@ public class DownDipConstraintTest {
         }
         return DownDipSubSectBuilder.fromList(sections, "puyrangi", parentId);
     }
-
 
     @Test
     public void testConnectednessMinimalRupture() {
@@ -69,9 +69,9 @@ public class DownDipConstraintTest {
     @Test
     public void testConnectednessWithHole() {
         int[][] ruptureGrid = {
-                {1, 1, 1},
-                {1, 0, 1},
-                {1, 1, 1},
+            {1, 1, 1},
+            {1, 0, 1},
+            {1, 1, 1},
         };
         assertTrue(apply(DownDipConstraint.connectednessConstraint(), ruptureGrid));
     }
@@ -79,11 +79,11 @@ public class DownDipConstraintTest {
     @Test
     public void testConnectednessWithSpiral() {
         int[][] ruptureGrid = {
-                {1, 1, 1, 1},
-                {0, 0, 0, 1},
-                {1, 1, 0, 1},
-                {1, 0, 0, 1},
-                {1, 1, 1, 1},
+            {1, 1, 1, 1},
+            {0, 0, 0, 1},
+            {1, 1, 0, 1},
+            {1, 0, 0, 1},
+            {1, 1, 1, 1},
         };
         assertTrue(apply(DownDipConstraint.connectednessConstraint(), ruptureGrid));
     }
@@ -91,10 +91,10 @@ public class DownDipConstraintTest {
     @Test
     public void testConnectednessWithCutout() {
         int[][] ruptureGrid = {
-                {1, 1, 1},
-                {1, 1, 0},
-                {1, 1, 0},
-                {1, 1, 1},
+            {1, 1, 1},
+            {1, 1, 0},
+            {1, 1, 0},
+            {1, 1, 1},
         };
         assertTrue(apply(DownDipConstraint.connectednessConstraint(), ruptureGrid));
     }
@@ -102,9 +102,9 @@ public class DownDipConstraintTest {
     @Test
     public void testConnectednessIsland() {
         int[][] ruptureGrid = {
-                {0, 0, 0},
-                {0, 1, 0},
-                {0, 0, 0},
+            {0, 0, 0},
+            {0, 1, 0},
+            {0, 0, 0},
         };
         assertTrue(apply(DownDipConstraint.connectednessConstraint(), ruptureGrid));
     }
@@ -112,8 +112,8 @@ public class DownDipConstraintTest {
     @Test
     public void testConnectednessConfineToRupture() {
         int[][] builderGrid = {
-                {1, 0, 1},
-                {1, 1, 1},
+            {1, 0, 1},
+            {1, 1, 1},
         };
 
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, builderGrid);
@@ -158,11 +158,11 @@ public class DownDipConstraintTest {
     @Test
     public void testAspectRatioThreshold() {
         int[][] builderGrid = {
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         };
 
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, builderGrid);
@@ -183,13 +183,8 @@ public class DownDipConstraintTest {
 
     @Test
     public void testAspectRatioOrientation() {
-        int[][] horizontalRupture = {
-                {1, 1}
-        };
-        int[][] verticalRupture = {
-                {1},
-                {1}
-        };
+        int[][] horizontalRupture = {{1, 1}};
+        int[][] verticalRupture = {{1}, {1}};
 
         assertTrue(apply(DownDipConstraint.aspectRatioConstraint(2, 2), horizontalRupture));
         assertFalse(apply(DownDipConstraint.aspectRatioConstraint(2, 2), verticalRupture));
@@ -211,17 +206,15 @@ public class DownDipConstraintTest {
 
     @Test
     public void testMinFillRatios() {
-        int[][] full = {
-                {1, 1, 1, 1, 1, 1}
-        };
+        int[][] full = {{1, 1, 1, 1, 1, 1}};
         int[][] half = {
-                {1, 1, 1, 1, 1, 1},
-                {0, 0, 0, 0, 0, 0}
+            {1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0}
         };
         int[][] third = {
-                {1, 1, 1, 1, 1, 1},
-                {0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0}
+            {1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0}
         };
 
         assertTrue(apply(DownDipConstraint.minFillConstraint(1), full));
@@ -241,64 +234,66 @@ public class DownDipConstraintTest {
         assertTrue(apply(DownDipConstraint.minFillConstraint(0.3), third));
     }
 
-
     // for future reference
 
     //    @Test
-//    public void testSizeCoarsenessConstraint() {
-//
-//        ExhaustiveUnilateralRuptureGrowingStrategy ucerf3Strategy = new ExhaustiveUnilateralRuptureGrowingStrategy();
-//
-//        // single section, too large coarseness
-//        DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
-//        FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-//        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(ucerf3Strategy);
-//        strategy.addSizeCoarsenessConstraint(4);
-//        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
-//        assertEquals(0, actual.size());
-//
-//        // single section, small coarseness
-//        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
-//        strategy.addSizeCoarsenessConstraint(1);
-//        actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
-//        List<List<Integer>> expected = new ArrayList<>();
-//        expected.add(Lists.newArrayList(0));
-//        assertEquals(expected, simplifyPermutations(actual));
-//
-//        // 3x3 downDip
-//        builder = mockDownDipBuilder(0, 3, 3);
-//        cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-//
-//        // size coarseness so permissive that we take everything
-//        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
-//        strategy.addSizeCoarsenessConstraint(0.1);
-//        actual = strategy.getVariations(cluster, builder.getSubSect(0, 1));
-//        expected = new ArrayList<>();
-//        expected.add(Lists.newArrayList(1));
-//        expected.add(Lists.newArrayList(1, 2));
-//        expected.add(Lists.newArrayList(1, 0));
-//        expected.add(Lists.newArrayList(1, 4));
-//        expected.add(Lists.newArrayList(1, 2, 4, 5));
-//        expected.add(Lists.newArrayList(1, 0, 4, 3));
-//        expected.add(Lists.newArrayList(1, 4, 7));
-//        expected.add(Lists.newArrayList(1, 2, 4, 5, 7, 8));
-//        expected.add(Lists.newArrayList(1, 0, 4, 3, 7, 6));
-//        assertEquals(expected, simplifyPermutations(actual));
-//
-//        // size coarseness weeds out ruptures that don't fit
-//        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
-//        strategy.addSizeCoarsenessConstraint(0.5);
-//        actual = strategy.getVariations(cluster, builder.getSubSect(0, 1));
-//        expected = new ArrayList<>();
-//        expected.add(Lists.newArrayList(1));
-//        expected.add(Lists.newArrayList(1, 2));
-//        expected.add(Lists.newArrayList(1, 0));
-//        expected.add(Lists.newArrayList(1, 4));
-//        expected.add(Lists.newArrayList(1, 2, 4, 5));
-//        expected.add(Lists.newArrayList(1, 0, 4, 3));
-//        // expected.add(Lists.newArrayList(1, 4, 7));
-//        //  expected.add(Lists.newArrayList(1, 2, 4, 5, 7, 8));
-//        // expected.add(Lists.newArrayList(1, 0, 4, 3, 7, 6));
-//        assertEquals(expected, simplifyPermutations(actual));
-//    }
+    //    public void testSizeCoarsenessConstraint() {
+    //
+    //        ExhaustiveUnilateralRuptureGrowingStrategy ucerf3Strategy = new
+    // ExhaustiveUnilateralRuptureGrowingStrategy();
+    //
+    //        // single section, too large coarseness
+    //        DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
+    //        FaultSubsectionCluster cluster = new
+    // FaultSubsectionCluster(builder.getSubSectsList());
+    //        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+    //        strategy.addSizeCoarsenessConstraint(4);
+    //        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster,
+    // builder.getSubSect(0, 0));
+    //        assertEquals(0, actual.size());
+    //
+    //        // single section, small coarseness
+    //        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+    //        strategy.addSizeCoarsenessConstraint(1);
+    //        actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
+    //        List<List<Integer>> expected = new ArrayList<>();
+    //        expected.add(Lists.newArrayList(0));
+    //        assertEquals(expected, simplifyPermutations(actual));
+    //
+    //        // 3x3 downDip
+    //        builder = mockDownDipBuilder(0, 3, 3);
+    //        cluster = new FaultSubsectionCluster(builder.getSubSectsList());
+    //
+    //        // size coarseness so permissive that we take everything
+    //        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+    //        strategy.addSizeCoarsenessConstraint(0.1);
+    //        actual = strategy.getVariations(cluster, builder.getSubSect(0, 1));
+    //        expected = new ArrayList<>();
+    //        expected.add(Lists.newArrayList(1));
+    //        expected.add(Lists.newArrayList(1, 2));
+    //        expected.add(Lists.newArrayList(1, 0));
+    //        expected.add(Lists.newArrayList(1, 4));
+    //        expected.add(Lists.newArrayList(1, 2, 4, 5));
+    //        expected.add(Lists.newArrayList(1, 0, 4, 3));
+    //        expected.add(Lists.newArrayList(1, 4, 7));
+    //        expected.add(Lists.newArrayList(1, 2, 4, 5, 7, 8));
+    //        expected.add(Lists.newArrayList(1, 0, 4, 3, 7, 6));
+    //        assertEquals(expected, simplifyPermutations(actual));
+    //
+    //        // size coarseness weeds out ruptures that don't fit
+    //        strategy = new DownDipPermutationStrategy(ucerf3Strategy);
+    //        strategy.addSizeCoarsenessConstraint(0.5);
+    //        actual = strategy.getVariations(cluster, builder.getSubSect(0, 1));
+    //        expected = new ArrayList<>();
+    //        expected.add(Lists.newArrayList(1));
+    //        expected.add(Lists.newArrayList(1, 2));
+    //        expected.add(Lists.newArrayList(1, 0));
+    //        expected.add(Lists.newArrayList(1, 4));
+    //        expected.add(Lists.newArrayList(1, 2, 4, 5));
+    //        expected.add(Lists.newArrayList(1, 0, 4, 3));
+    //        // expected.add(Lists.newArrayList(1, 4, 7));
+    //        //  expected.add(Lists.newArrayList(1, 2, 4, 5, 7, 8));
+    //        // expected.add(Lists.newArrayList(1, 0, 4, 3, 7, 6));
+    //        assertEquals(expected, simplifyPermutations(actual));
+    //    }
 }

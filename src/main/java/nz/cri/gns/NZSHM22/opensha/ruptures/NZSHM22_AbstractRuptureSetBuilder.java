@@ -1,10 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.GitVersion;
@@ -20,17 +26,10 @@ import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
-	
-	PlausibilityConfiguration plausibilityConfig;
-	
+
+    PlausibilityConfiguration plausibilityConfig;
+
     protected FaultSectionList subSections;
     protected List<ClusterRupture> ruptures;
     ClusterRuptureBuilder builder;
@@ -44,10 +43,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     int minSubSections = 2; // New NZSHM22
 
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
-    protected int numThreads = Runtime.getRuntime().availableProcessors(); // use all available processors
+    protected int numThreads =
+            Runtime.getRuntime().availableProcessors(); // use all available processors
 
-	protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
-	protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
+    protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
+    protected SlipAlongRuptureModels slipAlongRuptureModel = SlipAlongRuptureModels.UNIFORM;
 
     protected boolean invertRake = false;
     String scaleDepthIncludeDomainNo;
@@ -59,21 +59,24 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     /**
      * For debugging only. adds 180 degrees to each rake in the fault model
+     *
      * @param invertRake
      * @return
      */
-    public NZSHM22_AbstractRuptureSetBuilder setInvertRake(boolean invertRake){
+    public NZSHM22_AbstractRuptureSetBuilder setInvertRake(boolean invertRake) {
         this.invertRake = invertRake;
         return this;
     }
 
-    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthIncludeDomain(String domainNo, double scalar){
+    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthIncludeDomain(
+            String domainNo, double scalar) {
         this.scaleDepthIncludeDomainNo = domainNo;
         this.scaleDepthIncludeDomainScalar = scalar;
         return this;
     }
 
-    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthExcludeDomain(String domainNo, double scalar){
+    public NZSHM22_AbstractRuptureSetBuilder setScaleDepthExcludeDomain(
+            String domainNo, double scalar) {
         this.scaleDepthExcludeDomainNo = domainNo;
         this.scaleDepthExcludeDomainScalar = scalar;
         return this;
@@ -94,7 +97,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return this;
     }
 
-    public NZSHM22_AbstractRuptureSetBuilder setIdRangeFilter(int skipFaultSections, int maxFaultSections) {
+    public NZSHM22_AbstractRuptureSetBuilder setIdRangeFilter(
+            int skipFaultSections, int maxFaultSections) {
         faultFilters.add(new FaultFilter.IdRangeFilter(skipFaultSections, maxFaultSections));
         return this;
     }
@@ -118,23 +122,19 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     }
 
     protected static String fmt(float d) {
-        if (d == (long) d)
-            return String.format("%d", (long) d);
-        else
-            return Float.toString(d);
+        if (d == (long) d) return String.format("%d", (long) d);
+        else return Float.toString(d);
     }
 
     protected static String fmt(double d) {
-        if (d == (long) d)
-            return String.format("%d", (long) d);
-        else
-            return Double.toString(d);
+        if (d == (long) d) return String.format("%d", (long) d);
+        else return Double.toString(d);
     }
 
     protected static String fmt(boolean b) {
         return b ? "T" : "F";
     }
-    
+
     public String getDescriptiveName() {
         String description = "";
         if (faultModel != null) {
@@ -150,27 +150,29 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         description += "_mnSSPP(" + fmt(minSubSectsPerParent) + ")";
         description += "_mxSSL(" + fmt(maxSubSectionLength) + ")";
 
-        for(FaultFilter filter:faultFilters) {
+        for (FaultFilter filter : faultFilters) {
             description += filter.toDescription();
         }
         return description;
     }
 
     public static BuildInfoModule createBuildInfo() throws IOException {
-        BuildInfoModule buildInfo = BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
+        BuildInfoModule buildInfo =
+                BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
         buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
         return buildInfo;
     }
-    
-    public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException ;
 
-    public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel){
+    public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException;
+
+    public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
         Preconditions.checkState(this.downDipFile == null);
         this.faultModel = faultModel;
         return this;
     }
 
-    public NZSHM22_AbstractRuptureSetBuilder setSubductionFaultModelFile(String fileName, String faultName) {
+    public NZSHM22_AbstractRuptureSetBuilder setSubductionFaultModelFile(
+            String fileName, String faultName) {
         Preconditions.checkState(this.faultModel == null);
         this.downDipFile = new File(fileName);
         this.downDipFaultName = faultName;
@@ -180,8 +182,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     /**
      * Sets the FaultModel file for all crustal faults
      *
-     * @param fsdFile the XML FaultSection data file containing source fault
-     *                information
+     * @param fsdFile the XML FaultSection data file containing source fault information
      * @return this builder
      */
     public NZSHM22_AbstractRuptureSetBuilder setFaultModelFile(File fsdFile) {
@@ -189,38 +190,39 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return this;
     }
 
-    
-	public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(RupSetScalingRelationship scalingRelationship) {
-		this.scalingRelationship = scalingRelationship;
-		return this;
-	}
-	
-	public RupSetScalingRelationship getScalingRelationship() {
-		return this.scalingRelationship;
-	}
-	
-	public NZSHM22_AbstractRuptureSetBuilder setSlipAlongRuptureModel(SlipAlongRuptureModels slipAlongRuptureModel) {
-		this.slipAlongRuptureModel = slipAlongRuptureModel;
-		return this;
-	}
-	
-	public SlipAlongRuptureModels getSlipAlongRuptureModel() {
-		return this.slipAlongRuptureModel;
-	}	
-    
-//    /**
-//     * Sets the subduction fault. At the moment, only one fault can be set.
-//     *
-//     * @param faultName   The name fo the fault.
-//     * @param downDipFile the CSV file containing all sections.
-//     * @return this builder
-//     */
-//    public NZSHM22_AbstractRuptureSetBuilder setSubductionFault(String faultName, File downDipFile) {
-//        this.downDipFaultName = faultName;
-//        this.downDipFile = downDipFile;
-//        return this;
-//    }
+    public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(
+            RupSetScalingRelationship scalingRelationship) {
+        this.scalingRelationship = scalingRelationship;
+        return this;
+    }
 
+    public RupSetScalingRelationship getScalingRelationship() {
+        return this.scalingRelationship;
+    }
+
+    public NZSHM22_AbstractRuptureSetBuilder setSlipAlongRuptureModel(
+            SlipAlongRuptureModels slipAlongRuptureModel) {
+        this.slipAlongRuptureModel = slipAlongRuptureModel;
+        return this;
+    }
+
+    public SlipAlongRuptureModels getSlipAlongRuptureModel() {
+        return this.slipAlongRuptureModel;
+    }
+
+    //    /**
+    //     * Sets the subduction fault. At the moment, only one fault can be set.
+    //     *
+    //     * @param faultName   The name fo the fault.
+    //     * @param downDipFile the CSV file containing all sections.
+    //     * @return this builder
+    //     */
+    //    public NZSHM22_AbstractRuptureSetBuilder setSubductionFault(String faultName, File
+    // downDipFile) {
+    //        this.downDipFaultName = faultName;
+    //        this.downDipFile = downDipFile;
+    //        return this;
+    //    }
 
     /**
      * Some internal classes support parallelisation.
@@ -234,8 +236,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     }
 
     /**
-     * @param minSubSectsPerParent sets the minimum subsections per parent, 2 is
-     *                             standard as per UCERF3
+     * @param minSubSectsPerParent sets the minimum subsections per parent, 2 is standard as per
+     *     UCERF3
      * @return NZSHM22_RuptureSetBuilder the builder
      */
     public NZSHM22_AbstractRuptureSetBuilder setMinSubSectsPerParent(int minSubSectsPerParent) {
@@ -254,26 +256,33 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     protected void applyDepthScalars(FaultSectionList sections) {
         if (scaleDepthIncludeDomainNo != null) {
-            Preconditions.checkState(((NZFaultSection) sections.get(0)).getDomainNo() != null,
+            Preconditions.checkState(
+                    ((NZFaultSection) sections.get(0)).getDomainNo() != null,
                     "fault model must have domain data when using scaleDepthIncludeDomain");
             for (FaultSection section : sections) {
                 if (((NZFaultSection) section).getDomainNo().equals(scaleDepthIncludeDomainNo)) {
-                    ((FaultSectionPrefData) section).setAveLowerDepth(section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
+                    ((FaultSectionPrefData) section)
+                            .setAveLowerDepth(
+                                    section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
                 }
             }
         }
         if (scaleDepthExcludeDomainNo != null) {
-            Preconditions.checkState(((NZFaultSection) sections.get(0)).getDomainNo() != null,
+            Preconditions.checkState(
+                    ((NZFaultSection) sections.get(0)).getDomainNo() != null,
                     "fault model must have domain data when using scaleDepthExcludeDomain");
             for (FaultSection section : sections) {
                 if (!((NZFaultSection) section).getDomainNo().equals(scaleDepthExcludeDomainNo)) {
-                    ((FaultSectionPrefData) section).setAveLowerDepth(section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
+                    ((FaultSectionPrefData) section)
+                            .setAveLowerDepth(
+                                    section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
                 }
             }
         }
     }
 
-    protected void loadFaults(NZSHM22_FaultModels faultModel) throws DocumentException, IOException {
+    protected void loadFaults(NZSHM22_FaultModels faultModel)
+            throws DocumentException, IOException {
         faultModel.fetchFaultSections(subSections);
 
         System.out.println("Fault model has " + subSections.size() + " fault sections");
@@ -290,9 +299,18 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
         applyDepthScalars(subSections);
 
-        subSections.removeIf(faultSection -> faultSection.getFaultTrace().get(0).getLongitude() > 170 ||
-                faultSection.getFaultTrace().get(faultSection.getFaultTrace().size() - 1).getLongitude() > 170);
-        subSections.removeIf(faultSection -> !(faultSection instanceof DownDipFaultSection) && !faultSection.getSectionName().startsWith("Alpine"));
+        subSections.removeIf(
+                faultSection ->
+                        faultSection.getFaultTrace().get(0).getLongitude() > 170
+                                || faultSection
+                                                .getFaultTrace()
+                                                .get(faultSection.getFaultTrace().size() - 1)
+                                                .getLongitude()
+                                        > 170);
+        subSections.removeIf(
+                faultSection ->
+                        !(faultSection instanceof DownDipFaultSection)
+                                && !faultSection.getSectionName().startsWith("Alpine"));
 
         if (faultModel.isCrustal()) {
 
@@ -309,10 +327,14 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                 double maxSectLength = ddw * maxSubSectionLength;
                 System.out.println("Get subSections in " + parentSect.getName());
                 // the "2" here sets a minimum number of sub sections
-                List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength,
-                        subSections.getSafeId(), 2);
+                List<? extends FaultSection> newSubSects =
+                        parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
                 getSubSections().addAll(newSubSects);
-                System.out.println("Produced " + newSubSects.size() + " subSections in " + parentSect.getName());
+                System.out.println(
+                        "Produced "
+                                + newSubSects.size()
+                                + " subSections in "
+                                + parentSect.getName());
             }
             System.out.println(subSections.size() + " Sub Sections created.");
         }
@@ -361,19 +383,23 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                 double maxSectLength = ddw * maxSubSectionLength;
                 System.out.println("Get subSections in " + parentSect.getName());
                 // the "2" here sets a minimum number of sub sections
-                List<? extends FaultSection> newSubSects = parentSect.getSubSectionsList(maxSectLength,
-                        subSections.getSafeId(), 2);
+                List<? extends FaultSection> newSubSects =
+                        parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
                 getSubSections().addAll(newSubSects);
-                System.out.println("Produced " + newSubSects.size() + " subSections in " + parentSect.getName());
+                System.out.println(
+                        "Produced "
+                                + newSubSects.size()
+                                + " subSections in "
+                                + parentSect.getName());
             }
             System.out.println(subSections.size() + " Sub Sections created.");
         }
     }
 
-    public NZSHM22_LogicTreeBranch getLogicTreeBranch(FaultRegime regime){
+    public NZSHM22_LogicTreeBranch getLogicTreeBranch(FaultRegime regime) {
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(regime);
-        if(faultModel != null) {
+        if (faultModel != null) {
             branch.setValue(faultModel);
         }
         branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
@@ -401,11 +427,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public ClusterRuptureBuilder getBuilder() {
         return builder;
     }
-    
-	/**
-	 * @return the plausabilityConfig
-	 */
-	public PlausibilityConfiguration getPlausibilityConfig() {
-		return plausibilityConfig;
-	}    
+
+    /**
+     * @return the plausabilityConfig
+     */
+    public PlausibilityConfiguration getPlausibilityConfig() {
+        return plausibilityConfig;
+    }
 }

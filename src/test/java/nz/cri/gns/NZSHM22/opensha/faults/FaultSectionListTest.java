@@ -5,27 +5,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
-
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-
+import java.util.List;
 import org.junit.Test;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.List;
-
 public class FaultSectionListTest {
 
-    final static FaultSection section0 = mockFaultSection(0, 1);
-    final static FaultSection section1 = mockFaultSection(1, 1);
-    final static FaultSection section2 = mockFaultSection(2, 1);
-    final static FaultSection section3 = mockFaultSection(3, 1);
-    final static FaultSection section4 = mockFaultSection(4, 1);
-    final static FaultSection section5 = mockFaultSection(5, 1);
+    static final FaultSection section0 = mockFaultSection(0, 1);
+    static final FaultSection section1 = mockFaultSection(1, 1);
+    static final FaultSection section2 = mockFaultSection(2, 1);
+    static final FaultSection section3 = mockFaultSection(3, 1);
+    static final FaultSection section4 = mockFaultSection(4, 1);
+    static final FaultSection section5 = mockFaultSection(5, 1);
 
-    final static FaultSection section0Too = mockFaultSection(0, 1);
-    final static FaultSection section0dip = mockFaultSection(6, 0);
-    final static FaultSection section90dip = mockFaultSection(7, 90);
-    final static FaultSection section91dip = mockFaultSection(8, 91);
+    static final FaultSection section0Too = mockFaultSection(0, 1);
+    static final FaultSection section0dip = mockFaultSection(6, 0);
+    static final FaultSection section90dip = mockFaultSection(7, 90);
+    static final FaultSection section91dip = mockFaultSection(8, 91);
 
     private static FaultSection mockFaultSection(int id, double dip) {
         FaultSection result = mock(FaultSection.class);
@@ -124,7 +120,8 @@ public class FaultSectionListTest {
 
     @Test
     public void testRemoveByIndex() {
-        FaultSectionList list = FaultSectionList.fromList(Lists.newArrayList(section0, section3, section5));
+        FaultSectionList list =
+                FaultSectionList.fromList(Lists.newArrayList(section0, section3, section5));
         assertEquals(list, Lists.newArrayList(section0, section3, section5));
         assertEquals(3, list.size());
         assertEquals(6, list.getSafeId());
@@ -146,7 +143,8 @@ public class FaultSectionListTest {
 
     @Test
     public void testRemoveByReference() {
-        FaultSectionList list = FaultSectionList.fromList(Lists.newArrayList(section0, section3, section5));
+        FaultSectionList list =
+                FaultSectionList.fromList(Lists.newArrayList(section0, section3, section5));
         assertEquals(list, Lists.newArrayList(section0, section3, section5));
         assertEquals(3, list.size());
         assertEquals(6, list.getSafeId());
@@ -158,7 +156,6 @@ public class FaultSectionListTest {
 
         assertFalse("can't remove element that's not in the list", list.remove(section2));
         assertEquals(list, Lists.newArrayList(section0, section3));
-
 
         assertTrue(list.remove(section0));
         assertEquals(list, Lists.newArrayList(section3));
@@ -176,13 +173,15 @@ public class FaultSectionListTest {
         assertFalse(emptyList.removeIf(section -> true));
         assertEquals(Lists.newArrayList(), emptyList);
 
-        List<FaultSection> sourceList = Lists.newArrayList(section0, section4, section1, section3, section2, section5);
+        List<FaultSection> sourceList =
+                Lists.newArrayList(section0, section4, section1, section3, section2, section5);
         FaultSectionList unorderedList = FaultSectionList.fromList(sourceList);
-        assertFalse("nothing removed",unorderedList.removeIf(section -> section.getSectionId() > 10));
+        assertFalse(
+                "nothing removed", unorderedList.removeIf(section -> section.getSectionId() > 10));
         assertEquals(sourceList, unorderedList);
-        assertTrue("remove elements", unorderedList.removeIf(section -> section.getSectionId() < 3));
+        assertTrue(
+                "remove elements", unorderedList.removeIf(section -> section.getSectionId() < 3));
         assertEquals(Lists.newArrayList(section4, section3, section5), unorderedList);
         assertEquals(3, unorderedList.size());
     }
-
 }

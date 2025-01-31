@@ -1,14 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class LoggingCompletionCriteriaTest {
 
@@ -28,7 +27,6 @@ public class LoggingCompletionCriteriaTest {
         assertEquals("1E-6", format(0.000001));
         assertEquals("1.235", format(1.23456));
         assertEquals("1.235E3", format(1234.5678));
-
     }
 
     static String getFile(File path, String csvFile) throws IOException {
@@ -48,23 +46,21 @@ public class LoggingCompletionCriteriaTest {
 
         File tempDir = Files.createTempDirectory("zipLog").toFile();
 
-        LoggingCompletionCriteria.MultiZipLog log = new LoggingCompletionCriteria.MultiZipLog(
-                tempDir.getAbsolutePath(),
-                "testLog",
-                30);
+        LoggingCompletionCriteria.MultiZipLog log =
+                new LoggingCompletionCriteria.MultiZipLog(tempDir.getAbsolutePath(), "testLog", 30);
         log.addHeader(headerFile, "a,b,c\n");
 
         log.nextIndex(0);
-        log.log(headerFile, new double[]{1, 2, 3});
-        log.log(arrayFile, new double[]{4, 5, 6});
+        log.log(headerFile, new double[] {1, 2, 3});
+        log.log(arrayFile, new double[] {4, 5, 6});
 
         log.nextIndex(1);
         log.log(headerFile, "a,b,c\n");
-        log.log(arrayFile, new double[]{7, 8, 9});
+        log.log(arrayFile, new double[] {7, 8, 9});
 
         log.nextIndex(2);
         log.log(headerFile, "d,e,f\n");
-        log.log(arrayFile, new double[]{10, 11, 12});
+        log.log(arrayFile, new double[] {10, 11, 12});
 
         log.close();
 

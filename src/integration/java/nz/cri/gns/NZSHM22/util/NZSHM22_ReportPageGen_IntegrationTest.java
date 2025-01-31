@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 import org.junit.AfterClass;
@@ -13,7 +12,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-
 
 public class NZSHM22_ReportPageGen_IntegrationTest {
 
@@ -27,11 +25,11 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
 
     @AfterClass
     public static void tearDown() throws IOException {
-        //Clean up the temp folder
+        // Clean up the temp folder
 
-        File[] tmp_folders = {new File(tempFolder, "resources"),
-                new File(tempFolder, "hist_rup_pages"),
-                tempFolder}; //make this one last
+        File[] tmp_folders = {
+            new File(tempFolder, "resources"), new File(tempFolder, "hist_rup_pages"), tempFolder
+        }; // make this one last
 
         for (File folder : tmp_folders) {
             File[] files = folder.listFiles();
@@ -46,9 +44,13 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
 
     @Test
     public void testRunReportForInversionSolution() throws IOException, DocumentException {
-        FaultSystemSolution solution = TestHelpers.createCrustalSolution(
-                TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ, ScalingRelationships.SHAW_2009_MOD));
-        new NZSHM22_ReportPageGen().setOutputPath(tempFolder.toString())
+        FaultSystemSolution solution =
+                TestHelpers.createCrustalSolution(
+                        TestHelpers.makeRupSet(
+                                NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
+                                ScalingRelationships.SHAW_2009_MOD));
+        new NZSHM22_ReportPageGen()
+                .setOutputPath(tempFolder.toString())
                 .setName("test")
                 .setSolution(solution)
                 .setPlotLevel(null)
@@ -59,5 +61,4 @@ public class NZSHM22_ReportPageGen_IntegrationTest {
 
         assertTrue(index_html.exists());
     }
-
 }

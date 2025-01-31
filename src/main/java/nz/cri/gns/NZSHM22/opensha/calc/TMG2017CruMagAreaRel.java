@@ -1,56 +1,48 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
-import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
-
 import static nz.cri.gns.NZSHM22.opensha.calc.TMG2017FaultingType.*;
 
+import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
 
 /**
  * <b>Title:</b>TMG2017_MagAreaRel<br>
- *
  * <b>Description:</b>
- * <p>
- * This implements CRUSTAL faults specific magnitude versus rupture area
- * relations of Thingbaijam K.K.S., P.M. Mai and K. Goda 2017, Bull. Seism. Soc.
- * Am., 107, 2225–2246.
- * <p>
- * <p>
- * We consider rake to differentiate different broad faulting-types:
- * strike-slip, reverse-faulting and normal-faulting. The classification is as
- * follows: Strike-slip: Rake angles within (or equals) 45 to -45 degrees and
- * 135 to -135 degrees Reverse-faulting: Rake angles within 45 to 135
- * Normal-faulting: Rake angles within -45 to -135.
- * <p>
- * Notes: [1] Valid rake is in the range -180 to 180 degrees. [2] The standard
- * deviation for area as a function of mag is given for log(area) (base-10) not
- * area.
- * <p>
- * Also see: https://github.com/thingbaijam/sceqsrc
  *
- * </p>
+ * <p>This implements CRUSTAL faults specific magnitude versus rupture area relations of Thingbaijam
+ * K.K.S., P.M. Mai and K. Goda 2017, Bull. Seism. Soc. Am., 107, 2225–2246.
+ *
+ * <p>
+ *
+ * <p>We consider rake to differentiate different broad faulting-types: strike-slip,
+ * reverse-faulting and normal-faulting. The classification is as follows: Strike-slip: Rake angles
+ * within (or equals) 45 to -45 degrees and 135 to -135 degrees Reverse-faulting: Rake angles within
+ * 45 to 135 Normal-faulting: Rake angles within -45 to -135.
+ *
+ * <p>Notes: [1] Valid rake is in the range -180 to 180 degrees. [2] The standard deviation for area
+ * as a function of mag is given for log(area) (base-10) not area.
+ *
+ * <p>Also see: https://github.com/thingbaijam/sceqsrc
  *
  * @version 0.0
  */
-
 public class TMG2017CruMagAreaRel extends MagAreaRelationship {
 
-    final static String C = "TMG2017CruMagAreaRel";
-    public final static String NAME = "Thingbaijam et al.(2017)";
+    static final String C = "TMG2017CruMagAreaRel";
+    public static final String NAME = "Thingbaijam et al.(2017)";
 
     protected TMG2017FaultingType faultingType = NONE;
 
-    public TMG2017CruMagAreaRel(){
+    public TMG2017CruMagAreaRel() {
         super();
     }
 
-    public TMG2017CruMagAreaRel(double initalRake){
+    public TMG2017CruMagAreaRel(double initalRake) {
         super();
         setRake(initalRake);
     }
 
     /**
-     * Computes the median magnitude from rupture area for previously set rake
-     * values.
+     * Computes the median magnitude from rupture area for previously set rake values.
      *
      * @param area in km
      * @return median magnitude MW
@@ -69,8 +61,8 @@ public class TMG2017CruMagAreaRel extends MagAreaRelationship {
     }
 
     /**
-     * Gives the standard deviation for the magnitude as a function of area for
-     * previously-set rake values
+     * Gives the standard deviation for the magnitude as a function of area for previously-set rake
+     * values
      *
      * @return standard deviation
      */
@@ -87,8 +79,7 @@ public class TMG2017CruMagAreaRel extends MagAreaRelationship {
     }
 
     /**
-     * Computes the median rupture area from magnitude (for the previously set rake
-     * values).
+     * Computes the median rupture area from magnitude (for the previously set rake values).
      *
      * @param mag - moment magnitude
      * @return median area in km
@@ -106,8 +97,8 @@ public class TMG2017CruMagAreaRel extends MagAreaRelationship {
     }
 
     /**
-     * Computes the standard deviation of log(area) (base-10) from magnitude (for
-     * the previously set rake values)
+     * Computes the standard deviation of log(area) (base-10) from magnitude (for the previously set
+     * rake values)
      *
      * @return standard deviation
      */
@@ -125,9 +116,7 @@ public class TMG2017CruMagAreaRel extends MagAreaRelationship {
         this.faultingType = TMG2017FaultingType.fromRake(rake);
     }
 
-    /**
-     * Returns the name of the object
-     */
+    /** Returns the name of the object */
     public String getName() {
         String type;
         if (NONE == faultingType) {

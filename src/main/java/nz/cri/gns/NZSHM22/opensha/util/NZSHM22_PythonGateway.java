@@ -3,60 +3,52 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
-
-//import nz.cri.gns.NZSHM22.util.NZSHM22_InversionDiagnosticsReportBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_GridHazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
+import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.CrustalMFDRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
-
 import nz.cri.gns.NZSHM22.opensha.timeDependent.TimeDependentRatesGenerator;
-import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import nz.cri.gns.NZSHM22.util.GitVersion;
+import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-
-import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import py4j.GatewayServer;
 
-import scratch.UCERF3.utils.U3FaultSystemIO;
-
-/**
- * A py4j gateway for building ruptures and running inversions.
- */
+/** A py4j gateway for building ruptures and running inversions. */
 public class NZSHM22_PythonGateway {
 
-	static NZSHM22_AbstractRuptureSetBuilder builder;
+    static NZSHM22_AbstractRuptureSetBuilder builder;
     static CachedCrustalInversionRunner crustalInversionRunner;
     static CachedSubductionInversionRunner subductionInversionRunner;
     static NZSHM22_HazardCalculatorBuilder hazardCalcBuilder;
     static NZSHM22_GridHazardCalculator gridHazCalc;
 
-    public static NZSHM22_CachedCoulombRuptureSetBuilder getCoulombRuptureSetBuilder(){
-        NZSHM22_CachedCoulombRuptureSetBuilder coulBuilder = new NZSHM22_CachedCoulombRuptureSetBuilder();
+    public static NZSHM22_CachedCoulombRuptureSetBuilder getCoulombRuptureSetBuilder() {
+        NZSHM22_CachedCoulombRuptureSetBuilder coulBuilder =
+                new NZSHM22_CachedCoulombRuptureSetBuilder();
         builder = coulBuilder;
         return coulBuilder;
     }
 
-    public static NZSHM22_CachedSubductionRuptureSetBuilder getSubductionRuptureSetBuilder(){
-    	NZSHM22_CachedSubductionRuptureSetBuilder subBuilder = new NZSHM22_CachedSubductionRuptureSetBuilder();
+    public static NZSHM22_CachedSubductionRuptureSetBuilder getSubductionRuptureSetBuilder() {
+        NZSHM22_CachedSubductionRuptureSetBuilder subBuilder =
+                new NZSHM22_CachedSubductionRuptureSetBuilder();
         builder = subBuilder;
         return subBuilder;
     }
 
-
     /**
-     * Get a new cached inversion runner. For now we want a new one to ensure the
-     * setup is clean, but this can maybe be optimised. The produced solution is
-     * cached to allow inspection etc.
+     * Get a new cached inversion runner. For now we want a new one to ensure the setup is clean,
+     * but this can maybe be optimised. The produced solution is cached to allow inspection etc.
      */
     public static CachedCrustalInversionRunner getCrustalInversionRunner() {
         crustalInversionRunner = new CachedCrustalInversionRunner();
@@ -64,9 +56,8 @@ public class NZSHM22_PythonGateway {
     }
 
     /**
-     * Get a new cached inversion runner. For now we want a new one to ensure the
-     * setup is clean, but this can maybe be optimised. The produced solution is
-     * cached to allow inspection etc.
+     * Get a new cached inversion runner. For now we want a new one to ensure the setup is clean,
+     * but this can maybe be optimised. The produced solution is cached to allow inspection etc.
      */
     public static CachedSubductionInversionRunner getSubductionInversionRunner() {
         subductionInversionRunner = new CachedSubductionInversionRunner();
@@ -78,16 +69,18 @@ public class NZSHM22_PythonGateway {
         return hazardCalcBuilder;
     }
 
-    public static NZSHM22_GridHazardCalculator getGridHazardCalculator(NZSHM22_HazardCalculator calculator){
+    public static NZSHM22_GridHazardCalculator getGridHazardCalculator(
+            NZSHM22_HazardCalculator calculator) {
         gridHazCalc = new NZSHM22_GridHazardCalculator(calculator);
         return gridHazCalc;
     }
 
     /**
      * Returns a new TimeDependentRatesGenerator.
+     *
      * @return the generator
      */
-    public static TimeDependentRatesGenerator getTimeDependentRatesGenerator(){
+    public static TimeDependentRatesGenerator getTimeDependentRatesGenerator() {
         return new TimeDependentRatesGenerator();
     }
 
@@ -95,17 +88,19 @@ public class NZSHM22_PythonGateway {
 
     /**
      * Returns a new MFDPlotBuilder to create MFD plots
+     *
      * @return
      */
-    public static MFDPlotBuilder getMFDPlotBuilder(){
+    public static MFDPlotBuilder getMFDPlotBuilder() {
         return new MFDPlotBuilder();
     }
 
     /**
      * Returns a wrapper around the new (modular) ReportPageGen
+     *
      * @return
      */
-    public static NZSHM22_ReportPageGen getReportPageGen(){
+    public static NZSHM22_ReportPageGen getReportPageGen() {
         return new NZSHM22_ReportPageGen();
     }
 
@@ -134,18 +129,18 @@ public class NZSHM22_PythonGateway {
         server.start();
     }
 
-    /**
-     * Provide a little help for python clients
-     */
-    public static class NZSHM22_CachedCoulombRuptureSetBuilder extends NZSHM22_CoulombRuptureSetBuilder {
+    /** Provide a little help for python clients */
+    public static class NZSHM22_CachedCoulombRuptureSetBuilder
+            extends NZSHM22_CoulombRuptureSetBuilder {
         FaultSystemRupSet ruptureSet;
 
         /**
          * Chooses a known fault model.
+         *
          * @param faultModel the name of a known fault model
          * @return this object
          */
-        public NZSHM22_CachedCoulombRuptureSetBuilder setFaultModel(String faultModel){
+        public NZSHM22_CachedCoulombRuptureSetBuilder setFaultModel(String faultModel) {
             setFaultModel(NZSHM22_FaultModels.valueOf(faultModel));
             return this;
         }
@@ -153,8 +148,7 @@ public class NZSHM22_PythonGateway {
         /**
          * Sets the FaultModel file for all crustal faults
          *
-         * @param fsdFileName the XML FaultSection data file containing source fault
-         *                    information
+         * @param fsdFileName the XML FaultSection data file containing source fault information
          * @return this builder
          */
         public NZSHM22_CachedCoulombRuptureSetBuilder setFaultModelFile(String fsdFileName) {
@@ -162,9 +156,7 @@ public class NZSHM22_PythonGateway {
             return this;
         }
 
-        /**
-         * Caches the results of the build
-         */
+        /** Caches the results of the build */
         @Override
         public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
             ruptureSet = super.buildRuptureSet();
@@ -183,15 +175,12 @@ public class NZSHM22_PythonGateway {
         }
     }
 
-    /**
-     * Provide a little help for python clients using NZSHM22_SubductionRuptureSetBuilder
-     */
-    public static class NZSHM22_CachedSubductionRuptureSetBuilder extends NZSHM22_SubductionRuptureSetBuilder {
+    /** Provide a little help for python clients using NZSHM22_SubductionRuptureSetBuilder */
+    public static class NZSHM22_CachedSubductionRuptureSetBuilder
+            extends NZSHM22_SubductionRuptureSetBuilder {
         FaultSystemRupSet ruptureSet;
 
-        /**
-         * Caches the results of the build
-         */
+        /** Caches the results of the build */
         @Override
         public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
             ruptureSet = super.buildRuptureSet();
@@ -210,10 +199,7 @@ public class NZSHM22_PythonGateway {
         }
     }
 
-
-    /**
-     * Python helper that wraps NZSHM22_InversionRunner
-     */
+    /** Python helper that wraps NZSHM22_InversionRunner */
     public static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
         private FaultSystemSolution solution;
 
@@ -240,9 +226,7 @@ public class NZSHM22_PythonGateway {
             solution.write(solutionFile);
         }
     }
-    /**
-     * Python helper that wraps NZSHM22_InversionRunner
-     */
+    /** Python helper that wraps NZSHM22_InversionRunner */
     public static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
         FaultSystemSolution solution = null;
 
@@ -267,16 +251,17 @@ public class NZSHM22_PythonGateway {
         public void writeSolution(String solutionFileName) throws IOException {
             File solutionFile = new File(solutionFileName);
             solution.write(solutionFile);
-
         }
     }
 
     /**
-     * Returns a RupSetScalingRelationship that can be configured and passed on to the inversion runner.
+     * Returns a RupSetScalingRelationship that can be configured and passed on to the inversion
+     * runner.
+     *
      * @param name
      * @return
      */
-    public static RupSetScalingRelationship getScalingRelationship(String name){
+    public static RupSetScalingRelationship getScalingRelationship(String name) {
         return NZSHM22_ScalingRelationshipNode.createRelationShip(name);
     }
 }

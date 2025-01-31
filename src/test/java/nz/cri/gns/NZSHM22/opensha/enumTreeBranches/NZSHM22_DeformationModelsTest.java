@@ -3,13 +3,12 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
 import static org.junit.Assert.*;
 
+import java.io.*;
+import java.util.*;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
-
-import java.io.*;
-import java.util.*;
 
 public class NZSHM22_DeformationModelsTest {
 
@@ -22,18 +21,20 @@ public class NZSHM22_DeformationModelsTest {
         assertEquals(2.0E-4, ruptSet.getSlipRateForSection(0), 0.0000001);
         assertEquals(2.0E-5, ruptSet.getSlipRateForSection(1), 0.0000001);
 
-        NZSHM22_DeformationModel.DeformationHelper helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-            // We bypass loading a file by overriding this method.
-            public InputStream getStream() {
-                // simulate a deformationFile where each slip and stdev for each section is equal to the section id
-                StringBuilder builder = new StringBuilder();
-                for (int id = 0; id < ruptSet.getNumSections(); id++) {
-                    builder.append(id + "," + id + "," + id + "," + id + "\n");
-                }
-                String data = builder.toString();
-                return new ByteArrayInputStream(data.getBytes());
-            }
-        };
+        NZSHM22_DeformationModel.DeformationHelper helper =
+                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+                    // We bypass loading a file by overriding this method.
+                    public InputStream getStream() {
+                        // simulate a deformationFile where each slip and stdev for each section is
+                        // equal to the section id
+                        StringBuilder builder = new StringBuilder();
+                        for (int id = 0; id < ruptSet.getNumSections(); id++) {
+                            builder.append(id + "," + id + "," + id + "," + id + "\n");
+                        }
+                        String data = builder.toString();
+                        return new ByteArrayInputStream(data.getBytes());
+                    }
+                };
 
         // set slip to be equal section ID
         helper.applyTo(ruptSet);
@@ -47,11 +48,12 @@ public class NZSHM22_DeformationModelsTest {
         }
 
         // Testing that we check the length
-        helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-            public List<SlipDeformation> getDeformations() {
-                return new ArrayList<>();
-            }
-        };
+        helper =
+                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+                    public List<SlipDeformation> getDeformations() {
+                        return new ArrayList<>();
+                    }
+                };
 
         String message = null;
         try {
@@ -62,17 +64,18 @@ public class NZSHM22_DeformationModelsTest {
         assertEquals("Deformation model length does not match number of sections.", message);
 
         // Testing that we check the parent section id
-        helper = new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-            public List<SlipDeformation> getDeformations() {
-                List<SlipDeformation> result = new ArrayList<>();
-                for (int i = 0; i < ruptSet.getNumSections(); i++) {
-                    SlipDeformation deformation = new SlipDeformation();
-                    deformation.sectionId = i;
-                    result.add(deformation);
-                }
-                return result;
-            }
-        };
+        helper =
+                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+                    public List<SlipDeformation> getDeformations() {
+                        List<SlipDeformation> result = new ArrayList<>();
+                        for (int i = 0; i < ruptSet.getNumSections(); i++) {
+                            SlipDeformation deformation = new SlipDeformation();
+                            deformation.sectionId = i;
+                            result.add(deformation);
+                        }
+                        return result;
+                    }
+                };
 
         message = null;
         try {
@@ -81,7 +84,6 @@ public class NZSHM22_DeformationModelsTest {
             message = x.getMessage();
         }
         assertEquals("Deformation parent id does not match section parent id.", message);
-
     }
 
     @Test
@@ -126,7 +128,5 @@ public class NZSHM22_DeformationModelsTest {
             assert (!hashes.containsKey(data));
             hashes.put(data, model);
         }
-
     }
-
 }

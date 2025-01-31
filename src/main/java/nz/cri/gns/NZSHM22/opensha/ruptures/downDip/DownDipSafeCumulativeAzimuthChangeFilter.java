@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -10,21 +11,20 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.Plausib
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.CumulativeAzimuthChangeFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.impl.JumpAzimuthChangeFilter;
 
-
-import java.io.IOException;
-
 public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthChangeFilter {
 
     protected float threshold;
 
-    public DownDipSafeCumulativeAzimuthChangeFilter(JumpAzimuthChangeFilter.AzimuthCalc calc, float threshold) {
+    public DownDipSafeCumulativeAzimuthChangeFilter(
+            JumpAzimuthChangeFilter.AzimuthCalc calc, float threshold) {
         super(calc, threshold);
         this.threshold = threshold;
     }
 
     @Override
     public PlausibilityResult apply(ClusterRupture rupture, boolean verbose) {
-        // we only need to check the first cluster because we have a filter that prevents combinations of crustal and downDip
+        // we only need to check the first cluster because we have a filter that prevents
+        // combinations of crustal and downDip
         if (DownDipFaultSection.isDownDip(rupture.clusters[0])) {
             return PlausibilityResult.PASS;
         } else {
@@ -39,12 +39,14 @@ public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthC
 
     public static class Adapter extends TypeAdapter<PlausibilityFilter> {
 
-        public Adapter() {
-        }
+        public Adapter() {}
 
         @Override
         public void write(JsonWriter out, PlausibilityFilter value) throws IOException {
-            out.beginObject().name("threshold").value(((DownDipSafeCumulativeAzimuthChangeFilter) value).threshold).endObject();
+            out.beginObject()
+                    .name("threshold")
+                    .value(((DownDipSafeCumulativeAzimuthChangeFilter) value).threshold)
+                    .endObject();
         }
 
         @Override

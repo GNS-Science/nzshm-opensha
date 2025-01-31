@@ -1,8 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
-import org.junit.Test;
-
 import static org.junit.Assert.*;
+
+import org.junit.Test;
 
 // tested against sceqsrc (https://github.com/thingbaijam/sceqsrc)
 

@@ -1,18 +1,17 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.faultSurface.FaultSection;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DownDipTestPermutationStrategyTest {
 
@@ -22,9 +21,11 @@ public class DownDipTestPermutationStrategyTest {
         // single section
         DownDipSubSectBuilder builder = mockDownDipBuilder(0, 1, 1);
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
-        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
+        DownDipPermutationStrategy strategy =
+                new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
 
-        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster, builder.getSubSect(0, 0));
+        List<FaultSubsectionCluster> actual =
+                strategy.getVariations(cluster, builder.getSubSect(0, 0));
         List<List<Integer>> expected = new ArrayList<>();
         expected.add(Lists.newArrayList(0));
         assertEquals(expected, simplifyPermutations(actual));
@@ -115,8 +116,10 @@ public class DownDipTestPermutationStrategyTest {
         FaultSubsectionCluster cluster = new FaultSubsectionCluster(builder.getSubSectsList());
 
         // without minFill we take everything
-        DownDipPermutationStrategy strategy = new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
-        List<FaultSubsectionCluster> actual = strategy.getVariations(cluster, builder.getSubSect(0, 1));
+        DownDipPermutationStrategy strategy =
+                new DownDipPermutationStrategy(DownDipConstraint.ALWAYS);
+        List<FaultSubsectionCluster> actual =
+                strategy.getVariations(cluster, builder.getSubSect(0, 1));
         List<List<Integer>> expected = new ArrayList<>();
         expected.add(Lists.newArrayList(1));
         expected.add(Lists.newArrayList(1));
@@ -150,7 +153,8 @@ public class DownDipTestPermutationStrategyTest {
         return mockDownDipBuilder(parentId, numRows, numCols, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
-    public DownDipSubSectBuilder mockDownDipBuilder(int parentId, int numRows, int numCols, int holeRow, int holeCol) {
+    public DownDipSubSectBuilder mockDownDipBuilder(
+            int parentId, int numRows, int numCols, int holeRow, int holeCol) {
         DownDipSubSectBuilder builder = mock(DownDipSubSectBuilder.class);
         when(builder.getParentID()).thenReturn(parentId);
         when(builder.getNumRows()).thenReturn(numRows);
@@ -173,7 +177,8 @@ public class DownDipTestPermutationStrategyTest {
         return builder;
     }
 
-    public static List<List<Integer>> simplifyPermutations(List<FaultSubsectionCluster> permutations) {
+    public static List<List<Integer>> simplifyPermutations(
+            List<FaultSubsectionCluster> permutations) {
         List<List<Integer>> result = new ArrayList<>();
         for (FaultSubsectionCluster cluster : permutations) {
             List<Integer> rupture = new ArrayList<>();

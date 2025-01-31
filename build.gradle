@@ -1,3 +1,8 @@
+plugins {
+    id 'pmd'
+    id 'com.diffplug.spotless' version '6.13.0'
+    id 'jacoco'
+}
 
 apply plugin: 'java-library'
 
@@ -133,20 +138,21 @@ task smokeTest(type: Test) {
     shouldRunAfter test
 }
 
-test {
-    exclude 'org/opensha/**'
-    exclude '**/DataSuite'
-    filter {
-        includeTestsMatching('*NZSHM22.*')
-        getIncludePatterns().remove('*Suite*')
-    }
+task pmd(type:GradleBuild) {
+    tasks = ['pmdMain', 'pmdTest', 'pmdIntTest', 'pmdSmokeTest' ]
 }
 
-task localTests(type: Test, dependsOn: testClasses) {
-    //filter { excludeTestsMatching('*.opensha.commons.*')}
-    filter { includeTestsMatching('*NZSHM22.*') }
-    filter { includeTestsMatching('*nz.cri.gns.*') }
-    filter { includeTestsMatching('*UCERF3.inversion.*') }
+test {
+    // exclude expensive opensha tests unless flag is set on command line
+    if (!providers.gradleProperty("openshaTest").forUseAtConfigurationTime().isPresent()) {
+        project.gradle.startParameter.excludedTaskNames.add("opensha:test")
+    }
+    filter {
+        includeTestsMatching('*NZSHM22.*')
+        includeTestsMatching('*nz.cri.gns.*')
+        includeTestsMatching('*UCERF3.inversion.*')
+    }
+
     //filter { excludeTestsMatching 'generic.*' }
     // excludes a whole package, "generic". NB this is not a regex:
     // '*' is simply "wildcard" and dot means dot ... other more
@@ -155,4 +161,28 @@ task localTests(type: Test, dependsOn: testClasses) {
     //filter { excludeTestsMatching '*_FT' }
     // also exclude all test classes ending in "_FT" (e.g. for "functional test")
 }
+
+// PMD enforces Java best practices https://docs.pmd-code.org/latest/pmd_rules_java.html
+pmd {
+    // We have hundreds of failures at the moment. Set this to false once it's fixed.
+    ignoreFailures = true
+}
+
+// spotless enforces Java style rules.
+spotless {
+    java {
+        removeUnusedImports()
+        // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
+        googleJavaFormat().aosp()
+    }
+}
+
+// jacoco generates coverage reports
+jacocoTestReport {
+    reports {
+        // XML is require for the github action
+        xml.required = true
+    }
+}
+
 

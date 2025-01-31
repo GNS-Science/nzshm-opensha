@@ -1,14 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 public class NZSHM22_CoulombRuptureSetBuilder_IntegrationTest {
 

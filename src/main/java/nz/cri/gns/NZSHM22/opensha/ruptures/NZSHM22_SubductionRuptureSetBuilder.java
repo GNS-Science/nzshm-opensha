@@ -1,7 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
-import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
@@ -22,25 +24,21 @@ import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * Builds opensha SlipAlongRuptureModelRupSet rupture sets using NZ Subduction Ruptures
- * <p>
- * Note these have a differnt Faulty Model, with pre-computed subsections built externally
- * with eq-fault-geom project
+ *
+ * <p>Note these have a differnt Faulty Model, with pre-computed subsections built externally with
+ * eq-fault-geom project
  */
 public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
-//	PlausibilityConfiguration plausibilityConfig;
+    //	PlausibilityConfiguration plausibilityConfig;
 
     double thinningFactor = 0;
     double downDipMinAspect = 1;
     double downDipMaxAspect = 3;
-    int downDipAspectDepthThreshold = Integer.MAX_VALUE; // from this 'depth' (in tile rows) the max aspect constraint
+    int downDipAspectDepthThreshold =
+            Integer.MAX_VALUE; // from this 'depth' (in tile rows) the max aspect constraint
     // is ignored
     double downDipMinFill = 1; // 1 means only allow complete rectangles
     double downDipPositionCoarseness = 0; // 0 means no coarseness
@@ -48,9 +46,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 
     int maxRuptures = Integer.MAX_VALUE;
 
-    /**
-     * Constructs a new NZSHM22_RuptureSetBuilder with the default NSHM configuration.
-     */
+    /** Constructs a new NZSHM22_RuptureSetBuilder with the default NSHM configuration. */
     public NZSHM22_SubductionRuptureSetBuilder() {
         subSections = new FaultSectionList();
     }
@@ -60,12 +56,19 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         String description = "RupSet_Sub";
         description += super.getDescriptiveName();
 
-        description += "_ddAsRa(" + downDipMinAspect + "," + downDipMaxAspect + "," + downDipAspectDepthThreshold + ")";
+        description +=
+                "_ddAsRa("
+                        + downDipMinAspect
+                        + ","
+                        + downDipMaxAspect
+                        + ","
+                        + downDipAspectDepthThreshold
+                        + ")";
         description += "_ddMnFl(" + downDipMinFill + ")";
         description += "_ddPsCo(" + downDipPositionCoarseness + ")";
         description += "_ddSzCo(" + downDipSizeCoarseness + ")";
 
-        //description += "_pmSt(" + permutationStrategyClass.name() + ")";
+        // description += "_pmSt(" + permutationStrategyClass.name() + ")";
         description += "_thFc(" + thinningFactor + ")";
         return description;
     }
@@ -87,7 +90,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      * @param slipAlongRuptureModel the name of a known slipAlongRuptureModel
      * @return this object
      */
-    public NZSHM22_SubductionRuptureSetBuilder setSlipAlongRuptureModel(String slipAlongRuptureModel) {
+    public NZSHM22_SubductionRuptureSetBuilder setSlipAlongRuptureModel(
+            String slipAlongRuptureModel) {
         setSlipAlongRuptureModel(SlipAlongRuptureModels.valueOf(slipAlongRuptureModel));
         return this;
     }
@@ -115,23 +119,25 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
      * @param maxAspect the maximum aspect ratio
      * @return this builder
      */
-    public NZSHM22_SubductionRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect) {
+    public NZSHM22_SubductionRuptureSetBuilder setDownDipAspectRatio(
+            double minAspect, double maxAspect) {
         this.downDipMinAspect = minAspect;
         this.downDipMaxAspect = maxAspect;
         return this;
     }
 
     /**
-     * Sets the aspect ratio boundaries for subduction zone ruptures with elastic
-     * aspect ratinos set with depthThreshold.
+     * Sets the aspect ratio boundaries for subduction zone ruptures with elastic aspect ratinos set
+     * with depthThreshold.
      *
-     * @param minAspect      the minimum aspect ratio
-     * @param maxAspect      the maximum aspect ratio
-     * @param depthThreshold the threshold (count of rows) from which the maxAspect
-     *                       constraint will be ignored
+     * @param minAspect the minimum aspect ratio
+     * @param maxAspect the maximum aspect ratio
+     * @param depthThreshold the threshold (count of rows) from which the maxAspect constraint will
+     *     be ignored
      * @return this builder
      */
-    public NZSHM22_SubductionRuptureSetBuilder setDownDipAspectRatio(double minAspect, double maxAspect, int depthThreshold) {
+    public NZSHM22_SubductionRuptureSetBuilder setDownDipAspectRatio(
+            double minAspect, double maxAspect, int depthThreshold) {
         this.downDipMinAspect = minAspect;
         this.downDipMaxAspect = maxAspect;
         this.downDipAspectDepthThreshold = depthThreshold;
@@ -139,9 +145,9 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
     }
 
     /**
-     * Sets the required rectangularity for subduction zone ruptures. A value of 1
-     * means all ruptures need to be rectangular. A value smaller of 1 indicates the
-     * minimum percentage of actual section within the rupture rectangle.
+     * Sets the required rectangularity for subduction zone ruptures. A value of 1 means all
+     * ruptures need to be rectangular. A value smaller of 1 indicates the minimum percentage of
+     * actual section within the rupture rectangle.
      *
      * @param minFill the minimum fill of the rupture rectangle
      * @return this builder
@@ -178,18 +184,21 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
     }
 
     private void buildConfig() {
-        SectionDistanceAzimuthCalculator distAzCalc = new SectionDistanceAzimuthCalculator(subSections);
-        JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc = new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
+        SectionDistanceAzimuthCalculator distAzCalc =
+                new SectionDistanceAzimuthCalculator(subSections);
+        JumpAzimuthChangeFilter.AzimuthCalc azimuthCalc =
+                new JumpAzimuthChangeFilter.SimpleAzimuthCalc(distAzCalc);
 
         // connection strategy: parent faults connect at closest point, and only when
         // dist <=5 km
-        ClusterConnectionStrategy connectionStrategy = new FaultTypeSeparationConnectionStrategy(
-                subSections, distAzCalc, 5.0d);
+        ClusterConnectionStrategy connectionStrategy =
+                new FaultTypeSeparationConnectionStrategy(subSections, distAzCalc, 5.0d);
         System.out.println("Built connectionStrategy _ although it's never used here");
 
         int maxNumSplays = 0; // don't allow any splays
-        PlausibilityConfiguration.Builder configBuilder = PlausibilityConfiguration
-                .builder(connectionStrategy, distAzCalc).maxSplays(maxNumSplays);
+        PlausibilityConfiguration.Builder configBuilder =
+                PlausibilityConfiguration.builder(connectionStrategy, distAzCalc)
+                        .maxSplays(maxNumSplays);
 
         plausibilityConfig = configBuilder.build();
     }
@@ -221,12 +230,11 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         return result;
     }
 
-
     /**
      * Builds an NSHM rupture set according to the configuration.
      *
-     * @return a SlipAlongRuptureModelRupSet built according to the configuration
-     * from the input fsdFile
+     * @return a SlipAlongRuptureModelRupSet built according to the configuration from the input
+     *     fsdFile
      * @throws DocumentException
      * @throws IOException
      */
@@ -247,11 +255,13 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         // builder.setDebugCriteria(debugCriteria, true);
 
         DownDipConstraint constraint =
-                DownDipConstraint.aspectRatioConstraint(downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
+                DownDipConstraint.aspectRatioConstraint(
+                                downDipMinAspect, downDipMaxAspect, downDipAspectDepthThreshold)
                         .and(DownDipConstraint.minFillConstraint(downDipMinFill))
                         .and(DownDipConstraint.connectednessConstraint());
 
-        ////RuptureGrowingStrategy permutationStrategy = createPermutationStrategy(permutationStrategyClass);
+        //// RuptureGrowingStrategy permutationStrategy =
+        // createPermutationStrategy(permutationStrategyClass);
         RuptureGrowingStrategy permutationStrategy = new DownDipPermutationStrategy(constraint);
 
         // debugging
@@ -261,10 +271,16 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         if (thinningFactor <= 0) {
             System.out.println("Built " + ruptures.size() + " total ruptures");
         } else {
-            ruptures = RuptureThinning.filterRuptures(ruptures,
-                    RuptureThinning.downDipPredicate().or(RuptureThinning
-                            .coarsenessPredicate(thinningFactor)
-                            .or(RuptureThinning.endToEndPredicate(getPlausibilityConfig().getConnectionStrategy()))));
+            ruptures =
+                    RuptureThinning.filterRuptures(
+                            ruptures,
+                            RuptureThinning.downDipPredicate()
+                                    .or(
+                                            RuptureThinning.coarsenessPredicate(thinningFactor)
+                                                    .or(
+                                                            RuptureThinning.endToEndPredicate(
+                                                                    getPlausibilityConfig()
+                                                                            .getConnectionStrategy()))));
             System.out.println("Built " + ruptures.size() + " total ruptures after thinning");
         }
 

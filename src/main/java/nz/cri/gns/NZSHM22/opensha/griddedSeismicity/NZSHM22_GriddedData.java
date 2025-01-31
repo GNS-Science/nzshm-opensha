@@ -1,27 +1,21 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Preconditions;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-
-import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
-import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
 import org.opensha.commons.geo.Region;
 
-/**
- * Gridded data. Copied and modified from UCERF3's GridReader
- */
-
+/** Gridded data. Copied and modified from UCERF3's GridReader */
 public class NZSHM22_GriddedData {
 
     // how many possible grid points per degree. UCERF3 uses 10
@@ -43,8 +37,8 @@ public class NZSHM22_GriddedData {
     }
 
     /**
-     * Loads the grid in the native resolution of the file.
-     * Use NZSHM22_GriddedData(NZSHM22_GriddedData original) to upsample if required
+     * Loads the grid in the native resolution of the file. Use
+     * NZSHM22_GriddedData(NZSHM22_GriddedData original) to upsample if required
      *
      * @param fileName
      */
@@ -119,9 +113,7 @@ public class NZSHM22_GriddedData {
     public CSVFile<Double> toCsv() {
         CSVFile<Double> csv = new CSVFile<>(false);
         for (Location location : getGridPoints()) {
-            csv.addLine(location.getLatitude(),
-                    location.getLongitude(),
-                    getValue(location));
+            csv.addLine(location.getLatitude(), location.getLongitude(), getValue(location));
         }
         return csv;
     }
@@ -134,7 +126,10 @@ public class NZSHM22_GriddedData {
 
     public void writeToGeoJson(SimpleGeoJsonBuilder builder) {
         for (Table.Cell<Integer, Integer, Double> cell : table.cellSet()) {
-            builder.addLocation(new Location(keyToLatLonComp(spacing, cell.getRowKey()), keyToLatLonComp(spacing, cell.getColumnKey())));
+            builder.addLocation(
+                    new Location(
+                            keyToLatLonComp(spacing, cell.getRowKey()),
+                            keyToLatLonComp(spacing, cell.getColumnKey())));
         }
     }
 
@@ -155,7 +150,6 @@ public class NZSHM22_GriddedData {
         return key * spacing;
     }
 
-
     public Location snapToGrid(Location location) {
         return new Location(
                 keyToLatLonComp(spacing, latLonCompToKey(step, location.getLatitude())),
@@ -164,16 +158,18 @@ public class NZSHM22_GriddedData {
 
     /**
      * Build the data table from a CS file
-     * <p>
-     * NZ data files have data format: lat,lon,value
-     * UCERF3 data format:  lat|lon|value
+     *
+     * <p>NZ data files have data format: lat,lon,value UCERF3 data format: lat|lon|value
      */
     protected void initTable(CSVFile<Double> csv) {
         table = HashBasedTable.create();
         for (List<Double> line : csv) {
             Location loc = new Location(line.get(0), line.get(1));
             if (getValue(loc) != null) {
-                System.out.println("location " + loc + " is already defined in table, input data duplication!");
+                System.out.println(
+                        "location "
+                                + loc
+                                + " is already defined in table, input data duplication!");
             }
             setValue(loc, line.get(2));
         }
@@ -185,25 +181,26 @@ public class NZSHM22_GriddedData {
      * @return
      */
     public GriddedRegion getNativeRegion() {
-        return new GriddedRegion(new NewZealandRegions.NZ_RECTANGLE(), spacing, GriddedRegion.ANCHOR_0_0);
+        return new GriddedRegion(
+                new NewZealandRegions.NZ_RECTANGLE(), spacing, GriddedRegion.ANCHOR_0_0);
     }
 
     /**
-     * Returns the grid bin for the specified location. It is assumed that location is an actual grid point.
+     * Returns the grid bin for the specified location. It is assumed that location is an actual
+     * grid point.
      *
      * @param location
      * @return
      */
     public Region getBin(Location location) {
         return new Region(
-                new Location(location.getLatitude() - spacing,
-                        location.getLongitude() - spacing),
-                new Location(location.getLatitude() + spacing,
-                        location.getLongitude() + spacing));
+                new Location(location.getLatitude() - spacing, location.getLongitude() - spacing),
+                new Location(location.getLatitude() + spacing, location.getLongitude() + spacing));
     }
 
     /**
      * Returns all gridpoints for which there is a value
+     *
      * @return
      */
     public List<Location> getGridPoints() {
@@ -249,8 +246,7 @@ public class NZSHM22_GriddedData {
     }
 
     /**
-     * Returns all values in order corresponding to the node indices in the
-     * supplied GriddedRegion.
+     * Returns all values in order corresponding to the node indices in the supplied GriddedRegion.
      *
      * @return all required values
      */
@@ -265,15 +261,15 @@ public class NZSHM22_GriddedData {
     }
 
     /**
-     * Returns the spatial value at the point closest to the supplied
-     * {@code Location}
+     * Returns the spatial value at the point closest to the supplied {@code Location}
      *
      * @param loc {@code Location} of interest
-     * @return a value or @code null} if supplied {@code Location} is more
-     * than 0.05&deg; outside the available data domain
+     * @return a value or @code null} if supplied {@code Location} is more than 0.05&deg; outside
+     *     the available data domain
      */
     public Double getValue(Location loc) {
-        return table.get(latLonCompToKey(step, loc.getLatitude()),
+        return table.get(
+                latLonCompToKey(step, loc.getLatitude()),
                 latLonCompToKey(step, loc.getLongitude()));
     }
 
@@ -316,5 +312,4 @@ public class NZSHM22_GriddedData {
             }
         }
     }
-
 }

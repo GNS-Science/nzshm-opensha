@@ -2,18 +2,14 @@ package nz.cri.gns.NZSHM22.opensha.polygonise;
 
 import com.bbn.openmap.geo.Geo;
 import com.bbn.openmap.geo.Intersection;
-import com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.List;
 import org.opensha.commons.geo.*;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A FaultSection represented in OpenMap geometry so that we can use OpenMap operations on it
- */
+/** A FaultSection represented in OpenMap geometry so that we can use OpenMap operations on it */
 public class FaultSectionPolygonWeights {
 
     public FaultSection section;
@@ -43,9 +39,8 @@ public class FaultSectionPolygonWeights {
     }
 
     /**
-     * Returns the distance of the point to the fault trace along the dip direction.
-     * 0 means the point is on the fault trace
-     * 1 means the point is on the outer polygon border
+     * Returns the distance of the point to the fault trace along the dip direction. 0 means the
+     * point is on the fault trace 1 means the point is on the outer polygon border
      *
      * @param gridPoint
      * @return
@@ -63,7 +58,8 @@ public class FaultSectionPolygonWeights {
         vector.reverse();
         Geo b = geo(LocationUtils.location(gridPoint, vector));
 
-        // get the intersection of a 100km long line centered on the gridPoint and aligned with the dipDirection
+        // get the intersection of a 100km long line centered on the gridPoint and aligned with the
+        // dipDirection
         // and the fault trace.
         Geo traceIntersection = getSegIntersection(a, b, trace);
 
@@ -76,7 +72,8 @@ public class FaultSectionPolygonWeights {
 
         // get intersections of the 100km long line with the edges of the polygon
         List<Geo> edgesIntersections = getAllSegIntersections(a, b, polygon);
-        Geo polygonIntersection = nearestAzimuth(targetAzimuth, loc(traceIntersection), edgesIntersections);
+        Geo polygonIntersection =
+                nearestAzimuth(targetAzimuth, loc(traceIntersection), edgesIntersections);
 
         if (polygonIntersection == null) {
             return -1;
@@ -102,9 +99,8 @@ public class FaultSectionPolygonWeights {
     }
 
     /**
-     * Returns the intersection of a line segment and a list of segments.
-     * Used to calculate the intersection of a line segment with a fault trace.
-     * returns null if no intersection.
+     * Returns the intersection of a line segment and a list of segments. Used to calculate the
+     * intersection of a line segment with a fault trace. returns null if no intersection.
      *
      * @param p1
      * @param p2
@@ -113,7 +109,8 @@ public class FaultSectionPolygonWeights {
      */
     protected static Geo getSegIntersection(Geo p1, Geo p2, List<Geo> segments) {
         for (int i = 1; i < segments.size(); i++) {
-            Geo[] result = Intersection.getSegIntersection(p1, p2, segments.get(i - 1), segments.get(i));
+            Geo[] result =
+                    Intersection.getSegIntersection(p1, p2, segments.get(i - 1), segments.get(i));
             if (result[0] != null) {
                 return result[0];
             } else if (result[1] != null) {
@@ -134,7 +131,8 @@ public class FaultSectionPolygonWeights {
     protected static List<Geo> getAllSegIntersections(Geo p1, Geo p2, List<Geo> segments) {
         List<Geo> result = new ArrayList<>();
         for (int i = 1; i < segments.size(); i++) {
-            Geo[] ints = Intersection.getSegIntersection(p1, p2, segments.get(i - 1), segments.get(i));
+            Geo[] ints =
+                    Intersection.getSegIntersection(p1, p2, segments.get(i - 1), segments.get(i));
             if (ints[0] != null) {
                 result.add(ints[0]);
             } else if (ints[1] != null) {
@@ -174,5 +172,4 @@ public class FaultSectionPolygonWeights {
         }
         return result;
     }
-
 }

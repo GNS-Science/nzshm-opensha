@@ -1,6 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
 import com.google.common.collect.*;
+import java.awt.geom.Area;
+import java.io.IOException;
+import java.util.*;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -10,23 +13,18 @@ import org.opensha.commons.util.modules.ArchivableModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PolygonFaultGridAssociations;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.awt.geom.Area;
-import java.io.IOException;
-import java.util.*;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
 // copied from scratch.UCERF3.griddedSeismicity.FaultPolyMgr
 
 /**
- * Class maintains collections of the polygonal relationships between grid nodes
- * and fault sections. Use of the word 'node' in this class generally refers to
- * the lat-lon cell represented by the 'node'.
+ * Class maintains collections of the polygonal relationships between grid nodes and fault sections.
+ * Use of the word 'node' in this class generally refers to the lat-lon cell represented by the
+ * 'node'.
  *
  * @author Peter Powers
  * @version $Id:$
  */
-public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAssociations, ArchivableModule {
+public class NZSHM22_FaultPolyMgr
+        implements Iterable<Area>, PolygonFaultGridAssociations, ArchivableModule {
 
     private static boolean log = false;
 
@@ -52,8 +50,7 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
 
     private GriddedRegion region;
 
-    private NZSHM22_FaultPolyMgr() {
-    }
+    private NZSHM22_FaultPolyMgr() {}
 
     @Override
     public GriddedRegion getRegion() {
@@ -91,7 +88,6 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
         return nodeInSectPartic.column(nodeIdx);
     }
 
-
     /**
      * Returns the polygon{@code Region} for the fault section at {@code sectIdx}.
      *
@@ -112,7 +108,7 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
         return new Region(locs, null);
     }
 
-    public LocationList getFaultTrace(int faultId){
+    public LocationList getFaultTrace(int faultId) {
         return polys.getFaultTrace(faultId);
     }
 
@@ -138,16 +134,20 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
     }
 
     /**
-     * Create a fault polygon manager from a list of {@code FaultSectionPrefData}.
-     * This method assumes that  of which references the polygon of it's parent fault.
+     * Create a fault polygon manager from a list of {@code FaultSectionPrefData}. This method
+     * assumes that of which references the polygon of it's parent fault.
      *
-     * @param fspd   {@code FaultSectionPrefData} to initialize manager with
-     * @param buf    additional buffer around fault trace to include in polygon in
-     *               km on either side of fault; may be {@code null}
+     * @param fspd {@code FaultSectionPrefData} to initialize manager with
+     * @param buf additional buffer around fault trace to include in polygon in km on either side of
+     *     fault; may be {@code null}
      * @param region {@code GriddedRegion} to override the default California
      * @return a reference to the newly minted manager
      */
-    public static NZSHM22_FaultPolyMgr create(List<? extends FaultSection> fspd, Double buf, double minBufferSize, GriddedRegion region) {
+    public static NZSHM22_FaultPolyMgr create(
+            List<? extends FaultSection> fspd,
+            Double buf,
+            double minBufferSize,
+            GriddedRegion region) {
         NZSHM22_FaultPolyMgr mgr = new NZSHM22_FaultPolyMgr();
         if (log) System.out.println("Building poly mgr...");
         if (log) System.out.println("   section polygons");
@@ -216,8 +216,7 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
         sectExtents = Maps.newHashMap();
         for (Integer id : polys.indices()) {
             Area area = polys.get(id);
-            double extent = (area == null) ? 0.0 : SectionPolygons
-                    .getExtent(area);
+            double extent = (area == null) ? 0.0 : SectionPolygons.getExtent(area);
             sectExtents.put(id, extent);
         }
     }
@@ -357,7 +356,8 @@ public class NZSHM22_FaultPolyMgr implements Iterable<Area>, PolygonFaultGridAss
 
     @Override
     public Class<? extends ArchivableModule> getLoadingClass() {
-        // use this class to initially build polygons and associations, but always load it back in as precomputed one
+        // use this class to initially build polygons and associations, but always load it back in
+        // as precomputed one
         return Precomputed.class;
     }
 }

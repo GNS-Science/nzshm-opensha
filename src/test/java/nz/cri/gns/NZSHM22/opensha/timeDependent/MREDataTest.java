@@ -1,5 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.timeDependent;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.opensha.commons.geo.Location;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
@@ -7,16 +15,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 
 public class MREDataTest {
 
@@ -102,5 +100,4 @@ public class MREDataTest {
         MREData.CFM_1_1.apply(solution, 2022);
         assertEquals(-7984072800000L, section.getDateOfLastEvent());
     }
-
 }

@@ -1,6 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.opensha.commons.geo.Location;
@@ -8,16 +14,9 @@ import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
- * FaultFilters are used to filter crustal faults before they are divided into subsections.
- * This is done to create smaller rupture sets for debugging.
+ * FaultFilters are used to filter crustal faults before they are divided into subsections. This is
+ * done to create smaller rupture sets for debugging.
  */
 public interface FaultFilter {
 
@@ -25,7 +24,8 @@ public interface FaultFilter {
 
     public default void filter(FaultSectionList sections) {
         sections.removeIf(section -> !keep(section));
-        System.out.println("Fault model filtered to " + sections.size() + " after applying " + this);
+        System.out.println(
+                "Fault model filtered to " + sections.size() + " after applying " + this);
     }
 
     /**
@@ -45,7 +45,7 @@ public interface FaultFilter {
          * Creates a FaultFilter based on section ids.
          *
          * @param skipFaultSections discard sections with ids less than this value.
-         * @param maxFaultSections  take this many sections if available.
+         * @param maxFaultSections take this many sections if available.
          */
         public IdRangeFilter(int skipFaultSections, int maxFaultSections) {
             this.skipFaultSections = skipFaultSections;
@@ -56,7 +56,8 @@ public interface FaultFilter {
 
         @Override
         public boolean keep(FaultSection section) {
-            return section.getSectionId() >= skipFaultSections && section.getSectionId() < (skipFaultSections + maxFaultSections);
+            return section.getSectionId() >= skipFaultSections
+                    && section.getSectionId() < (skipFaultSections + maxFaultSections);
         }
 
         @Override
@@ -68,10 +69,12 @@ public interface FaultFilter {
         public String toDescription() {
             String description = "";
             if (maxFaultSections != 100000) {
-                description += "_mxFS(" + NZSHM22_AbstractRuptureSetBuilder.fmt(maxFaultSections) + ")";
+                description +=
+                        "_mxFS(" + NZSHM22_AbstractRuptureSetBuilder.fmt(maxFaultSections) + ")";
             }
             if (skipFaultSections > 0) {
-                description += "_skFS(" + NZSHM22_AbstractRuptureSetBuilder.fmt(skipFaultSections) + ")";
+                description +=
+                        "_skFS(" + NZSHM22_AbstractRuptureSetBuilder.fmt(skipFaultSections) + ")";
             }
             return description;
         }
@@ -90,7 +93,8 @@ public interface FaultFilter {
         public DomainFilter(String domains) {
             this.filterDescription = domains;
             this.domains = new HashSet<>(List.of(domains.split("\\D+")));
-            Preconditions.checkState(!this.domains.isEmpty(), "Could not find any ids in the domains string");
+            Preconditions.checkState(
+                    !this.domains.isEmpty(), "Could not find any ids in the domains string");
         }
 
         @Override
@@ -127,10 +131,10 @@ public interface FaultFilter {
             return "slip filter with a minimum of " + minSlip + " mm/yr";
         }
 
-//        @Override
-//        public String toDescription() {
-//            return "_mSlp(" + NZSHM22_AbstractRuptureSetBuilder.fmt(minSlip) + ")";
-//        }
+        //        @Override
+        //        public String toDescription() {
+        //            return "_mSlp(" + NZSHM22_AbstractRuptureSetBuilder.fmt(minSlip) + ")";
+        //        }
     }
 
     public class PolygonFilter implements FaultFilter {
@@ -155,7 +159,10 @@ public interface FaultFilter {
                 String line = reader.readLine();
                 while (line != null) {
                     String[] parts = line.split("\\s+");
-                    Location location = new Location(Double.parseDouble(parts[1].trim()), Double.parseDouble(parts[0].trim()));
+                    Location location =
+                            new Location(
+                                    Double.parseDouble(parts[1].trim()),
+                                    Double.parseDouble(parts[0].trim()));
                     locations.add(location);
                     line = reader.readLine();
                 }

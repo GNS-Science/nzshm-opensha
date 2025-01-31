@@ -4,11 +4,10 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
-
-import java.io.IOException;
 
 @JsonAdapter(NZSHM22_FaultPolyParameters.Adapter.class)
 public class NZSHM22_FaultPolyParameters implements LogicTreeNode {
@@ -16,9 +15,7 @@ public class NZSHM22_FaultPolyParameters implements LogicTreeNode {
     protected double bufferSize = 12;
     protected double minBufferSize = 3;
 
-    public NZSHM22_FaultPolyParameters(){
-
-    }
+    public NZSHM22_FaultPolyParameters() {}
 
     @Override
     public String getName() {
@@ -56,10 +53,10 @@ public class NZSHM22_FaultPolyParameters implements LogicTreeNode {
         this.minBufferSize = minBufferSize;
     }
 
-    public static class Adapter extends TypeAdapter<NZSHM22_FaultPolyParameters>{
+    public static class Adapter extends TypeAdapter<NZSHM22_FaultPolyParameters> {
 
-        final static String BUFFER_SIZE = "bufferSize";
-        final static String MIN_BUFFER = "minBufferSize";
+        static final String BUFFER_SIZE = "bufferSize";
+        static final String MIN_BUFFER = "minBufferSize";
 
         @Override
         public void write(JsonWriter out, NZSHM22_FaultPolyParameters value) throws IOException {
@@ -75,8 +72,8 @@ public class NZSHM22_FaultPolyParameters implements LogicTreeNode {
         public NZSHM22_FaultPolyParameters read(JsonReader in) throws IOException {
             NZSHM22_FaultPolyParameters parameters = new NZSHM22_FaultPolyParameters();
             in.beginObject();
-            while(in.hasNext()){
-                switch(in.nextName()){
+            while (in.hasNext()) {
+                switch (in.nextName()) {
                     case BUFFER_SIZE:
                         parameters.setBufferSize(in.nextDouble());
                         break;
@@ -92,7 +89,8 @@ public class NZSHM22_FaultPolyParameters implements LogicTreeNode {
 
     public static class Level extends LogicTreeLevel.AdapterBackedLevel {
         public Level() {
-            super("NZSHM22_FaultPolyParameters",
+            super(
+                    "NZSHM22_FaultPolyParameters",
                     "NZSHM22_FaultPolyParameters",
                     NZSHM22_FaultPolyParameters.class);
         }

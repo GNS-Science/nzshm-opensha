@@ -1,5 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.polygonise;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
@@ -14,42 +17,47 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 /**
- * Takes a background pdf grid and re-weights grid points inside fault polygons so that points close to the fault trace
- * Have a lower weight than grid points further away.
+ * Takes a background pdf grid and re-weights grid points inside fault polygons so that points close
+ * to the fault trace Have a lower weight than grid points further away.
  */
 public class NZSHM22_PolygonisedDistributedModelBuilder {
 
     protected double exponent;
     protected int step;
     protected FaultSystemSolution solution;
-    protected Function<Double, Double> weightingFunction = getWeightingFunction(WeightingFunctionType.LINEAR, null);
+    protected Function<Double, Double> weightingFunction =
+            getWeightingFunction(WeightingFunctionType.LINEAR, null);
     List<FaultSectionPolygonWeights> polygonWeights;
 
-    public NZSHM22_PolygonisedDistributedModelBuilder() {
-    }
+    public NZSHM22_PolygonisedDistributedModelBuilder() {}
 
     protected List<Double> mMinsPerSection(FaultSystemRupSet rupSet) {
         ModSectMinMags finalMinMags = rupSet.getModule(ModSectMinMags.class);
-        ArrayList<GutenbergRichterMagFreqDist> grNuclMFD_List = FaultSystemRupSetCalc.calcImpliedGR_NuclMFD_ForEachSection(rupSet,
-                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG, NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS, NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG);
+        ArrayList<GutenbergRichterMagFreqDist> grNuclMFD_List =
+                FaultSystemRupSetCalc.calcImpliedGR_NuclMFD_ForEachSection(
+                        rupSet,
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS,
+                        NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG);
         List<Double> result = new ArrayList<>();
         for (int s = 0; s < grNuclMFD_List.size(); s++) {
             GutenbergRichterMagFreqDist grNuclMFD = grNuclMFD_List.get(s);
             int mMaxIndex = grNuclMFD.getClosestXIndex(rupSet.getMinMagForSection(s));
-            mMaxIndex = Math.max(mMaxIndex, grNuclMFD.getClosestXIndex(finalMinMags.getMinMagForSection(s)));
+            mMaxIndex =
+                    Math.max(
+                            mMaxIndex,
+                            grNuclMFD.getClosestXIndex(finalMinMags.getMinMagForSection(s)));
             result.add(grNuclMFD.getX(mMaxIndex));
         }
         return result;
     }
 
     /**
-     * Returns the mMin for a grid point. This accumulates the mmins from all polygons that the grid point is in.
-     * Mmins from more than one polygon are weighted by intersection of polygon and grid bin.
+     * Returns the mMin for a grid point. This accumulates the mmins from all polygons that the grid
+     * point is in. Mmins from more than one polygon are weighted by intersection of polygon and
+     * grid bin.
+     *
      * @param point
      * @param gridBin
      * @param mmins
@@ -86,23 +94,42 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         return result;
     }
 
-    private void printGridPoints(int section, NZSHM22_GriddedData origGrid, NZSHM22_GriddedData resultGrid){
+    private void printGridPoints(
+            int section, NZSHM22_GriddedData origGrid, NZSHM22_GriddedData resultGrid) {
         FaultSectionPolygonWeights polyWeights = polygonWeights.get(section);
-        GriddedRegion polyRegion = new GriddedRegion(polyWeights.originalPoly, origGrid.getSpacing(), GriddedRegion.ANCHOR_0_0);
+        GriddedRegion polyRegion =
+                new GriddedRegion(
+                        polyWeights.originalPoly, origGrid.getSpacing(), GriddedRegion.ANCHOR_0_0);
         for (Location gridPoint : polyRegion.getNodeList()) {
-            System.out.println(gridPoint.getLatitude() +", " + gridPoint.getLongitude()+", "+ polyWeights.polygonWeight(gridPoint) +", "+ origGrid.getValue(gridPoint)+ ", " + resultGrid.getValue(gridPoint));
+            System.out.println(
+                    gridPoint.getLatitude()
+                            + ", "
+                            + gridPoint.getLongitude()
+                            + ", "
+                            + polyWeights.polygonWeight(gridPoint)
+                            + ", "
+                            + origGrid.getValue(gridPoint)
+                            + ", "
+                            + resultGrid.getValue(gridPoint));
         }
     }
 
-    private void geojsonGrid(int section, NZSHM22_GriddedData grid, NZSHM22_GriddedData resultGrid){
+    private void geojsonGrid(
+            int section, NZSHM22_GriddedData grid, NZSHM22_GriddedData resultGrid) {
         SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
         FaultSectionPolygonWeights polyWeights = polygonWeights.get(section);
-        GriddedRegion polyRegion = new GriddedRegion(polyWeights.originalPoly, grid.getSpacing(), GriddedRegion.ANCHOR_0_0);
+        GriddedRegion polyRegion =
+                new GriddedRegion(
+                        polyWeights.originalPoly, grid.getSpacing(), GriddedRegion.ANCHOR_0_0);
         for (Location gridPoint : polyRegion.getNodeList()) {
-            builder.addLocation(gridPoint,
-                    "value", ""+grid.getValue(gridPoint),
-                    "resultValue", ""+resultGrid.getValue(gridPoint),
-                    "weight", ""+polyWeights.polygonWeight(gridPoint));
+            builder.addLocation(
+                    gridPoint,
+                    "value",
+                    "" + grid.getValue(gridPoint),
+                    "resultValue",
+                    "" + resultGrid.getValue(gridPoint),
+                    "weight",
+                    "" + polyWeights.polygonWeight(gridPoint));
         }
         builder.toJSON("polypoints.geojson");
     }
@@ -111,13 +138,18 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
 
-        NZSHM22_GriddedData upSampled = NZSHM22_GriddedData.reSample(spatialSeisPDF.getGriddedData(), step);
+        NZSHM22_GriddedData upSampled =
+                NZSHM22_GriddedData.reSample(spatialSeisPDF.getGriddedData(), step);
 
         Map<Location, List<Double>> tempGrid = new HashMap<>();
 
         for (int s = 0; s < rupSet.getNumSections(); s++) {
             FaultSectionPolygonWeights polyWeights = polygonWeights.get(s);
-            GriddedRegion polyRegion = new GriddedRegion(polyWeights.originalPoly, upSampled.getSpacing(), GriddedRegion.ANCHOR_0_0);
+            GriddedRegion polyRegion =
+                    new GriddedRegion(
+                            polyWeights.originalPoly,
+                            upSampled.getSpacing(),
+                            GriddedRegion.ANCHOR_0_0);
             List<Location> gridPoints = new ArrayList<>();
             List<Double> oldValues = new ArrayList<>();
             for (Location gridPoint : polyRegion.getNodeList()) {
@@ -128,15 +160,14 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
                 }
             }
 
-            List<Double> ds = gridPoints.
-                    stream().
-                    map(location -> Math.pow(polyWeights.polygonWeight(location), exponent)).
-                    collect(Collectors.toList());
-            double sumOfAllDs = ds.
-                    stream().
-                    filter(v -> v >= 0).
-                    mapToDouble(Double::doubleValue).
-                    sum();
+            List<Double> ds =
+                    gridPoints.stream()
+                            .map(
+                                    location ->
+                                            Math.pow(polyWeights.polygonWeight(location), exponent))
+                            .collect(Collectors.toList());
+            double sumOfAllDs =
+                    ds.stream().filter(v -> v >= 0).mapToDouble(Double::doubleValue).sum();
 
             for (int p = 0; p < gridPoints.size(); p++) {
                 Location location = gridPoints.get(p);
@@ -147,7 +178,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
                     // not in a polygon
                     newValues.add(oldValue);
                 } else {
-//                    newValues.add(oldValue * d / sumOfAllDs);
+                    //                    newValues.add(oldValue * d / sumOfAllDs);
                     newValues.add(oldValue * d);
                 }
             }
@@ -177,12 +208,14 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         return this;
     }
 
-    protected Function<Double, Double> getWeightingFunction(WeightingFunctionType type, double[] parameters) {
+    protected Function<Double, Double> getWeightingFunction(
+            WeightingFunctionType type, double[] parameters) {
         switch (type) {
             case LINEAR:
                 return weight -> weight;
             default:
-                throw new IllegalArgumentException("Unsupported WeightingFunctionType " + type.name());
+                throw new IllegalArgumentException(
+                        "Unsupported WeightingFunctionType " + type.name());
         }
     }
 
@@ -193,7 +226,8 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
      * @param parameters
      * @return
      */
-    public NZSHM22_PolygonisedDistributedModelBuilder setWeightingFunction(String type, double... parameters) {
+    public NZSHM22_PolygonisedDistributedModelBuilder setWeightingFunction(
+            String type, double... parameters) {
         weightingFunction = getWeightingFunction(WeightingFunctionType.valueOf(type), parameters);
         return this;
     }
@@ -207,5 +241,4 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         List<Double> mMins = gridMmins(newGrid, rupSet);
         rupSet.addModule(new NZSHM22_PolygonisedDistributedModel(oldGrid, newGrid, mMins));
     }
-
 }

@@ -1,10 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 public class SimplifiedNZ_MagAreaRelTest {
     @Test
@@ -25,6 +24,5 @@ public class SimplifiedNZ_MagAreaRelTest {
         actualJson = adapter.toJson(actual);
         assertEquals(original, actual);
         assertEquals(json, actualJson);
-
     }
 }

@@ -35,23 +35,23 @@ public class NZSHM22_SlipRateInversionConstraintBuilder {
         double minCOV = Double.POSITIVE_INFINITY;
         for (int i = 0; i < targetSlipRates.length; i++) {
             double cov = coefficientOfVariance(targetSlipRates[i], targetSlipRateStdDevs[i]);
-            if (Double.isNaN(cov) || Double.isInfinite(cov))
-                continue;
+            if (Double.isNaN(cov) || Double.isInfinite(cov)) continue;
             minCOV = Double.min(cov, minCOV);
             maxCOV = Double.max(cov, maxCOV);
         }
         Preconditions.checkState(Double.isFinite(minCOV));
         Preconditions.checkState(Double.isFinite(maxCOV));
 
-        return new double[]{minCOV, maxCOV};
+        return new double[] {minCOV, maxCOV};
     }
 
     /**
      * Translate value from one range of values (left) onto another (right)
-     * <p>
-     * see: https://stackoverflow.com/a/1969274
+     *
+     * <p>see: https://stackoverflow.com/a/1969274
      */
-    public static double translate(double value, double leftMin, double leftMax, double rightMin, double rightMax) {
+    public static double translate(
+            double value, double leftMin, double leftMax, double rightMin, double rightMax) {
         // Figure out how 'wide' each range is
         double leftSpan = leftMax - leftMin;
         double rightSpan = rightMax - rightMin;
@@ -61,7 +61,10 @@ public class NZSHM22_SlipRateInversionConstraintBuilder {
         return rightMin + (valueScaled * rightSpan);
     }
 
-    public static double[] buildNormalisedWeightTable(double[] targetSlipRates, double[] targetSlipRateStdDevs, double weightScalingOrderOfMagnitude) {
+    public static double[] buildNormalisedWeightTable(
+            double[] targetSlipRates,
+            double[] targetSlipRateStdDevs,
+            double weightScalingOrderOfMagnitude) {
         Preconditions.checkArgument(targetSlipRates.length == targetSlipRateStdDevs.length);
 
         double[] result = new double[targetSlipRateStdDevs.length];
@@ -73,12 +76,20 @@ public class NZSHM22_SlipRateInversionConstraintBuilder {
         double minNormalisedWeight = 1;
         double maxNormalisedWeight = Math.pow(10, weightScalingOrderOfMagnitude);
 
-        System.out.println("weightScalingOrderOfMagnitude " + weightScalingOrderOfMagnitude + " minCOV: " + minCOV
-                + "; maxCOV: " + maxCOV + "; maxNormalisedWeight: " + maxNormalisedWeight);
+        System.out.println(
+                "weightScalingOrderOfMagnitude "
+                        + weightScalingOrderOfMagnitude
+                        + " minCOV: "
+                        + minCOV
+                        + "; maxCOV: "
+                        + maxCOV
+                        + "; maxNormalisedWeight: "
+                        + maxNormalisedWeight);
 
         for (int i = 0; i < targetSlipRates.length; i++) {
             double cov = coefficientOfVariance(targetSlipRates[i], targetSlipRateStdDevs[i]);
-            double normalised_weight = translate(cov, minCOV, maxCOV, minNormalisedWeight, maxNormalisedWeight);
+            double normalised_weight =
+                    translate(cov, minCOV, maxCOV, minNormalisedWeight, maxNormalisedWeight);
 
             if (Double.isNaN(normalised_weight) || Double.isInfinite(normalised_weight)) {
                 result[i] = 1;
@@ -92,22 +103,32 @@ public class NZSHM22_SlipRateInversionConstraintBuilder {
         return result;
     }
 
-    public static SectSlipRates createSectSlipRates(SectSlipRates oldSlipRates, double weightScalingOrderOfMagnitude) {
+    public static SectSlipRates createSectSlipRates(
+            SectSlipRates oldSlipRates, double weightScalingOrderOfMagnitude) {
         double[] slipRates = oldSlipRates.getSlipRates();
         double[] modelStdDevs = oldSlipRates.getSlipRateStdDevs();
 
-        double[] stdDevs = buildNormalisedWeightTable(slipRates, modelStdDevs, weightScalingOrderOfMagnitude);
+        double[] stdDevs =
+                buildNormalisedWeightTable(slipRates, modelStdDevs, weightScalingOrderOfMagnitude);
 
         return SectSlipRates.precomputed(oldSlipRates.getParent(), slipRates, stdDevs);
     }
 
-    public static InversionConstraint buildUncertaintyConstraint(double weight, FaultSystemRupSet rupSet, double weightScalingOrderOfMagnitude, boolean useOriginalStdDevs) {
+    public static InversionConstraint buildUncertaintyConstraint(
+            double weight,
+            FaultSystemRupSet rupSet,
+            double weightScalingOrderOfMagnitude,
+            boolean useOriginalStdDevs) {
         SectSlipRates sectSlipRates = rupSet.getModule(SectSlipRates.class);
         if (!useOriginalStdDevs) {
             sectSlipRates = createSectSlipRates(sectSlipRates, weightScalingOrderOfMagnitude);
         }
-        return new SlipRateInversionConstraint(weight, ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, rupSet,
-                rupSet.requireModule(AveSlipModule.class), rupSet.requireModule(SlipAlongRuptureModel.class), sectSlipRates);
+        return new SlipRateInversionConstraint(
+                weight,
+                ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
+                rupSet,
+                rupSet.requireModule(AveSlipModule.class),
+                rupSet.requireModule(SlipAlongRuptureModel.class),
+                sectSlipRates);
     }
-
 }

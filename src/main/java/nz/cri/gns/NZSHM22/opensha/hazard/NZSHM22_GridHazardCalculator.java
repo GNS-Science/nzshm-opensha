@@ -1,6 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.hazard;
 
 import com.google.common.collect.Lists;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.function.DiscretizedFunc;
@@ -8,12 +13,6 @@ import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class NZSHM22_GridHazardCalculator {
 
@@ -60,7 +59,12 @@ public class NZSHM22_GridHazardCalculator {
     }
 
     public List<GridHazards> run() {
-        GriddedRegion region = new GriddedRegion(parentRegion.getBorder(), BorderType.MERCATOR_LINEAR, spacing, GriddedRegion.ANCHOR_0_0);
+        GriddedRegion region =
+                new GriddedRegion(
+                        parentRegion.getBorder(),
+                        BorderType.MERCATOR_LINEAR,
+                        spacing,
+                        GriddedRegion.ANCHOR_0_0);
         List<GridHazards> result = new ArrayList<>();
         for (Location location : region.getNodeList()) {
             GridHazards grdHaz = new GridHazards();
@@ -77,10 +81,9 @@ public class NZSHM22_GridHazardCalculator {
     }
 
     /**
-     * Runs the calculator and returns the result as tabular data (rows of String values).
-     * The first row contains the column headers, e.g.
-     * "lat", "long", "PofET 0.02", "PofET 0.1", "0.0001", "0.00013", ...
-     * Then each row contains the values for each of these columns.
+     * Runs the calculator and returns the result as tabular data (rows of String values). The first
+     * row contains the column headers, e.g. "lat", "long", "PofET 0.02", "PofET 0.1", "0.0001",
+     * "0.00013", ... Then each row contains the values for each of these columns.
      *
      * @return rows of Strings representing the hazards in the specified grid.
      */
@@ -144,9 +147,7 @@ public class NZSHM22_GridHazardCalculator {
         double sp = spacing * 0.5;
 
         try (PrintWriter out = new PrintWriter(new FileWriter(fileName))) {
-            out.println("{\n" +
-                    "  \"type\": \"FeatureCollection\",\n" +
-                    "  \"features\": [");
+            out.println("{\n" + "  \"type\": \"FeatureCollection\",\n" + "  \"features\": [");
 
             boolean previous = false;
 
@@ -162,10 +163,11 @@ public class NZSHM22_GridHazardCalculator {
                         previous = true;
                     }
 
-                    out.println("{\"type\": \"Feature\",\n" +
-                            " \"geometry\": {\n" +
-                            " \"type\": \"Polygon\",\n" +
-                            " \"coordinates\": [[");
+                    out.println(
+                            "{\"type\": \"Feature\",\n"
+                                    + " \"geometry\": {\n"
+                                    + " \"type\": \"Polygon\",\n"
+                                    + " \"coordinates\": [[");
                     out.println("  [" + (lon - sp) + "," + (lat - sp) + "],");
                     out.println("  [" + (lon + sp) + "," + (lat - sp) + "],");
                     out.println("  [" + (lon + sp) + "," + (lat + sp) + "],");
@@ -174,15 +176,16 @@ public class NZSHM22_GridHazardCalculator {
 
                     out.println("]]},"); // coordinates, geometry
 
-
                     long colour = Math.round((1 - ((value - min) / (max - min))) * 255);
 
-
-                    out.println(" \"properties\": {\n" +
-                            "  \"fill\": \"#FF" + String.format("%02X", colour) + "FF\",\n" +
-                            "  \"fill-opacity\": 0.5,\n" +
-                            "  \"stroke-width\": 0\n" +
-                            " }}");
+                    out.println(
+                            " \"properties\": {\n"
+                                    + "  \"fill\": \"#FF"
+                                    + String.format("%02X", colour)
+                                    + "FF\",\n"
+                                    + "  \"fill-opacity\": 0.5,\n"
+                                    + "  \"stroke-width\": 0\n"
+                                    + " }}");
                 }
             }
 
@@ -215,7 +218,8 @@ public class NZSHM22_GridHazardCalculator {
     public static void main(String[] args) throws DocumentException, IOException {
 
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile("C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
+        builder.setSolutionFile(
+                "C:\\Users\\volkertj\\Downloads\\InversionSolution-RmlsZTo2-rnd0-t30.zip");
         builder.setForecastTimespan(50);
         builder.setLinear(true); // has to be linear to make pofet calc work
         NZSHM22_GridHazardCalculator gridCalc = new NZSHM22_GridHazardCalculator(builder.build());
@@ -237,5 +241,4 @@ public class NZSHM22_GridHazardCalculator {
 
         System.out.println("done.");
     }
-
 }

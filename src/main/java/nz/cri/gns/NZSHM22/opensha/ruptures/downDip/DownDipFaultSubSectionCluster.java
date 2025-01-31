@@ -1,15 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-/**
- * A FaultSubsectionCluster for subduction faults. Has some convenience methods.
- */
+/** A FaultSubsectionCluster for subduction faults. Has some convenience methods. */
 public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
 
     public final List<DownDipFaultSection> ddSections;
@@ -18,7 +15,8 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
         this(subSects, null);
     }
 
-    public DownDipFaultSubSectionCluster(List<? extends FaultSection> subSects, Collection<FaultSection> endSects) {
+    public DownDipFaultSubSectionCluster(
+            List<? extends FaultSection> subSects, Collection<FaultSection> endSects) {
         super(subSects, endSects);
         ddSections = (List<DownDipFaultSection>) subSects;
     }
@@ -55,7 +53,6 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
         throw new RuntimeException("Not implemented");
     }
 
-
     public DownDipFaultSection first() {
         return ddSections.get(0);
     }
@@ -81,6 +78,8 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
      * @return
      */
     public List<DownDipFaultSection> getTraceSections() {
-        return ddSections.stream().filter(s -> s.getRowIndex() == first().getRowIndex()).collect(Collectors.toList());
+        return ddSections.stream()
+                .filter(s -> s.getRowIndex() == first().getRowIndex())
+                .collect(Collectors.toList());
     }
 }

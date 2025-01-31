@@ -1,9 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.calc;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.opensha.commons.exceptions.InvalidRangeException;
-
-import static org.junit.Assert.*;
 
 // tested against sceqsrc (https://github.com/thingbaijam/sceqsrc)
 // for subduction-interface events

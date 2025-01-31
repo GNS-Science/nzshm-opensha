@@ -1,6 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
@@ -10,27 +15,20 @@ import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-
 public class TvzDomainSections implements CSV_BackedModule {
 
     protected Set<Integer> sections;
 
-    public TvzDomainSections() {
-    }
+    public TvzDomainSections() {}
 
     public TvzDomainSections(FaultSystemRupSet rupSet) {
         NZSHM22_LogicTreeBranch branch = rupSet.requireModule(NZSHM22_LogicTreeBranch.class);
         Predicate<FaultSection> filter = createTvzFilter(branch);
-        sections = rupSet.getFaultSectionDataList().stream()
-                .filter(filter)
-                .map(FaultSection::getSectionId)
-                .collect(Collectors.toSet());
+        sections =
+                rupSet.getFaultSectionDataList().stream()
+                        .filter(filter)
+                        .map(FaultSection::getSectionId)
+                        .collect(Collectors.toSet());
     }
 
     protected static Predicate<FaultSection> createTvzFilter(NZSHM22_LogicTreeBranch branch) {
@@ -86,7 +84,7 @@ public class TvzDomainSections implements CSV_BackedModule {
     }
 
     @Override
-    public String getFileName(){
+    public String getFileName() {
         return getName() + ".csv";
     }
 
@@ -94,6 +92,4 @@ public class TvzDomainSections implements CSV_BackedModule {
     public String getName() {
         return "TvzDomainSections";
     }
-
-
 }

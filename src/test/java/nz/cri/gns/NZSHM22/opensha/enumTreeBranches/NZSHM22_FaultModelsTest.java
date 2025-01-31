@@ -2,25 +2,24 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import static org.junit.Assert.*;
 
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import org.dom4j.DocumentException;
-import org.junit.Test;
-import org.opensha.sha.faultSurface.FaultSection;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import org.dom4j.DocumentException;
+import org.junit.Test;
+import org.opensha.sha.faultSurface.FaultSection;
 
 public class NZSHM22_FaultModelsTest {
 
     @Test
     public void testDuplicateNames() throws DocumentException, IOException {
         for (NZSHM22_FaultModels model : NZSHM22_FaultModels.values()) {
-            if (model == NZSHM22_FaultModels.CFM_0_9_ALL_2010 ||
-                    model == NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010 ||
-                    model == NZSHM22_FaultModels.CFM_0_9_ALL_D90 ||
-                    model == NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90) {
+            if (model == NZSHM22_FaultModels.CFM_0_9_ALL_2010
+                    || model == NZSHM22_FaultModels.CFM_0_9_SANSTVZ_2010
+                    || model == NZSHM22_FaultModels.CFM_0_9_ALL_D90
+                    || model == NZSHM22_FaultModels.CFM_0_9_SANSTVZ_D90) {
                 continue;
             }
             System.out.println(model.name());

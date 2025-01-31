@@ -1,12 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.griddedSeismicity;
 
+import static org.junit.Assert.assertTrue;
+
+import java.awt.geom.Area;
 import org.junit.Test;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
-
-import java.awt.geom.Area;
-
-import static org.junit.Assert.assertTrue;
 
 // copied from scratch.UCERF3.griddedSeismicity.SectionPolygonsTest
 
@@ -28,7 +27,7 @@ public class SectionPolygonsTest {
     public static boolean containsAll(Area area, LocationList locations) {
         for (Location location : locations) {
             if (!containsWithTolerance(area, location, 0.0000000001)) {
-               return false;
+                return false;
             }
         }
         return true;

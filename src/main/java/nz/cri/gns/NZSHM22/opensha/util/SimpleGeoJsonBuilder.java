@@ -1,6 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -11,17 +16,7 @@ import org.opensha.commons.geo.json.Geometry;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-/**
- * A utility to quickly write opensha geometry to a GeoJSON file.
- */
-
+/** A utility to quickly write opensha geometry to a GeoJSON file. */
 public class SimpleGeoJsonBuilder {
 
     List<Feature> features = new ArrayList<>();
@@ -40,7 +35,8 @@ public class SimpleGeoJsonBuilder {
     }
 
     public FeatureProperties addLocation(Location location, String... properties) {
-        Preconditions.checkArgument((properties.length % 2) == 0, "Properties must be key/value pairs");
+        Preconditions.checkArgument(
+                (properties.length % 2) == 0, "Properties must be key/value pairs");
 
         FeatureProperties props = new FeatureProperties();
         for (int i = 0; i < properties.length - 1; i += 2) {
@@ -84,25 +80,26 @@ public class SimpleGeoJsonBuilder {
         return feature.properties;
     }
 
-    public FeatureProperties addRegion(Region region, String colour, double opacity){
+    public FeatureProperties addRegion(Region region, String colour, double opacity) {
         FeatureProperties props = addRegion(region);
         props.set(FeatureProperties.FILL_OPACITY_PROP, opacity);
         props.set(FeatureProperties.FILL_COLOR_PROP, colour);
         return props;
     }
 
-    public FeatureProperties setLineColour(FeatureProperties props, String cssColour, double opacity){
+    public FeatureProperties setLineColour(
+            FeatureProperties props, String cssColour, double opacity) {
         props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
         props.set(FeatureProperties.STROKE_OPACITY_PROP, opacity);
         return props;
     }
 
-    public FeatureProperties setLineColour(FeatureProperties props, String cssColour){
+    public FeatureProperties setLineColour(FeatureProperties props, String cssColour) {
         props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
         return props;
     }
 
-    public FeatureProperties setLineWidth(FeatureProperties props, int width){
+    public FeatureProperties setLineWidth(FeatureProperties props, int width) {
         props.set(FeatureProperties.STROKE_WIDTH_PROP, width);
         return props;
     }

@@ -1,17 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.scripts;
 
+import java.io.*;
+import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationUtils;
 
-import java.io.*;
-import java.util.*;
-
 /**
- * Imports 2010 data and turns it into NZSHM22 grids
- * Written for https://github.com/GNS-Science/fortran_SHMs/blob/main/2010_NSHM-corrected/NZBCK615.txt
+ * Imports 2010 data and turns it into NZSHM22 grids Written for
+ * https://github.com/GNS-Science/fortran_SHMs/blob/main/2010_NSHM-corrected/NZBCK615.txt
  */
 public class FocalMechGridsImporter {
 
@@ -35,25 +34,29 @@ public class FocalMechGridsImporter {
     static Map<String, Map<Mechs, Double>> weights;
 
     static {
-        Map<Mechs, Double> normal = Map.of(
-                Mechs.NORMAL, 1.0,
-                Mechs.REVERSE, 0.0,
-                Mechs.STRIKESLIP, 0.0);
+        Map<Mechs, Double> normal =
+                Map.of(
+                        Mechs.NORMAL, 1.0,
+                        Mechs.REVERSE, 0.0,
+                        Mechs.STRIKESLIP, 0.0);
 
-        Map<Mechs, Double> reverse = Map.of(
-                Mechs.NORMAL, 0.0,
-                Mechs.REVERSE, 1.0,
-                Mechs.STRIKESLIP, 0.0);
+        Map<Mechs, Double> reverse =
+                Map.of(
+                        Mechs.NORMAL, 0.0,
+                        Mechs.REVERSE, 1.0,
+                        Mechs.STRIKESLIP, 0.0);
 
-        Map<Mechs, Double> strikeSlip = Map.of(
-                Mechs.NORMAL, 0.0,
-                Mechs.REVERSE, 0.0,
-                Mechs.STRIKESLIP, 1.0);
+        Map<Mechs, Double> strikeSlip =
+                Map.of(
+                        Mechs.NORMAL, 0.0,
+                        Mechs.REVERSE, 0.0,
+                        Mechs.STRIKESLIP, 1.0);
 
-        Map<Mechs, Double> mixed = Map.of(
-                Mechs.NORMAL, 0.0,
-                Mechs.REVERSE, 0.5,
-                Mechs.STRIKESLIP, 0.5);
+        Map<Mechs, Double> mixed =
+                Map.of(
+                        Mechs.NORMAL, 0.0,
+                        Mechs.REVERSE, 0.5,
+                        Mechs.STRIKESLIP, 0.5);
 
         weights = new HashMap<>();
         weights.put("nv", normal);
@@ -154,10 +157,12 @@ public class FocalMechGridsImporter {
         System.out.println("Source bounding box");
         printGridExtent(source);
 
-        GriddedRegion region = new GriddedRegion(new NewZealandRegions.NZ_TEST_GRIDDED().getBorder(),
-                BorderType.MERCATOR_LINEAR,
-                0.1, //GridReader expects values not closer than 0.1 from each other
-                GriddedRegion.ANCHOR_0_0);
+        GriddedRegion region =
+                new GriddedRegion(
+                        new NewZealandRegions.NZ_TEST_GRIDDED().getBorder(),
+                        BorderType.MERCATOR_LINEAR,
+                        0.1, // GridReader expects values not closer than 0.1 from each other
+                        GriddedRegion.ANCHOR_0_0);
 
         System.out.println("Target bounding box");
         printGridExtent(region.getNodeList());
@@ -167,9 +172,12 @@ public class FocalMechGridsImporter {
         Set<String> seen = new HashSet<>();
 
         int i = 0;
-        try (PrintWriter normalOut = new PrintWriter(new FileWriter("c:/tmp/normalFocalMech.grid"));
-             PrintWriter reverseOut = new PrintWriter(new FileWriter("c:/tmp/reverseFocalMech.grid"));
-             PrintWriter strikeSlipOut = new PrintWriter(new FileWriter("c:/tmp/strikeFocalHazMech.grid"))) {
+        try (PrintWriter normalOut =
+                        new PrintWriter(new FileWriter("c:/tmp/normalFocalMech.grid"));
+                PrintWriter reverseOut =
+                        new PrintWriter(new FileWriter("c:/tmp/reverseFocalMech.grid"));
+                PrintWriter strikeSlipOut =
+                        new PrintWriter(new FileWriter("c:/tmp/strikeFocalHazMech.grid"))) {
             for (Location location : region.getNodeList()) {
                 String locString = location.getLongitude() + " " + location.getLatitude() + " ";
 

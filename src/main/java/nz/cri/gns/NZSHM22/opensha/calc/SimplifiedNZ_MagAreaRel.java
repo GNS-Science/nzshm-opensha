@@ -5,19 +5,17 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
-
-import java.io.IOException;
 
 @JsonAdapter(SimplifiedNZ_MagAreaRel.Adapter.class)
 public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
 
-    public final static String NAME = "SimplifiedScalingNZNSHM_2021";
-    /**
-     * Regime is either CRUSTAL or INTERFACE
-     */
+    public static final String NAME = "SimplifiedScalingNZNSHM_2021";
+    /** Regime is either CRUSTAL or INTERFACE */
     protected FaultRegime faultRegime = FaultRegime.CRUSTAL;
+
     protected double cValue = 0;
     protected double strikeSlipCValue = 0;
 
@@ -25,14 +23,15 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         super();
     }
 
-    public static SimplifiedNZ_MagAreaRel forSubduction(double cValue){
+    public static SimplifiedNZ_MagAreaRel forSubduction(double cValue) {
         SimplifiedNZ_MagAreaRel result = new SimplifiedNZ_MagAreaRel();
         result.setRegime(FaultRegime.SUBDUCTION);
         result.cValue = cValue;
         return result;
     }
 
-    public static SimplifiedNZ_MagAreaRel forCrustal(double dipSlipCValue, double strikeSlipCValue){
+    public static SimplifiedNZ_MagAreaRel forCrustal(
+            double dipSlipCValue, double strikeSlipCValue) {
         SimplifiedNZ_MagAreaRel result = new SimplifiedNZ_MagAreaRel();
         result.setRegime(FaultRegime.CRUSTAL);
         result.cValue = dipSlipCValue;
@@ -62,8 +61,8 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
     }
 
     /**
-     * Gives the standard deviation for the magnitude as a function of area for
-     * previously-set rake values
+     * Gives the standard deviation for the magnitude as a function of area for previously-set rake
+     * values
      *
      * @return standard deviation
      */
@@ -90,12 +89,12 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         return Double.NaN;
     }
 
-    public enum FaultType{
+    public enum FaultType {
         STRIKE_SLIP,
         REVERSE_FAULTING,
         NORMAL_FAULTING;
 
-        public static FaultType fromRake(double rake){
+        public static FaultType fromRake(double rake) {
             Preconditions.checkArgument(!Double.isNaN(rake));
             if ((rake <= 45 && rake >= -45) || rake >= 135 || rake <= -135) {
                 return STRIKE_SLIP;
@@ -113,56 +112,55 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
      * @return C
      */
     private double getC4log10A2Mw() {
-        if (faultRegime == FaultRegime.CRUSTAL && FaultType.fromRake(rake) == FaultType.STRIKE_SLIP) {
+        if (faultRegime == FaultRegime.CRUSTAL
+                && FaultType.fromRake(rake) == FaultType.STRIKE_SLIP) {
             return strikeSlipCValue;
         } else {
             return cValue;
         }
     }
 
-//    private double getC4log10A2Mw() {
-//
-//        //rhat AKA cValue => perhaps, we refactor rhat as cvalue
-//        Double rhat = Double.NaN;
-//        if (faultRegime == CRUSTAL || faultRegime == NONE) {
-//            if (faultType == NONE || epistemicBound == NONE) {
-//                return Double.NaN;
-//            } else if (faultType == STRIKE_SLIP && epistemicBound == MEAN) {
-//                rhat = 4.0;
-//            } else if (faultType == STRIKE_SLIP && epistemicBound == LOWER) {
-//                rhat = 3.65;
-//            } else if (faultType == STRIKE_SLIP && epistemicBound == UPPER) {
-//                rhat = 4.30;
-//            } else if (faultType == REVERSE_FAULTING && epistemicBound == MEAN) {
-//                rhat = 4.13;
-//            } else if (faultType == REVERSE_FAULTING && epistemicBound == LOWER) {
-//                rhat = 3.95;
-//            } else if (faultType == REVERSE_FAULTING && epistemicBound == UPPER) {
-//                rhat = 4.30;
-//            } else if (faultType == NORMAL_FAULTING && epistemicBound == MEAN) {
-//                rhat = 4.13;
-//            } else if (faultType == NORMAL_FAULTING && epistemicBound == LOWER) {
-//                rhat = 3.95;
-//            } else if (faultType == NORMAL_FAULTING && epistemicBound == UPPER) {
-//                rhat = 4.30;
-//            }
-//        } else if (faultRegime == SUBDUCTION_INTERFACE) {
-//            if (epistemicBound == MEAN) {
-//                rhat = 3.85;
-//            } else if (epistemicBound == LOWER) {
-//                rhat = 3.60;
-//            } else if (epistemicBound == UPPER) {
-//                rhat = 4.10;
-//            } else if (epistemicBound == NONE) {
-//                return Double.NaN;
-//            }
-//        }
-//        return rhat;
-//    }
+    //    private double getC4log10A2Mw() {
+    //
+    //        //rhat AKA cValue => perhaps, we refactor rhat as cvalue
+    //        Double rhat = Double.NaN;
+    //        if (faultRegime == CRUSTAL || faultRegime == NONE) {
+    //            if (faultType == NONE || epistemicBound == NONE) {
+    //                return Double.NaN;
+    //            } else if (faultType == STRIKE_SLIP && epistemicBound == MEAN) {
+    //                rhat = 4.0;
+    //            } else if (faultType == STRIKE_SLIP && epistemicBound == LOWER) {
+    //                rhat = 3.65;
+    //            } else if (faultType == STRIKE_SLIP && epistemicBound == UPPER) {
+    //                rhat = 4.30;
+    //            } else if (faultType == REVERSE_FAULTING && epistemicBound == MEAN) {
+    //                rhat = 4.13;
+    //            } else if (faultType == REVERSE_FAULTING && epistemicBound == LOWER) {
+    //                rhat = 3.95;
+    //            } else if (faultType == REVERSE_FAULTING && epistemicBound == UPPER) {
+    //                rhat = 4.30;
+    //            } else if (faultType == NORMAL_FAULTING && epistemicBound == MEAN) {
+    //                rhat = 4.13;
+    //            } else if (faultType == NORMAL_FAULTING && epistemicBound == LOWER) {
+    //                rhat = 3.95;
+    //            } else if (faultType == NORMAL_FAULTING && epistemicBound == UPPER) {
+    //                rhat = 4.30;
+    //            }
+    //        } else if (faultRegime == SUBDUCTION_INTERFACE) {
+    //            if (epistemicBound == MEAN) {
+    //                rhat = 3.85;
+    //            } else if (epistemicBound == LOWER) {
+    //                rhat = 3.60;
+    //            } else if (epistemicBound == UPPER) {
+    //                rhat = 4.10;
+    //            } else if (epistemicBound == NONE) {
+    //                return Double.NaN;
+    //            }
+    //        }
+    //        return rhat;
+    //    }
 
-    /**
-     * Returns the name of the object
-     */
+    /** Returns the name of the object */
     public String getName() {
         return NAME + " " + faultRegime.toString();
     }
@@ -171,11 +169,13 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
     public boolean equals(Object o) {
         if (o instanceof SimplifiedNZ_MagAreaRel) {
             SimplifiedNZ_MagAreaRel other = (SimplifiedNZ_MagAreaRel) o;
-            return  faultRegime == other.faultRegime &&
-//                    faultType == other.faultType &&
-//                    (rake == other.rake || (Double.isNaN(rake) && Double.isNaN(other.rake))) &&
-                    cValue == other.cValue &&
-                    strikeSlipCValue == other.strikeSlipCValue;
+            return faultRegime == other.faultRegime
+                    &&
+                    //                    faultType == other.faultType &&
+                    //                    (rake == other.rake || (Double.isNaN(rake) &&
+                    // Double.isNaN(other.rake))) &&
+                    cValue == other.cValue
+                    && strikeSlipCValue == other.strikeSlipCValue;
         }
         return false;
     }
@@ -212,7 +212,8 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
                         break;
                     default:
                         in.skipValue();
-                        System.out.println("SimplifiedNZ_MagAreaRel.Adapter: discovered unknown name " + name);
+                        System.out.println(
+                                "SimplifiedNZ_MagAreaRel.Adapter: discovered unknown name " + name);
                         break;
                 }
             }
@@ -221,5 +222,3 @@ public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
         }
     }
 }
-
-

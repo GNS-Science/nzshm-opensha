@@ -1,11 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import com.google.common.collect.ImmutableList;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.AnnealingProgress;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompletionCriteria;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
@@ -13,11 +7,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.AnnealingProgress;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.CompletionCriteria;
 
 /**
  * Can be used to wrap a CompletionCriteria to log all InversionState instances that are passed in.
- * Note that this will not work as a sub CompletionCriteria if the inner criteria relies on iteration count.
- * Logs will be broken up into zip files.
+ * Note that this will not work as a sub CompletionCriteria if the inner criteria relies on
+ * iteration count. Logs will be broken up into zip files.
  */
 public class LoggingCompletionCriteria implements CompletionCriteria, Closeable {
 
@@ -29,11 +27,13 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
      * Creates a new LoggingCompletionCriteria
      *
      * @param innerCriteria the isSatisfied() method will be forwarded to the innerCriteria
-     * @param basePath      a path to a folder. Does not need to exist. All log files will be stored in this folder.
-     * @param maxMB         log files will be split up if they reach this size (uncompressed)
+     * @param basePath a path to a folder. Does not need to exist. All log files will be stored in
+     *     this folder.
+     * @param maxMB log files will be split up if they reach this size (uncompressed)
      * @throws IOException
      */
-    public LoggingCompletionCriteria(CompletionCriteria innerCriteria, String basePath, int maxMB) throws IOException {
+    public LoggingCompletionCriteria(CompletionCriteria innerCriteria, String basePath, int maxMB)
+            throws IOException {
         this.innerCriteria = innerCriteria;
         this.solutionLog = new InversionStateLog(basePath, maxMB);
 
@@ -54,9 +54,9 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     }
 
     public void setConstraintRanges(List<ConstraintRange> constraintRanges) {
-        AnnealingProgress progress =  AnnealingProgress.forConstraintRanges(constraintRanges);
-        String energiesHeader = String.join("," , progress.getEnergyTypes());
-        solutionLog.addHeader("energy", energiesHeader+"\n");
+        AnnealingProgress progress = AnnealingProgress.forConstraintRanges(constraintRanges);
+        String energiesHeader = String.join(",", progress.getEnergyTypes());
+        solutionLog.addHeader("energy", energiesHeader + "\n");
     }
 
     protected static class InversionStateLog implements Closeable {
@@ -65,7 +65,9 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
 
         public InversionStateLog(String basePath, int maxMB) {
             log = new MultiZipLog(basePath, "inversionState", ((long) maxMB) * 1024 * 1024);
-            addHeader("meta", "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
+            addHeader(
+                    "meta",
+                    "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
         }
 
         public void addHeader(String file, String header) {
@@ -75,11 +77,17 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         public void log(InversionState state) {
             log.nextIndex(state.iterations);
 
-            String meta = state.iterations + ","
-                    + state.elapsedTimeMillis + ","
-                    + state.numPerturbsKept + ","
-                    + state.numWorseValuesKept + ","
-                    + state.numNonZero + "\n";
+            String meta =
+                    state.iterations
+                            + ","
+                            + state.elapsedTimeMillis
+                            + ","
+                            + state.numPerturbsKept
+                            + ","
+                            + state.numWorseValuesKept
+                            + ","
+                            + state.numNonZero
+                            + "\n";
 
             log.log("meta", meta);
             log.log("solution", state.bestSolution);
@@ -95,8 +103,9 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     }
 
     /**
-     * Can be used log multiple streams at once. Streams are synchronized by index and stored together in a zip file.
-     * The zip file will be broken up if the uncompressed data takes up more than a specified sized.
+     * Can be used log multiple streams at once. Streams are synchronized by index and stored
+     * together in a zip file. The zip file will be broken up if the uncompressed data takes up more
+     * than a specified sized.
      */
     static class MultiZipLog implements Closeable {
 
@@ -146,7 +155,8 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                 return a;
             }
 
-            // writing it like this because using regex functions here double the runtime for inmversion
+            // writing it like this because using regex functions here double the runtime for
+            // inmversion
             if (a.charAt(0) == '0' && a.charAt(1) == '.') {
                 a = a.substring(1);
             }
@@ -170,7 +180,11 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             String line = "\n";
 
             if (data != null) {
-                line = Arrays.stream(data).mapToObj(MultiZipLog::format).collect(Collectors.joining(",")) + "\n";
+                line =
+                        Arrays.stream(data)
+                                        .mapToObj(MultiZipLog::format)
+                                        .collect(Collectors.joining(","))
+                                + "\n";
             }
             return line.getBytes();
         }
@@ -207,7 +221,9 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
 
         public void writeToFile() {
             try {
-                FileOutputStream fout = new FileOutputStream(fileName + "[" + startLine + "-" + currentLine + "].zip");
+                FileOutputStream fout =
+                        new FileOutputStream(
+                                fileName + "[" + startLine + "-" + currentLine + "].zip");
                 ZipOutputStream zout = new ZipOutputStream(fout);
                 zout.setLevel(9);
 

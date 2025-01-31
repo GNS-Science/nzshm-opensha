@@ -10,14 +10,16 @@ public class TMG2017SubScalingRelationship implements RupSetScalingRelationship 
     private TMG2017SubMagAreaRel tmg_sub_magArea = new TMG2017SubMagAreaRel(90); // interface
 
     // units of the input dimensions are in m or m^2
-    public double getAveSlip(double area, double length, double width, double origWidth, double aveRake) {
+    public double getAveSlip(
+            double area, double length, double width, double origWidth, double aveRake) {
         tmg_sub_magArea.setRake(aveRake);
         double mag = tmg_sub_magArea.getMedianMag(area * 1e-6);
         double moment = MagUtils.magToMoment(mag);
         return FaultMomentCalc.getSlip(area, moment);
     }
 
-    public double getMag(double area, double length, double width, double origWidth, double aveRake) {
+    public double getMag(
+            double area, double length, double width, double origWidth, double aveRake) {
         tmg_sub_magArea.setRake(aveRake);
         return tmg_sub_magArea.getMedianMag(area * 1e-6);
     }
@@ -25,7 +27,6 @@ public class TMG2017SubScalingRelationship implements RupSetScalingRelationship 
     public double getArea(double mag, double origWidth) {
         return tmg_sub_magArea.getMedianArea(mag) * 1e6;
     }
-
 
     @Override
     public String getName() {
@@ -48,7 +49,7 @@ public class TMG2017SubScalingRelationship implements RupSetScalingRelationship 
     }
 
     @Override
-    public boolean equals(Object other){
+    public boolean equals(Object other) {
         return other instanceof TMG2017SubScalingRelationship;
     }
 }

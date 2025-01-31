@@ -1,8 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
-import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
@@ -11,8 +11,6 @@ import org.junit.Test;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-
-import java.io.IOException;
 
 public class NZSHM22_LogicTreeBranchTest {
 
@@ -40,13 +38,13 @@ public class NZSHM22_LogicTreeBranchTest {
         assertEquals(json, json2);
     }
 
-    /**
-     * Create a rupture set with crustal LTB, write and read it from file.
-     */
+    /** Create a rupture set with crustal LTB, write and read it from file. */
     public static FaultSystemRupSet makeRupSet() throws DocumentException, IOException {
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
-        NZSHM22_ScalingRelationshipNode scalingNode = branch.getValue(NZSHM22_ScalingRelationshipNode.class);
-        FaultSystemRupSet rupSet = TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, scalingNode);
+        NZSHM22_ScalingRelationshipNode scalingNode =
+                branch.getValue(NZSHM22_ScalingRelationshipNode.class);
+        FaultSystemRupSet rupSet =
+                TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, scalingNode);
         rupSet = NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
         ArchiveOutput.InMemoryZipOutput output = new ArchiveOutput.InMemoryZipOutput(true);
         rupSet.getArchive().write(output);
@@ -58,12 +56,14 @@ public class NZSHM22_LogicTreeBranchTest {
         NZSHM22_LogicTreeBranch branch = makeRupSet().getModule(NZSHM22_LogicTreeBranch.class);
 
         assertEquals(FaultRegime.CRUSTAL, branch.getValue(FaultRegime.class));
-        assertEquals(NZSHM22_SpatialSeisPDF.NZSHM22_1346, branch.getValue(NZSHM22_SpatialSeisPDF.class));
+        assertEquals(
+                NZSHM22_SpatialSeisPDF.NZSHM22_1346, branch.getValue(NZSHM22_SpatialSeisPDF.class));
         assertEquals(SlipAlongRuptureModels.UNIFORM, branch.getValue(SlipAlongRuptureModels.class));
         SimplifiedScalingRelationship scaling = new SimplifiedScalingRelationship();
         scaling.setupCrustal(4, 4);
         assertTrue(
                 scaling.equals(
-                        branch.getValue(NZSHM22_ScalingRelationshipNode.class).getScalingRelationship()));
+                        branch.getValue(NZSHM22_ScalingRelationshipNode.class)
+                                .getScalingRelationship()));
     }
 }
