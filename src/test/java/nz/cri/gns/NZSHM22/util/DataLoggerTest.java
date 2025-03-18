@@ -2,14 +2,13 @@ package nz.cri.gns.NZSHM22.util;
 
 import static org.junit.Assert.*;
 
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import org.junit.Test;
 
 public class DataLoggerTest {

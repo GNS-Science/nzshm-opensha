@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.util;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.text.DecimalFormat;

@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
-
 import nz.cri.gns.NZSHM22.util.DataLogger;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
@@ -62,7 +61,9 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         DataLogger.MultiZipLog log;
 
         public InversionStateLog(String basePath, int maxMB) {
-            log = new DataLogger.MultiZipLog(basePath, "inversionState", ((long) maxMB) * 1024 * 1024);
+            log =
+                    new DataLogger.MultiZipLog(
+                            basePath, "inversionState", ((long) maxMB) * 1024 * 1024);
             addHeader(
                     "meta",
                     "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
