@@ -26,31 +26,34 @@ public class DataLogger {
             return "0";
         }
 
-        String a = value + "";
+        String stringValue = value + "";
 
         if (Double.isInfinite(value) || Double.isNaN(value)) {
-            return a;
+            return stringValue;
         }
 
         // writing it like this because using regex functions here double the runtime for
-        // inmversion
-        if (a.charAt(0) == '0' && a.charAt(1) == '.') {
-            a = a.substring(1);
+        // inversion
+        // turn 0.XXX into .XXX
+        if (stringValue.charAt(0) == '0' && stringValue.charAt(1) == '.') {
+            stringValue = stringValue.substring(1);
         }
 
-        if (a.length() < 5) {
-            return a;
+        if (stringValue.length() < 5) {
+            return stringValue;
         }
 
-        String b = fmt.format(value);
-        if (b.charAt(b.length() - 2) == 'E' && b.charAt(b.length() - 1) == '0') {
-            b = b.substring(0, b.length() - 2);
+        String formattedValue = fmt.format(value);
+        // turn XXXE0 into XXX
+        if (formattedValue.charAt(formattedValue.length() - 2) == 'E'
+                && formattedValue.charAt(formattedValue.length() - 1) == '0') {
+            formattedValue = formattedValue.substring(0, formattedValue.length() - 2);
         }
 
-        if (b.length() < a.length()) {
-            return b;
+        if (formattedValue.length() < stringValue.length()) {
+            return formattedValue;
         }
-        return a;
+        return stringValue;
     }
 
     static byte[] getBytes(double[] data) {
