@@ -3,7 +3,21 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+
+import com.google.common.collect.ImmutableList;
 import nz.cri.gns.NZSHM22.util.DataLogger;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.fs.Path;
+import org.apache.parquet.avro.AvroParquetWriter;
+import org.apache.parquet.avro.AvroWriteSupport;
+import org.apache.parquet.hadoop.ParquetFileWriter;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.parquet.hadoop.util.HadoopOutputFile;
+import org.apache.parquet.io.OutputFile;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.AnnealingProgress;
@@ -20,6 +34,69 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
 
     protected InversionStateLog solutionLog;
 
+    protected OutputFile outputFile;
+    protected static Schema metaSchema =
+            SchemaBuilder.record("Meta")
+                    .fields()
+                    .requiredLong("iterations")
+                    .requiredLong("elapsedTimeMillis")
+                    .requiredLong("numPerturbsKept")
+                    .requiredLong("numWorseValuesKept")
+                    .requiredLong("numNonZero")
+                    .endRecord();
+    protected static Schema energySchema;
+    protected static Schema schema;
+    protected static ParquetWriter<GenericRecord> parquetWriter;
+
+    public void setParquetSchema(ImmutableList<String> energyTypes) {
+        SchemaBuilder.FieldAssembler<Schema> energyFields = SchemaBuilder.record("Energy").fields();
+        for (String energyType : energyTypes) {
+            energyFields = energyFields.requiredDouble(energyType.replaceAll("[\\W]", ""));
+
+        }
+        Schema energySchema = energyFields.endRecord();
+
+        schema =
+                SchemaBuilder.record("IterationLog")
+                        .fields()
+                        .name("meta")
+                        .type(metaSchema)
+                        .noDefault()
+                        .name("energy")
+                        .type(energySchema)
+                        .noDefault()
+                        .name("solution")
+                        .type()
+                        .array()
+                        .items()
+                        .doubleType()
+                        .noDefault()
+                        .name("misfits")
+                        .type()
+                        .array()
+                        .items()
+                        .doubleType()
+                        .noDefault()
+                        .name("misfitsIneq")
+                        .type()
+                        .array()
+                        .items()
+                        .doubleType()
+                        .noDefault()
+                        .endRecord();
+
+        try {
+            parquetWriter =
+                    AvroParquetWriter.<GenericRecord>builder(outputFile)
+                            .withSchema(schema)
+                            .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+                            .config(AvroWriteSupport.WRITE_PARQUET_UUID, "true")
+                            .build();
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
     /**
      * Creates a new LoggingCompletionCriteria
      *
@@ -33,6 +110,8 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             throws IOException {
         this.innerCriteria = innerCriteria;
         this.solutionLog = new InversionStateLog(basePath, maxMB);
+        this.outputFile =
+                HadoopOutputFile.fromPath(new Path(basePath, "parquet"), new Configuration());
 
         Files.createDirectories(new File(basePath).toPath());
     }
@@ -54,6 +133,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         AnnealingProgress progress = AnnealingProgress.forConstraintRanges(constraintRanges);
         String energiesHeader = String.join(",", progress.getEnergyTypes());
         solutionLog.addHeader("energy", energiesHeader + "\n");
+        setParquetSchema(progress.getEnergyTypes());
     }
 
     protected static class InversionStateLog implements Closeable {
@@ -93,11 +173,36 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             log.log("energy", state.energy);
             log.log("misfits", state.misfits);
             log.log("misfits_ineq", state.misfits_ineq);
+
+            GenericRecord energyRecord = new GenericData.Record(energySchema);
+            for (int i = 0; i < state.energy.length; i++) {
+                energyRecord.put(i, state.energy[i]);
+            }
+            GenericRecord metaRecord = new GenericData.Record(metaSchema);
+            metaRecord.put("iterations", state.iterations);
+            metaRecord.put("elapsedTimeMillis", state.elapsedTimeMillis);
+            metaRecord.put("numPerturbsKept", state.numPerturbsKept);
+            metaRecord.put("numWorseValuesKept", state.numWorseValuesKept);
+            metaRecord.put("numNonZero", state.numNonZero);
+
+            GenericRecord record = new GenericData.Record(schema);
+            record.put("meta", metaRecord);
+            record.put("energy", energyRecord);
+            record.put("solution", state.bestSolution);
+            record.put("misfits", state.misfits);
+            record.put("misfitsIneq", state.misfits_ineq);
+
+            try {
+                parquetWriter.write(record);
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
         }
 
         @Override
         public void close() throws IOException {
             log.close();
+            parquetWriter.close();
         }
     }
 }
