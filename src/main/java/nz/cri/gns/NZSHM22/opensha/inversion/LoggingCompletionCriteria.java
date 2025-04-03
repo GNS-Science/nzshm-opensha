@@ -1,7 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
@@ -10,13 +15,16 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.hadoop.fs.Path;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.avro.AvroWriteSupport;
+import org.apache.parquet.conf.ParquetConfiguration;
+import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
+import org.apache.parquet.io.LocalOutputFile;
 import org.apache.parquet.io.OutputFile;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
@@ -34,7 +42,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
 
     protected InversionStateLog solutionLog;
 
-    protected OutputFile outputFile;
+    protected LocalOutputFile outputFile;
     protected static Schema metaSchema =
             SchemaBuilder.record("Meta")
                     .fields()
@@ -54,7 +62,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             energyFields = energyFields.requiredDouble(energyType.replaceAll("[\\W]", ""));
 
         }
-        Schema energySchema = energyFields.endRecord();
+        energySchema = energyFields.endRecord();
 
         schema =
                 SchemaBuilder.record("IterationLog")
@@ -73,12 +81,14 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                         .noDefault()
                         .name("misfits")
                         .type()
+                        .nullable()
                         .array()
                         .items()
                         .doubleType()
                         .noDefault()
                         .name("misfitsIneq")
                         .type()
+                        .nullable()
                         .array()
                         .items()
                         .doubleType()
@@ -86,10 +96,15 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                         .endRecord();
 
         try {
+            ParquetConfiguration parquetConf = new PlainParquetConfiguration();
             parquetWriter =
                     AvroParquetWriter.<GenericRecord>builder(outputFile)
                             .withSchema(schema)
                             .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+                            .withPageRowCountLimit(1000)
+                            .withConf(parquetConf)
+                            .withCompressionCodec(CompressionCodecName.GZIP)
+                            .withDictionaryEncoding(true)
                             .config(AvroWriteSupport.WRITE_PARQUET_UUID, "true")
                             .build();
         } catch (IOException x) {
@@ -110,10 +125,17 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             throws IOException {
         this.innerCriteria = innerCriteria;
         this.solutionLog = new InversionStateLog(basePath, maxMB);
-        this.outputFile =
-                HadoopOutputFile.fromPath(new Path(basePath, "parquet"), new Configuration());
-
         Files.createDirectories(new File(basePath).toPath());
+
+        try{
+        FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
+        Path nioOutputPath = fs.getPath(basePath, "parquet");
+        System.out.println(nioOutputPath.toAbsolutePath());
+        this.outputFile = new LocalOutputFile(nioOutputPath);
+        }catch (URISyntaxException x) {
+            throw new RuntimeException(x);
+        }
+
     }
 
     @Override
@@ -189,8 +211,17 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
             record.put("meta", metaRecord);
             record.put("energy", energyRecord);
             record.put("solution", state.bestSolution);
-            record.put("misfits", state.misfits);
-            record.put("misfitsIneq", state.misfits_ineq);
+            if (state.misfits != null) {
+                record.put("misfits", state.misfits);
+            } else {
+                record.put("misfits", new double[]{});
+            }
+            if (state.misfits_ineq != null) {
+                record.put("misfitsIneq", state.misfits_ineq);
+            } else {
+                record.put("misfitsIneq", new double[]{});
+            }
+
 
             try {
                 parquetWriter.write(record);
