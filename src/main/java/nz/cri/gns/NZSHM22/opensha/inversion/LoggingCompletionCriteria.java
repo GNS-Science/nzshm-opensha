@@ -9,8 +9,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.*;
 
-import com.google.common.collect.ImmutableList;
-import nz.cri.gns.NZSHM22.util.DataLogger;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
@@ -21,11 +19,8 @@ import org.apache.parquet.conf.ParquetConfiguration;
 import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.LocalOutputFile;
-import org.apache.parquet.io.OutputFile;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.InversionState;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.AnnealingProgress;
@@ -39,10 +34,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.Compl
 public class LoggingCompletionCriteria implements CompletionCriteria, Closeable {
 
     protected final CompletionCriteria innerCriteria;
+    protected final String basePath;
 
-    protected InversionStateLog solutionLog;
-
-    protected LocalOutputFile outputFile;
     protected static Schema metaSchema =
             SchemaBuilder.record("Meta")
                     .fields()
@@ -53,61 +46,54 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     .requiredLong("numNonZero")
                     .endRecord();
     protected static Schema energySchema;
-    protected static Schema schema;
-    protected static ParquetWriter<GenericRecord> parquetWriter;
+    protected static Schema arraySchema = SchemaBuilder.array().items().doubleType();
+    protected static Schema solutionSchema =
+            SchemaBuilder.record("solution")
+                    .fields()
+                    .name("solution")
+                    .type(arraySchema)
+                    .noDefault()
+                    .endRecord();
+    protected static Schema misfitsSchema =
+            SchemaBuilder.record("misfits")
+                    .fields()
+                    .name("misfits")
+                    .type(arraySchema)
+                    .noDefault()
+                    .endRecord();
+    protected static Schema misfitsIneqSchema =
+            SchemaBuilder.record("misfitsIneq")
+                    .fields()
+                    .name("misfitsIneq")
+                    .type(arraySchema)
+                    .noDefault()
+                    .endRecord();
 
-    public void setParquetSchema(ImmutableList<String> energyTypes) {
-        SchemaBuilder.FieldAssembler<Schema> energyFields = SchemaBuilder.record("Energy").fields();
-        for (String energyType : energyTypes) {
-            energyFields = energyFields.requiredDouble(energyType.replaceAll("[\\W]", ""));
+    protected static ParquetWriter<GenericRecord> metaWriter;
+    protected static ParquetWriter<GenericRecord> energyWriter;
+    protected static ParquetWriter<GenericRecord> solutionWriter;
+    protected static ParquetWriter<GenericRecord> misfitsWriter;
+    protected static ParquetWriter<GenericRecord> misfitsIneqWriter;
 
-        }
-        energySchema = energyFields.endRecord();
-
-        schema =
-                SchemaBuilder.record("IterationLog")
-                        .fields()
-                        .name("meta")
-                        .type(metaSchema)
-                        .noDefault()
-                        .name("energy")
-                        .type(energySchema)
-                        .noDefault()
-                        .name("solution")
-                        .type()
-                        .array()
-                        .items()
-                        .doubleType()
-                        .noDefault()
-                        .name("misfits")
-                        .type()
-                        .nullable()
-                        .array()
-                        .items()
-                        .doubleType()
-                        .noDefault()
-                        .name("misfitsIneq")
-                        .type()
-                        .nullable()
-                        .array()
-                        .items()
-                        .doubleType()
-                        .noDefault()
-                        .endRecord();
-
+    public ParquetWriter<GenericRecord> openWriter(Schema schema, String fileName) {
         try {
+            FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
+            Path nioOutputPath = fs.getPath(basePath, fileName + ".parquet");
+            LocalOutputFile outputFile = new LocalOutputFile(nioOutputPath);
             ParquetConfiguration parquetConf = new PlainParquetConfiguration();
-            parquetWriter =
-                    AvroParquetWriter.<GenericRecord>builder(outputFile)
-                            .withSchema(schema)
-                            .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-                            .withPageRowCountLimit(1000)
-                            .withConf(parquetConf)
-                            .withCompressionCodec(CompressionCodecName.GZIP)
-                            .withDictionaryEncoding(true)
-                            .config(AvroWriteSupport.WRITE_PARQUET_UUID, "true")
-                            .build();
-        } catch (IOException x) {
+            return AvroParquetWriter.<GenericRecord>builder(outputFile)
+                    .withSchema(schema)
+                    .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+                    // 8K recommended https://parquet.apache.org/docs/file-format/configurations/
+                    .withPageSize(8 * 1024)
+                    // smaller than recommended because we've got huge arrays in the column
+                    .withRowGroupSize((long) 128 * 1024)
+                    .withConf(parquetConf)
+                    // better performance than SNAPPY
+                    .withCompressionCodec(CompressionCodecName.GZIP)
+                    .config(AvroWriteSupport.WRITE_PARQUET_UUID, "true")
+                    .build();
+        } catch (IOException | URISyntaxException x) {
             throw new RuntimeException(x);
         }
     }
@@ -124,116 +110,84 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     public LoggingCompletionCriteria(CompletionCriteria innerCriteria, String basePath, int maxMB)
             throws IOException {
         this.innerCriteria = innerCriteria;
-        this.solutionLog = new InversionStateLog(basePath, maxMB);
+        this.basePath = basePath;
         Files.createDirectories(new File(basePath).toPath());
-
-        try{
-        FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
-        Path nioOutputPath = fs.getPath(basePath, "parquet");
-        System.out.println(nioOutputPath.toAbsolutePath());
-        this.outputFile = new LocalOutputFile(nioOutputPath);
-        }catch (URISyntaxException x) {
-            throw new RuntimeException(x);
-        }
-
     }
 
     @Override
     public boolean isSatisfied(InversionState state) {
 
-        solutionLog.log(state);
+        GenericRecord metaRecord = new GenericData.Record(metaSchema);
+        metaRecord.put("iterations", state.iterations);
+        metaRecord.put("elapsedTimeMillis", state.elapsedTimeMillis);
+        metaRecord.put("numPerturbsKept", state.numPerturbsKept);
+        metaRecord.put("numWorseValuesKept", state.numWorseValuesKept);
+        metaRecord.put("numNonZero", state.numNonZero);
+
+        GenericRecord energyRecord = new GenericData.Record(energySchema);
+        for (int i = 0; i < state.energy.length; i++) {
+            energyRecord.put(i, state.energy[i]);
+        }
+
+        GenericRecord solutionRecord = new GenericData.Record(solutionSchema);
+        solutionRecord.put(
+                "solution", state.bestSolution == null ? new double[] {} : state.bestSolution);
+
+        GenericRecord misfitsRecord = new GenericData.Record(misfitsSchema);
+        misfitsRecord.put("misfits", state.misfits == null ? new double[] {} : state.misfits);
+
+        GenericRecord misfitsIneqRecord = new GenericData.Record(misfitsIneqSchema);
+        misfitsIneqRecord.put(
+                "misfitsIneq", state.misfits_ineq == null ? new double[] {} : state.misfits_ineq);
+
+        try {
+            synchronized (basePath) {
+                metaWriter.write(metaRecord);
+                energyWriter.write(energyRecord);
+                solutionWriter.write(solutionRecord);
+                misfitsWriter.write(misfitsRecord);
+                misfitsIneqWriter.write(misfitsIneqRecord);
+            }
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
 
         return innerCriteria.isSatisfied(state);
     }
 
+    public void open() {
+        metaWriter = openWriter(metaSchema, "meta");
+        energyWriter = openWriter(energySchema, "energy");
+        solutionWriter = openWriter(solutionSchema, "solution");
+        misfitsWriter = openWriter(misfitsSchema, "misfits");
+        misfitsIneqWriter = openWriter(misfitsIneqSchema, "misfits_ineq");
+    }
+
     @Override
     public void close() throws IOException {
-        solutionLog.close();
+        metaWriter.close();
+        metaWriter = null;
+        energyWriter.close();
+        energyWriter = null;
+        solutionWriter.close();
+        solutionWriter = null;
+        misfitsWriter.close();
+        misfitsWriter = null;
+        misfitsIneqWriter.close();
+        misfitsIneqWriter = null;
+        energySchema = null;
     }
 
-    public void setConstraintRanges(List<ConstraintRange> constraintRanges) {
+    public LoggingCompletionCriteria setConstraintRanges(List<ConstraintRange> constraintRanges) {
         AnnealingProgress progress = AnnealingProgress.forConstraintRanges(constraintRanges);
-        String energiesHeader = String.join(",", progress.getEnergyTypes());
-        solutionLog.addHeader("energy", energiesHeader + "\n");
-        setParquetSchema(progress.getEnergyTypes());
-    }
 
-    protected static class InversionStateLog implements Closeable {
-
-        DataLogger.MultiZipLog log;
-
-        public InversionStateLog(String basePath, int maxMB) {
-            log =
-                    new DataLogger.MultiZipLog(
-                            basePath, "inversionState", ((long) maxMB) * 1024 * 1024);
-            addHeader(
-                    "meta",
-                    "iterations,elapsedTimeMillis,numPerturbsKept,numWorseValuesKept,numNonZero\n");
+        SchemaBuilder.FieldAssembler<Schema> energyFields = SchemaBuilder.record("Energy").fields();
+        for (String energyType : progress.getEnergyTypes()) {
+            // energyType names can have brackets etc in them, which are not legal for parquet names
+            energyFields = energyFields.requiredDouble(energyType.replaceAll("[\\W]", ""));
         }
+        energySchema = energyFields.endRecord();
 
-        public void addHeader(String file, String header) {
-            log.addHeader(file, header);
-        }
-
-        public void log(InversionState state) {
-            log.nextIndex(state.iterations);
-
-            String meta =
-                    state.iterations
-                            + ","
-                            + state.elapsedTimeMillis
-                            + ","
-                            + state.numPerturbsKept
-                            + ","
-                            + state.numWorseValuesKept
-                            + ","
-                            + state.numNonZero
-                            + "\n";
-
-            log.log("meta", meta);
-            log.log("solution", state.bestSolution);
-            log.log("energy", state.energy);
-            log.log("misfits", state.misfits);
-            log.log("misfits_ineq", state.misfits_ineq);
-
-            GenericRecord energyRecord = new GenericData.Record(energySchema);
-            for (int i = 0; i < state.energy.length; i++) {
-                energyRecord.put(i, state.energy[i]);
-            }
-            GenericRecord metaRecord = new GenericData.Record(metaSchema);
-            metaRecord.put("iterations", state.iterations);
-            metaRecord.put("elapsedTimeMillis", state.elapsedTimeMillis);
-            metaRecord.put("numPerturbsKept", state.numPerturbsKept);
-            metaRecord.put("numWorseValuesKept", state.numWorseValuesKept);
-            metaRecord.put("numNonZero", state.numNonZero);
-
-            GenericRecord record = new GenericData.Record(schema);
-            record.put("meta", metaRecord);
-            record.put("energy", energyRecord);
-            record.put("solution", state.bestSolution);
-            if (state.misfits != null) {
-                record.put("misfits", state.misfits);
-            } else {
-                record.put("misfits", new double[]{});
-            }
-            if (state.misfits_ineq != null) {
-                record.put("misfitsIneq", state.misfits_ineq);
-            } else {
-                record.put("misfitsIneq", new double[]{});
-            }
-
-
-            try {
-                parquetWriter.write(record);
-            } catch (IOException x) {
-                throw new RuntimeException(x);
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            log.close();
-            parquetWriter.close();
-        }
+        return this;
     }
 }

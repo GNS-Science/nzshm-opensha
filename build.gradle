@@ -22,7 +22,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:3.5.13'
     implementation 'org.apache.parquet:parquet-avro:1.15.1'
 
-    implementation("org.apache.hadoop:hadoop-common:3.3.5") {
+    implementation("org.apache.hadoop:hadoop-common:3.4.1") {
         exclude group: 'org.apache.curator', module: 'curator-recipes'
         exclude group: 'org.apache.kerby', module: 'kerb-core'
         exclude group: 'org.apache.avro', module: 'avro'

@@ -857,7 +857,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
         if (completionCriteria instanceof LoggingCompletionCriteria) {
             ((LoggingCompletionCriteria) completionCriteria)
-                    .setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+                    .setConstraintRanges(inversionInputGenerator.getConstraintRowRanges())
+                    .open();
         }
 
         tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
