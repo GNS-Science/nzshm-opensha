@@ -114,6 +114,6 @@ public class LoggingCompletionCriteriaTest {
 
         assertArrayEquals(new double[] {9, 10, 11}, (double[]) actual.get("solution"), 0.00000001);
 
- 
+
     }
 }

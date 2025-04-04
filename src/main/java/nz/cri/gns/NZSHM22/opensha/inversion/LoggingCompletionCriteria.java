@@ -30,6 +30,15 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.Compl
  * Can be used to wrap a CompletionCriteria to log all InversionState instances that are passed in.
  * Note that this will not work as a sub CompletionCriteria if the inner criteria relies on
  * iteration count. Logs will be broken up into zip files.
+ *
+ * How to use Avro
+ * https://www.jeronimo.dev/working-with-parquet-files-in-java-using-avro/
+ * https://avro.apache.org/docs/++version++/getting-started-java/
+ * Minimal Avro:
+ * https://blakesmith.me/2024/10/05/how-to-use-parquet-java-without-hadoop.html
+ * 
+ *
+ *
  */
 public class LoggingCompletionCriteria implements CompletionCriteria, Closeable {
 
