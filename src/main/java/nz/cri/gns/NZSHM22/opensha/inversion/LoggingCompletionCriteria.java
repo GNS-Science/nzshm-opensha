@@ -3,12 +3,11 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.*;
-
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
