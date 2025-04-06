@@ -29,16 +29,12 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.Compl
 /**
  * Can be used to wrap a CompletionCriteria to log all InversionState instances that are passed in.
  * Note that this will not work as a sub CompletionCriteria if the inner criteria relies on
- * iteration count. Logs will be broken up into zip files.
+ * iteration count. Logs will be written as parquet files.
  *
- * How to use Avro
+ * <p>Implementation hints: How to use Avro
  * https://www.jeronimo.dev/working-with-parquet-files-in-java-using-avro/
- * https://avro.apache.org/docs/++version++/getting-started-java/
- * Minimal Avro:
+ * https://avro.apache.org/docs/++version++/getting-started-java/ Minimal Avro:
  * https://blakesmith.me/2024/10/05/how-to-use-parquet-java-without-hadoop.html
- * 
- *
- *
  */
 public class LoggingCompletionCriteria implements CompletionCriteria, Closeable {
 
@@ -46,7 +42,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     protected final String basePath;
 
     protected static Schema metaSchema =
-            SchemaBuilder.record("Meta")
+            SchemaBuilder.record("meta")
                     .fields()
                     .requiredLong("iterations")
                     .requiredLong("elapsedTimeMillis")
@@ -54,7 +50,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     .requiredLong("numWorseValuesKept")
                     .requiredLong("numNonZero")
                     .endRecord();
-    protected static Schema energySchema;
+    protected Schema energySchema;
     protected static Schema arraySchema = SchemaBuilder.array().items().doubleType();
     protected static Schema solutionSchema =
             SchemaBuilder.record("solution")
@@ -78,11 +74,11 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     .noDefault()
                     .endRecord();
 
-    protected static ParquetWriter<GenericRecord> metaWriter;
-    protected static ParquetWriter<GenericRecord> energyWriter;
-    protected static ParquetWriter<GenericRecord> solutionWriter;
-    protected static ParquetWriter<GenericRecord> misfitsWriter;
-    protected static ParquetWriter<GenericRecord> misfitsIneqWriter;
+    protected ParquetWriter<GenericRecord> metaWriter;
+    protected ParquetWriter<GenericRecord> energyWriter;
+    protected ParquetWriter<GenericRecord> solutionWriter;
+    protected ParquetWriter<GenericRecord> misfitsWriter;
+    protected ParquetWriter<GenericRecord> misfitsIneqWriter;
 
     public ParquetWriter<GenericRecord> openWriter(Schema schema, String fileName) {
         try {
@@ -175,22 +171,16 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     @Override
     public void close() throws IOException {
         metaWriter.close();
-        metaWriter = null;
         energyWriter.close();
-        energyWriter = null;
         solutionWriter.close();
-        solutionWriter = null;
         misfitsWriter.close();
-        misfitsWriter = null;
         misfitsIneqWriter.close();
-        misfitsIneqWriter = null;
-        energySchema = null;
     }
 
     public LoggingCompletionCriteria setConstraintRanges(List<ConstraintRange> constraintRanges) {
         AnnealingProgress progress = AnnealingProgress.forConstraintRanges(constraintRanges);
 
-        SchemaBuilder.FieldAssembler<Schema> energyFields = SchemaBuilder.record("Energy").fields();
+        SchemaBuilder.FieldAssembler<Schema> energyFields = SchemaBuilder.record("energy").fields();
         for (String energyType : progress.getEnergyTypes()) {
             // energyType names can have brackets etc in them, which are not legal for parquet names
             energyFields = energyFields.requiredDouble(energyType.replaceAll("[\\W]", ""));
