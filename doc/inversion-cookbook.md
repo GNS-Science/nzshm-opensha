@@ -231,6 +231,25 @@ If you want to log at each iteration step, make each round exactly one iteration
         runner.setInversionAveraging(false);
 ```
 
+Logs will be stored in the `parquet` format and can for example be read with `pyarrow` in `Python`:
+
+```Python
+import pyarrow.parquet as pq
+
+parquet_file = pq.ParquetFile('/tmp/stateLog/misfits.parquet')
+
+print(parquet_file.metadata)
+print(parquet_file.schema)
+
+def parquet_iterator(parquet_file):
+  for record_batch in parquet_file.iter_batches(batch_size=100):
+    for d in record_batch.to_pylist():
+      yield d
+
+for row in parquet_iterator(parquet_file):
+  print(row)
+```
+
 
 # Oddness:
 
