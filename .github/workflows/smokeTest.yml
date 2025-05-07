@@ -46,3 +46,15 @@ jobs:
           cd main
           chmod +x gradlew
           ./gradlew smokeTest
+
+      #----------------------------------------------
+      #       Post error msg to Slack for failed scheduled builds
+      #----------------------------------------------
+      - name: Post a Slack message if build failed
+        uses: slackapi/slack-github-action@v2.0.0
+        if: failure() # && github.event_name == 'schedule'
+        with:
+          webhook: ${{ secrets.SCHEDULED_GITHUB_SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "⚠️*scheduled smoke tests: ${{ job.status }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.event.repository.name }}>"
