@@ -41,6 +41,12 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      - name: debug folder structure
+        run: |
+          pwd
+          ls -la
+          ls -la opensha
+
       - name: Build with Gradle
         run: |
           cd main
@@ -52,7 +58,7 @@ jobs:
       #----------------------------------------------
       - name: Post a Slack message if build failed
         uses: slackapi/slack-github-action@v2.0.0
-      #  if: failure() # && github.event_name == 'schedule'
+        if: failure() || success() # && github.event_name == 'schedule'
         with:
           webhook: ${{ secrets.SCHEDULED_GITHUB_SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
