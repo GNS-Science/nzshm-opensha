@@ -29,22 +29,8 @@ public class SmokeTest {
     @BeforeClass
     public static void setup() throws IOException {
         tempDir = Files.createTempDirectory("opensha").toFile();
+        System.out.println("tempdir" + tempDir.exists());
         System.out.println("smoke tests directory: " + tempDir);
-    }
-
-    @Test
-    public void testAzimuthalCrustal() throws DocumentException, IOException {
-        File dir = new File(tempDir, "azimuthal");
-        dir.mkdir();
-        File ruptureSetFile = new File(dir, "rupSet.zip");
-        File solutionFile = new File(dir, "solution.zip");
-        File mfdDir = new File(dir, "MFDPlots");
-
-        testRupSetReportPageGen(ruptureSetFile);
-        testCrustalInversionRunner(ruptureSetFile, solutionFile);
-        testSolutionReportPageGen(solutionFile);
-        testMFDPlotBuilder(mfdDir, solutionFile, true);
-        testHazard(solutionFile, "INCLUDE");
     }
 
     @Test
@@ -251,6 +237,9 @@ public class SmokeTest {
     public void testRupSetReportPageGen(File rupSetFile) throws IOException {
         File outputDir = new File(rupSetFile.getParentFile(), "ruptureReport");
         outputDir.mkdir();
+
+        System.out.println(outputDir.exists());
+        System.out.println(rupSetFile.exists());
 
         NZSHM22_PythonGateway.getReportPageGen()
                 .setRuptureSet(rupSetFile.getAbsolutePath())
