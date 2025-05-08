@@ -52,7 +52,7 @@ jobs:
       #----------------------------------------------
       - name: Post a Slack message if build failed
         uses: slackapi/slack-github-action@v2.0.0
-        if: failure() || true # && github.event_name == 'schedule'
+        if: failure() && github.event_name == 'schedule'
         with:
           webhook: ${{ secrets.SCHEDULED_GITHUB_SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
