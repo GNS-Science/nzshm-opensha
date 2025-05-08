@@ -29,7 +29,6 @@ public class SmokeTest {
     @BeforeClass
     public static void setup() throws IOException {
         tempDir = Files.createTempDirectory("opensha").toFile();
-        System.out.println("tempdir" + tempDir.exists());
         System.out.println("smoke tests directory: " + tempDir);
     }
 
@@ -68,10 +67,6 @@ public class SmokeTest {
         assertEquals(133, rupSet.getSlipRateForAllSections().length);
         assertEquals(133, rupSet.getSlipRateStdDevForAllSections().length);
 
-
-        System.out.println( rupSet.getSlipRateForSection(0));
-        System.out.println( rupSet.getSlipRateStdDevForSection(0));
-        System.out.println(rupSet.getMagForRup(0));
 
         // sanity check first rupture
         assertEquals("Acton", rupSet.getFaultSectionData(0).getParentSectionName());
@@ -242,9 +237,6 @@ public class SmokeTest {
     public void testRupSetReportPageGen(File rupSetFile) throws IOException {
         File outputDir = new File(rupSetFile.getParentFile(), "ruptureReport");
         outputDir.mkdir();
-
-        System.out.println(outputDir.exists());
-        System.out.println(rupSetFile.exists());
 
         NZSHM22_PythonGateway.getReportPageGen()
                 .setRuptureSet(rupSetFile.getAbsolutePath())

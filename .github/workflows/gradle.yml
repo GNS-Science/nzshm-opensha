@@ -21,7 +21,7 @@ jobs:
     steps:
 
     - name: Clone opensha fork
-      if:  github.event_name != 'schedule'
+      if: github.event_name != 'schedule'
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
@@ -29,7 +29,7 @@ jobs:
         path: opensha
 
     - name: Clone opensha
-      if:  github.event_name != 'schedule'
+      if: github.event_name != 'schedule'
       uses: actions/checkout@v2
       with:
         repository: opensha/opensha
