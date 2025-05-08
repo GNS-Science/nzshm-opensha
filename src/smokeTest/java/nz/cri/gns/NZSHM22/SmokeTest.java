@@ -67,7 +67,6 @@ public class SmokeTest {
         assertEquals(133, rupSet.getSlipRateForAllSections().length);
         assertEquals(133, rupSet.getSlipRateStdDevForAllSections().length);
 
-
         // sanity check first rupture
         assertEquals("Acton", rupSet.getFaultSectionData(0).getParentSectionName());
         assertEquals(2.0e-4, rupSet.getSlipRateForSection(0), 0.0000000001);
