@@ -167,6 +167,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
         Preconditions.checkState(this.downDipFile == null);
+        Preconditions.checkState((!faultModel.isCrustal()) || faultModel.getTvzDomain() != null);
         this.faultModel = faultModel;
         return this;
     }

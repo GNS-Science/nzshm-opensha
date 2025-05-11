@@ -16,15 +16,15 @@ jobs:
     steps:
 
       - name: Clone opensha fork
-        if: github.event.schedule != '20 15 * * 0'
+        if: github.event_name != 'schedule'
         uses: actions/checkout@v2
         with:
           repository: GNS-Science/opensha
-          ref: fix/rup-normalization
+          ref: fix/rup-normalization-2024
           path: opensha
 
       - name: Clone opensha
-        if: github.event.schedule == '20 15 * * 0'
+        if: github.event_name == 'schedule'
         uses: actions/checkout@v2
         with:
           repository: opensha/opensha
@@ -46,3 +46,15 @@ jobs:
           cd main
           chmod +x gradlew
           ./gradlew smokeTest
+
+      #----------------------------------------------
+      #       Post error msg to Slack for failed scheduled builds
+      #----------------------------------------------
+      - name: Post a Slack message if build failed
+        uses: slackapi/slack-github-action@v2.0.0
+        if: failure() && github.event_name == 'schedule'
+        with:
+          webhook: ${{ secrets.SCHEDULED_GITHUB_SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "⚠️*${{ github.event.repository.name }}: ${{ job.status }}*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"

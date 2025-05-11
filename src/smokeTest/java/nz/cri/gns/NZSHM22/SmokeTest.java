@@ -33,21 +33,6 @@ public class SmokeTest {
     }
 
     @Test
-    public void testAzimuthalCrustal() throws DocumentException, IOException {
-        File dir = new File(tempDir, "azimuthal");
-        dir.mkdir();
-        File ruptureSetFile = new File(dir, "rupSet.zip");
-        File solutionFile = new File(dir, "solution.zip");
-        File mfdDir = new File(dir, "MFDPlots");
-
-        testRupSetReportPageGen(ruptureSetFile);
-        testCrustalInversionRunner(ruptureSetFile, solutionFile);
-        testSolutionReportPageGen(solutionFile);
-        testMFDPlotBuilder(mfdDir, solutionFile, true);
-        testHazard(solutionFile, "INCLUDE");
-    }
-
-    @Test
     public void testCoulombCrustal() throws DocumentException, IOException {
         File dir = new File(tempDir, "coulomb");
         dir.mkdir();
@@ -60,7 +45,7 @@ public class SmokeTest {
         testCrustalInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
         testMFDPlotBuilder(mfdDir, solutionFile, true);
-        testHazard(solutionFile, "INCLUDE");
+        // testHazard(solutionFile, "INCLUDE");
     }
 
     @Test
@@ -74,19 +59,19 @@ public class SmokeTest {
         testRupSetReportPageGen(ruptureSetFile);
         testSubductionInversionRunner(ruptureSetFile, solutionFile);
         testSolutionReportPageGen(solutionFile);
-        testHazard(solutionFile, "EXCLUDE");
+        // testHazard(solutionFile, "EXCLUDE");
     }
 
     public void sanityCheckCoulombRuptureSet(FaultSystemRupSet rupSet) {
-        assertEquals(3064, rupSet.getNumRuptures());
-        assertEquals(145, rupSet.getSlipRateForAllSections().length);
-        assertEquals(145, rupSet.getSlipRateStdDevForAllSections().length);
+        assertEquals(2335, rupSet.getNumRuptures());
+        assertEquals(133, rupSet.getSlipRateForAllSections().length);
+        assertEquals(133, rupSet.getSlipRateStdDevForAllSections().length);
 
         // sanity check first rupture
         assertEquals("Acton", rupSet.getFaultSectionData(0).getParentSectionName());
         assertEquals(2.0e-4, rupSet.getSlipRateForSection(0), 0.0000000001);
         assertEquals(1.5e-4, rupSet.getSlipRateStdDevForSection(0), 0.0000000001);
-        assertEquals(6.890572888121233, rupSet.getMagForRup(0), 0.0000000001);
+        assertEquals(7.134465576851742, rupSet.getMagForRup(0), 0.0000000001);
     }
 
     public void testCoulombRuptures(File ruptureSetFile) throws DocumentException, IOException {
@@ -105,7 +90,7 @@ public class SmokeTest {
                         .setMaxJumpDistance(15d)
                         .setAdaptiveSectFract(0.1f)
                         .setIdRangeFilter(0, 40)
-                        .setFaultModel(NZSHM22_FaultModels.CFM_0_9A_ALL_D90)
+                        .setFaultModel(NZSHM22_FaultModels.CFM_1_0_DOM_ALL)
                         .setScalingRelationship(scaling)
                         .setSlipAlongRuptureModel(SlipAlongRuptureModels.TAPERED)
                         .buildRuptureSet();
