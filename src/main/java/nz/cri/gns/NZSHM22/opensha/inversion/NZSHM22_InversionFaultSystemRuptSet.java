@@ -80,7 +80,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
                 rupSet.getFaultSectionDataList(),
                 parameters.getBufferSize(),
                 parameters.getMinBufferSize(),
-                new NewZealandRegions.NZ_RECTANGLE_GRIDDED());
+                NewZealandRegions.NZ);
     }
 
     /**

@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.data.function.DiscretizedFunc;
@@ -85,9 +87,6 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
                         1.4943934978361995E-11);
         assertEquals(expected, actual.yValues());
 
-        // the following section should be uncommented when
-        // https://github.com/GNS-Science/nzshm-opensha/issues/359 is fixed
-        /*
         builder = new NZSHM22_HazardCalculatorBuilder();
         builder.setSolutionFile(getSolution());
         builder.setBackgroundOption("INCLUDE");
@@ -106,7 +105,7 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
         for(int i =0;i<expected.size(); i++){
             assertEquals(expected.get(i), actual.yValues().get(i), 0.000001);
         }
-        */
+
 
     }
 }
