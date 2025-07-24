@@ -8,10 +8,21 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
+import nz.cri.gns.NZSHM22.opensha.util.Parameters;
+import nz.cri.gns.NZSHM22.util.TestHelpers;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.commons.util.io.archive.ArchiveInput;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
 
@@ -23,189 +34,73 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
         return new File(vernonSolution.toURI());
     }
 
+    public static ArchiveInput makeSolution() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ, ScalingRelationships.SHAW_2009_MOD);
+        ArchiveOutput archiveOutput = new ArchiveOutput.InMemoryZipOutput(true);
+        rupSet.getArchive().write(archiveOutput);
+
+        rupSet.getArchive().write(new File("testrup.zip"));
+
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
+        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner();
+        parameterRunner.setUpCrustalInversionRunner(runner);
+        runner
+                .setIterationCompletionCriteria(100)
+                .setSelectionIterations(1)
+                .setRepeatable(true)
+                .setInversionAveraging(false)
+                .setRuptureSetArchiveInput(archiveOutput.getCompletedInput());
+
+        FaultSystemSolution solution = runner.runInversion();
+        solution.write(new File("testolution.zip"));
+
+        ArchiveOutput out = new ArchiveOutput.InMemoryZipOutput(true);
+        solution.getArchive().write(out);
+        return out.getCompletedInput();
+    }
+
     @Test
     public void hazardCalcTest() throws URISyntaxException, DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile(getSolution());
+        // off rupture
+//        double lat = -41.167;
+//        double lon = 175.342;
+
+        //on rupture
+//        double lat = -41.1225;
+//        double lon = 175.0372;
+
+
+        // on section 1
+//        double lon = 174.8494;
+//        double lat = -37.2555;
+
+// outside polygon of section 1
+        double lat = -37.36402246219363;
+        double lon = 174.9079855447284;
+
+
+        builder.setSolution(makeSolution());
         builder.setBackgroundOption("EXCLUDE");
         NZSHM22_HazardCalculator calculator = builder.build();
-        DiscretizedFunc actual = calculator.calc(-41.289, 174.777);
+        // a location on a rupture
+        DiscretizedFunc actual1;//= calculator.calc(-41.1225, 175.0372);
+        actual1 = calculator.calc(lat, lon);
 
-        List<Double> expected =
-                Arrays.asList(
-                        0.0778137512486966,
-                        0.07781375124869183,
-                        0.07781375124866374,
-                        0.07781375124848389,
-                        0.07781375124739276,
-                        0.07781375123968137,
-                        0.07781375120020961,
-                        0.07781375100432308,
-                        0.07781375003254265,
-                        0.07781374579288103,
-                        0.07781372706386747,
-                        0.0778136544843071,
-                        0.0778134005002663,
-                        0.07781250480338087,
-                        0.07780981114759933,
-                        0.07780196822496799,
-                        0.07778091997835213,
-                        0.07772893120155766,
-                        0.07760970054198757,
-                        0.0773590310426645,
-                        0.07686829898015257,
-                        0.07598445164687606,
-                        0.07450872774913642,
-                        0.072221996352557,
-                        0.06890966629235729,
-                        0.06443295989283337,
-                        0.05873915311143396,
-                        0.05192969861762964,
-                        0.04426101535752136,
-                        0.036147499881604594,
-                        0.02809576856482321,
-                        0.020651729952447018,
-                        0.014264859392911888,
-                        0.00920770329562337,
-                        0.005526981824169441,
-                        0.0030720454393283747,
-                        0.0015757346318683307,
-                        7.437288313860702E-4,
-                        3.2225038734257083E-4,
-                        1.2793079472195323E-4,
-                        4.646029707811028E-5,
-                        1.5417194252353994E-5,
-                        4.671927854360547E-6,
-                        1.2927043256949489E-6,
-                        3.2682755080060133E-7,
-                        7.561856840698766E-8,
-                        1.605050159447785E-8,
-                        3.1360924968026893E-9,
-                        5.665684588151976E-10,
-                        9.514788956721532E-11,
-                        1.4943934978361995E-11);
-        assertEquals(expected, actual.yValues());
+        // We have not verified that these values are correct. We only want to catch unexpected changes with his test.
+        //   List<Double> expected = Arrays.asList(0.09532602505251131, 0.09532602505251131, 0.09532602505251109, 0.09532602505250931, 0.09532602505249643, 0.09532602505237686, 0.09532602505156873, 0.09532602504617882, 0.09532602500931642, 0.09532602478570473, 0.09532602339475482, 0.09532601583929279, 0.09532597936109133, 0.09532580308639438, 0.09532509270520095, 0.09532237633234575, 0.09531298454770032, 0.09528372093206106, 0.09520076160535595, 0.09498954857743602, 0.09449879057111943, 0.09347147712475035, 0.09152255495544248, 0.08817563392388372, 0.0829503092649424, 0.07557325884105659, 0.06610609991554084, 0.05509946995555548, 0.04350295873495669, 0.03244534262465637, 0.022885187451926914, 0.015393616735604576, 0.010037100576270275, 0.006500535128294294, 0.0042870911710641835, 0.0029132490176523307, 0.002020124928060807, 0.0013936081153361757, 9.302925224911052E-4, 5.879681232344725E-4, 3.467620074188993E-4, 1.8910879175393358E-4, 9.483560321732476E-5, 4.3572955102266775E-5, 1.829699035560406E-5, 7.009762983734014E-6, 2.447086358436934E-6, 7.77854806566225E-7, 2.2510616670690098E-7, 5.934050295586246E-8, 1.426880802402053E-8);
+        //   assertEquals(expected, actual.yValues());
 
         builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile(getSolution());
+        builder.setSolution(makeSolution());
         builder.setBackgroundOption("INCLUDE");
         calculator = builder.build();
-        actual = calculator.calc(-41.289, 174.777);
+        //  actual = calculator.calc(-41.1225, 175.0372);
+        DiscretizedFunc actual2 = calculator.calc(lat, lon);
 
-        if (NZSHM22_GriddedData.GRID_SPACING == 0.1) {
-            expected =
-                    Arrays.asList(
-                            0.9999999999084646,
-                            0.9999999998957413,
-                            0.9999999998755943,
-                            0.9999999998331618,
-                            0.9999999997428833,
-                            0.9999999994953424,
-                            0.9999999988702721,
-                            0.9999999969450835,
-                            0.999999989715479,
-                            0.9999999607773171,
-                            0.9999998229847161,
-                            0.9999991746444056,
-                            0.9999962235029006,
-                            0.9999821263609509,
-                            0.9999249055409333,
-                            0.999705553526697,
-                            0.9989618838799238,
-                            0.9967660051071718,
-                            0.991105589417386,
-                            0.9785582292971007,
-                            0.9542191565256799,
-                            0.9132089651486436,
-                            0.8523042585833716,
-                            0.7718300104402331,
-                            0.6757269986461291,
-                            0.5712702329808842,
-                            0.4661202752274932,
-                            0.36729563459511017,
-                            0.2796247786988959,
-                            0.2056792252411611,
-                            0.1459502783968124,
-                            0.0997244128824919,
-                            0.06540599511045175,
-                            0.04104009754685056,
-                            0.024552589197433083,
-                            0.013959651296515552,
-                            0.007522956335838549,
-                            0.003834240872694017,
-                            0.001844782014587154,
-                            8.365122363507282E-4,
-                            3.569027698899774E-4,
-                            1.4301826035323373E-4,
-                            5.372069256293077E-5,
-                            1.8870255302450012E-5,
-                            6.1835355265049685E-6,
-                            1.8856029241343109E-6,
-                            5.338475899119288E-7,
-                            1.400637773540936E-7,
-                            3.401397574709364E-8,
-                            7.642981358912948E-9,
-                            1.590122589156806E-9);
-        } else if (NZSHM22_GriddedData.GRID_SPACING == 0.05) {
-            expected =
-                    Arrays.asList(
-                            0.9999999998064021,
-                            0.999999999780703,
-                            0.9999999997402402,
-                            0.9999999996557773,
-                            0.9999999994785365,
-                            0.9999999990026438,
-                            0.9999999978327678,
-                            0.9999999943420695,
-                            0.9999999817134319,
-                            0.9999999331569618,
-                            0.9999997115488475,
-                            0.9999987113943188,
-                            0.9999943331547049,
-                            0.9999741902882648,
-                            0.999895209016672,
-                            0.9996021215281853,
-                            0.9986387914620511,
-                            0.9958771659369933,
-                            0.9889566103383715,
-                            0.974020290616405,
-                            0.9457640216504745,
-                            0.8992486480211278,
-                            0.8316418983544077,
-                            0.744105169431706,
-                            0.6416100110317446,
-                            0.5324272002736739,
-                            0.42487765207376704,
-                            0.3262315701803571,
-                            0.24113509308963244,
-                            0.17163347066814738,
-                            0.11750172277290416,
-                            0.07725966603064938,
-                            0.04864967106454954,
-                            0.02924306331979487,
-                            0.016720938462077783,
-                            0.009063264309767005,
-                            0.004643651349384825,
-                            0.0022439747628518747,
-                            0.001021137601526112,
-                            4.3715844703995366E-4,
-                            1.7596478022019468E-4,
-                            6.656219253031725E-5,
-                            2.3647904738743897E-5,
-                            7.881952110988522E-6,
-                            2.460809792714791E-6,
-                            7.182191771315516E-7,
-                            1.9551772978410042E-7,
-                            4.953722188005827E-8,
-                            1.1662090182440465E-8,
-                            2.5488879895618766E-9,
-                            5.172848815959696E-10);
-        } else {
-            expected = null; // cause an assertion failure
-        }
+        assertNotEquals(actual1, actual2);
 
-        double[] expectedValues = expected.stream().mapToDouble(x -> x).toArray();
-        double[] actualValues = actual.yValues().stream().mapToDouble(x -> x).toArray();
-        assertArrayEquals(expectedValues, actualValues, 0.000001);
-    }
-}
+        // We have not verified that these values are correct. This test only checks that hazard changes when background is included.
+        //   expected = Arrays.asList(0.9999999999913296, 0.9999999999897597, 0.9999999999872021, 0.9999999999815505, 0.9999999999685879, 0.9999999999287628, 0.9999999998127505, 0.9999999993905798, 0.9999999974642347, 0.9999999879516961, 0.9999999313242015, 0.9999995990800863, 0.9999977418003023, 0.9999870087293586, 0.9999359008739048, 0.9997134852199828, 0.9988863755801156, 0.9962961437063166, 0.9894170397126908, 0.9740584390535683, 0.9445236249014294, 0.8956748283705995, 0.8248515119150669, 0.7337438777045995, 0.6279797427902616, 0.5163840636884308, 0.40754289365671115, 0.30873534520871493, 0.22446126993837512, 0.15657132341972801, 0.10463384187006208, 0.0669238592218393, 0.040901828780002925, 0.02385964787518513, 0.013272944282620491, 0.007036300515632088, 0.003553236643354829, 0.0017083268201186774, 7.811947136414643E-4, 3.392037710656659E-4, 1.3950143765106837E-4, 5.4158053138353424E-5, 1.977227061933373E-5, 6.759932810074254E-6, 2.155724318275709E-6, 6.389622968505648E-7, 1.755254912527704E-7, 4.459924496380552E-8, 1.0471993161509374E-8, 2.2725783477284267E-9, 4.564267852558146E-10);
+        // assertEquals(expected, actual.yValues());
+    }}

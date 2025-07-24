@@ -105,6 +105,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
                         .getOnFaultSubSeisMFDs()
                         .getAll();
 
+        System.out.println(subSeisMFD_list.size());
+
         sectSubSeisMFDs = Maps.newHashMap();
         List<? extends FaultSection> faults = ifss.getRupSet().getFaultSectionDataList();
         for (int i = 0; i < faults.size(); i++) {
