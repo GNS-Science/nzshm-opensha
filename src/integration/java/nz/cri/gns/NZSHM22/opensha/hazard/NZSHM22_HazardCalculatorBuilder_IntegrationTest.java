@@ -132,6 +132,7 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
                         3.2107060154995537E-7,
                         7.46043127275442E-8,
                         1.586735576264431E-8);
+
         assertEquals(expected, actual1.yValues());
 
         builder = new NZSHM22_HazardCalculatorBuilder();
@@ -198,6 +199,8 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
                         3.216470756406409E-7,
                         7.472612262304779E-8,
                         1.5891202242990232E-8);
+        System.out.println(actual2.yValues());
+        System.out.println("helloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
         assertEquals(expected, actual2.yValues());
     }
 }
