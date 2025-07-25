@@ -79,8 +79,8 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
 
         // We have not verified that these values are correct. We only want to catch unexpected
         // changes with his test.
-        List<Double> expected =
-                Arrays.asList(
+        double[] expected =
+                new double[]{
                         0.0315352306268023,
                         0.0315352306268023,
                         0.0315352306268023,
@@ -131,9 +131,9 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
                         1.2613583006970686E-6,
                         3.2107060154995537E-7,
                         7.46043127275442E-8,
-                        1.586735576264431E-8);
+                        1.586735576264431E-8};
 
-        assertEquals(expected, actual1.yValues());
+        assertArrayEquals(expected, actual1.yValues().stream().mapToDouble(v->v).toArray(), 0.000000001);
 
         builder = new NZSHM22_HazardCalculatorBuilder();
         builder.setSolution(makeSolution());
@@ -147,7 +147,7 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
         // We have not verified that these values are correct. This test only checks that hazard
         // changes when background is included.
         expected =
-                Arrays.asList(
+                new double[]{
                         0.9987056924065442,
                         0.9986350386845625,
                         0.9985330863785602,
@@ -198,9 +198,9 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
                         1.2638831792255445E-6,
                         3.216470756406409E-7,
                         7.472612262304779E-8,
-                        1.5891202242990232E-8);
+                        1.5891202242990232E-8};
         System.out.println(actual2.yValues());
         System.out.println("helloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
-        assertEquals(expected, actual2.yValues());
+        assertArrayEquals(expected, actual2.yValues().stream().mapToDouble(v->v).toArray(), 0.00000001);
     }
 }
