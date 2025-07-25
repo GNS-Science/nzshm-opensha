@@ -70,7 +70,9 @@ public class NZSHM22_LogicTreeBranch extends LogicTreeBranch<LogicTreeNode> {
         branch.setValue(scalingRelationship);
         branch.setValue(
                 new NZSHM22_Regions(
-                        new NewZealandRegions.NZ_RECTANGLE_SANS_TVZ_GRIDDED(), // oakley fixme: sans must be based on test
+                        new NewZealandRegions
+                                .NZ_RECTANGLE_SANS_TVZ_GRIDDED(), // oakley fixme: sans must be
+                        // based on test
                         new NewZealandRegions.NZ_TVZ_GRIDDED()));
         return branch;
     }

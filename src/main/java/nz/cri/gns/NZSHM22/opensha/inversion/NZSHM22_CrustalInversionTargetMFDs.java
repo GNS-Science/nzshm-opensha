@@ -437,7 +437,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = new ArrayList<>();
         subSeismoOnFaultMFD_List.addAll(sansTvz.subSeismoOnFaultMFD_List);
         if (!tvz.ignore) {
-            // oakley XXX this is potentially wrong because mfds should be ordered by section id. Have not yet
+            // oakley XXX this is potentially wrong because mfds should be ordered by section id.
+            // Have not yet
             // investigated if this actually has any consequences for us
             subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
         }
