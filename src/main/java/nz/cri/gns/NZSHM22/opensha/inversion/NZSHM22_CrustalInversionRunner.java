@@ -6,6 +6,7 @@ import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
+import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;

@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
@@ -181,13 +184,16 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                             uncertainties));
         }
 
-        //        geoJson.toJSON("paleoRates.geojson");
-        //        for(String section : doubleUps.keySet()){
-        //            if(doubleUps.get(section) > 1){
-        //                System.out.println("subsection " + section + " has " +
-        // doubleUps.get(section) + " paleo sites.");
-        //            }
-        //        }
+        List<String> doubleUpStrings = new ArrayList<>();
+        for(String section : doubleUps.keySet()){
+            if(doubleUps.get(section) > 1){
+                doubleUpStrings.add(
+                        "- " + section + " has " + doubleUps.get(section) + " paleo sites.");
+            }
+        }
+        String doubleUpString = !doubleUpStrings.isEmpty() ? "### Double-ups: \n"+ String.join("\n", doubleUpStrings) : "";
+        JupyterLogger.logger().addMarkDown("## Paleo Rates\nPaleo rate locations and their matching fault section.\n"+ doubleUpString);
+        JupyterLogger.logger().addMap("paleoRatesMatches", geoJson.toJSON());
 
         return paleoRateConstraints;
     }
