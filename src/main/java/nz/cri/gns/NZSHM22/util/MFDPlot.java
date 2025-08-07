@@ -43,17 +43,6 @@ public class MFDPlot {
         File nuclCmlSubDir = new File(dir, "nucleation_cumulative");
         if (!nuclCmlSubDir.exists()) nuclCmlSubDir.mkdir();
 
-        if (parents == null) {
-            parents = new HashMap<>();
-            for (FaultSection sect : sol.getRupSet().getFaultSectionDataList()) {
-                if (!parents.containsKey(sect.getParentSectionName())) {
-                    parents.put(
-                            sect.getParentSectionName(),
-                            Sets.newHashSet(sect.getParentSectionId()));
-                }
-            }
-        }
-
         // MFD extents
         double minMag = 5.05;
         double maxMag = 9.05;
