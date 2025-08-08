@@ -8,6 +8,7 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.commons.util.DataUtils;
@@ -54,6 +55,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
     protected double mfdMax = 8.45;
     protected int mfdNum = 35;
 
+    List<? extends FaultSection> mfdFaultSections;
+
     /**
      * Options:
      *
@@ -86,6 +89,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
         polyMgr = ifss.getRupSet().getModule(PolygonFaultGridAssociations.class);
 
+        mfdFaultSections =
+                NZSHM22_InversionFaultSystemRuptSet.getMFDFaultSections(ifss.getRupSet());
+
         System.out.println("   initSectionMFDs() ...");
         initSectionMFDs(ifss);
         System.out.println("   initNodeMFDs() ...");
@@ -106,9 +112,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
                         .getAll();
 
         sectSubSeisMFDs = Maps.newHashMap();
-        List<? extends FaultSection> faults = ifss.getRupSet().getFaultSectionDataList();
-        for (int i = 0; i < faults.size(); i++) {
-            sectSubSeisMFDs.put(faults.get(i).getSectionId(), subSeisMFD_list.get(i));
+        for (int i = 0; i < mfdFaultSections.size(); i++) {
+            sectSubSeisMFDs.put(mfdFaultSections.get(i).getSectionId(), subSeisMFD_list.get(i));
         }
     }
 
@@ -119,7 +124,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
      */
     protected void initNodeMFDs(FaultSystemSolution ifss) {
         nodeSubSeisMFDs = Maps.newHashMap();
-        for (FaultSection sect : ifss.getRupSet().getFaultSectionDataList()) {
+
+        for (FaultSection sect : mfdFaultSections) {
             int id = sect.getSectionId();
             IncrementalMagFreqDist sectSubSeisMFD = sectSubSeisMFDs.get(id);
             Map<Integer, Double> nodeFractions = polyMgr.getNodeFractions(id);

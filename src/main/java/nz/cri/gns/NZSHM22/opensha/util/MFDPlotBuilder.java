@@ -46,7 +46,7 @@ public class MFDPlotBuilder {
     }
 
     public void plot() throws IOException {
-        HashMap<String, Set<Integer>> parentSections = new HashMap<>();
+        HashMap<String, Set<Integer>> parentSections = null;
         if (faultModel == null) {
             NZSHM22_LogicTreeBranch branch =
                     solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
@@ -55,13 +55,16 @@ public class MFDPlotBuilder {
             }
         }
         if (faultModel != null) {
+            parentSections = new HashMap<>();
             Map<String, List<Integer>> namedFaultsMap = faultModel.getNamedFaultsMapAlt();
             if (namedFaultsMap != null) {
                 for (String name : namedFaultsMap.keySet()) {
                     parentSections.put(name, Sets.newHashSet(namedFaultsMap.get(name)));
                 }
             }
-        } else {
+        }
+        if (parentSections == null) {
+            parentSections = new HashMap<>();
             for (FaultSection sect : solution.getRupSet().getFaultSectionDataList()) {
                 if (!parentSections.containsKey(sect.getParentSectionName())) {
                     parentSections.put(

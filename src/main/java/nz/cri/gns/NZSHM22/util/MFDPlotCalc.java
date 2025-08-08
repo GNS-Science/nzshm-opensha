@@ -4,10 +4,12 @@ import java.awt.geom.Point2D;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.ArbIncrementalMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -22,6 +24,7 @@ public class MFDPlotCalc {
             double maxMag,
             int numMag) {
         FaultSystemRupSet rupSet = solution.getRupSet();
+
         SummedMagFreqDist mfd = new SummedMagFreqDist(minMag, maxMag, numMag);
         for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
             if (parentSectionIDs.contains(
@@ -99,20 +102,28 @@ public class MFDPlotCalc {
     public static SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(
             FaultSystemSolution solution, Set<Integer> parentSectionIDs) {
 
+        FaultSystemRupSet rupSet = solution.getRupSet();
+        for (int index = 0; index < rupSet.getNumSections(); index++) {
+            if (index != rupSet.getFaultSectionData(index).getSectionId()) {
+                throw new RuntimeException("section ids and section index don't line up");
+            }
+        }
+
         SummedMagFreqDist mfd =
                 new SummedMagFreqDist(
                         U3InversionTargetMFDs.MIN_MAG,
                         U3InversionTargetMFDs.NUM_MAG,
                         U3InversionTargetMFDs.DELTA_MAG);
-        FaultSystemRupSet rupSet = solution.getRupSet();
 
         List<? extends IncrementalMagFreqDist> subSeismoMFDs =
                 rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().getAll();
 
-        for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
-            if (parentSectionIDs.contains(
-                    rupSet.getFaultSectionData(sectIndex).getParentSectionId())) {
-                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(sectIndex));
+        List<? extends FaultSection> sections =
+                NZSHM22_InversionFaultSystemRuptSet.getMFDFaultSections(rupSet);
+
+        for (int index = 0; index < sections.size(); index++) {
+            if (parentSectionIDs.contains(sections.get(index).getParentSectionId())) {
+                mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(index));
             }
         }
 
