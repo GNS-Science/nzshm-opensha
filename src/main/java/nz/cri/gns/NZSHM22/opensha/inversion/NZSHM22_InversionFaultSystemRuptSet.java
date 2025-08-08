@@ -6,18 +6,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
-
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
-import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
 /**
@@ -314,17 +311,21 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Only return fault sections that have a subseismo MFD
+     *
      * @return
      */
     public static List<? extends FaultSection> getMFDFaultSections(FaultSystemRupSet rupSet) {
         List<? extends FaultSection> sections = rupSet.getFaultSectionDataList();
-        int mfdSize =         rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().size();
-        if(sections.size() == mfdSize) {
+        int mfdSize = rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().size();
+        if (sections.size() == mfdSize) {
             return sections;
         }
         TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
         IntPredicate sansTvzFilter = ((IntPredicate) tvzSections::isInRegion).negate();
-        List<FaultSection> filtered = rupSet.getFaultSectionDataList().stream().filter((section) -> sansTvzFilter.test(section.getSectionId())).collect(Collectors.toList());
+        List<FaultSection> filtered =
+                rupSet.getFaultSectionDataList().stream()
+                        .filter((section) -> sansTvzFilter.test(section.getSectionId()))
+                        .collect(Collectors.toList());
         if (filtered.size() == mfdSize) {
             return filtered;
         }

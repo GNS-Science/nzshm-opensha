@@ -4,7 +4,6 @@ import java.awt.geom.Point2D;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -104,8 +103,8 @@ public class MFDPlotCalc {
             FaultSystemSolution solution, Set<Integer> parentSectionIDs) {
 
         FaultSystemRupSet rupSet = solution.getRupSet();
-        for(int index = 0; index < rupSet.getNumSections(); index++) {
-            if(index != rupSet.getFaultSectionData(index).getSectionId()) {
+        for (int index = 0; index < rupSet.getNumSections(); index++) {
+            if (index != rupSet.getFaultSectionData(index).getSectionId()) {
                 throw new RuntimeException("section ids and section index don't line up");
             }
         }
@@ -119,9 +118,10 @@ public class MFDPlotCalc {
         List<? extends IncrementalMagFreqDist> subSeismoMFDs =
                 rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().getAll();
 
-        List<? extends FaultSection> sections = NZSHM22_InversionFaultSystemRuptSet.getMFDFaultSections(rupSet);
+        List<? extends FaultSection> sections =
+                NZSHM22_InversionFaultSystemRuptSet.getMFDFaultSections(rupSet);
 
-        for (int index = 0 ; index < sections.size(); index ++) {
+        for (int index = 0; index < sections.size(); index++) {
             if (parentSectionIDs.contains(sections.get(index).getParentSectionId())) {
                 mfd.addIncrementalMagFreqDist(subSeismoMFDs.get(index));
             }

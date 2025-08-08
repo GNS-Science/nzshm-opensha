@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.util;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import org.opensha.commons.gui.plot.HeadlessGraphPanel;
 import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.analysis.CompoundFSSPlots;

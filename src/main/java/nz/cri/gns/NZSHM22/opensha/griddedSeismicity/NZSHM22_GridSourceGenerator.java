@@ -4,13 +4,11 @@ import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.IntPredicate;
-import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
-import nz.cri.gns.NZSHM22.opensha.inversion.TvzDomainSections;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.commons.util.DataUtils;
@@ -57,7 +55,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
     protected double mfdMax = 8.45;
     protected int mfdNum = 35;
 
-    List<? extends FaultSection> filteredSections;
+    List<? extends FaultSection> mfdFaultSections;
 
     /**
      * Options:
@@ -91,24 +89,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
         polyMgr = ifss.getRupSet().getModule(PolygonFaultGridAssociations.class);
 
-        NZSHM22_LogicTreeBranch ltb = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
-        NZSHM22_Regions regions = ltb.getValue(NZSHM22_Regions.class);
-
-        filteredSections = ifss.getRupSet().getFaultSectionDataList();
-
-        if (regions.getTvzRegion().getName().contains("Not in NZ")) {
-            TvzDomainSections tvzSections = ifss.getRupSet().getModule(TvzDomainSections.class);
-            IntPredicate tvzFilter = tvzSections::isInRegion;
-            System.out.println("yes");
-            IntPredicate predicate = tvzFilter.negate();
-            filteredSections =
-                    filteredSections.stream()
-                            .filter(s -> predicate.test(s.getSectionId()))
-                            .collect(Collectors.toList());
-        } else {
-            // We don't yet have a compatible way of reconstructing MFDs
-            throw new RuntimeException("TVZ not supported");
-        }
+        mfdFaultSections =
+                NZSHM22_InversionFaultSystemRuptSet.getMFDFaultSections(ifss.getRupSet());
 
         System.out.println("   initSectionMFDs() ...");
         initSectionMFDs(ifss);
@@ -130,8 +112,8 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
                         .getAll();
 
         sectSubSeisMFDs = Maps.newHashMap();
-        for (int i = 0; i < filteredSections.size(); i++) {
-            sectSubSeisMFDs.put(filteredSections.get(i).getSectionId(), subSeisMFD_list.get(i));
+        for (int i = 0; i < mfdFaultSections.size(); i++) {
+            sectSubSeisMFDs.put(mfdFaultSections.get(i).getSectionId(), subSeisMFD_list.get(i));
         }
     }
 
@@ -143,7 +125,7 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
     protected void initNodeMFDs(FaultSystemSolution ifss) {
         nodeSubSeisMFDs = Maps.newHashMap();
 
-        for (FaultSection sect : filteredSections) {
+        for (FaultSection sect : mfdFaultSections) {
             int id = sect.getSectionId();
             IncrementalMagFreqDist sectSubSeisMFD = sectSubSeisMFDs.get(id);
             Map<Integer, Double> nodeFractions = polyMgr.getNodeFractions(id);

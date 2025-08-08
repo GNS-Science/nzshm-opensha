@@ -63,7 +63,7 @@ public class MFDPlotBuilder {
                 }
             }
         }
-        if(parentSections == null) {
+        if (parentSections == null) {
             parentSections = new HashMap<>();
             for (FaultSection sect : solution.getRupSet().getFaultSectionDataList()) {
                 if (!parentSections.containsKey(sect.getParentSectionName())) {
