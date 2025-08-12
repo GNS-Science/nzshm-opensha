@@ -17,7 +17,7 @@ import org.opensha.commons.geo.Region;
 public class NZSHM22_GridHazardCalculator {
 
     final NZSHM22_HazardCalculator calculator;
-    Region parentRegion = new NewZealandRegions.NZ_TEST_GRIDDED();
+    Region parentRegion = NewZealandRegions.NZ;
     double spacing = 0.1;
     List<Double> pOfEts = Lists.newArrayList(0.02, 0.1);
 
