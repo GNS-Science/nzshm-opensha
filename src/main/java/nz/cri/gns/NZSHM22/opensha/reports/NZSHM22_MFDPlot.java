@@ -47,7 +47,7 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
                 new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(
                 targetMFDs.getSansTvz().targetOnFaultSupraSeisMFDs);
-        if (!targetMFDs.getTvz().ignore) {
+        if (!targetMFDs.getTvz().isEmpty) {
             targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(
                     targetMFDs.getTvz().targetOnFaultSupraSeisMFDs);
         }
@@ -78,7 +78,7 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
                 "Target Supra-Seis");
         plots.add(sansPlot);
 
-        if (!targetMFDs.getTvz().ignore) {
+        if (!targetMFDs.getTvz().isEmpty) {
             MFD_Plot tvzPlot = new MFD_Plot("NZ TVZ Target MFDs", null);
             tvzPlot.addComp(
                     targetMFDs.getTvz().totalTargetGR, Color.GREEN.darker(), "Total Target GR");

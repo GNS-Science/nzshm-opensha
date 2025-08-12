@@ -118,7 +118,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         public GriddedRegion region;
         public String suffix;
         public RegionalRupSetData regionalRupSet;
-        public boolean ignore = false;
+        public boolean isEmpty = false;
 
         public double totalRateM5;
         public double bValue;
@@ -152,17 +152,14 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             this.maxMag = maxMag;
             this.uncertaintyPower = uncertaintyPower;
             this.uncertaintyScalar = uncertaintyScalar;
-            if (region.getName().contains("SANS TVZ")
-                    || region.getName().contains("NZ_RECTANGLE")) {
-                suffix = "SansTVZ";
-            } else if (region.getName().contains("TVZ")) {
+            if (!region.getName().contains("SANS") && region.getName().contains("TVZ")) {
                 suffix = "TVZ";
             } else {
-                suffix = "";
+                suffix = "SansTVZ";
             }
             this.regionalRupSet = regionalRupSet;
             if (regionalRupSet.isEmpty()) {
-                ignore = true;
+                isEmpty = true;
             } else {
                 init();
             }
@@ -183,15 +180,15 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             out.name("minMag");
             out.value(minMag);
 
-            // hint for writing a readr: this value is not present in older versions
+            // hint for writing a reader: this value is not present in older versions
             out.name("maxMag");
             out.value(maxMag);
 
-            // hint for writing a readr: this value is not present in older versions
+            // hint for writing a reader: this value is not present in older versions
             out.name("uncertaintyPower");
             out.value(uncertaintyPower);
 
-            // hint for writing a readr: this value is not present in older versions
+            // hint for writing a reader: this value is not present in older versions
             out.name("uncertaintyScalar");
             out.value(uncertaintyScalar);
 
@@ -384,13 +381,13 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         // Build the MFD Constraints for regions
         mfdConstraints = new ArrayList<>();
         mfdConstraints.add(sansTvz.targetOnFaultSupraSeisMFDs);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             mfdConstraints.add(tvz.targetOnFaultSupraSeisMFDs);
         }
 
         mfdUncertaintyConstraints = new ArrayList<>();
         mfdUncertaintyConstraints.add(sansTvz.uncertaintyMFD);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             mfdUncertaintyConstraints.add(tvz.uncertaintyMFD);
         }
 
@@ -404,7 +401,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
         SummedMagFreqDist tempTargetGR = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         tempTargetGR.addIncrementalMagFreqDist(sansTvz.totalTargetGR);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             tempTargetGR.addIncrementalMagFreqDist(tvz.totalTargetGR);
         }
 
@@ -416,7 +413,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         SummedMagFreqDist tempTrulyOffFaultMFD =
                 new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         tempTrulyOffFaultMFD.addIncrementalMagFreqDist(sansTvz.trulyOffFaultMFD);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             tempTrulyOffFaultMFD.addIncrementalMagFreqDist(tvz.trulyOffFaultMFD);
         }
 
@@ -429,21 +426,21 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         // CHECK: New MFD addition approach....
         totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(sansTvz.totalSubSeismoOnFaultMFD);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(tvz.totalSubSeismoOnFaultMFD);
         }
 
         // TODO is this correct? It's just a guess by Oakley (and now Chris)
         ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = new ArrayList<>();
         subSeismoOnFaultMFD_List.addAll(sansTvz.subSeismoOnFaultMFD_List);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             subSeismoOnFaultMFD_List.addAll(tvz.subSeismoOnFaultMFD_List);
         }
         subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
         targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
         }
 
@@ -456,7 +453,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         this.reportingMFDConstraintComponents = new ArrayList<>();
         this.reportingMFDConstraintComponents.add(trulyOffFaultMFD);
         this.reportingMFDConstraintComponents.add(sansTvz.targetOnFaultSupraSeisMFDs);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             this.reportingMFDConstraintComponents.add(tvz.targetOnFaultSupraSeisMFDs);
         }
         this.reportingMFDConstraintComponents.add(totalSubSeismoOnFaultMFD);
@@ -467,7 +464,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         this.reportingMFDConstraintComponentsV2.add(trulyOffFaultMFD);
         this.reportingMFDConstraintComponentsV2.add(targetOnFaultSupraSeisMFD);
         this.reportingMFDConstraintComponentsV2.add(totalSubSeismoOnFaultMFD);
-        if (!tvz.ignore) {
+        if (!tvz.isEmpty) {
             this.reportingMFDConstraintComponentsV2.add(tvz.totalTargetGR);
             this.reportingMFDConstraintComponentsV2.add(sansTvz.totalTargetGR);
             this.reportingMFDConstraintComponentsV2.add(tvz.trulyOffFaultMFD);

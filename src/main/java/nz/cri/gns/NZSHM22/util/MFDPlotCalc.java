@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -22,6 +23,7 @@ public class MFDPlotCalc {
             double maxMag,
             int numMag) {
         FaultSystemRupSet rupSet = solution.getRupSet();
+
         SummedMagFreqDist mfd = new SummedMagFreqDist(minMag, maxMag, numMag);
         for (int sectIndex = 0; sectIndex < rupSet.getNumSections(); sectIndex++) {
             if (parentSectionIDs.contains(
@@ -98,6 +100,8 @@ public class MFDPlotCalc {
 
     public static SummedMagFreqDist getFinalSubSeismoOnFaultMFDForSects(
             FaultSystemSolution solution, Set<Integer> parentSectionIDs) {
+
+        NZSHM22_InversionFaultSystemRuptSet.checkMFDConsistency(solution.getRupSet());
 
         SummedMagFreqDist mfd =
                 new SummedMagFreqDist(

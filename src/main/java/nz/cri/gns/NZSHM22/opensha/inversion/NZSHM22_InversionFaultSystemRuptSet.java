@@ -304,4 +304,17 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
     public double getUpperMagForSubseismoRuptures(int sectIndex) {
         throw new RuntimeException("Not supported, don't use this!");
     }
+
+    /**
+     * Asserts that all fault sections have an MFD associated with them. This is to weed out
+     * solutions generated with code affected by #377 where sections in the TVZ were excluded from
+     * MFD generation.
+     */
+    public static void checkMFDConsistency(FaultSystemRupSet rupSet) {
+        int mfdSize = rupSet.getModule(InversionTargetMFDs.class).getOnFaultSubSeisMFDs().size();
+        if (mfdSize != rupSet.getNumSections()) {
+            throw new RuntimeException(
+                    "This solution was created with a faulty nzshm-opensha version. See issue #377.");
+        }
+    }
 }

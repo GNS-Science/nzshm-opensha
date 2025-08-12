@@ -36,7 +36,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double sansSlipRateFactor = -1;
     private double tvzSlipRateFactor = -1;
 
-    private boolean enableTvzMFDs = true;
+    private boolean enableTvzMFDs = false;
     private boolean enableMinMaxSampler = false;
 
     private NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
@@ -73,6 +73,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
      * @return
      */
     public NZSHM22_CrustalInversionRunner setEnableTvzMFDs(boolean enableTvz) {
+        if (enableTvz) {
+            throw new RuntimeException("This feature is not currently supported.");
+        }
         this.enableTvzMFDs = enableTvz;
         return this;
     }
