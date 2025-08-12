@@ -13,7 +13,7 @@ public class NewZealandRegions {
 
     static String DATA_DIR = "region";
 
-    public static final GriddedRegion NZ = new NZ_RECTANGLE_GRIDDED();
+    public static final GriddedRegion NZ = new NZ_TEST_GRIDDED();
 
     private NewZealandRegions() {}
     ;

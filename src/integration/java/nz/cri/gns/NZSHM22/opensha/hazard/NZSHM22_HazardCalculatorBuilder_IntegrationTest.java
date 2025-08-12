@@ -2,111 +2,200 @@ package nz.cri.gns.NZSHM22.opensha.hazard;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
+import nz.cri.gns.NZSHM22.opensha.util.Parameters;
+import nz.cri.gns.NZSHM22.util.TestHelpers;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.commons.util.io.archive.ArchiveInput;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
 
-    protected File getSolution() throws URISyntaxException {
-        URL vernonSolution =
-                Thread.currentThread()
-                        .getContextClassLoader()
-                        .getResource("ModularAlpineVernonInversionSolution.zip");
-        return new File(vernonSolution.toURI());
+    public static ArchiveInput makeSolution() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet =
+                TestHelpers.makeRupSet(
+                        NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
+                        ScalingRelationships.SHAW_2009_MOD);
+        ArchiveOutput archiveOutput = new ArchiveOutput.InMemoryZipOutput(true);
+        rupSet.getArchive().write(archiveOutput);
+
+        // rupSet.getArchive().write(new File("testrup.zip"));
+
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
+        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner();
+        parameterRunner.setUpCrustalInversionRunner(runner);
+        runner.setIterationCompletionCriteria(100)
+                .setSelectionIterations(1)
+                .setRepeatable(true)
+                .setInversionAveraging(false)
+                .setRuptureSetArchiveInput(archiveOutput.getCompletedInput());
+
+        FaultSystemSolution solution = runner.runInversion();
+        // solution.write(new File("testsolution.zip"));
+
+        ArchiveOutput out = new ArchiveOutput.InMemoryZipOutput(true);
+        solution.getArchive().write(out);
+        return out.getCompletedInput();
     }
 
     @Test
-    public void hazardCalcTest() throws URISyntaxException, DocumentException, IOException {
+    public void hazardCalcTest() throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile(getSolution());
+        // off rupture
+        //        double lat = -41.167;
+        //        double lon = 175.342;
+
+        // on rupture
+        //        double lat = -41.1225;
+        //        double lon = 175.0372;
+
+        // on section 1
+        //        double lon = 174.8494;
+        //        double lat = -37.2555;
+
+        // outside polygon of section 1
+        double lat = -37.36402246219363;
+        double lon = 174.9079855447284;
+
+        builder.setSolution(makeSolution());
         builder.setBackgroundOption("EXCLUDE");
         NZSHM22_HazardCalculator calculator = builder.build();
-        DiscretizedFunc actual = calculator.calc(-41.289, 174.777);
+        // a location on a rupture
+        DiscretizedFunc actual1; // = calculator.calc(-41.1225, 175.0372);
+        actual1 = calculator.calc(lat, lon);
 
-        List<Double> expected =
-                Arrays.asList(
-                        0.0778137512486966,
-                        0.07781375124869183,
-                        0.07781375124866374,
-                        0.07781375124848389,
-                        0.07781375124739276,
-                        0.07781375123968137,
-                        0.07781375120020961,
-                        0.07781375100432308,
-                        0.07781375003254265,
-                        0.07781374579288103,
-                        0.07781372706386747,
-                        0.0778136544843071,
-                        0.0778134005002663,
-                        0.07781250480338087,
-                        0.07780981114759933,
-                        0.07780196822496799,
-                        0.07778091997835213,
-                        0.07772893120155766,
-                        0.07760970054198757,
-                        0.0773590310426645,
-                        0.07686829898015257,
-                        0.07598445164687606,
-                        0.07450872774913642,
-                        0.072221996352557,
-                        0.06890966629235729,
-                        0.06443295989283337,
-                        0.05873915311143396,
-                        0.05192969861762964,
-                        0.04426101535752136,
-                        0.036147499881604594,
-                        0.02809576856482321,
-                        0.020651729952447018,
-                        0.014264859392911888,
-                        0.00920770329562337,
-                        0.005526981824169441,
-                        0.0030720454393283747,
-                        0.0015757346318683307,
-                        7.437288313860702E-4,
-                        3.2225038734257083E-4,
-                        1.2793079472195323E-4,
-                        4.646029707811028E-5,
-                        1.5417194252353994E-5,
-                        4.671927854360547E-6,
-                        1.2927043256949489E-6,
-                        3.2682755080060133E-7,
-                        7.561856840698766E-8,
-                        1.605050159447785E-8,
-                        3.1360924968026893E-9,
-                        5.665684588151976E-10,
-                        9.514788956721532E-11,
-                        1.4943934978361995E-11);
-        assertEquals(expected, actual.yValues());
+        // We have not verified that these values are correct. We only want to catch unexpected
+        // changes with his test.
+        double[] expected =
+                new double[] {
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832898,
+                    0.010674170719832676,
+                    0.010674170719831566,
+                    0.010674170719822573,
+                    0.010674170719751186,
+                    0.010674170719260467,
+                    0.010674170715920805,
+                    0.010674170694564555,
+                    0.010674170567876562,
+                    0.010674169867356698,
+                    0.010674166331911983,
+                    0.01067414982896886,
+                    0.01067407987469382,
+                    0.010673810133134398,
+                    0.01067286770993603,
+                    0.010669874615915287,
+                    0.010661295621475553,
+                    0.010638994595421392,
+                    0.010586575671253762,
+                    0.0104750751612952,
+                    0.01026061652242527,
+                    0.009886802272396245,
+                    0.009297480457119867,
+                    0.008456158408889358,
+                    0.007369202985779921,
+                    0.006098207145589285,
+                    0.0047528354763811675,
+                    0.0034641484844992743,
+                    0.0023472051813597794,
+                    0.0014712876572381406,
+                    8.498250117680017E-4,
+                    4.509003956173485E-4,
+                    2.1920282732956764E-4,
+                    9.744499879282831E-5,
+                    3.954355731405901E-5,
+                    1.462953257169719E-5,
+                    4.929776495687932E-6,
+                    1.5123643396508513E-6,
+                    4.2244047271378093E-7,
+                    1.0752945789338497E-7,
+                    2.4985659208276445E-8,
+                    5.314120921084964E-9
+                };
+        assertArrayEquals(
+                expected, actual1.yValues().stream().mapToDouble(v -> v).toArray(), 0.000000001);
 
-        // the following section should be uncommented when
-        // https://github.com/GNS-Science/nzshm-opensha/issues/359 is fixed
-        /*
         builder = new NZSHM22_HazardCalculatorBuilder();
-        builder.setSolutionFile(getSolution());
+        builder.setSolution(makeSolution());
         builder.setBackgroundOption("INCLUDE");
         calculator = builder.build();
-        actual = calculator.calc(-41.289, 174.777);
+        //  actual = calculator.calc(-41.1225, 175.0372);
+        DiscretizedFunc actual2 = calculator.calc(lat, lon);
+        assertNotEquals(actual1, actual2);
 
-        if(NZSHM22_GriddedData.GRID_SPACING == 0.1) {
-            expected = Arrays.asList(0.9999999999582688, 0.999999999952393, 0.9999999999430508, 0.9999999999232628, 0.9999999998808006, 0.9999999997627773, 0.9999999994591091, 0.999999998500612, 0.999999994783072, 0.9999999793053742, 0.9999999020312221, 0.9999995185463371, 0.9999976706931961, 0.9999882798686462, 0.9999476857134101, 0.9997818855141064, 0.9991835403378778, 0.9973087263491843, 0.9922045819924482, 0.9803308020614999, 0.9563375708900821, 0.9145673406148302, 0.851024257845397, 0.7657665131277069, 0.6632643364793765, 0.5520431736988205, 0.44118898765405257, 0.3388431366390908, 0.2503124098341698, 0.17799033830883126, 0.12173109050004371, 0.07998370507068508, 0.050357084914912864, 0.03028844984715362, 0.01734755680823985, 0.009431262705570265, 0.004855205668274909, 0.0023626243991314855, 0.001085657460272338, 4.7088650992677117E-4, 1.9274938862801072E-4, 7.443661580441852E-5, 2.710052815402264E-5, 9.286480581183199E-6, 2.9879148262246247E-6, 8.999459244485308E-7, 2.5290594263260857E-7, 6.610879499380218E-8, 1.6035405225878208E-8, 3.604335496731892E-9, 7.506500976361963E-10);
-        } else if(NZSHM22_GriddedData.GRID_SPACING == 0.05) {
-            expected = Arrays.asList(0.9999999998064021, 0.999999999780703, 0.9999999997402402, 0.9999999996557773, 0.9999999994785365, 0.9999999990026438, 0.9999999978327678, 0.9999999943420695, 0.9999999817134319, 0.9999999331569618, 0.9999997115488475, 0.9999987113943188, 0.9999943331547049, 0.9999741902882648, 0.999895209016672, 0.9996021215281853, 0.9986387914620511, 0.9958771659369933, 0.9889566103383715, 0.974020290616405, 0.9457640216504745, 0.8992486480211278, 0.8316418983544077, 0.744105169431706, 0.6416100110317446, 0.5324272002736739, 0.42487765207376704, 0.3262315701803571, 0.24113509308963244, 0.17163347066814738, 0.11750172277290416, 0.07725966603064938, 0.04864967106454954, 0.02924306331979487, 0.016720938462077783, 0.009063264309767005, 0.004643651349384825, 0.0022439747628518747, 0.001021137601526112, 4.3715844703995366E-4, 1.7596478022019468E-4, 6.656219253031725E-5, 2.3647904738743897E-5, 7.881952110988522E-6, 2.460809792714791E-6, 7.182191771315516E-7, 1.9551772978410042E-7, 4.953722188005827E-8, 1.1662090182440465E-8, 2.5488879895618766E-9, 5.172848815959696E-10);
-        } else {
-            expected = null; // cause an assertion failure
-        }
-
-        assertEquals(expected.size(), actual.yValues().size());
-        for(int i =0;i<expected.size(); i++){
-            assertEquals(expected.get(i), actual.yValues().get(i), 0.000001);
-        }
-        */
-
+        // We have not verified that these values are correct. This test only checks that hazard
+        // changes when background is included.
+        expected =
+                new double[] {
+                    0.9758996094211274,
+                    0.9750734334117824,
+                    0.9739204835308194,
+                    0.9719148693544343,
+                    0.968732616370211,
+                    0.9631723970956172,
+                    0.9554484247456217,
+                    0.9440482327610595,
+                    0.9268739616647104,
+                    0.903031746467323,
+                    0.8689428194861298,
+                    0.824952364161639,
+                    0.7713220132911743,
+                    0.705287602068448,
+                    0.6340330279174293,
+                    0.557304016059982,
+                    0.47942798305757806,
+                    0.4040431776766821,
+                    0.33348774097399037,
+                    0.27009052264665634,
+                    0.21445283093660794,
+                    0.16730619234655375,
+                    0.12840701353912776,
+                    0.0971962762995997,
+                    0.07275976268218642,
+                    0.05418671996625668,
+                    0.040403765788833534,
+                    0.0304376401492068,
+                    0.023378514891661872,
+                    0.01843267367228152,
+                    0.014923240937210869,
+                    0.012316506766824054,
+                    0.01021366534171142,
+                    0.008361002415922969,
+                    0.006639323516470785,
+                    0.005037234570323679,
+                    0.003607549327338422,
+                    0.002416257606076333,
+                    0.0015028930992332379,
+                    8.635115290078765E-4,
+                    4.5648340194559545E-4,
+                    2.213394021676196E-4,
+                    9.820932851156705E-5,
+                    3.979831047196125E-5,
+                    1.470842598449984E-5,
+                    4.952427391513581E-6,
+                    1.5183836463705802E-6,
+                    4.2391967292054744E-7,
+                    1.0786555937336573E-7,
+                    2.5056319463701016E-8,
+                    5.327877028449279E-9
+                };
+        assertArrayEquals(
+                expected, actual2.yValues().stream().mapToDouble(v -> v).toArray(), 0.00000001);
     }
 }
