@@ -28,7 +28,7 @@ import scratch.UCERF3.griddedSeismicity.AbstractGridSourceProvider;
  */
 public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
 
-    protected static final GriddedRegion region = NewZealandRegions.NZ;
+    protected static final GriddedRegion region = new NewZealandRegions.NZ_TEST_GRIDDED();
 
     private static double[] fracStrikeSlip, fracNormal, fracReverse;
     protected NZSHM22_LogicTreeBranch branch;

@@ -38,7 +38,8 @@ public class NZSHM22_GridSourceGeneratorTest {
         }
         Collections.sort(focalGridLocations);
 
-        List<Location> nzRegion = new ArrayList<>(NewZealandRegions.NZ.getNodeList());
+        List<Location> nzRegion =
+                new ArrayList<>(new NewZealandRegions.NZ_TEST_GRIDDED().getNodeList());
         Collections.sort(nzRegion);
 
         assertEquals(nzRegion.size(), focalGridLocations.size());
