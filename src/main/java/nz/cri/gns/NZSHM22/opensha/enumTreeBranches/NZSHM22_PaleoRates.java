@@ -18,6 +18,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Un
 import org.opensha.sha.faultSurface.FaultSection;
 
 public enum NZSHM22_PaleoRates implements LogicTreeNode {
+    CUSTOM("Paleo Rates are side-loaded from custom file", null),
+
     GEODETIC_SLIP_PRIOR_NO_TVZ(
             "Geodetic with Geologic prior timing, no TVZ",
             "NZNSHM_paleotimings_GEODETICGEOLOGICPRIOR_notvz.txt"),
@@ -81,12 +83,20 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     public List<UncertainDataConstraint.SectMappedUncertainDataConstraint> fetchConstraints(
             List<? extends FaultSection> faultSections) {
+        if (fileName == null) {
+            return new ArrayList<>();
+        }
+        return fetchConstraints(faultSections, getStream(fileName));
+    }
+
+    public static List<UncertainDataConstraint.SectMappedUncertainDataConstraint> fetchConstraints(
+            List<? extends FaultSection> faultSections, InputStream in) {
 
         List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints =
                 new ArrayList<>();
         CSVFile<String> csv;
         try {
-            csv = CSVFile.readStream(getStream(fileName), false);
+            csv = CSVFile.readStream(in, false);
         } catch (IOException x) {
             x.printStackTrace();
             throw new RuntimeException(x);

@@ -22,7 +22,11 @@ public class NZSHM22_PaleoRatesTest {
             List<UncertainDataConstraint.SectMappedUncertainDataConstraint> constraints =
                     rates.fetchConstraints(sections);
 
-            assertFalse(constraints.isEmpty());
+            if (rates == NZSHM22_PaleoRates.CUSTOM) {
+                assertTrue(constraints.isEmpty());
+            } else {
+                assertFalse(constraints.isEmpty());
+            }
 
             for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
                     constraints) {
