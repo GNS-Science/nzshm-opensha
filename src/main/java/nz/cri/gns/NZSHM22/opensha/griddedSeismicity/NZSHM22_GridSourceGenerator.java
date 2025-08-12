@@ -8,6 +8,7 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.gui.plot.GraphWindow;
 import org.opensha.commons.util.DataUtils;
@@ -66,6 +67,9 @@ public class NZSHM22_GridSourceGenerator extends AbstractGridSourceProvider {
      *     be generated
      */
     public NZSHM22_GridSourceGenerator(FaultSystemSolution ifss) {
+
+        NZSHM22_InversionFaultSystemRuptSet.checkMFDConsistency(ifss.getRupSet());
+
         branch = ifss.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
         NZSHM22_SpatialSeisPDF spatialSeisPDF = branch.getValue(NZSHM22_SpatialSeisPDF.class);
 

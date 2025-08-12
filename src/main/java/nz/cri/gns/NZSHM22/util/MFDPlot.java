@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.util;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import org.opensha.commons.gui.plot.HeadlessGraphPanel;
 import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
 import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.analysis.CompoundFSSPlots;
@@ -42,17 +40,6 @@ public class MFDPlot {
         if (!nuclIncrSubDir.exists()) nuclIncrSubDir.mkdir();
         File nuclCmlSubDir = new File(dir, "nucleation_cumulative");
         if (!nuclCmlSubDir.exists()) nuclCmlSubDir.mkdir();
-
-        if (parents == null) {
-            parents = new HashMap<>();
-            for (FaultSection sect : sol.getRupSet().getFaultSectionDataList()) {
-                if (!parents.containsKey(sect.getParentSectionName())) {
-                    parents.put(
-                            sect.getParentSectionName(),
-                            Sets.newHashSet(sect.getParentSectionId()));
-                }
-            }
-        }
 
         // MFD extents
         double minMag = 5.05;

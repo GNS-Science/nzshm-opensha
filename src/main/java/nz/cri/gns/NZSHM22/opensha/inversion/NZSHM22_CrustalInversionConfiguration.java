@@ -3,10 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
-import org.opensha.commons.geo.GriddedRegion;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
@@ -20,31 +17,21 @@ import scratch.UCERF3.enumTreeBranches.InversionModels;
  */
 public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConfiguration {
 
-    protected static final boolean D = true; // for debugging
     private double paleoRateConstraintWt;
     private double mfdSmoothnessConstraintWtForPaleoParents;
 
     /** */
     public NZSHM22_CrustalInversionConfiguration() {}
 
-    public static final double DEFAULT_MFD_EQUALITY_WT = 10;
-    public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
-
     public static void setRegionalData(
             NZSHM22_InversionFaultSystemRuptSet rupSet, double mMin_Sans, double mMin_TVZ) {
 
-        NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
-        NZSHM22_Regions regions = branch.getValue(NZSHM22_Regions.class);
-
-        GriddedRegion tvzRegion = regions.getTvzRegion();
-        GriddedRegion sansTvzRegion = regions.getSansTvzRegion();
-
-        TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
-        IntPredicate tvzFilter = tvzSections::isInRegion;
-
-        RegionalRupSetData tvz = new RegionalRupSetData(rupSet, tvzRegion, tvzFilter, mMin_TVZ);
+        // TVZ is hard-coded to always be empty, and sansTVZ is hardcoded to always be all of NZ
+        RegionalRupSetData tvz =
+                new RegionalRupSetData(
+                        rupSet, new NewZealandRegions.NZ_EMPTY_GRIDDED(), id -> false, mMin_TVZ);
         RegionalRupSetData sansTvz =
-                new RegionalRupSetData(rupSet, sansTvzRegion, tvzFilter.negate(), mMin_Sans);
+                new RegionalRupSetData(rupSet, NewZealandRegions.NZ, id -> true, mMin_Sans);
 
         rupSet.setRegionalData(tvz, sansTvz);
     }
