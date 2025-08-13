@@ -9,7 +9,10 @@ import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
 import org.dom4j.DocumentException;
+import org.hamcrest.core.StringStartsWith;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -74,5 +77,20 @@ public class NZSHM22_CrustalInversionRunnerTest {
             assertEquals(fromEnum.dataLocation, fromFile.dataLocation);
             assertEquals(fromEnum.sectionIndex, fromFile.sectionIndex);
         }
+    }
+
+    @Rule public ExpectedException exceptionRule = ExpectedException.none();
+
+    @Test
+    public void testPaleoRatesDoubleUp() throws DocumentException, IOException {
+
+        NZSHM22_CrustalInversionRunner runner = makeRunner();
+        runner.setPaleoRateConstraints(0.4, 0.5, "PALEO_RI_GEOLOGIC_MAY24", "NZSHM22_C_42");
+        runner.setPaleoRatesFile(
+                "src/main/resources/paleoRates/NZNSHM_paleotimings_GEOLOGIC_24May.txt");
+
+        exceptionRule.expect(IllegalStateException.class);
+        exceptionRule.expectMessage(new StringStartsWith("Paleo rate location double-up"));
+        runner.runInversion();
     }
 }

@@ -176,8 +176,12 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     }
 
     /**
-     * Specifies a CSV to use for paleo rates. This file adds to the paleo rates specified in the
-     * LTB. Set the LTB paleo rates to CUSTOM if you only want rates from this CSV file.
+     * Specifies a CSV to use for paleo rates. The rates in this CSV will be imported as if they
+     * were appended to the paleo rates CSV specified in the LogicTreeBranch with setPaleoRates() or
+     * setPaleoRateConstraints(). An IllegalStateException will be thrown during inversion if this
+     * file has a location double-up with the data in the LogicTreeBranch. Set the LTB paleo rates
+     * to CUSTOM if you only want rates from this CSV file. Note that this file will not be recorded
+     * in the LogicTreeBranch.
      *
      * @param fileName a path to a paleo rates CSV file
      * @return this runner
@@ -321,10 +325,21 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                     paleoRates.fetchConstraints(rupSet.getFaultSectionDataList()));
         }
         if (extraPaleoRatesFile != null) {
-            paleoRateConstraints.addAll(
+            List<UncertainDataConstraint.SectMappedUncertainDataConstraint> extraConstraints =
                     NZSHM22_PaleoRates.fetchConstraints(
                             rupSet.getFaultSectionDataList(),
-                            new FileInputStream(extraPaleoRatesFile)));
+                            new FileInputStream(extraPaleoRatesFile));
+            for (UncertainDataConstraint.SectMappedUncertainDataConstraint extraConstraint :
+                    extraConstraints) {
+                for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
+                        paleoRateConstraints) {
+                    if (constraint.dataLocation.equals(extraConstraint.dataLocation)) {
+                        throw new IllegalStateException(
+                                "Paleo rate location double-up at " + extraConstraint.dataLocation);
+                    }
+                }
+                paleoRateConstraints.add(extraConstraint);
+            }
         }
 
         PaleoProbabilityModel paleoProbabilityModel = null;
