@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
@@ -33,6 +35,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double paleoParentRateSmoothnessConstraintWeight = 0;
     private NZSHM22_PaleoRates paleoRates;
     private NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+    private String extraPaleoRatesFile;
     private double sansSlipRateFactor = -1;
     private double tvzSlipRateFactor = -1;
 
@@ -172,6 +175,22 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         return this;
     }
 
+    /**
+     * Specifies a CSV to use for paleo rates. The rates in this CSV will be imported as if they
+     * were appended to the paleo rates CSV specified in the LogicTreeBranch with setPaleoRates() or
+     * setPaleoRateConstraints(). An IllegalStateException will be thrown during inversion if this
+     * file has a location double-up with the data in the LogicTreeBranch. Set the LTB paleo rates
+     * to CUSTOM if you only want rates from this CSV file. Note that this file will not be recorded
+     * in the LogicTreeBranch.
+     *
+     * @param fileName a path to a paleo rates CSV file
+     * @return this runner
+     */
+    public NZSHM22_CrustalInversionRunner setPaleoRatesFile(String fileName) {
+        extraPaleoRatesFile = fileName;
+        return this;
+    }
+
     @Override
     protected Set<Integer> createSamplerExclusions() {
         Set<Integer> exclusions = super.createSamplerExclusions();
@@ -299,9 +318,28 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         /*
          * Build inversion inputs
          */
-        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints = null;
+        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints =
+                new ArrayList<>();
         if (paleoRates != null) {
-            paleoRateConstraints = paleoRates.fetchConstraints(rupSet.getFaultSectionDataList());
+            paleoRateConstraints.addAll(
+                    paleoRates.fetchConstraints(rupSet.getFaultSectionDataList()));
+        }
+        if (extraPaleoRatesFile != null) {
+            List<UncertainDataConstraint.SectMappedUncertainDataConstraint> extraConstraints =
+                    NZSHM22_PaleoRates.fetchConstraints(
+                            rupSet.getFaultSectionDataList(),
+                            new FileInputStream(extraPaleoRatesFile));
+            for (UncertainDataConstraint.SectMappedUncertainDataConstraint extraConstraint :
+                    extraConstraints) {
+                for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
+                        paleoRateConstraints) {
+                    if (constraint.dataLocation.equals(extraConstraint.dataLocation)) {
+                        throw new IllegalStateException(
+                                "Paleo rate location double-up at " + extraConstraint.dataLocation);
+                    }
+                }
+                paleoRateConstraints.add(extraConstraint);
+            }
         }
 
         PaleoProbabilityModel paleoProbabilityModel = null;
