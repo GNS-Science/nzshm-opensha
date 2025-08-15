@@ -7,28 +7,48 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.opensha.commons.data.CSVWriter;
 
+/** A facility to easily create a Jupyter notebook from debug data. */
 public class JupyterLogger implements Closeable {
-
+    static final Object lock = new Object();
+    static String defaultBasePath = "jupyterLog/logs";
     static JupyterLogger instance;
 
     public final Path basePath;
     public final JupyterNotebook notebook;
 
-    public static JupyterLogger setup(String basePath) {
-        try {
-            instance = new JupyterLogger(basePath);
-            instance.addCode(
-                            "import json\n"
-                                    + "import pandas as pd\n"
-                                    + "\n"
-                                    + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
-                                    + "from ipywidgets import HTML")
-                    .hideSource();
+    public static void setBasePath(String basePath) {
+        if (instance != null) {
+            throw new IllegalStateException(
+                    "The logger has already been created. Please set the base path before the logger is used.");
+        }
+        defaultBasePath = basePath;
+    }
 
-            Runtime.getRuntime().addShutdownHook(new Thread(JupyterLogger::shutdownHook));
-            return instance;
-        } catch (IOException x) {
-            throw new RuntimeException(x);
+    /**
+     * Sets up the static logger.
+     *
+     * @return
+     */
+    public static JupyterLogger setup() {
+        synchronized (lock) {
+            if (instance != null) {
+                return instance;
+            }
+            try {
+                instance = new JupyterLogger(defaultBasePath);
+                instance.addCode(
+                                "import json\n"
+                                        + "import pandas as pd\n"
+                                        + "\n"
+                                        + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
+                                        + "from ipywidgets import HTML")
+                        .hideSource();
+
+                Runtime.getRuntime().addShutdownHook(new Thread(JupyterLogger::shutdownHook));
+                return instance;
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
         }
     }
 
@@ -44,7 +64,7 @@ public class JupyterLogger implements Closeable {
 
     public static JupyterLogger logger() {
         if (instance == null) {
-            setup("jupyterLog/logs");
+            setup();
         }
         return instance;
     }
@@ -132,15 +152,21 @@ public class JupyterLogger implements Closeable {
             FileOutputStream out = new FileOutputStream(basePath.resolve(name) + ".csv");
             CSVWriter csvWriter = new CSVWriter(out, false);
             for (List<Object> row : csv) {
-                csvWriter.write(row.stream().map(String::valueOf).collect(Collectors.toList()));
+                List<String> stringRow =
+                        row.stream().map(String::valueOf).collect(Collectors.toList());
+                csvWriter.write(stringRow);
             }
             csvWriter.flush();
             out.close();
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        String csvCode = "%name% = pd.read_csv('%name%.csv')\n" + "%name%";
-        csvCode = csvCode.replace("%name%", name);
+        return addCSVByFileName(name, name + ".csv");
+    }
+
+    public JupyterNotebook.Cell addCSVByFileName(String name, String fileName) {
+        String csvCode = "%name% = pd.read_csv('%fileName%.csv')\n" + "%name%";
+        csvCode = csvCode.replace("%name%", name).replace("%fileName%", fileName);
         JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(csvCode).hideSource();
         notebook.add(cell);
         return cell;
