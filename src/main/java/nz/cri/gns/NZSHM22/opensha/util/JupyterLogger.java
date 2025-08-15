@@ -16,6 +16,10 @@ public class JupyterLogger implements Closeable {
     public final Path basePath;
     public final JupyterNotebook notebook;
 
+    /**
+     * Can be used if a base path other than "jupyterLog/logs" is desired.
+     * @param basePath the base path
+     */
     public static void setBasePath(String basePath) {
         if (instance != null) {
             throw new IllegalStateException(
@@ -24,28 +28,14 @@ public class JupyterLogger implements Closeable {
         defaultBasePath = basePath;
     }
 
-    /**
-     * Sets up the static logger.
-     *
-     * @return
-     */
-    public static JupyterLogger setup() {
+    protected static void setup() {
         synchronized (lock) {
             if (instance != null) {
-                return instance;
+                return;
             }
             try {
                 instance = new JupyterLogger(defaultBasePath);
-                instance.addCode(
-                                "import json\n"
-                                        + "import pandas as pd\n"
-                                        + "\n"
-                                        + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
-                                        + "from ipywidgets import HTML")
-                        .hideSource();
-
                 Runtime.getRuntime().addShutdownHook(new Thread(JupyterLogger::shutdownHook));
-                return instance;
             } catch (IOException x) {
                 throw new RuntimeException(x);
             }
@@ -62,6 +52,11 @@ public class JupyterLogger implements Closeable {
         }
     }
 
+    /**
+     * Returns the logger.
+     *
+     * @return
+     */
     public static JupyterLogger logger() {
         if (instance == null) {
             setup();
@@ -81,6 +76,13 @@ public class JupyterLogger implements Closeable {
             Files.createDirectories(this.basePath);
         }
         this.notebook = new JupyterNotebook();
+        addCode(
+                        "import json\n"
+                                + "import pandas as pd\n"
+                                + "\n"
+                                + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
+                                + "from ipywidgets import HTML")
+                .hideSource();
     }
 
     public String makeFile(String fileName, String data) {
