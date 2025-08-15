@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
@@ -194,16 +193,23 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                             uncertainties));
         }
 
-        List<String> doubleUpStrings = new ArrayList<>();
-        for(String section : doubleUps.keySet()){
-            if(doubleUps.get(section) > 1){
-                doubleUpStrings.add(
-                        "- " + section + " has " + doubleUps.get(section) + " paleo sites.");
+        JupyterLogger.logger()
+                .addMarkDown(
+                        "## Paleo Rates\n"
+                                + "A map of paleo sites and their matching fault sections.\n\n"
+                                + "If applicable, a table of fault sections that have more than one matching paleo site.");
+        JupyterLogger.logger().addMap("paleoRatesMatches", geoJson.toJSON());
+
+        List<List<Object>> doubleUpList = new ArrayList<>();
+        doubleUpList.add(List.of("section id", "paleo sites count"));
+        for (String section : doubleUps.keySet()) {
+            if (doubleUps.get(section) > 1) {
+                doubleUpList.add(List.of(section, doubleUps.get(section)));
             }
         }
-        String doubleUpString = !doubleUpStrings.isEmpty() ? "### Double-ups: \n"+ String.join("\n", doubleUpStrings) : "";
-        JupyterLogger.logger().addMarkDown("## Paleo Rates\nPaleo rate locations and their matching fault section.\n"+ doubleUpString);
-        JupyterLogger.logger().addMap("paleoRatesMatches", geoJson.toJSON());
+        if (doubleUpList.size() > 1) {
+            JupyterLogger.logger().addCSV("paleo_rates_double_up", doubleUpList);
+        }
 
         return paleoRateConstraints;
     }

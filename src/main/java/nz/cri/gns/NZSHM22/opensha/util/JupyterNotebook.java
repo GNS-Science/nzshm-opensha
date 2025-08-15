@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;

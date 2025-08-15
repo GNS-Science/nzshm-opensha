@@ -1,10 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
-import java.io.Closeable;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.opensha.commons.data.CSVWriter;
 
 public class JupyterLogger implements Closeable {
 
@@ -18,6 +19,7 @@ public class JupyterLogger implements Closeable {
             instance = new JupyterLogger(basePath);
             instance.addCode(
                             "import json\n"
+                                    + "import pandas as pd\n"
                                     + "\n"
                                     + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
                                     + "from ipywidgets import HTML")
@@ -42,7 +44,7 @@ public class JupyterLogger implements Closeable {
 
     public static JupyterLogger logger() {
         if (instance == null) {
-            setup("jupyterLog");
+            setup("jupyterLog/logs");
         }
         return instance;
     }
@@ -87,33 +89,34 @@ public class JupyterLogger implements Closeable {
             String name, String geoJson, double lat, double lon, int zoom) {
         String fileName = makeFile(name + ".geojson", geoJson);
         String mapCode =
-                "with open('%fileName%') as json_file:\n" +
-                        "    %name% = json.load(json_file)\n" +
-                        "    json_file.close()\n" +
-                        "%name%_map = Map(center=[%lat%, %lon%], zoom=%zoom%)\n" +
-                        "%name%_section_info = HTML()\n" +
-                        "%name%_section_info.value = \"Hover over features for more details.\"\n" +
-                        "%name%_widget_control = WidgetControl(widget=%name%_section_info, position='topright')\n" +
-                        "def %name%_callback(event, **kwargs):\n" +
-                        "    %name%_section_info.value = \"<ul>\"\n" +
-                        "    keys = kwargs[\"properties\"].keys()\n" +
-                        "    for k,v in kwargs[\"properties\"].items():\n" +
-                        "        %name%_section_info.value += (\"<li> \" + k + \": \" + str(v) +\"</li>\")\n" +
-                        "    %name%_section_info.value += \"</ul>\"\n" +
-                        "        \n" +
-                        "%name%_g = GeoJSON(data=%name%, \n" +
-                        "    hover_style={'color': 'white', 'dashArray': '0', 'fillOpacity': 0.1})\n" +
-                        "%name%_g.on_hover(%name%_callback)\n" +
-                        "%name%_g.on_click(%name%_callback)\n" +
-                        "\n" +
-                        "%name%_map.add(%name%_g)\n" +
-                        "%name%_map.add(%name%_widget_control)\n" +
-                        "%name%_map";
-        mapCode = mapCode.replace("%name%", name)
-                .replace("%fileName%", fileName)
-                .replace("%lat%", ""+lat)
-                .replace("%lon%", ""+lon)
-                .replace("%zoom%", ""+zoom);
+                "with open('%fileName%') as json_file:\n"
+                        + "    %name% = json.load(json_file)\n"
+                        + "    json_file.close()\n"
+                        + "%name%_map = Map(center=[%lat%, %lon%], zoom=%zoom%)\n"
+                        + "%name%_section_info = HTML()\n"
+                        + "%name%_section_info.value = \"Hover over features for more details.\"\n"
+                        + "%name%_widget_control = WidgetControl(widget=%name%_section_info, position='topright')\n"
+                        + "def %name%_callback(event, **kwargs):\n"
+                        + "    %name%_section_info.value = \"<ul>\"\n"
+                        + "    keys = kwargs[\"properties\"].keys()\n"
+                        + "    for k,v in kwargs[\"properties\"].items():\n"
+                        + "        %name%_section_info.value += (\"<li> \" + k + \": \" + str(v) +\"</li>\")\n"
+                        + "    %name%_section_info.value += \"</ul>\"\n"
+                        + "        \n"
+                        + "%name%_g = GeoJSON(data=%name%, \n"
+                        + "    hover_style={'color': 'white', 'dashArray': '0', 'fillOpacity': 0.1})\n"
+                        + "%name%_g.on_hover(%name%_callback)\n"
+                        + "%name%_g.on_click(%name%_callback)\n"
+                        + "\n"
+                        + "%name%_map.add(%name%_g)\n"
+                        + "%name%_map.add(%name%_widget_control)\n"
+                        + "%name%_map";
+        mapCode =
+                mapCode.replace("%name%", name)
+                        .replace("%fileName%", fileName)
+                        .replace("%lat%", "" + lat)
+                        .replace("%lon%", "" + lon)
+                        .replace("%zoom%", "" + zoom);
 
         JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(mapCode).hideSource();
         notebook.add(cell);
@@ -122,6 +125,25 @@ public class JupyterLogger implements Closeable {
 
     public JupyterNotebook.Cell addMap(String name, String geoJson) {
         return addMap(name, geoJson, -41.5, 175, 5);
+    }
+
+    public JupyterNotebook.Cell addCSV(String name, List<List<Object>> csv) {
+        try {
+            FileOutputStream out = new FileOutputStream(basePath.resolve(name) + ".csv");
+            CSVWriter csvWriter = new CSVWriter(out, false);
+            for (List<Object> row : csv) {
+                csvWriter.write(row.stream().map(String::valueOf).collect(Collectors.toList()));
+            }
+            csvWriter.flush();
+            out.close();
+        } catch (IOException x) {
+            throw new RuntimeException(x);
+        }
+        String csvCode = "%name% = pd.read_csv('%name%.csv')\n" + "%name%";
+        csvCode = csvCode.replace("%name%", name);
+        JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(csvCode).hideSource();
+        notebook.add(cell);
+        return cell;
     }
 
     @Override
