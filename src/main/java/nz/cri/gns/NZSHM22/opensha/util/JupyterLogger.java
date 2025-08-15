@@ -168,7 +168,7 @@ public class JupyterLogger implements Closeable {
     }
 
     public JupyterNotebook.Cell addCSVByFileName(String name, String fileName) {
-        String csvCode = "%name% = pd.read_csv('%fileName%.csv')\n" + "%name%";
+        String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
         csvCode = csvCode.replace("%name%", name).replace("%fileName%", fileName);
         JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(csvCode).hideSource();
         notebook.add(cell);
