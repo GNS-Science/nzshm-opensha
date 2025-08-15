@@ -18,6 +18,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Can be used if a base path other than "jupyterLog/logs" is desired.
+     *
      * @param basePath the base path
      */
     public static void setBasePath(String basePath) {
