@@ -43,3 +43,4 @@ nzshm-build.date
 nzshm-build.gitbranch
 nzshm-build.githash
 nzshm-build.gitremoteurl
+jupyterLog/logs/
