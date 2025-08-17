@@ -3,7 +3,9 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.opensha.commons.data.CSVWriter;
 
@@ -15,6 +17,7 @@ public class JupyterLogger implements Closeable {
 
     public final Path basePath;
     public final JupyterNotebook notebook;
+    public final Set<String> names;
 
     /**
      * Can be used if a base path other than "jupyterLog/logs" is desired.
@@ -77,6 +80,7 @@ public class JupyterLogger implements Closeable {
             Files.createDirectories(this.basePath);
         }
         this.notebook = new JupyterNotebook();
+        this.names = new HashSet<>();
         addCode(
                         "import json\n"
                                 + "import pandas as pd\n"
@@ -86,7 +90,19 @@ public class JupyterLogger implements Closeable {
                 .hideSource();
     }
 
+    public String registerName(String name){
+        String candidate = name;
+        int count = 0;
+        while(names.contains(candidate)){
+            candidate = name + "_"+count;
+            count++;
+        }
+        names.add(candidate);
+        return candidate;
+    }
+
     public String makeFile(String fileName, String data) {
+        // TODO register filename
         Path path = basePath.resolve(fileName);
         try (FileWriter writer = new FileWriter(path.toAbsolutePath().toString())) {
             writer.write(data);
@@ -110,6 +126,7 @@ public class JupyterLogger implements Closeable {
 
     public JupyterNotebook.Cell addMap(
             String name, String geoJson, double lat, double lon, int zoom) {
+        // TODO: register name
         String fileName = makeFile(name + ".geojson", geoJson);
         String mapCode =
                 "with open('%fileName%') as json_file:\n"
@@ -151,6 +168,7 @@ public class JupyterLogger implements Closeable {
     }
 
     public JupyterNotebook.Cell addCSV(String name, List<List<Object>> csv) {
+        // TODO: register name
         try {
             FileOutputStream out = new FileOutputStream(basePath.resolve(name) + ".csv");
             CSVWriter csvWriter = new CSVWriter(out, false);
@@ -168,6 +186,7 @@ public class JupyterLogger implements Closeable {
     }
 
     public JupyterNotebook.Cell addCSVByFileName(String name, String fileName) {
+        // TODO: register name
         String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
         csvCode = csvCode.replace("%name%", name).replace("%fileName%", fileName);
         JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(csvCode).hideSource();
