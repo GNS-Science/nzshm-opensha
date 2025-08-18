@@ -58,6 +58,10 @@ public class JupyterNotebook {
             return this;
         }
 
+        public String getSource() {
+            return source;
+        }
+
         public Cell setMetaData(String key, Object value) {
             metaData.put(key, value);
             return this;
@@ -102,7 +106,7 @@ public class JupyterNotebook {
             out.name("metadata");
             gson.toJson(metaData, Map.class, out);
             out.name("source");
-            out.value(source);
+            out.value(getSource());
             writeExtraJson(out);
             out.endObject();
         }

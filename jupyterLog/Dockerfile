@@ -1,3 +1,3 @@
 FROM quay.io/jupyter/base-notebook:latest
 
-RUN pip install geojson ipyleaflet jupyterlab-geojson matplotlib pandas solvis
+RUN pip install geojson ipyleaflet jupyterlab-geojson matplotlib pandas

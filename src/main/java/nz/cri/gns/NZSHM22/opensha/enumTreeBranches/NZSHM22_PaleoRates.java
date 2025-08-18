@@ -70,6 +70,8 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     static final String RESOURCE_PATH = "/paleoRates/";
 
+    static JupyterLogger.MapCell jupyterMap;
+
     final String description;
     final String fileName;
 
@@ -192,12 +194,20 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                             uncertainties));
         }
 
-        JupyterLogger.logger()
-                .addMarkDown(
-                        "## Paleo Rates\n"
-                                + "A map of paleo sites and their matching fault sections.\n\n"
-                                + "If applicable, a table of fault sections that have more than one matching paleo site.");
-        JupyterLogger.logger().addMap("paleoRatesMatches", geoJson.toJSON());
+        if(jupyterMap == null) {
+            JupyterLogger.logger()
+                    .addMarkDown(
+                            "## Paleo Rates\n"
+                                    + "A map of paleo sites and their matching fault sections.\n\n"
+                                    + "If applicable, a table of fault sections that have more than one matching paleo site.");
+            jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches" );
+        }
+
+        if(jupyterMap.getLayerCount() == 0) {
+            jupyterMap.addLayer("sites_from_enum", geoJson.toJSON());
+        } else {
+            jupyterMap.addLayer("sites_from_file", geoJson.toJSON());
+        }
 
         List<List<Object>> doubleUpList = new ArrayList<>();
         doubleUpList.add(List.of("section id", "paleo sites count"));
