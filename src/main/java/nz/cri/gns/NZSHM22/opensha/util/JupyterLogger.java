@@ -130,7 +130,7 @@ public class JupyterLogger implements Closeable {
     }
 
     public JupyterNotebook.Cell addCode(String code) {
-        JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(code);
+        JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell(code);
         notebook.add(cell);
         return cell;
     }
@@ -138,9 +138,12 @@ public class JupyterLogger implements Closeable {
     public MapCell addMap(String prefix, double lat, double lon, int zoom) {
         String uniquePrefix = uniquePrefix(prefix);
         MapCell mapCell = new MapCell(uniquePrefix, lat, lon, zoom);
-        mapCell.hideSource();
         notebook.add(mapCell);
         return mapCell;
+    }
+
+    public MapCell addMap(String prefix) {
+        return addMap(prefix, -41.5, 175, 5);
     }
 
     public class MapCell extends JupyterNotebook.CodeCell {
@@ -157,6 +160,7 @@ public class JupyterLogger implements Closeable {
             this.lon = lon;
             this.zoom = zoom;
             this.layers = new ArrayList<>();
+            hideSource();
         }
 
         @Override
@@ -207,7 +211,7 @@ public class JupyterLogger implements Closeable {
 
             public GeoJsonLayer(String name, String data, String colour) {
                 this.name = MapCell.this.prefix + "_" + name;
-                this.fileName = makeFile(this.name + "geojson", data);
+                this.fileName = makeFile(this.name + ".geojson", data);
                 this.colour = colour;
             }
 
@@ -217,6 +221,7 @@ public class JupyterLogger implements Closeable {
                                 + "    json_file.close()\n"
                                 + "%layerName%_g = GeoJSON(data=%layerName%, \n"
                                 + "    style={'color': '%colour%', 'weight':4},\n"
+                                + "    point_style={'color': '%colour%', 'weight':4},\n"
                                 + "    hover_style={'color': 'white', 'weight':4})\n"
                                 + "%layerName%_g.on_hover(%name%_callback)\n"
                                 + "%layerName%_g.on_click(%name%_callback)\n"
@@ -229,54 +234,7 @@ public class JupyterLogger implements Closeable {
         }
     }
 
-    public JupyterNotebook.Cell addMap(
-            String prefix, String geoJson, double lat, double lon, int zoom) {
-        String uniquePrefix = uniquePrefix(prefix);
-        String fileName = makeFile(uniquePrefix + ".geojson", geoJson);
-        String mapCode =
-                "with open('%fileName%') as json_file:\n"
-                        + "    %name% = json.load(json_file)\n"
-                        + "    json_file.close()\n"
-                        + "%name%_map = Map(center=[%lat%, %lon%], zoom=%zoom%)\n"
-                        + "%name%_section_info = HTML()\n"
-                        + "%name%_section_info.value = \"Hover over features for more details.\"\n"
-                        + "%name%_widget_control = WidgetControl(widget=%name%_section_info, position='topright')\n"
-                        + "def %name%_callback(event, **kwargs):\n"
-                        + "    %name%_section_info.value = \"<ul>\"\n"
-                        + "    keys = kwargs[\"properties\"].keys()\n"
-                        + "    for k,v in kwargs[\"properties\"].items():\n"
-                        + "        %name%_section_info.value += (\"<li> \" + k + \": \" + str(v) +\"</li>\")\n"
-                        + "    %name%_section_info.value += \"</ul>\"\n"
-                        + "        \n"
-                        + "%name%_g = GeoJSON(data=%name%, \n"
-                        + "    hover_style={'color': 'white', 'dashArray': '0', 'fillOpacity': 0.1})\n"
-                        + "%name%_g.on_hover(%name%_callback)\n"
-                        + "%name%_g.on_click(%name%_callback)\n"
-                        + "\n"
-                        + "%name%_map.add(%name%_g)\n"
-                        + "%name%_map.add(%name%_widget_control)\n"
-                        + "%name%_map";
-        mapCode =
-                mapCode.replace("%name%", uniquePrefix)
-                        .replace("%fileName%", fileName)
-                        .replace("%lat%", "" + lat)
-                        .replace("%lon%", "" + lon)
-                        .replace("%zoom%", "" + zoom);
-
-        JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(mapCode).hideSource();
-        notebook.add(cell);
-        return cell;
-    }
-
-    public MapCell addMap(String prefix) {
-        return addMap(prefix, -41.5, 175, 5);
-    }
-
-    public JupyterNotebook.Cell addMap(String prefix, String geoJson) {
-        return addMap(prefix, geoJson, -41.5, 175, 5);
-    }
-
-    public JupyterNotebook.Cell addCSV(String prefix, List<List<Object>> csv) {
+    public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
         String uniquePrefix = uniquePrefix(prefix);
         try {
             FileOutputStream out = new FileOutputStream(basePath.resolve(uniquePrefix) + ".csv");
@@ -295,7 +253,8 @@ public class JupyterLogger implements Closeable {
         csvCode =
                 csvCode.replace("%name%", uniquePrefix)
                         .replace("%fileName%", uniquePrefix + ".csv");
-        JupyterNotebook.Cell cell = new JupyterNotebook.CodeCell().setSource(csvCode).hideSource();
+        JupyterNotebook.CodeCell cell = new JupyterNotebook.CodeCell(csvCode);
+        cell.hideSource();
         notebook.add(cell);
         return cell;
     }

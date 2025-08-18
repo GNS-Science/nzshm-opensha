@@ -135,6 +135,11 @@ public class JupyterNotebook {
             super("code");
         }
 
+        public CodeCell(String source) {
+            this();
+            setSource(source);
+        }
+
         @Override
         public void writeExtraJson(JsonWriter out) throws IOException {
             out.name("execution_count");
