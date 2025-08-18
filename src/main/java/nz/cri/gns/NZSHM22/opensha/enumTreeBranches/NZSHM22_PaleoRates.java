@@ -194,16 +194,16 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                             uncertainties));
         }
 
-        if(jupyterMap == null) {
+        if (jupyterMap == null) {
             JupyterLogger.logger()
                     .addMarkDown(
                             "## Paleo Rates\n"
                                     + "A map of paleo sites and their matching fault sections.\n\n"
                                     + "If applicable, a table of fault sections that have more than one matching paleo site.");
-            jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches" );
+            jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches");
         }
 
-        if(jupyterMap.getLayerCount() == 0) {
+        if (jupyterMap.getLayerCount() == 0) {
             jupyterMap.addLayer("sites_from_enum", geoJson.toJSON());
         } else {
             jupyterMap.addLayer("sites_from_file", geoJson.toJSON());
