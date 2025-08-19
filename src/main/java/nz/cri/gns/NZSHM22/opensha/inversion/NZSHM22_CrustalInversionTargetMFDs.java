@@ -291,11 +291,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                             uncertaintyPower,
                             uncertaintyScalar);
 
+            JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
             JupyterLogger.MFDCell mfdCell = JupyterLogger.logger().addMFDs("RegionalTargetMFDs");
-            mfdCell.addMFD("totalTargetGR_" + suffix + " after setAllButTotMoRate", totalTargetGR);
-            mfdCell.addMFD("trulyOffFaultMFD_" + suffix + " (TriLinearCharOffFaultTargetMFD)", trulyOffFaultMFD);
-            mfdCell.addMFD("totalSubSeismoOnFaultMFD_" + suffix + " (SummedMagFreqDist)", totalSubSeismoOnFaultMFD);
-            mfdCell.addMFD("targetOnFaultSupraSeisMFD_" + suffix + " (SummedMagFreqDist)", targetOnFaultSupraSeisMFDs);
+            mfdCell.addMFD("totalTargetGR_" + suffix, totalTargetGR);
+            mfdCell.addMFD("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD);
+            mfdCell.addMFD("totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD);
+            mfdCell.addMFD("targetOnFaultSupraSeisMFD_" + suffix, targetOnFaultSupraSeisMFDs);
 
             // TODO are these purely analysis?? for now they're off
             //		// compute coupling coefficients
@@ -463,11 +464,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             this.reportingMFDConstraintComponentsV2.add(sansTvz.totalSubSeismoOnFaultMFD);
         }
 
-        JupyterLogger.MFDCell mfdCell = JupyterLogger.logger().addMFDs("NZSHM22_CrustalInversionTargetMFDs_init");
+        JupyterLogger.logger().addMarkDown("## Total MFDs");
+        JupyterLogger.MFDCell mfdCell =
+                JupyterLogger.logger().addMFDs("NZSHM22_CrustalInversionTargetMFDs_init");
         mfdCell.addMFD("trulyOffFaultMFD.all", trulyOffFaultMFD);
         mfdCell.addMFD("totalTargetGR.all", totalTargetGR);
         mfdCell.addMFD("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD);
-
     }
 
     public RegionalTargetMFDs getSansTvz() {

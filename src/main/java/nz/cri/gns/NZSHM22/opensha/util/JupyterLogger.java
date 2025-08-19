@@ -21,10 +21,7 @@ public class JupyterLogger implements Closeable {
 
     static class NoOpLogger extends JupyterLogger {
 
-        /**
-         * Creates a new JupyterLogger that does not write anything to disk.
-         *
-         */
+        /** Creates a new JupyterLogger that does not write anything to disk. */
         public NoOpLogger() {
             super();
         }
@@ -40,10 +37,7 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public void close() throws IOException {
-
-        }
-
+        public void close() throws IOException {}
     }
 
     public static void initialise(String basePath) {
@@ -53,8 +47,7 @@ public class JupyterLogger implements Closeable {
             }
             try {
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-M-d_HH-mm-ss");
-                String path =
-                        String.valueOf(Path.of(basePath, formatter.format(new Date())));
+                String path = String.valueOf(Path.of(basePath, formatter.format(new Date())));
                 instance = new JupyterLogger(path);
                 Runtime.getRuntime().addShutdownHook(new Thread(JupyterLogger::shutdownHook));
             } catch (IOException x) {
@@ -101,6 +94,7 @@ public class JupyterLogger implements Closeable {
         addCode(
                         "import json\n"
                                 + "import pandas as pd\n"
+                                + "import matplotlib.pyplot as plt\n"
                                 + "\n"
                                 + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
                                 + "from ipywidgets import HTML")
@@ -160,6 +154,17 @@ public class JupyterLogger implements Closeable {
         MFDCell cell = new MFDCell(prefix);
         cell.hideSource();
         notebook.add(cell);
+        String plotCode =
+                ("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
+                                + "fig, axs = plt.subplots()\n"
+                                + "axs.set_yscale('log')\n"
+                                + "for index, row in %prefix%.iterrows():\n"
+                                //  + "    axs.scatter (xs, row[1:].to_numpy())\n"
+                                + "    axs.plot (xs, row[1:].to_numpy())\n")
+                        .replace("%prefix%", cell.prefix);
+        JupyterNotebook.CodeCell plot = new JupyterNotebook.CodeCell(plotCode);
+        plot.hideSource();
+        notebook.add(plot);
         return cell;
     }
 
@@ -172,19 +177,20 @@ public class JupyterLogger implements Closeable {
         }
 
         public void addMFD(String name, IncrementalMagFreqDist mfd) {
-            if(xValues == null) {
+            if (xValues == null) {
                 xValues = mfd.xValues();
                 List<Object> headerRow = new ArrayList<>(List.of("magnitude"));
                 headerRow.addAll(xValues);
                 csv.add(headerRow);
             } else {
-                if(!xValues.equals(mfd.xValues())){
+                if (!xValues.equals(mfd.xValues())) {
                     return;
                 }
             }
             List<Object> row = new ArrayList<>(List.of(name));
             row.addAll(mfd.yValues());
             csv.add(row);
+            return;
         }
     }
 
@@ -316,7 +322,7 @@ public class JupyterLogger implements Closeable {
         List<List<Object>> csv;
         String prefix;
 
-        protected CSVCell(String prefix){
+        protected CSVCell(String prefix) {
             this.prefix = uniquePrefix(prefix);
         }
 
@@ -329,9 +335,7 @@ public class JupyterLogger implements Closeable {
         public String getSource() {
             String fileName = writeCSV(prefix, csv);
             String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
-            return
-                    csvCode.replace("%name%", prefix)
-                            .replace("%fileName%", fileName);
+            return csvCode.replace("%name%", prefix).replace("%fileName%", fileName);
         }
     }
 
