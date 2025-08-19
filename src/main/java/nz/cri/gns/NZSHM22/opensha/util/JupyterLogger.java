@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.opensha.commons.data.CSVWriter;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 /** A facility to easily create a Jupyter notebook from debug data. */
 public class JupyterLogger implements Closeable {
@@ -155,6 +156,38 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
+    public MFDCell addMFDs(String prefix) {
+        MFDCell cell = new MFDCell(prefix);
+        cell.hideSource();
+        notebook.add(cell);
+        return cell;
+    }
+
+    public class MFDCell extends CSVCell {
+        List<Double> xValues;
+
+        public MFDCell(String prefix) {
+            super(prefix);
+            csv = new ArrayList<>();
+        }
+
+        public void addMFD(String name, IncrementalMagFreqDist mfd) {
+            if(xValues == null) {
+                xValues = mfd.xValues();
+                List<Object> headerRow = new ArrayList<>(List.of("magnitude"));
+                headerRow.addAll(xValues);
+                csv.add(headerRow);
+            } else {
+                if(!xValues.equals(mfd.xValues())){
+                    return;
+                }
+            }
+            List<Object> row = new ArrayList<>(List.of(name));
+            row.addAll(mfd.yValues());
+            csv.add(row);
+        }
+    }
+
     public MapCell addMap(String prefix, double lat, double lon, int zoom) {
         String uniquePrefix = uniquePrefix(prefix);
         MapCell mapCell = new MapCell(uniquePrefix, lat, lon, zoom);
@@ -254,10 +287,10 @@ public class JupyterLogger implements Closeable {
         }
     }
 
-    public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
-        String uniquePrefix = uniquePrefix(prefix);
+    protected String writeCSV(String prefix, List<List<Object>> csv) {
+        String fileName = prefix + ".csv";
         try {
-            FileOutputStream out = new FileOutputStream(basePath.resolve(uniquePrefix) + ".csv");
+            FileOutputStream out = new FileOutputStream(basePath.resolve(fileName).toString());
             CSVWriter csvWriter = new CSVWriter(out, false);
             for (List<Object> row : csv) {
                 List<String> stringRow =
@@ -269,14 +302,37 @@ public class JupyterLogger implements Closeable {
         } catch (IOException x) {
             throw new RuntimeException(x);
         }
-        String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
-        csvCode =
-                csvCode.replace("%name%", uniquePrefix)
-                        .replace("%fileName%", uniquePrefix + ".csv");
-        JupyterNotebook.CodeCell cell = new JupyterNotebook.CodeCell(csvCode);
+        return fileName;
+    }
+
+    public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
+        CSVCell cell = new CSVCell(prefix, csv);
         cell.hideSource();
         notebook.add(cell);
         return cell;
+    }
+
+    public class CSVCell extends JupyterNotebook.CodeCell {
+        List<List<Object>> csv;
+        String prefix;
+
+        protected CSVCell(String prefix){
+            this.prefix = uniquePrefix(prefix);
+        }
+
+        public CSVCell(String prefix, List<List<Object>> csv) {
+            this(prefix);
+            this.csv = csv;
+        }
+
+        @Override
+        public String getSource() {
+            String fileName = writeCSV(prefix, csv);
+            String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
+            return
+                    csvCode.replace("%name%", prefix)
+                            .replace("%fileName%", fileName);
+        }
     }
 
     @Override

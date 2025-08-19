@@ -182,7 +182,6 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                     "" + minDist);
 
             geoJson.addFaultSection(faultSections.get(closestFaultSectionIndex));
-            System.out.println(siteName + " -> " + sectionName + ", " + minDist);
 
             paleoRateConstraints.add(
                     new UncertainDataConstraint.SectMappedUncertainDataConstraint(
