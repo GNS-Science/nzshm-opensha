@@ -12,36 +12,49 @@ import org.opensha.commons.data.CSVWriter;
 /** A facility to easily create a Jupyter notebook from debug data. */
 public class JupyterLogger implements Closeable {
     static final Object lock = new Object();
-    static String defaultBasePath = "jupyterLog/logs";
     static JupyterLogger instance;
 
     public final Path basePath;
     public final JupyterNotebook notebook;
     public final Set<String> prefixes;
 
-    /**
-     * Can be used if a base path other than "jupyterLog/logs" is desired.
-     *
-     * @param basePath the base path
-     */
-    public static void setBasePath(String basePath) {
-        if (instance != null) {
-            throw new IllegalStateException(
-                    "The logger has already been created. Please set the base path before the logger is used.");
+    static class NoOpLogger extends JupyterLogger {
+
+        /**
+         * Creates a new JupyterLogger that does not write anything to disk.
+         *
+         */
+        public NoOpLogger() {
+            super();
         }
-        defaultBasePath = basePath;
+
+        @Override
+        public String makeFile(String fileName, String data) {
+            return "";
+        }
+
+        @Override
+        public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
+            return new JupyterNotebook.CodeCell();
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+
     }
 
-    protected static void setup() {
+    public static void initialise(String basePath) {
         synchronized (lock) {
-            if (instance != null) {
-                return;
+            if (instance != null && !(instance instanceof NoOpLogger)) {
+                throw new IllegalStateException("JupyterLogger is already initialised");
             }
             try {
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-M-d_HH-mm-ss");
-                String basePath =
-                        String.valueOf(Path.of(defaultBasePath, formatter.format(new Date())));
-                instance = new JupyterLogger(basePath);
+                String path =
+                        String.valueOf(Path.of(basePath, formatter.format(new Date())));
+                instance = new JupyterLogger(path);
                 Runtime.getRuntime().addShutdownHook(new Thread(JupyterLogger::shutdownHook));
             } catch (IOException x) {
                 throw new RuntimeException(x);
@@ -66,7 +79,7 @@ public class JupyterLogger implements Closeable {
      */
     public static JupyterLogger logger() {
         if (instance == null) {
-            setup();
+            instance = new NoOpLogger();
         }
         return instance;
     }
@@ -91,6 +104,13 @@ public class JupyterLogger implements Closeable {
                                 + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
                                 + "from ipywidgets import HTML")
                 .hideSource();
+    }
+
+    // this only exists for the NoOpLogger
+    protected JupyterLogger() {
+        basePath = Path.of("");
+        notebook = new JupyterNotebook();
+        prefixes = new HashSet<>();
     }
 
     public synchronized String uniquePrefix(String prefix) {
