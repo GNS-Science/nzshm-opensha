@@ -150,21 +150,10 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    public MFDCell addMFDs(String prefix) {
+    public MFDCell addMFDPlot(String prefix) {
         MFDCell cell = new MFDCell(prefix);
         cell.hideSource();
         notebook.add(cell);
-        String plotCode =
-                ("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
-                                + "fig, axs = plt.subplots()\n"
-                                + "axs.set_yscale('log')\n"
-                                + "for index, row in %prefix%.iterrows():\n"
-                                //  + "    axs.scatter (xs, row[1:].to_numpy())\n"
-                                + "    axs.plot (xs, row[1:].to_numpy())\n")
-                        .replace("%prefix%", cell.prefix);
-        JupyterNotebook.CodeCell plot = new JupyterNotebook.CodeCell(plotCode);
-        plot.hideSource();
-        notebook.add(plot);
         return cell;
     }
 
@@ -190,7 +179,18 @@ public class JupyterLogger implements Closeable {
             List<Object> row = new ArrayList<>(List.of(name));
             row.addAll(mfd.yValues());
             csv.add(row);
-            return;
+        }
+
+        public String getSource() {
+            String source = super.getSource();
+            source+=("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
+                    + "fig, axs = plt.subplots()\n"
+                    + "axs.set_yscale('log')\n"
+                    + "for index, row in %prefix%.iterrows():\n"
+                    + "    axs.plot (xs, row[1:].to_numpy())\n"
+                    + "axs.legend(%prefix%['magnitude'])\n")
+                    .replace("%prefix%", prefix);
+            return source;
         }
     }
 
@@ -334,7 +334,7 @@ public class JupyterLogger implements Closeable {
         @Override
         public String getSource() {
             String fileName = writeCSV(prefix, csv);
-            String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%";
+            String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%\n";
             return csvCode.replace("%name%", prefix).replace("%fileName%", fileName);
         }
     }
