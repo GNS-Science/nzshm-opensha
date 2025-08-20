@@ -77,7 +77,7 @@ public class ParameterRunner {
                 System.err.println("Rupture set file does not exist at " + ruptureSetPath);
                 if (arguments.containsKey("rupture_set_file_id")) {
                     System.err.println(
-                            "Try to download the rupture set from http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/"
+                            "Try to download the rupture set from https://weka.gns.cri.nz/File/"
                                     + arguments.get("rupture_set_file_id"));
                 }
             }
