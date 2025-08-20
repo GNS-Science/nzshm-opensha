@@ -54,23 +54,17 @@ jobs:
         ./gradlew check
         ./gradlew jacocoTestReport
 
-    - name: Add coverage to PR
-      id: jacoco
-      uses: GNS-Science/jacoco-report@c9acaa1b36f995c60841aaf1455420af1ddb8b9b
+    #----------------------------------------------
+    #       upload coverage report to Codecov
+    #----------------------------------------------
+    - name: Submit coverage report
+      uses: codecov/codecov-action@v5
       with:
-        paths: ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
-        token: ${{ secrets.GITHUB_TOKEN }}
-        min-coverage-overall: 40
-        min-coverage-changed-files: 60
-        title: Code Coverage
-        update-comment: true
-
-#    - name: Fail PR if overall coverage is less than 80%
-#      if: ${{ steps.jacoco.outputs.coverage-overall < 80.0 }}
-#      uses: actions/github-script@v6
-#      with:
-#        script: |
-#          core.setFailed('Overall coverage is less than 80%!')
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
     - name: Set version env var
       if: startsWith(github.ref, 'refs/tags/release')
