@@ -1,4 +1,7 @@
 ## Features unused by runzi
+
+Some of these can probably be removed. Others are useful to keep for experimenting.
+
 - `NZSHM22_CrustalInversionRunner.setPolygonizer()`
     - https://github.com/GNS-Science/nzshm-opensha/issues/139
     - Scales spatialSeisPDF inside fault polygons.
