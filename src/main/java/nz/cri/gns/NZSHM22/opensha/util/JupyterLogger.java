@@ -183,13 +183,14 @@ public class JupyterLogger implements Closeable {
 
         public String getSource() {
             String source = super.getSource();
-            source+=("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
-                    + "fig, axs = plt.subplots()\n"
-                    + "axs.set_yscale('log')\n"
-                    + "for index, row in %prefix%.iterrows():\n"
-                    + "    axs.plot (xs, row[1:].to_numpy())\n"
-                    + "axs.legend(%prefix%['magnitude'])\n")
-                    .replace("%prefix%", prefix);
+            source +=
+                    ("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
+                                    + "fig, axs = plt.subplots()\n"
+                                    + "axs.set_yscale('log')\n"
+                                    + "for index, row in %prefix%.iterrows():\n"
+                                    + "    axs.plot (xs, row[1:].to_numpy())\n"
+                                    + "axs.legend(%prefix%['magnitude'])\n")
+                            .replace("%prefix%", prefix);
             return source;
         }
     }
