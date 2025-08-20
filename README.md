@@ -1,4 +1,7 @@
 # nzshm-opensha
+
+[![codecov](https://codecov.io/gh/GNS-Science/nzshm-opensha/branch/main/graphs/badge.svg)](https://codecov.io/github/GNS-Science/nzshm-opensha)
+
 [NZ NSHM Programme](https://www.gns.cri.nz/research-projects/national-seismic-hazard-model/) opensha applications (patterned on the UCERF3 part of https://github.com/opensha/opensha)
 
 ## Getting started 
