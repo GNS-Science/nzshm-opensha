@@ -2,11 +2,11 @@
 
 This happens in the `nz.cri.gns.NZSHM22.opensha.polygonise` package.
 
-It appears that this was not used directly during an inversion, but that it was used to create a file that Kiran used 
-to modify the DSM. 
+It appears that this was not used directly during an inversion, but that it was used to create a file that Kiran used to modify the DSM. 
 
 See https://nshmrevisionproject.slack.com/archives/C02E5PXMB1D/p1651186074485649 for a discussion of some of the details.
 
+See the `NZSHM22_PolygonisedDistributedModelBuilder.main()` for a reproduction of the file generated in 2022.
 
 ### Inputs:
     STEPS : resolution of up-sampled grid
@@ -31,23 +31,4 @@ See https://nshmrevisionproject.slack.com/archives/C02E5PXMB1D/p1651186074485649
 6. Mmins are calculated per grid point:
     - Add up all mMin values from sub sections where the grid point is inside the polygon
         - mMin values are normalised based on how much the grid bin overlaps with the fault section polygon
-    
 
-## Usage
-- confirmed:
-  - NZSHM22_SpatialSeisPDF.NZSHM22_1346 (this is not what was used in NZSHM22)
-  - don't kill normalisation in RegionalRupSetData
-  - runner.setPolygonizer(4, "LINEAR", 40) (see CrustalInversionRunner in 0b4e5f9012f01c1d2b3dac36da92d068c82acfd4)
-  - possibly? setPolyBufferSize(runner.getPolyBufferSize(), 3);
-
-With the following settings, we can reproduce the locations and the old grid value in `NZSHM22_PolygonisedDistributedModel.csv`:
-
-```java
-        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
-        NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
-        parameterRunner.ensurePaths();
-        parameterRunner.setUpCrustalInversionRunner(runner);
-        runner.setSpatialSeisPDF(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
-        runner.setPolyBufferSize(runner.getPolyBufferSize(), 3);
-        runner.setPolygonizer(4, "LINEAR", 40);
-```
