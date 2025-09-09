@@ -1,13 +1,18 @@
 package nz.cri.gns.NZSHM22.opensha.polygonise;
 
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import nz.cri.gns.NZSHM22.opensha.util.*;
+import nz.cri.gns.NZSHM22.util.ZipTools;
+import org.dom4j.DocumentException;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
@@ -240,5 +245,48 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         NZSHM22_GriddedData newGrid = scalePDF(rupSet);
         List<Double> mMins = gridMmins(newGrid, rupSet);
         rupSet.addModule(new NZSHM22_PolygonisedDistributedModel(oldGrid, newGrid, mMins));
+    }
+
+    /**
+     * This reproduces the file posted at
+     * https://nshmrevisionproject.slack.com/archives/C02E5PXMB1D/p1661301108709039
+     */
+    public static void reproduceNZSHM22() throws IOException, DocumentException {
+        String outputPath = "/tmp";
+        ParameterRunner parameterRunner = new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL);
+        NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpCrustalInversionRunner(runner);
+
+        // set up odd config
+        runner.setSpatialSeisPDF(NZSHM22_SpatialSeisPDF.NZSHM22_1346);
+        runner.setMinMags(6.8, 6.5);
+
+        // set up polygoniser specific config
+        // These functions are also accessible through the Python gateway.
+        runner.setPolyBufferSize(runner.getPolyBufferSize(), 3);
+        runner.setPolygonizer(4, "LINEAR", 40);
+
+        // shortcut the inversion as much as possible
+        runner.setIterationCompletionCriteria(10);
+        runner.setSelectionIterations(1);
+        runner.setRepeatable(true);
+        runner.setInversionAveraging(false);
+
+        FaultSystemSolution solution = runner.runInversion();
+        Path solutionPath = Path.of(outputPath, "inversionSolution.zip");
+        solution.write(solutionPath.toFile());
+
+        // NZSHM22_PolygonisedDistributedModel.csv is available in a solution that was built with
+        // runner.setPolygonizer() called.
+        ZipTools.copyFromZipFile(
+                solutionPath,
+                "ruptures/NZSHM22_PolygonisedDistributedModel.csv",
+                Path.of(outputPath, "NZSHM22_PolygonisedDistributedModel.csv"),
+                StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    public static void main(String[] args) throws IOException, DocumentException {
+        reproduceNZSHM22();
     }
 }
