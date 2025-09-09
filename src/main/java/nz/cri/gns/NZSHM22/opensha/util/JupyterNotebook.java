@@ -10,63 +10,117 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Basic class to create Jupyter Notebook files. Based on the <a
+ * href="https://nbformat.readthedocs.io/en/latest/format_description.html">Notebook file format
+ * 5.10</a>.
+ */
 public class JupyterNotebook {
 
     List<Cell> cells = new ArrayList<>();
     public Map<String, Object> metaData = new HashMap<>();
 
+    /**
+     * Appends the provided cell to the notebook.
+     *
+     * @param cell a cell
+     * @return this notebook
+     */
     public JupyterNotebook add(Cell cell) {
         cell.id = cells.size() + "";
         cells.add(cell);
         return this;
     }
 
-    public String toJson() throws IOException {
-        Gson gson = new GsonBuilder().create();
-        StringWriter writer = new StringWriter();
-        JsonWriter out = gson.newJsonWriter(writer);
-        out.beginObject();
-        out.name("nbformat");
-        out.value(4);
-        out.name("nbformat_minor");
-        out.value(0);
-        out.name("metadata");
-        gson.toJson(metaData, Map.class, out);
-        out.name("cells");
-        out.beginArray();
-        for (Cell cell : cells) {
-            cell.writeJson(out, gson);
+    /**
+     * Returns a JSON representation of this notebook.
+     *
+     * @return a JSON representation of this notebook.
+     */
+    public String toJson() {
+        try {
+            Gson gson = new GsonBuilder().create();
+            StringWriter writer = new StringWriter();
+            JsonWriter out = gson.newJsonWriter(writer);
+            out.beginObject();
+            out.name("nbformat");
+            out.value(4);
+            out.name("nbformat_minor");
+            out.value(0);
+            out.name("metadata");
+            gson.toJson(metaData, Map.class, out);
+            out.name("cells");
+            out.beginArray();
+            for (Cell cell : cells) {
+                cell.writeJson(out, gson);
+            }
+            out.endArray();
+            out.endObject();
+            out.close();
+            return writer.toString();
+        } catch (IOException x) {
+            // Because we operate in memory, writing should not throw, and we don't expect callers
+            // to handle exceptions. In case it does, we throw a RunTimeException.
+            throw new RuntimeException(x);
         }
-        out.endArray();
-        out.endObject();
-        out.close();
-        return writer.toString();
     }
 
-    public abstract static class Cell {
-        public String id;
-        public final String cellType;
-        public final Map<String, Object> metaData = new HashMap<>();
-        public String source;
+    /** A abstract Jupyter notebook cell. Use MarkdownCell or CodeCell to create new cells. */
+    protected abstract static class Cell {
+        protected String id;
+        protected final String cellType;
+        protected final Map<String, Object> metaData = new HashMap<>();
+        protected String source;
 
-        public Cell(String cellType) {
+        /**
+         * Creates a new cell.
+         *
+         * @param cellType
+         */
+        protected Cell(String cellType) {
             this.cellType = cellType;
         }
 
+        /**
+         * Sets the source
+         *
+         * @param source the source
+         * @return this cell
+         */
         public Cell setSource(String source) {
             this.source = source;
             return this;
         }
 
+        /**
+         * Returns the source
+         *
+         * @return the source
+         */
         public String getSource() {
             return source;
         }
 
+        /**
+         * Sets a metadata entry
+         *
+         * @param key the metadata key
+         * @param value the metadata value
+         * @return this cell
+         */
         public Cell setMetaData(String key, Object value) {
             metaData.put(key, value);
             return this;
         }
 
+        /**
+         * Sets a namespaces metadata entry
+         *
+         * @param namespace the metadata namespace
+         * @param key the metadata key
+         * @param value the metadata value
+         * @return this cell
+         */
         public Cell setMetaData(String namespace, String key, Object value) {
             Map<String, Object> innerMeta = (Map<String, Object>) metaData.get(namespace);
             if (innerMeta == null) {
@@ -77,6 +131,11 @@ public class JupyterNotebook {
             return this;
         }
 
+        /**
+         * Hide (collapse) the source of the cell
+         *
+         * @return this cell
+         */
         public Cell hideSource() {
             return setMetaData("jupyter", "source_hidden", true);
         }
@@ -97,7 +156,7 @@ public class JupyterNotebook {
             return setMetaData("editable", false);
         }
 
-        public void writeJson(JsonWriter out, Gson gson) throws IOException {
+        protected void writeJson(JsonWriter out, Gson gson) throws IOException {
             out.beginObject();
             out.name("cell_type");
             out.value(cellType);
@@ -114,27 +173,41 @@ public class JupyterNotebook {
         public abstract void writeExtraJson(JsonWriter out) throws IOException;
     }
 
+    /** A notebook cell that represents markdown */
     public static class MarkdownCell extends Cell {
 
+        /** Creates an empty markdown cell. */
         public MarkdownCell() {
             super("markdown");
         }
 
+        /**
+         * Creates a markdown cell with the provided source.
+         *
+         * @param source a string representing markdown
+         */
         public MarkdownCell(String source) {
             this();
-            this.source = source;
+            setSource(source);
         }
 
         @Override
         public void writeExtraJson(JsonWriter out) throws IOException {}
     }
 
+    /** A notebook code cell. */
     public static class CodeCell extends Cell {
 
+        /** Creates an empty code cell. */
         public CodeCell() {
             super("code");
         }
 
+        /**
+         * Creates a code cell with the specified source.
+         *
+         * @param source the code string
+         */
         public CodeCell(String source) {
             this();
             setSource(source);
