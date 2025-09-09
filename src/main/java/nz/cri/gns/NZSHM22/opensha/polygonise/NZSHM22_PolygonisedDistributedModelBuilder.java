@@ -263,6 +263,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         runner.setMinMags(6.8, 6.5);
 
         // set up polygoniser specific config
+        // These functions are also accessible through the Python gateway.
         runner.setPolyBufferSize(runner.getPolyBufferSize(), 3);
         runner.setPolygonizer(4, "LINEAR", 40);
 
@@ -276,6 +277,8 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         Path solutionPath = Path.of(outputPath, "inversionSolution.zip");
         solution.write(solutionPath.toFile());
 
+        // NZSHM22_PolygonisedDistributedModel.csv is available in a solution that was built with
+        // runner.setPolygonizer() called.
         ZipTools.copyFromZipFile(
                 solutionPath,
                 "ruptures/NZSHM22_PolygonisedDistributedModel.csv",
