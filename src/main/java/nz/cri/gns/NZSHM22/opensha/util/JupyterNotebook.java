@@ -5,10 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Basic class to create Jupyter Notebook files. Based on the <a
@@ -69,7 +66,8 @@ public class JupyterNotebook {
     protected abstract static class Cell {
         protected String id;
         protected final String cellType;
-        protected final Map<String, Object> metaData = new HashMap<>();
+        // LinkedHashMap for reproducibility when writing JSON in tests
+        protected final Map<String, Object> metaData = new LinkedHashMap<>();
         protected String source;
 
         /**
@@ -124,7 +122,7 @@ public class JupyterNotebook {
         public Cell setMetaData(String namespace, String key, Object value) {
             Map<String, Object> innerMeta = (Map<String, Object>) metaData.get(namespace);
             if (innerMeta == null) {
-                innerMeta = new HashMap<>();
+                innerMeta = new LinkedHashMap<>();
                 metaData.put(namespace, innerMeta);
             }
             innerMeta.put(key, value);
