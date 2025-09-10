@@ -30,6 +30,19 @@ public class JupyterNotebookTest {
         return map;
     }
 
+    public static String notebook(Map<String, Object>... cells) {
+        return stringify(
+                map(
+                        "nbformat",
+                        4,
+                        "nbformat_minor",
+                        0,
+                        "metadata",
+                        map(),
+                        "cells",
+                        Arrays.asList(cells)));
+    }
+
     public static String stringify(Map<String, Object> notebook) {
         try {
             Gson gson = new GsonBuilder().create();
@@ -47,17 +60,7 @@ public class JupyterNotebookTest {
     public void emptyTest() {
         JupyterNotebook notebook = new JupyterNotebook();
         String actual = notebook.toJson();
-        String expected =
-                stringify(
-                        map(
-                                "nbformat",
-                                4,
-                                "nbformat_minor",
-                                0,
-                                "metadata",
-                                map(),
-                                "cells",
-                                List.of()));
+        String expected = notebook();
         assertEquals(expected, actual);
     }
 
@@ -90,17 +93,7 @@ public class JupyterNotebookTest {
         String actual = notebook.toJson();
         Map<String, Object> cell =
                 map("cell_type", "markdown", "id", "0", "metadata", map(), "source", "hello");
-        String expected =
-                stringify(
-                        map(
-                                "nbformat",
-                                4,
-                                "nbformat_minor",
-                                0,
-                                "metadata",
-                                map(),
-                                "cells",
-                                List.of(cell)));
+        String expected = notebook(cell);
         assertEquals(expected, actual);
     }
 
@@ -123,17 +116,7 @@ public class JupyterNotebookTest {
                         0,
                         "outputs",
                         List.of());
-        String expected =
-                stringify(
-                        map(
-                                "nbformat",
-                                4,
-                                "nbformat_minor",
-                                0,
-                                "metadata",
-                                map(),
-                                "cells",
-                                List.of(cell)));
+        String expected = notebook(cell);
         assertEquals(expected, actual);
     }
 
@@ -149,17 +132,7 @@ public class JupyterNotebookTest {
         Map<String, Object> cell2 =
                 map("cell_type", "markdown", "id", "1", "metadata", map(), "source", "cell 2");
 
-        String expected =
-                stringify(
-                        map(
-                                "nbformat",
-                                4,
-                                "nbformat_minor",
-                                0,
-                                "metadata",
-                                map(),
-                                "cells",
-                                List.of(cell1, cell2)));
+        String expected = notebook(cell1, cell2);
         assertEquals(expected, actual);
     }
 
@@ -194,17 +167,7 @@ public class JupyterNotebookTest {
                         false);
         Map<String, Object> cell =
                 map("cell_type", "markdown", "id", "0", "metadata", metadata, "source", "hello");
-        String expected =
-                stringify(
-                        map(
-                                "nbformat",
-                                4,
-                                "nbformat_minor",
-                                0,
-                                "metadata",
-                                map(),
-                                "cells",
-                                List.of(cell)));
+        String expected = notebook(cell);
         assertEquals(expected, actual);
     }
 }

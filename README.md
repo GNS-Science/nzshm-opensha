@@ -61,6 +61,10 @@ For `IntelliJ`, install the [google-java-format](https://plugins.jetbrains.com/p
 
 See [doc/how-to-run.md](doc/how-to-run.md)
 
+### Logging to Jupyter Notebooks
+
+See [jupyterLog/README.md](jupyterLog/README.md)
+
 ### Releases on github
 
 Github can build release fatjars and push them to S3.
