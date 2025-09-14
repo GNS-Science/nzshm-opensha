@@ -264,4 +264,13 @@ public class NZSHM22_PythonGateway {
     public static RupSetScalingRelationship getScalingRelationship(String name) {
         return NZSHM22_ScalingRelationshipNode.createRelationShip(name);
     }
+
+    /**
+     * Initialises the Jupyter Notebook Logger. The logger will write to the provided base path.
+     *
+     * @param basePath a directory to write to. The directory will be created if necessary.
+     */
+    public static void initJupyterLogger(String basePath) {
+        JupyterLogger.initialise(basePath);
+    }
 }
