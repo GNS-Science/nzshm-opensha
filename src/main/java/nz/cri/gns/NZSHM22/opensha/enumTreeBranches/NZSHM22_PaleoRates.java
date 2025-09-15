@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
@@ -68,6 +69,8 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
     ;
 
     static final String RESOURCE_PATH = "/paleoRates/";
+
+    static JupyterLogger.MapPlot jupyterMap;
 
     final String description;
     final String fileName;
@@ -179,7 +182,6 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                     "" + minDist);
 
             geoJson.addFaultSection(faultSections.get(closestFaultSectionIndex));
-            System.out.println(siteName + " -> " + sectionName + ", " + minDist);
 
             paleoRateConstraints.add(
                     new UncertainDataConstraint.SectMappedUncertainDataConstraint(
@@ -191,13 +193,31 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                             uncertainties));
         }
 
-        //        geoJson.toJSON("paleoRates.geojson");
-        //        for(String section : doubleUps.keySet()){
-        //            if(doubleUps.get(section) > 1){
-        //                System.out.println("subsection " + section + " has " +
-        // doubleUps.get(section) + " paleo sites.");
-        //            }
-        //        }
+        if (jupyterMap == null) {
+            JupyterLogger.logger()
+                    .addMarkDown(
+                            "## Paleo Rates\n"
+                                    + "A map of paleo sites and their matching fault sections.\n\n"
+                                    + "If applicable, a table of fault sections that have more than one matching paleo site.");
+            jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches");
+        }
+
+        if (jupyterMap.getLayerCount() == 0) {
+            jupyterMap.addLayer("sites_from_enum", geoJson.toJSON());
+        } else {
+            jupyterMap.addLayer("sites_from_file", geoJson.toJSON());
+        }
+
+        List<List<Object>> doubleUpList = new ArrayList<>();
+        doubleUpList.add(List.of("section id", "paleo sites count"));
+        for (String section : doubleUps.keySet()) {
+            if (doubleUps.get(section) > 1) {
+                doubleUpList.add(List.of(section, doubleUps.get(section)));
+            }
+        }
+        if (doubleUpList.size() > 1) {
+            JupyterLogger.logger().addCSV("paleo_rates_double_up", doubleUpList);
+        }
 
         return paleoRateConstraints;
     }

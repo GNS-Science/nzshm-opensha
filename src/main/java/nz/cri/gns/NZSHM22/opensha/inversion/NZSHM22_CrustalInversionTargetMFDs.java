@@ -12,6 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -290,24 +291,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                             uncertaintyPower,
                             uncertaintyScalar);
 
-            if (MFD_STATS) {
-                System.out.println("totalTargetGR_" + suffix + " after setAllButTotMoRate");
-                System.out.println(totalTargetGR.toString());
-                System.out.println("");
-
-                System.out.println(
-                        "trulyOffFaultMFD_" + suffix + " (TriLinearCharOffFaultTargetMFD)");
-                System.out.println(trulyOffFaultMFD.toString());
-                System.out.println("");
-
-                System.out.println("totalSubSeismoOnFaultMFD_" + suffix + " (SummedMagFreqDist)");
-                System.out.println(totalSubSeismoOnFaultMFD.toString());
-                System.out.println("");
-
-                System.out.println("targetOnFaultSupraSeisMFD_" + suffix + " (SummedMagFreqDist)");
-                System.out.println(targetOnFaultSupraSeisMFDs.toString());
-                System.out.println("");
-            }
+            JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
+            JupyterLogger.MFDPlot mfdCell = JupyterLogger.logger().addMFDPlot("RegionalTargetMFDs");
+            mfdCell.addMFD("totalTargetGR_" + suffix, totalTargetGR);
+            mfdCell.addMFD("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD);
+            mfdCell.addMFD("totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD);
+            mfdCell.addMFD("targetOnFaultSupraSeisMFD_" + suffix, targetOnFaultSupraSeisMFDs);
 
             // TODO are these purely analysis?? for now they're off
             //		// compute coupling coefficients
@@ -475,20 +464,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             this.reportingMFDConstraintComponentsV2.add(sansTvz.totalSubSeismoOnFaultMFD);
         }
 
-        if (MFD_STATS) {
-
-            System.out.println("trulyOffFaultMFD.all");
-            System.out.println(trulyOffFaultMFD.toString());
-            System.out.println("");
-
-            System.out.println("totalTargetGR.all");
-            System.out.println(totalTargetGR.toString());
-            System.out.println("");
-
-            System.out.println("totalSubSeismoOnFaultMFD.all");
-            System.out.println(totalSubSeismoOnFaultMFD.toString());
-            System.out.println("");
-        }
+        JupyterLogger.logger().addMarkDown("## Total MFDs");
+        JupyterLogger.MFDPlot mfdCell =
+                JupyterLogger.logger().addMFDPlot("NZSHM22_CrustalInversionTargetMFDs_init");
+        mfdCell.addMFD("trulyOffFaultMFD.all", trulyOffFaultMFD);
+        mfdCell.addMFD("totalTargetGR.all", totalTargetGR);
+        mfdCell.addMFD("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD);
     }
 
     public RegionalTargetMFDs getSansTvz() {
