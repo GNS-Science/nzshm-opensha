@@ -292,7 +292,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                             uncertaintyScalar);
 
             JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
-            JupyterLogger.MFDCell mfdCell = JupyterLogger.logger().addMFDPlot("RegionalTargetMFDs");
+            JupyterLogger.MFDPlot mfdCell = JupyterLogger.logger().addMFDPlot("RegionalTargetMFDs");
             mfdCell.addMFD("totalTargetGR_" + suffix, totalTargetGR);
             mfdCell.addMFD("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD);
             mfdCell.addMFD("totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD);
@@ -465,7 +465,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         }
 
         JupyterLogger.logger().addMarkDown("## Total MFDs");
-        JupyterLogger.MFDCell mfdCell =
+        JupyterLogger.MFDPlot mfdCell =
                 JupyterLogger.logger().addMFDPlot("NZSHM22_CrustalInversionTargetMFDs_init");
         mfdCell.addMFD("trulyOffFaultMFD.all", trulyOffFaultMFD);
         mfdCell.addMFD("totalTargetGR.all", totalTargetGR);

@@ -70,7 +70,7 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     static final String RESOURCE_PATH = "/paleoRates/";
 
-    static JupyterLogger.MapCell jupyterMap;
+    static JupyterLogger.MapPlot jupyterMap;
 
     final String description;
     final String fileName;
