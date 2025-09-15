@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 import org.opensha.commons.data.CSVWriter;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
-/** A facility to easily create a Jupyter notebook from debug data.
- * Jupyterlogger.initialise(); needs to be called before logging anything.*/
+/**
+ * A facility to easily create a Jupyter notebook from debug data. Jupyterlogger.initialise(); needs
+ * to be called before logging anything.
+ */
 public class JupyterLogger implements Closeable {
     static final Object lock = new Object();
     static JupyterLogger instance;
@@ -120,8 +122,9 @@ public class JupyterLogger implements Closeable {
     }
 
     /**
-     * Returns a guaranteed unique prefix for the current notebook. This prefix can be used
-     * for Python variables in Code cells.
+     * Returns a guaranteed unique prefix for the current notebook. This prefix can be used for
+     * Python variables in Code cells.
+     *
      * @param prefix a prefix
      * @return the prefix if is already unique. Otherwise, a modified prefix.
      */
@@ -157,6 +160,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Adds a markdown cell to the logger with the specified text.
+     *
      * @param markDown markdown formatted text
      * @return the markdown cell.
      */
@@ -168,6 +172,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Adds a code cell with the specified source text.
+     *
      * @param code Python code
      * @return the code cell.
      */
@@ -179,6 +184,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Adds an empty MFD plot to the notebook.
+     *
      * @param prefix the prefix to use for Python variables
      * @return an MFDPlot that can be used to add MFDs
      */
@@ -189,14 +195,13 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    /**
-     * A cell representing an MFD plot.
-     */
+    /** A cell representing an MFD plot. */
     public class MFDPlot extends CSVCell {
         List<Double> xValues;
 
         /**
          * Creates a new MFD plot.
+         *
          * @param prefix
          */
         public MFDPlot(String prefix) {
@@ -207,6 +212,7 @@ public class JupyterLogger implements Closeable {
         // TODO: ensure that all MFD buckets align.
         /**
          * Add an MFD to the plot.
+         *
          * @param name The display name of the MFD
          * @param mfd The MFD data
          */
@@ -226,9 +232,7 @@ public class JupyterLogger implements Closeable {
             csv.add(row);
         }
 
-        /**
-         * Method for rendering the cell.
-         */
+        /** Method for rendering the cell. */
         @Override
         public String getSource() {
             String source = super.getSource();
@@ -246,6 +250,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Add an empty map that can display GeoJson layers.
+     *
      * @param prefix Python variables prefix
      * @param lat map centre latitude
      * @param lon map centre longitude
@@ -261,6 +266,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Creates an empty map centred on NZ.
+     *
      * @param prefix Python variables prefix
      * @return an empty MapPlot that can be used to add GeoJSON layers
      */
@@ -268,9 +274,7 @@ public class JupyterLogger implements Closeable {
         return addMap(prefix, -41.5, 175, 5);
     }
 
-    /**
-     * A map plot that can display GeoJSON layers.
-     */
+    /** A map plot that can display GeoJSON layers. */
     public class MapPlot extends JupyterNotebook.CodeCell {
         String prefix;
         double lat;
@@ -321,6 +325,7 @@ public class JupyterLogger implements Closeable {
 
         /**
          * Returns the number of currently added layers.
+         *
          * @return
          */
         public int getLayerCount() {
@@ -329,6 +334,7 @@ public class JupyterLogger implements Closeable {
 
         /**
          * Adds a GeoJSON layer to the map.
+         *
          * @param name the name of the layer
          * @param geojsonData the GeoJSON data
          */
@@ -338,9 +344,7 @@ public class JupyterLogger implements Closeable {
                             name, geojsonData, palette.get(layers.size() % (palette.size() - 1))));
         }
 
-        /**
-         * A GeoJSON layer
-         */
+        /** A GeoJSON layer */
         public class GeoJsonLayer {
             public String name;
             public String fileName;
@@ -391,6 +395,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Adds data as a CSV
+     *
      * @param prefix Python variables prefix
      * @param csv a list of rows of String objects
      * @return the cell.
@@ -402,9 +407,7 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    /**
-     * A cell that can write a CSV file. Used by the addCSV() method.
-     */
+    /** A cell that can write a CSV file. Used by the addCSV() method. */
     public class CSVCell extends JupyterNotebook.CodeCell {
         List<List<Object>> csv;
         String prefix;
@@ -428,6 +431,7 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Closes the logger and writes all files to disk.
+     *
      * @throws IOException
      */
     @Override
