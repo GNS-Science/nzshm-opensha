@@ -20,6 +20,8 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:3.5.13'
+
+    implementation 'org.lz4:lz4-java:1.8.0'
     implementation 'org.apache.parquet:parquet-avro:1.15.1'
 
     implementation("org.apache.hadoop:hadoop-common:3.4.1") {

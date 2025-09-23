@@ -8,6 +8,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import nz.cri.gns.NZSHM22.opensha.util.NumpyLogger;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
@@ -78,6 +80,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
     protected ParquetWriter<GenericRecord> solutionWriter;
     protected ParquetWriter<GenericRecord> misfitsWriter;
     protected ParquetWriter<GenericRecord> misfitsIneqWriter;
+    protected NumpyLogger numpyLogger;
 
     public ParquetWriter<GenericRecord> openWriter(Schema schema, String fileName) {
         try {
@@ -91,7 +94,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     // 8K recommended https://parquet.apache.org/docs/file-format/configurations/
                     .withPageSize(8 * 1024)
                     // smaller than recommended because we've got huge arrays in the column
-                    .withRowGroupSize((long) 128 * 1024)
+                    .withRowGroupSize((long) 1024)
                     .withConf(parquetConf)
                     // better performance than SNAPPY
                     .withCompressionCodec(CompressionCodecName.GZIP)
@@ -151,6 +154,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                 solutionWriter.write(solutionRecord);
                 misfitsWriter.write(misfitsRecord);
                 misfitsIneqWriter.write(misfitsIneqRecord);
+                numpyLogger.log(state.bestSolution);
             }
         } catch (IOException x) {
             throw new RuntimeException(x);
@@ -165,6 +169,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         solutionWriter = openWriter(solutionSchema, "solution");
         misfitsWriter = openWriter(misfitsSchema, "misfits");
         misfitsIneqWriter = openWriter(misfitsIneqSchema, "misfits_ineq");
+        numpyLogger = new NumpyLogger("jupyterLog/logs/numpyTest", 500);
     }
 
     @Override
@@ -174,6 +179,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         solutionWriter.close();
         misfitsWriter.close();
         misfitsIneqWriter.close();
+        numpyLogger.close();
     }
 
     public LoggingCompletionCriteria setConstraintRanges(List<ConstraintRange> constraintRanges) {
