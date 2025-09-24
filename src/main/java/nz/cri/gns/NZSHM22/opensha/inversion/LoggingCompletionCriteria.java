@@ -97,7 +97,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     .withRowGroupSize((long) 1024)
                     .withConf(parquetConf)
                     // better performance than SNAPPY
-                    .withCompressionCodec(CompressionCodecName.GZIP)
+                    .withCompressionCodec(CompressionCodecName.LZ4_RAW)
                     .config(AvroWriteSupport.WRITE_PARQUET_UUID, "true")
                     .build();
         } catch (IOException | URISyntaxException x) {
@@ -154,7 +154,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                 solutionWriter.write(solutionRecord);
                 misfitsWriter.write(misfitsRecord);
                 misfitsIneqWriter.write(misfitsIneqRecord);
-                numpyLogger.log(state.bestSolution);
+                numpyLogger.log(state.misfits);
             }
         } catch (IOException x) {
             throw new RuntimeException(x);
