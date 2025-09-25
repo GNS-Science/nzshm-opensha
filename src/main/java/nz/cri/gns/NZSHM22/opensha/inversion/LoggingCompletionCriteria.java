@@ -150,7 +150,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
         try {
             synchronized (basePath) {
                 metaWriter.write(metaRecord);
-                energyWriter.write(energyRecord);
+            //    energyWriter.write(energyRecord);
                 solutionWriter.write(solutionRecord);
                 misfitsWriter.write(misfitsRecord);
                 misfitsIneqWriter.write(misfitsIneqRecord);

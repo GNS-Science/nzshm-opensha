@@ -782,9 +782,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
         CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
-        if (logStates != null) {
-            completionCriteria = new LoggingCompletionCriteria(completionCriteria, logStates, 500);
-        }
+
 
         // Bring up window to track progress
         // criteria = new ProgressTrackingCompletionCriteria(criteria, progressReport,
@@ -804,6 +802,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
         } else {
             subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
         }
+
+//        if (logStates != null) {
+//            subCompletionCriteria = new LoggingCompletionCriteria(subCompletionCriteria, logStates, 500);
+//        }
 
         initialState = inversionInputGenerator.getInitialSolution();
 
@@ -855,8 +857,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
         }
         progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
 
-        if (completionCriteria instanceof LoggingCompletionCriteria) {
-            ((LoggingCompletionCriteria) completionCriteria)
+        if (subCompletionCriteria instanceof LoggingCompletionCriteria) {
+            ((LoggingCompletionCriteria) subCompletionCriteria)
                     .setConstraintRanges(inversionInputGenerator.getConstraintRowRanges())
                     .open();
         }
