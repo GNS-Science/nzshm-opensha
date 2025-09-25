@@ -91,7 +91,7 @@ public class LoggingCompletionCriteria implements CompletionCriteria, Closeable 
                     // 8K recommended https://parquet.apache.org/docs/file-format/configurations/
                     .withPageSize(8 * 1024)
                     // smaller than recommended because we've got huge arrays in the column
-                    .withRowGroupSize((long) 128 * 1024)
+                    .withRowGroupSize((long) 1024)
                     .withConf(parquetConf)
                     // better performance than SNAPPY
                     .withCompressionCodec(CompressionCodecName.GZIP)
