@@ -39,7 +39,11 @@ public class NZSHM22_FaultModelsTest {
         for (NZSHM22_FaultModels model : NZSHM22_FaultModels.values()) {
             FaultSectionList sections = new FaultSectionList();
             model.fetchFaultSections(sections);
-            assertTrue(model.getName(), sections.size() > 0);
+            if (model == NZSHM22_FaultModels.CUSTOM) {
+                assertEquals(model.getName(), 0, sections.size());
+            } else {
+                assertFalse(model.getName(), sections.isEmpty());
+            }
         }
     }
 

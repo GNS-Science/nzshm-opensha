@@ -17,6 +17,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
+    CUSTOM("The fault model is specified in a file outside the logic tree", null, "4"),
 
     // CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults,
     // with depths scaled from Dfc and CFM Domains
@@ -190,6 +191,9 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
      */
     public void fetchFaultSections(FaultSectionList sections)
             throws IOException, DocumentException {
+        if (this == CUSTOM) {
+            return;
+        }
         try (InputStream in = getStream(fileName)) {
             fetchFaultSections(sections, in, crustal, id, modelName);
         }
