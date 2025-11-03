@@ -166,9 +166,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     public abstract FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException;
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
-        Preconditions.checkState(faultModel != NZSHM22_FaultModels.CUSTOM);
         Preconditions.checkState(this.downDipFile == null);
-        Preconditions.checkState(fsdFile == null);
+        Preconditions.checkState(fsdFile == null || faultModel == NZSHM22_FaultModels.CUSTOM);
         Preconditions.checkState((!faultModel.isCrustal()) || faultModel.getTvzDomain() != null);
         this.faultModel = faultModel;
         return this;
@@ -192,7 +191,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
      * @return this builder
      */
     public NZSHM22_AbstractRuptureSetBuilder setFaultModelFile(File fsdFile) {
-        Preconditions.checkState(faultModel == null);
+        Preconditions.checkState(faultModel == null || faultModel == NZSHM22_FaultModels.CUSTOM);
         Preconditions.checkState(downDipFile == null);
         this.fsdFile = fsdFile;
         faultModel = NZSHM22_FaultModels.CUSTOM;
