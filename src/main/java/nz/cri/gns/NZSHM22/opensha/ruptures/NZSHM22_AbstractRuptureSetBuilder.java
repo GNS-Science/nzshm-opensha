@@ -167,6 +167,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     public NZSHM22_AbstractRuptureSetBuilder setFaultModel(NZSHM22_FaultModels faultModel) {
         Preconditions.checkState(this.downDipFile == null);
+        Preconditions.checkState(fsdFile == null || faultModel == NZSHM22_FaultModels.CUSTOM);
         Preconditions.checkState((!faultModel.isCrustal()) || faultModel.getTvzDomain() != null);
         this.faultModel = faultModel;
         return this;
@@ -181,14 +182,31 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     }
 
     /**
-     * Sets the FaultModel file for all crustal faults
+     * Sets the FaultModel file for all crustal faults. The TVZ domain is the same as in the CUSTOM
+     * fault model.
+     *
+     * <p>Sets the fault model to CUSTOM.
      *
      * @param fsdFile the XML FaultSection data file containing source fault information
      * @return this builder
      */
     public NZSHM22_AbstractRuptureSetBuilder setFaultModelFile(File fsdFile) {
+        Preconditions.checkState(faultModel == null || faultModel == NZSHM22_FaultModels.CUSTOM);
+        Preconditions.checkState(downDipFile == null);
         this.fsdFile = fsdFile;
+        faultModel = NZSHM22_FaultModels.CUSTOM;
         return this;
+    }
+
+    /**
+     * Sets the FaultModel file for all crustal faults
+     *
+     * @param fsdFileName the name of the XML FaultSection data file containing source fault
+     *     information
+     * @return this builder
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setFaultModelFile(String fsdFileName) {
+        return setFaultModelFile(new File(fsdFileName));
     }
 
     public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(
@@ -344,14 +362,18 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
             faultModel.fetchFaultSections(subSections);
-        } else if (downDipFile != null) {
+        }
+        if (downDipFile != null) {
             try (FileInputStream in = new FileInputStream(downDipFile)) {
                 DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
             }
-        } else if (fsdFile != null) {
+        }
+        if (fsdFile != null) {
             Document doc = XMLUtils.loadDocument(fsdFile);
             NZSHM22_FaultModels.loadStoredFaultSections(subSections, doc);
-        } else {
+        }
+
+        if (faultModel == null && downDipFile == null && fsdFile == null) {
             throw new IllegalArgumentException("No fault model specified.");
         }
 
