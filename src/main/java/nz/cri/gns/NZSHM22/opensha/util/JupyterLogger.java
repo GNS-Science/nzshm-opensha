@@ -1,17 +1,21 @@
 package nz.cri.gns.NZSHM22.opensha.util;
 
 import com.google.common.base.Preconditions;
+
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.opensha.commons.data.CSVWriter;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 /**
- * A facility to easily create a Jupyter notebook from debug data. Jupyterlogger.initialise(); needs
+ * A facility to easily create a Jupyter notebook from debug data. JupyterLogger.initialise(); needs
  * to be called before logging anything.
  */
 public class JupyterLogger implements Closeable {
@@ -22,10 +26,14 @@ public class JupyterLogger implements Closeable {
     public final JupyterNotebook notebook;
     public final Set<String> prefixes;
 
-    /** The default logger. Does not write anything to disk. */
+    /**
+     * The default logger. Does not write anything to disk.
+     */
     static class NoOpLogger extends JupyterLogger {
 
-        /** Creates a new JupyterLogger that does not write anything to disk. */
+        /**
+         * Creates a new JupyterLogger that does not write anything to disk.
+         */
         public NoOpLogger() {
             super();
         }
@@ -41,7 +49,8 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public void close() throws IOException {}
+        public void close() throws IOException {
+        }
     }
 
     /**
@@ -91,6 +100,15 @@ public class JupyterLogger implements Closeable {
         return instance;
     }
 
+    public String getResource(String path) {
+        try {
+            Path p = Paths.get(getClass().getClassLoader().getResource(path).toURI());
+            return Files.readString(p);
+        } catch (IOException | URISyntaxException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
     /**
      * Creates a new JupyterLogger.
      *
@@ -100,17 +118,19 @@ public class JupyterLogger implements Closeable {
     public JupyterLogger(String basePath) throws IOException {
         this.basePath = Path.of(basePath);
         if (!this.basePath.toFile().exists()) {
-            Files.createDirectories(this.basePath);
+            Path path = Files.createDirectories(this.basePath);
+            System.out.println(
+                    "JupyterLogging enabled. Logging to " + path.toAbsolutePath().toString());
         }
+        makeFile("loggerwidgets.py", getResource("jupyterLogger/loggerwidgets.py"));
         this.notebook = new JupyterNotebook();
         this.prefixes = new HashSet<>();
         addCode(
-                        "import json\n"
-                                + "import pandas as pd\n"
-                                + "import matplotlib.pyplot as plt\n"
-                                + "\n"
-                                + "from ipyleaflet import Map, GeoJSON, LegendControl, FullScreenControl, Popup, ScaleControl, WidgetControl\n"
-                                + "from ipywidgets import HTML")
+                "import json\n"
+                        + "import pandas as pd\n"
+                        + "import matplotlib.pyplot as plt\n"
+                        + "\n"
+                        + "from loggerwidgets import LogMap\n")
                 .hideSource();
     }
 
@@ -129,7 +149,7 @@ public class JupyterLogger implements Closeable {
      * @return the prefix if is already unique. Otherwise, a modified prefix.
      */
     public synchronized String uniquePrefix(String prefix) {
-        String candidate = prefix;
+        String candidate = prefix.replace(" ", "_");
         int count = 0;
         while (prefixes.contains(candidate)) {
             candidate = prefix + "_" + count;
@@ -143,7 +163,7 @@ public class JupyterLogger implements Closeable {
      * Write the specified data to a file.
      *
      * @param fileName must be unique. Use uniquePrefix() to obtain a unique name.
-     * @param data The text data to write to the file
+     * @param data     The text data to write to the file
      * @return the file name
      */
     public String makeFile(String fileName, String data) {
@@ -195,7 +215,9 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    /** A cell representing an MFD plot. */
+    /**
+     * A cell representing an MFD plot.
+     */
     public class MFDPlot extends CSVCell {
         List<Double> xValues;
 
@@ -210,11 +232,12 @@ public class JupyterLogger implements Closeable {
         }
 
         // TODO: ensure that all MFD buckets align.
+
         /**
          * Add an MFD to the plot.
          *
          * @param name The display name of the MFD
-         * @param mfd The MFD data
+         * @param mfd  The MFD data
          */
         public void addMFD(String name, IncrementalMagFreqDist mfd) {
             if (xValues == null) {
@@ -232,17 +255,19 @@ public class JupyterLogger implements Closeable {
             csv.add(row);
         }
 
-        /** Method for rendering the cell. */
+        /**
+         * Method for rendering the cell.
+         */
         @Override
         public String getSource() {
             String source = super.getSource();
             source +=
                     ("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
-                                    + "fig, axs = plt.subplots()\n"
-                                    + "axs.set_yscale('log')\n"
-                                    + "for index, row in %prefix%.iterrows():\n"
-                                    + "    axs.plot (xs, row[1:].to_numpy())\n"
-                                    + "axs.legend(%prefix%['magnitude'])\n")
+                            + "fig, axs = plt.subplots()\n"
+                            + "axs.set_yscale('log')\n"
+                            + "for index, row in %prefix%.iterrows():\n"
+                            + "    axs.plot (xs, row[1:].to_numpy())\n"
+                            + "axs.legend(%prefix%['magnitude'])\n")
                             .replace("%prefix%", prefix);
             return source;
         }
@@ -252,9 +277,9 @@ public class JupyterLogger implements Closeable {
      * Add an empty map that can display GeoJson layers.
      *
      * @param prefix Python variables prefix
-     * @param lat map centre latitude
-     * @param lon map centre longitude
-     * @param zoom leaflet zoom level
+     * @param lat    map centre latitude
+     * @param lon    map centre longitude
+     * @param zoom   leaflet zoom level
      * @return an empty MapPlot that can be used to add GeoJSON layers
      */
     public MapPlot addMap(String prefix, double lat, double lon, int zoom) {
@@ -274,14 +299,15 @@ public class JupyterLogger implements Closeable {
         return addMap(prefix, -41.5, 175, 5);
     }
 
-    /** A map plot that can display GeoJSON layers. */
+    /**
+     * A map plot that can display GeoJSON layers.
+     */
     public class MapPlot extends JupyterNotebook.CodeCell {
         String prefix;
         double lat;
         double lon;
         int zoom;
         List<GeoJsonLayer> layers;
-        List<String> palette = List.of("blue", "red", "green", "cyan", "orange");
 
         public MapPlot(String prefix, double lat, double lon, int zoom) {
             this.prefix = prefix;
@@ -296,27 +322,9 @@ public class JupyterLogger implements Closeable {
         public String getSource() {
             String layersCode =
                     layers.stream().map(GeoJsonLayer::getSource).collect(Collectors.joining("\n"));
-            String legendContent =
-                    layers.stream()
-                            .map(layer -> "'" + layer.name + "':'" + layer.colour + "'")
-                            .collect(Collectors.joining(","));
-            return ("%name%_map = Map(center=[%lat%, %lon%], zoom=%zoom%)\n"
-                            + "%name%_section_info = HTML()\n"
-                            + "%name%_section_info.value = \"Hover over features for more details.\"\n"
-                            + "%name%_widget_control = WidgetControl(widget=%name%_section_info, position='topright')\n"
-                            + "%name%_map.add(%name%_widget_control)\n"
-                            + "def %name%_callback(event, **kwargs):\n"
-                            + "    %name%_section_info.value = \"<ul>\"\n"
-                            + "    keys = kwargs[\"properties\"].keys()\n"
-                            + "    for k,v in kwargs[\"properties\"].items():\n"
-                            + "        %name%_section_info.value += (\"<li> \" + k + \": \" + str(v) +\"</li>\")\n"
-                            + "    %name%_section_info.value += \"</ul>\"\n"
-                            + "        \n"
-                            + "%name%_map.add(LegendControl({"
-                            + legendContent
-                            + "}, title=''))\n"
-                            + layersCode
-                            + "%name%_map")
+            return ("%name%_map = LogMap(center=[%lat%, %lon%], zoom=%zoom%)\n"
+                    + layersCode + "\n"
+                    + "%name%_map")
                     .replace("%name%", prefix)
                     .replace("%lat%", "" + lat)
                     .replace("%lon%", "" + lon)
@@ -335,42 +343,33 @@ public class JupyterLogger implements Closeable {
         /**
          * Adds a GeoJSON layer to the map.
          *
-         * @param name the name of the layer
+         * @param name        the name of the layer
          * @param geojsonData the GeoJSON data
          */
         public void addLayer(String name, String geojsonData) {
-            layers.add(
-                    new GeoJsonLayer(
-                            name, geojsonData, palette.get(layers.size() % (palette.size() - 1))));
+            layers.add(new GeoJsonLayer(name, geojsonData));
         }
 
-        /** A GeoJSON layer */
+        /**
+         * A GeoJSON layer
+         */
         public class GeoJsonLayer {
             public String name;
+            public String layerName;
             public String fileName;
             public String colour;
 
-            public GeoJsonLayer(String name, String data, String colour) {
-                this.name = MapPlot.this.prefix + "_" + name;
-                this.fileName = makeFile(this.name + ".geojson", data);
-                this.colour = colour;
+            public GeoJsonLayer(String name, String data) {
+                this.name = name;
+                this.layerName = JupyterLogger.instance.uniquePrefix(name);
+                this.fileName = makeFile(this.layerName + ".geojson", data);
             }
 
             public String getSource() {
-                return ("with open('%fileName%') as json_file:\n"
-                                + "    %layerName% = json.load(json_file)\n"
-                                + "    json_file.close()\n"
-                                + "%layerName%_g = GeoJSON(data=%layerName%, \n"
-                                + "    style={'color': '%colour%', 'weight':4},\n"
-                                + "    point_style={'color': '%colour%', 'weight':4},\n"
-                                + "    hover_style={'color': 'white', 'weight':4})\n"
-                                + "%layerName%_g.on_hover(%name%_callback)\n"
-                                + "%layerName%_g.on_click(%name%_callback)\n"
-                                + "\n"
-                                + "%name%_map.add(%layerName%_g)\n")
+                return "(%layerName%, %layerName%_df) = %name%_map.add_layer('%humanName%', '%fileName%')\n"
                         .replace("%fileName%", fileName)
-                        .replace("%layerName%", name)
-                        .replace("%colour%", colour);
+                        .replace("%layerName%", layerName)
+                        .replace("%humanName%", name);
             }
         }
     }
@@ -397,7 +396,7 @@ public class JupyterLogger implements Closeable {
      * Adds data as a CSV
      *
      * @param prefix Python variables prefix
-     * @param csv a list of rows of String objects
+     * @param csv    a list of rows of String objects
      * @return the cell.
      */
     public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
@@ -407,7 +406,9 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    /** A cell that can write a CSV file. Used by the addCSV() method. */
+    /**
+     * A cell that can write a CSV file. Used by the addCSV() method.
+     */
     public class CSVCell extends JupyterNotebook.CodeCell {
         List<List<Object>> csv;
         String prefix;
