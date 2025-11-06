@@ -121,7 +121,7 @@ public class JupyterLogger implements Closeable {
                                 + "import pandas as pd\n"
                                 + "import matplotlib.pyplot as plt\n"
                                 + "\n"
-                                + "from loggerwidgets import LogMap\n")
+                                + "from loggerwidgets import LogMap")
                 .hideSource();
     }
 
@@ -240,6 +240,13 @@ public class JupyterLogger implements Closeable {
      */
     public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
         CSVCell cell = new CSVCell(prefix, indexCol, csv);
+        cell.hideSource();
+        notebook.add(cell);
+        return cell;
+    }
+
+    public LinePlotCell addLinePlot(String prefix, String indexCol, LinePlotCell.CONFIG... config) {
+        LinePlotCell cell = new LinePlotCell(prefix, indexCol, config);
         cell.hideSource();
         notebook.add(cell);
         return cell;
