@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.util;
+package nz.earthsciences.jupyterlogger;
 
 import com.google.common.base.Preconditions;
 
@@ -9,9 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import org.opensha.commons.data.CSVWriter;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 /**
@@ -44,7 +42,7 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
+        public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
             return new JupyterNotebook.CodeCell();
         }
 
@@ -227,8 +225,7 @@ public class JupyterLogger implements Closeable {
          * @param prefix
          */
         public MFDPlot(String prefix) {
-            super(prefix);
-            csv = new ArrayList<>();
+            super(prefix, "magnitude", new ArrayList<>());
         }
 
         // TODO: ensure that all MFD buckets align.
@@ -240,19 +237,22 @@ public class JupyterLogger implements Closeable {
          * @param mfd  The MFD data
          */
         public void addMFD(String name, IncrementalMagFreqDist mfd) {
-            if (xValues == null) {
-                xValues = mfd.xValues();
-                List<Object> headerRow = new ArrayList<>(List.of("magnitude"));
-                headerRow.addAll(xValues);
-                csv.add(headerRow);
-            } else {
-                if (!xValues.equals(mfd.xValues())) {
-                    return;
+
+            if (csv.isEmpty()) {
+                // fill index with x values
+                // first element is empty to allow for header row
+                csv.add(new ArrayList<>(List.of("magnitude")));
+                for (double x : mfd.xValues()) {
+                    csv.add(new ArrayList<>(List.of(x)));
                 }
             }
-            List<Object> row = new ArrayList<>(List.of(name));
-            row.addAll(mfd.yValues());
-            csv.add(row);
+            // stick mfd y values into the next column
+            // with name as the header
+            csv.get(0).add(name);
+            List<Double> ys = mfd.yValues();
+            for (int i = 0; i < ys.size(); i++) {
+                csv.get(i + 1).add(ys.get(i));
+            }
         }
 
         /**
@@ -261,14 +261,8 @@ public class JupyterLogger implements Closeable {
         @Override
         public String getSource() {
             String source = super.getSource();
-            source +=
-                    ("xs = [float(x) for x in list(%prefix%.columns.values)[1:]]\n"
-                            + "fig, axs = plt.subplots()\n"
-                            + "axs.set_yscale('log')\n"
-                            + "for index, row in %prefix%.iterrows():\n"
-                            + "    axs.plot (xs, row[1:].to_numpy())\n"
-                            + "axs.legend(%prefix%['magnitude'])\n")
-                            .replace("%prefix%", prefix);
+            source += "%prefix%.plot.line().set_yscale('log');"
+                    .replace("%prefix%", prefix);
             return source;
         }
     }
@@ -282,9 +276,9 @@ public class JupyterLogger implements Closeable {
      * @param zoom   leaflet zoom level
      * @return an empty MapPlot that can be used to add GeoJSON layers
      */
-    public MapPlot addMap(String prefix, double lat, double lon, int zoom) {
+    public MapCell addMap(String prefix, double lat, double lon, int zoom) {
         String uniquePrefix = uniquePrefix(prefix);
-        MapPlot mapCell = new MapPlot(uniquePrefix, lat, lon, zoom);
+        MapCell mapCell = new MapCell(uniquePrefix, lat, lon, zoom);
         notebook.add(mapCell);
         return mapCell;
     }
@@ -295,101 +289,8 @@ public class JupyterLogger implements Closeable {
      * @param prefix Python variables prefix
      * @return an empty MapPlot that can be used to add GeoJSON layers
      */
-    public MapPlot addMap(String prefix) {
+    public MapCell addMap(String prefix) {
         return addMap(prefix, -41.5, 175, 5);
-    }
-
-    /**
-     * A map plot that can display GeoJSON layers.
-     */
-    public class MapPlot extends JupyterNotebook.CodeCell {
-        String prefix;
-        double lat;
-        double lon;
-        int zoom;
-        List<GeoJsonLayer> layers;
-
-        public MapPlot(String prefix, double lat, double lon, int zoom) {
-            this.prefix = prefix;
-            this.lat = lat;
-            this.lon = lon;
-            this.zoom = zoom;
-            this.layers = new ArrayList<>();
-            hideSource();
-        }
-
-        @Override
-        public String getSource() {
-            String layersCode =
-                    layers.stream().map(GeoJsonLayer::getSource).collect(Collectors.joining("\n"));
-            return ("%name%_map = LogMap(center=[%lat%, %lon%], zoom=%zoom%)\n"
-                    + layersCode + "\n"
-                    + "%name%_map")
-                    .replace("%name%", prefix)
-                    .replace("%lat%", "" + lat)
-                    .replace("%lon%", "" + lon)
-                    .replace("%zoom%", "" + zoom);
-        }
-
-        /**
-         * Returns the number of currently added layers.
-         *
-         * @return
-         */
-        public int getLayerCount() {
-            return layers.size();
-        }
-
-        /**
-         * Adds a GeoJSON layer to the map.
-         *
-         * @param name        the name of the layer
-         * @param geojsonData the GeoJSON data
-         */
-        public void addLayer(String name, String geojsonData) {
-            layers.add(new GeoJsonLayer(name, geojsonData));
-        }
-
-        /**
-         * A GeoJSON layer
-         */
-        public class GeoJsonLayer {
-            public String name;
-            public String layerName;
-            public String fileName;
-            public String colour;
-
-            public GeoJsonLayer(String name, String data) {
-                this.name = name;
-                this.layerName = JupyterLogger.instance.uniquePrefix(name);
-                this.fileName = makeFile(this.layerName + ".geojson", data);
-            }
-
-            public String getSource() {
-                return "(%layerName%, %layerName%_df) = %name%_map.add_layer('%humanName%', '%fileName%')\n"
-                        .replace("%fileName%", fileName)
-                        .replace("%layerName%", layerName)
-                        .replace("%humanName%", name);
-            }
-        }
-    }
-
-    protected String writeCSV(String prefix, List<List<Object>> csv) {
-        String fileName = prefix + ".csv";
-        try {
-            FileOutputStream out = new FileOutputStream(basePath.resolve(fileName).toString());
-            CSVWriter csvWriter = new CSVWriter(out, false);
-            for (List<Object> row : csv) {
-                List<String> stringRow =
-                        row.stream().map(String::valueOf).collect(Collectors.toList());
-                csvWriter.write(stringRow);
-            }
-            csvWriter.flush();
-            out.close();
-        } catch (IOException x) {
-            throw new RuntimeException(x);
-        }
-        return fileName;
     }
 
     /**
@@ -400,34 +301,22 @@ public class JupyterLogger implements Closeable {
      * @return the cell.
      */
     public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
-        CSVCell cell = new CSVCell(prefix, csv);
-        cell.hideSource();
-        notebook.add(cell);
-        return cell;
+        return addCSV(prefix, null, csv);
     }
 
     /**
-     * A cell that can write a CSV file. Used by the addCSV() method.
+     * Adds data as a CSV
+     *
+     * @param prefix Python variables prefix
+     * @param indexCol index_col for pandas dataFrame
+     * @param csv    a list of rows of String objects
+     * @return the cell.
      */
-    public class CSVCell extends JupyterNotebook.CodeCell {
-        List<List<Object>> csv;
-        String prefix;
-
-        protected CSVCell(String prefix) {
-            this.prefix = uniquePrefix(prefix);
-        }
-
-        public CSVCell(String prefix, List<List<Object>> csv) {
-            this(prefix);
-            this.csv = csv;
-        }
-
-        @Override
-        public String getSource() {
-            String fileName = writeCSV(prefix, csv);
-            String csvCode = "%name% = pd.read_csv('%fileName%')\n" + "%name%\n";
-            return csvCode.replace("%name%", prefix).replace("%fileName%", fileName);
-        }
+    public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
+        CSVCell cell = new CSVCell(prefix, indexCol, csv);
+        cell.hideSource();
+        notebook.add(cell);
+        return cell;
     }
 
     /**

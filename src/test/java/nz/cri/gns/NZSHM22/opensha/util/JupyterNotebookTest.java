@@ -8,6 +8,8 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
+
+import nz.earthsciences.jupyterlogger.JupyterNotebook;
 import org.junit.Test;
 
 public class JupyterNotebookTest {

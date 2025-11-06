@@ -5,9 +5,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
+
+import nz.earthsciences.jupyterlogger.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import nz.earthsciences.jupyterlogger.MapCell;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
 import org.opensha.commons.data.uncertainty.UncertaintyBoundType;
@@ -70,7 +71,7 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     static final String RESOURCE_PATH = "/paleoRates/";
 
-    static JupyterLogger.MapPlot jupyterMap;
+    static MapCell jupyterMap;
 
     final String description;
     final String fileName;
