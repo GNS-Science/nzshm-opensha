@@ -17,7 +17,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.timeDependent.TimeDependentRatesGenerator;
 import nz.cri.gns.NZSHM22.util.GitVersion;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
-import nz.earthsciences.jupyterlogger.JupyterLogger;
+import nz.earthsciences.jupyterlogger.OpenShaLogger;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -272,6 +272,6 @@ public class NZSHM22_PythonGateway {
      * @param basePath a directory to write to. The directory will be created if necessary.
      */
     public static void initJupyterLogger(String basePath) {
-        JupyterLogger.initialise(basePath);
+        OpenShaLogger.initialise(basePath);
     }
 }

@@ -13,6 +13,8 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.earthsciences.jupyterlogger.JupyterLogger;
+import nz.earthsciences.jupyterlogger.MFDCell;
+import nz.earthsciences.jupyterlogger.OpenShaLogger;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -292,7 +294,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                             uncertaintyScalar);
 
             JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
-            JupyterLogger.MFDPlot mfdCell = JupyterLogger.logger().addMFDPlot("RegionalTargetMFDs");
+            MFDCell mfdCell = OpenShaLogger.logger().addMFD("RegionalTargetMFDs");
             mfdCell.addMFD("totalTargetGR_" + suffix, totalTargetGR);
             mfdCell.addMFD("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD);
             mfdCell.addMFD("totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD);
@@ -465,8 +467,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         }
 
         JupyterLogger.logger().addMarkDown("## Total MFDs");
-        JupyterLogger.MFDPlot mfdCell =
-                JupyterLogger.logger().addMFDPlot("NZSHM22_CrustalInversionTargetMFDs_init");
+        MFDCell mfdCell = OpenShaLogger.logger().addMFD("NZSHM22_CrustalInversionTargetMFDs_init");
         mfdCell.addMFD("trulyOffFaultMFD.all", trulyOffFaultMFD);
         mfdCell.addMFD("totalTargetGR.all", totalTargetGR);
         mfdCell.addMFD("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD);
