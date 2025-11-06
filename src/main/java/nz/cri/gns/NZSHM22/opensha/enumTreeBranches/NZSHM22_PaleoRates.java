@@ -5,9 +5,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import nz.earthsciences.jupyterlogger.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import nz.earthsciences.jupyterlogger.JupyterLogger;
 import nz.earthsciences.jupyterlogger.MapCell;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
@@ -174,14 +173,8 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                 doubleUps.put(sectionName, 1);
             }
 
-            geoJson.addLocation(
-                    loc,
-                    "site",
-                    siteName,
-                    "closest section",
-                    sectionName).put(
-                    "distance",
-                     minDist);
+            geoJson.addLocation(loc, "site", siteName, "closest section", sectionName)
+                    .put("distance", minDist);
 
             faultGeoJson.addFaultSection(faultSections.get(closestFaultSectionIndex));
 
@@ -203,7 +196,7 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                                     + "If applicable, a table of fault sections that have more than one matching paleo site.");
             jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches");
             SimpleGeoJsonBuilder allFaults = new SimpleGeoJsonBuilder();
-            for(FaultSection section:faultSections){
+            for (FaultSection section : faultSections) {
                 allFaults.addFaultSection(section);
             }
             jupyterMap.addLayer("CFM", allFaults.toJSON());

@@ -3,9 +3,7 @@ package nz.earthsciences.jupyterlogger;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * A cell that can write a CSV file. Used by the addCSV() method.
- */
+/** A cell that can write a CSV file. Used by the addCSV() method. */
 public class CSVCell extends JupyterNotebook.CodeCell {
     List<List<Object>> csv;
     String prefix;
@@ -40,8 +38,11 @@ public class CSVCell extends JupyterNotebook.CodeCell {
     @Override
     public String getSource() {
         String fileName = writeCSV(prefix, csv);
-        String template = indexCol == null ? "%name% = pd.read_csv('%fileName%')\n%name%\n" :
-                "%name% = pd.read_csv('%fileName%', index_col='%indexCol%')\n%name%\n".replace("%indexCol%", indexCol);
+        String template =
+                indexCol == null
+                        ? "%name% = pd.read_csv('%fileName%')\n%name%\n"
+                        : "%name% = pd.read_csv('%fileName%', index_col='%indexCol%')\n%name%\n"
+                                .replace("%indexCol%", indexCol);
         return template.replace("%name%", prefix).replace("%fileName%", fileName);
     }
 }

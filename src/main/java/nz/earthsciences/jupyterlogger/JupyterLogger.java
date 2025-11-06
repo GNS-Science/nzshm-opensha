@@ -1,7 +1,6 @@
 package nz.earthsciences.jupyterlogger;
 
 import com.google.common.base.Preconditions;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -9,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 /**
@@ -24,14 +22,10 @@ public class JupyterLogger implements Closeable {
     public final JupyterNotebook notebook;
     public final Set<String> prefixes;
 
-    /**
-     * The default logger. Does not write anything to disk.
-     */
+    /** The default logger. Does not write anything to disk. */
     static class NoOpLogger extends JupyterLogger {
 
-        /**
-         * Creates a new JupyterLogger that does not write anything to disk.
-         */
+        /** Creates a new JupyterLogger that does not write anything to disk. */
         public NoOpLogger() {
             super();
         }
@@ -42,13 +36,13 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
+        public JupyterNotebook.CodeCell addCSV(
+                String prefix, String indexCol, List<List<Object>> csv) {
             return new JupyterNotebook.CodeCell();
         }
 
         @Override
-        public void close() throws IOException {
-        }
+        public void close() throws IOException {}
     }
 
     /**
@@ -124,11 +118,11 @@ public class JupyterLogger implements Closeable {
         this.notebook = new JupyterNotebook();
         this.prefixes = new HashSet<>();
         addCode(
-                "import json\n"
-                        + "import pandas as pd\n"
-                        + "import matplotlib.pyplot as plt\n"
-                        + "\n"
-                        + "from loggerwidgets import LogMap\n")
+                        "import json\n"
+                                + "import pandas as pd\n"
+                                + "import matplotlib.pyplot as plt\n"
+                                + "\n"
+                                + "from loggerwidgets import LogMap\n")
                 .hideSource();
     }
 
@@ -161,7 +155,7 @@ public class JupyterLogger implements Closeable {
      * Write the specified data to a file.
      *
      * @param fileName must be unique. Use uniquePrefix() to obtain a unique name.
-     * @param data     The text data to write to the file
+     * @param data The text data to write to the file
      * @return the file name
      */
     public String makeFile(String fileName, String data) {
@@ -213,9 +207,7 @@ public class JupyterLogger implements Closeable {
         return cell;
     }
 
-    /**
-     * A cell representing an MFD plot.
-     */
+    /** A cell representing an MFD plot. */
     public class MFDPlot extends CSVCell {
         List<Double> xValues;
 
@@ -234,7 +226,7 @@ public class JupyterLogger implements Closeable {
          * Add an MFD to the plot.
          *
          * @param name The display name of the MFD
-         * @param mfd  The MFD data
+         * @param mfd The MFD data
          */
         public void addMFD(String name, IncrementalMagFreqDist mfd) {
 
@@ -255,14 +247,11 @@ public class JupyterLogger implements Closeable {
             }
         }
 
-        /**
-         * Method for rendering the cell.
-         */
+        /** Method for rendering the cell. */
         @Override
         public String getSource() {
             String source = super.getSource();
-            source += "%prefix%.plot.line().set_yscale('log');"
-                    .replace("%prefix%", prefix);
+            source += "%prefix%.plot.line().set_yscale('log');".replace("%prefix%", prefix);
             return source;
         }
     }
@@ -271,9 +260,9 @@ public class JupyterLogger implements Closeable {
      * Add an empty map that can display GeoJson layers.
      *
      * @param prefix Python variables prefix
-     * @param lat    map centre latitude
-     * @param lon    map centre longitude
-     * @param zoom   leaflet zoom level
+     * @param lat map centre latitude
+     * @param lon map centre longitude
+     * @param zoom leaflet zoom level
      * @return an empty MapPlot that can be used to add GeoJSON layers
      */
     public MapCell addMap(String prefix, double lat, double lon, int zoom) {
@@ -297,7 +286,7 @@ public class JupyterLogger implements Closeable {
      * Adds data as a CSV
      *
      * @param prefix Python variables prefix
-     * @param csv    a list of rows of String objects
+     * @param csv a list of rows of String objects
      * @return the cell.
      */
     public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
@@ -309,7 +298,7 @@ public class JupyterLogger implements Closeable {
      *
      * @param prefix Python variables prefix
      * @param indexCol index_col for pandas dataFrame
-     * @param csv    a list of rows of String objects
+     * @param csv a list of rows of String objects
      * @return the cell.
      */
     public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {

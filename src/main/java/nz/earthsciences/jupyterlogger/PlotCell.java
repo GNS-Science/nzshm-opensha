@@ -1,4 +1,3 @@
 package nz.earthsciences.jupyterlogger;
 
-public class PlotCell {
-}
+public class PlotCell {}

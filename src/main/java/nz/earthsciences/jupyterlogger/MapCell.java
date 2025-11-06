@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * A map plot that can display GeoJSON layers.
- */
+/** A map plot that can display GeoJSON layers. */
 public class MapCell extends JupyterNotebook.CodeCell {
     String prefix;
     double lat;
@@ -28,8 +26,9 @@ public class MapCell extends JupyterNotebook.CodeCell {
         String layersCode =
                 layers.stream().map(GeoJsonLayer::getSource).collect(Collectors.joining("\n"));
         return ("%name%_map = LogMap(center=[%lat%, %lon%], zoom=%zoom%)\n"
-                + layersCode + "\n"
-                + "%name%_map")
+                        + layersCode
+                        + "\n"
+                        + "%name%_map")
                 .replace("%name%", prefix)
                 .replace("%lat%", "" + lat)
                 .replace("%lon%", "" + lon)
@@ -48,16 +47,14 @@ public class MapCell extends JupyterNotebook.CodeCell {
     /**
      * Adds a GeoJSON layer to the map.
      *
-     * @param name        the name of the layer
+     * @param name the name of the layer
      * @param geojsonData the GeoJSON data
      */
     public void addLayer(String name, String geojsonData) {
         layers.add(new GeoJsonLayer(name, geojsonData));
     }
 
-    /**
-     * A GeoJSON layer
-     */
+    /** A GeoJSON layer */
     public static class GeoJsonLayer {
         public String name;
         public String layerName;
@@ -77,4 +74,3 @@ public class MapCell extends JupyterNotebook.CodeCell {
         }
     }
 }
-
