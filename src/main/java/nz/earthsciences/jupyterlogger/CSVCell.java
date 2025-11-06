@@ -1,5 +1,6 @@
 package nz.earthsciences.jupyterlogger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,25 @@ public class CSVCell extends JupyterNotebook.CodeCell {
         this.prefix = JupyterLogger.logger().uniquePrefix(prefix);
         this.csv = csv;
         this.indexCol = indexCol;
+    }
+
+    public void addIndex(List<?> index) {
+        // fill index with x values
+        // first element is empty to allow for header row
+        csv.add(new ArrayList<>(List.of(indexCol)));
+        for (Object x : index) {
+            csv.add(new ArrayList<>(List.of(x)));
+        }
+    }
+
+    public void addColumn(String name, List<?> values) {
+        if (values.size() + 1 != csv.size()) {
+            throw new IllegalArgumentException("new column is the wrong size");
+        }
+        csv.get(0).add(name);
+        for (int i = 0; i < values.size(); i++) {
+            csv.get(i + 1).add(values.get(i));
+        }
     }
 
     protected static String safeCSVString(Object value) {
