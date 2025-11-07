@@ -12,8 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_Regions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
-import nz.earthsciences.jupyterlogger.JupyterLogger;
-import nz.earthsciences.jupyterlogger.LinePlotCell;
+import nz.earthsciences.jupyterlogger.*;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -294,17 +293,19 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
             JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
 
-            LinePlotCell linePlot =
+            CSVCell csvCell =
                     JupyterLogger.logger()
-                            .addLinePlot(
-                                    "RegionalTargetMFDs", "magnitude", LinePlotCell.CONFIG.Y_LOG);
-            linePlot.setXValues(totalTargetGR.xValues());
-            linePlot.addSeries("totalTargetGR_" + suffix, totalTargetGR.yValues());
-            linePlot.addSeries("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD.yValues());
-            linePlot.addSeries(
+                            .addCSV("RegionalTargetMFDs", "magnitude")
+                            .showTable(false);
+            csvCell.setIndex(totalTargetGR.xValues());
+            csvCell.addColumn("totalTargetGR_" + suffix, totalTargetGR.yValues());
+            csvCell.addColumn("trulyOffFaultMFD_" + suffix, trulyOffFaultMFD.yValues());
+            csvCell.addColumn(
                     "totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD.yValues());
-            linePlot.addSeries(
+            csvCell.addColumn(
                     "targetOnFaultSupraSeisMFD_" + suffix, targetOnFaultSupraSeisMFDs.yValues());
+
+            JupyterLogger.logger().addLinePlot("RegionalTargetMFDs", csvCell).setYLog();
 
             // TODO are these purely analysis?? for now they're off
             //		// compute coupling coefficients
@@ -473,16 +474,18 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         }
 
         JupyterLogger.logger().addMarkDown("## Total MFDs");
-        LinePlotCell linePlot =
+        CSVCell csvCell =
                 JupyterLogger.logger()
-                        .addLinePlot(
-                                "NZSHM22_CrustalInversionTargetMFDs_init",
-                                "magnitude",
-                                LinePlotCell.CONFIG.Y_LOG);
-        linePlot.setXValues(trulyOffFaultMFD.xValues());
-        linePlot.addSeries("trulyOffFaultMFD.all", trulyOffFaultMFD.yValues());
-        linePlot.addSeries("totalTargetGR.all", totalTargetGR.yValues());
-        linePlot.addSeries("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD.yValues());
+                        .addCSV("NZSHM22_CrustalInversionTargetMFDs_init", "magnitude")
+                        .showTable(false);
+        csvCell.setIndex(trulyOffFaultMFD.xValues());
+        csvCell.addColumn("trulyOffFaultMFD.all", trulyOffFaultMFD.yValues());
+        csvCell.addColumn("totalTargetGR.all", totalTargetGR.yValues());
+        csvCell.addColumn("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD.yValues());
+
+        JupyterLogger.logger()
+                .addLinePlot("NZSHM22_CrustalInversionTargetMFDs_init", csvCell)
+                .setYLog();
     }
 
     public RegionalTargetMFDs getSansTvz() {

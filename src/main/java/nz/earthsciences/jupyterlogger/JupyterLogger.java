@@ -35,12 +35,6 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public JupyterNotebook.CodeCell addCSV(
-                String prefix, String indexCol, List<List<Object>> csv) {
-            return new JupyterNotebook.CodeCell();
-        }
-
-        @Override
         public void close() throws IOException {}
     }
 
@@ -120,6 +114,7 @@ public class JupyterLogger implements Closeable {
                         "import json\n"
                                 + "import pandas as pd\n"
                                 + "import matplotlib.pyplot as plt\n"
+                                + "import numpy as np\n"
                                 + "\n"
                                 + "from loggerwidgets import LogMap")
                 .hideSource();
@@ -167,6 +162,10 @@ public class JupyterLogger implements Closeable {
             throw new RuntimeException("Could not write " + fileName, x);
         }
         return fileName;
+    }
+
+    public void log(JupyterNotebook.Cell cell) {
+        notebook.add(cell);
     }
 
     /**
@@ -219,6 +218,14 @@ public class JupyterLogger implements Closeable {
         return addMap(prefix, -41.5, 175, 5);
     }
 
+    public CSVCell addCSV(String prefix) {
+        return addCSV(prefix, new ArrayList<>());
+    }
+
+    public CSVCell addCSV(String prefix, String indexCol) {
+        return addCSV(prefix, indexCol, new ArrayList<>());
+    }
+
     /**
      * Adds data as a CSV
      *
@@ -226,7 +233,7 @@ public class JupyterLogger implements Closeable {
      * @param csv a list of rows of String objects
      * @return the cell.
      */
-    public JupyterNotebook.CodeCell addCSV(String prefix, List<List<Object>> csv) {
+    public CSVCell addCSV(String prefix, List<List<Object>> csv) {
         return addCSV(prefix, null, csv);
     }
 
@@ -238,15 +245,15 @@ public class JupyterLogger implements Closeable {
      * @param csv a list of rows of String objects
      * @return the cell.
      */
-    public JupyterNotebook.CodeCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
+    public CSVCell addCSV(String prefix, String indexCol, List<List<Object>> csv) {
         CSVCell cell = new CSVCell(prefix, indexCol, csv);
         cell.hideSource();
         notebook.add(cell);
         return cell;
     }
 
-    public LinePlotCell addLinePlot(String prefix, String indexCol, LinePlotCell.CONFIG... config) {
-        LinePlotCell cell = new LinePlotCell(prefix, indexCol, config);
+    public LinePlotCell addLinePlot(String prefix, CSVCell csv) {
+        LinePlotCell cell = new LinePlotCell(prefix, csv);
         cell.hideSource();
         notebook.add(cell);
         return cell;

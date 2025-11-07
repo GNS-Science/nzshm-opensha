@@ -3,10 +3,10 @@ package nz.earthsciences.jupyterlogger;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LinePlotCell extends PlotCell {
+public class BarPlotCell extends PlotCell {
 
-    public LinePlotCell(String prefix, CSVCell csvCell) {
-        super("line", prefix, csvCell);
+    public BarPlotCell(String prefix, CSVCell csvCell) {
+        super("bar", prefix, csvCell);
     }
 
     @Override

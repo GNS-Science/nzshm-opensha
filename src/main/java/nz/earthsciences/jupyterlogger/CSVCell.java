@@ -9,11 +9,26 @@ public class CSVCell extends JupyterNotebook.CodeCell {
     List<List<Object>> csv;
     String prefix;
     String indexCol;
+    boolean showTable = true;
 
     public CSVCell(String prefix, String indexCol, List<List<Object>> csv) {
         this.prefix = JupyterLogger.logger().uniquePrefix(prefix);
         this.csv = csv;
         this.indexCol = indexCol;
+    }
+
+    /**
+     * This returns the name of the dataFrame holding the CSV
+     *
+     * @return
+     */
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public CSVCell showTable(boolean showTable) {
+        this.showTable = showTable;
+        return this;
     }
 
     public void setIndex(List<?> index) {
@@ -26,6 +41,11 @@ public class CSVCell extends JupyterNotebook.CodeCell {
     }
 
     public void addColumn(String name, List<?> values) {
+        if (csv.isEmpty()) {
+            for (Object v : values) {
+                csv.add(new ArrayList<>());
+            }
+        }
         if (values.size() + 1 != csv.size()) {
             throw new IllegalArgumentException(
                     "column must have exactly one value per index value");
@@ -34,6 +54,16 @@ public class CSVCell extends JupyterNotebook.CodeCell {
         for (int i = 0; i < values.size(); i++) {
             csv.get(i + 1).add(values.get(i));
         }
+    }
+
+    /**
+     * Adds a row to the CSV. It is not recommended to mix addColumn() and addRow() calls for one
+     * CSV.
+     *
+     * @param row
+     */
+    public void addrow(List<Object> row) {
+        csv.add(row);
     }
 
     protected static String escapeCSVString(Object value) {
@@ -60,14 +90,18 @@ public class CSVCell extends JupyterNotebook.CodeCell {
         String fileName = writeCSV(prefix, csv);
         String template =
                 indexCol == null
-                        ? "%prefix% = pd.read_csv('%fileName%')\n"
-                        : "%prefix% = pd.read_csv('%fileName%', index_col='%indexCol%')\n"
+                        ? "%prefix% = pd.read_csv('%fileName%')"
+                        : "%prefix% = pd.read_csv('%fileName%', index_col='%indexCol%')"
                                 .replace("%indexCol%", indexCol);
         return template.replace("%fileName%", fileName);
     }
 
     @Override
     public String getSource() {
-        return (finaliseCSV() + "%prefix%").replace("%prefix%", prefix);
+        String source = finaliseCSV();
+        if (showTable) {
+            source += "\n%prefix%";
+        }
+        return source.replace("%prefix%", prefix);
     }
 }
