@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.util;
+package nz.earthsciences.jupyterlogger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
