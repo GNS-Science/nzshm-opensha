@@ -30,6 +30,11 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
+        public boolean isEnabled(){
+            return false;
+        }
+
+        @Override
         public String makeFile(String fileName, String data) {
             return "";
         }
@@ -83,6 +88,14 @@ public class JupyterLogger implements Closeable {
             instance = new NoOpLogger();
         }
         return instance;
+    }
+
+    /**
+     * Can be used to determine whether to run expensive data collection for logging.
+     * @return whether the logger is enabled
+     */
+    public boolean isEnabled(){
+        return true;
     }
 
     public String getResource(String path) {
