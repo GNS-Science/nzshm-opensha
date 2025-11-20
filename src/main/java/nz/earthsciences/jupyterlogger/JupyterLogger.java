@@ -30,7 +30,7 @@ public class JupyterLogger implements Closeable {
         }
 
         @Override
-        public boolean isEnabled(){
+        public boolean isEnabled() {
             return false;
         }
 
@@ -92,9 +92,10 @@ public class JupyterLogger implements Closeable {
 
     /**
      * Can be used to determine whether to run expensive data collection for logging.
+     *
      * @return whether the logger is enabled
      */
-    public boolean isEnabled(){
+    public boolean isEnabled() {
         return true;
     }
 
