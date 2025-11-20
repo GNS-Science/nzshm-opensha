@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import nz.cri.gns.NZSHM22.opensha.util.JupyterLogger;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
+import nz.earthsciences.jupyterlogger.JupyterLogger;
+import nz.earthsciences.jupyterlogger.MapCell;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.uncertainty.BoundedUncertainty;
 import org.opensha.commons.data.uncertainty.UncertaintyBoundType;
@@ -70,7 +71,7 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
 
     static final String RESOURCE_PATH = "/paleoRates/";
 
-    static JupyterLogger.MapPlot jupyterMap;
+    static MapCell jupyterMap;
 
     final String description;
     final String fileName;
@@ -106,6 +107,7 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
         }
 
         SimpleGeoJsonBuilder geoJson = new SimpleGeoJsonBuilder();
+        SimpleGeoJsonBuilder faultGeoJson = new SimpleGeoJsonBuilder();
 
         Map<String, Integer> doubleUps = new HashMap<>();
 
@@ -172,16 +174,10 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                 doubleUps.put(sectionName, 1);
             }
 
-            geoJson.addLocation(
-                    loc,
-                    "site",
-                    siteName,
-                    "closest section",
-                    sectionName,
-                    "distance",
-                    "" + minDist);
+            geoJson.addLocation(loc, "site", siteName, "closest section", sectionName)
+                    .put("distance", minDist);
 
-            geoJson.addFaultSection(faultSections.get(closestFaultSectionIndex));
+            faultGeoJson.addFaultSection(faultSections.get(closestFaultSectionIndex));
 
             paleoRateConstraints.add(
                     new UncertainDataConstraint.SectMappedUncertainDataConstraint(
@@ -200,12 +196,19 @@ public enum NZSHM22_PaleoRates implements LogicTreeNode {
                                     + "A map of paleo sites and their matching fault sections.\n\n"
                                     + "If applicable, a table of fault sections that have more than one matching paleo site.");
             jupyterMap = JupyterLogger.logger().addMap("paleoRatesMatches");
+            SimpleGeoJsonBuilder allFaults = new SimpleGeoJsonBuilder();
+            for (FaultSection section : faultSections) {
+                allFaults.addFaultSection(section);
+            }
+            jupyterMap.addLayer("CFM", allFaults.toJSON());
         }
 
         if (jupyterMap.getLayerCount() == 0) {
-            jupyterMap.addLayer("sites_from_enum", geoJson.toJSON());
+            jupyterMap.addLayer("matches from enum", faultGeoJson.toJSON());
+            jupyterMap.addLayer("sites from enum", geoJson.toJSON());
         } else {
-            jupyterMap.addLayer("sites_from_file", geoJson.toJSON());
+            jupyterMap.addLayer("matches from file", faultGeoJson.toJSON());
+            jupyterMap.addLayer("sites from file", geoJson.toJSON());
         }
 
         List<List<Object>> doubleUpList = new ArrayList<>();
