@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.util;
+package nz.earthsciences.jupyterlogger;
 
 import static org.junit.Assert.assertEquals;
 
