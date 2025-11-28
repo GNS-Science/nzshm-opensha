@@ -5,8 +5,8 @@ name: Java SmokeTest with Gradle
 
 on:
   workflow_dispatch:
-  schedule:
-      - cron: '20 15 * * 0'
+#  schedule:
+#      - cron: '20 15 * * 0'
 
 jobs:
   build:
