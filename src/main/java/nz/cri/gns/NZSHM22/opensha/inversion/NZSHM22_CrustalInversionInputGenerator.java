@@ -79,7 +79,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
             List<U3AveSlipConstraint> aveSlipConstraints,
             PaleoProbabilityModel paleoProbabilityModel) {
 
-        if(aveSlipConstraints != null) {
+        if (aveSlipConstraints != null) {
             throw new RuntimeException("aveslipconstraints aren't ued");
         }
 

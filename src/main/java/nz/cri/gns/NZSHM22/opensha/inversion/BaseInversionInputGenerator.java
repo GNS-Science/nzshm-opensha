@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.List;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
@@ -9,20 +11,18 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MF
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BaseInversionInputGenerator extends InversionInputGenerator {
 
-    public BaseInversionInputGenerator(FaultSystemRupSet rupSet, List<InversionConstraint> constraints,
-                                   double[] initialSolution, double[] waterLevelRates) {
-    super(rupSet, constraints, initialSolution, waterLevelRates);
+    public BaseInversionInputGenerator(
+            FaultSystemRupSet rupSet,
+            List<InversionConstraint> constraints,
+            double[] initialSolution,
+            double[] waterLevelRates) {
+        super(rupSet, constraints, initialSolution, waterLevelRates);
     }
 
     protected static List<InversionConstraint> buildSharedConstraints(
-            NZSHM22_InversionFaultSystemRuptSet rupSet,
-            AbstractInversionConfiguration config
-    ) {
+            NZSHM22_InversionFaultSystemRuptSet rupSet, AbstractInversionConfiguration config) {
 
         System.out.println("buildConstraints");
         System.out.println("================");
@@ -31,7 +31,7 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
                 "config.getSlipRateWeightingType(): " + config.getSlipRateWeightingType());
         if (config.getSlipRateWeightingType()
                 == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
-                .NORMALIZED_BY_UNCERTAINTY) {
+                        .NORMALIZED_BY_UNCERTAINTY) {
             System.out.println(
                     "config.getSlipRateUncertaintyConstraintWt() :"
                             + config.getSlipRateUncertaintyConstraintWt());
@@ -63,7 +63,7 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
         // WARNING: pre-modular rupture sets have stdev 1000 times too large
         if (config.getSlipRateWeightingType()
                 == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
-                .NORMALIZED_BY_UNCERTAINTY) {
+                        .NORMALIZED_BY_UNCERTAINTY) {
             constraints.add(
                     NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
                             config.getSlipRateUncertaintyConstraintWt(),
@@ -73,11 +73,11 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
         } else {
             if (config.getSlipRateConstraintWt_normalized() > 0d
                     && (config.getSlipRateWeightingType()
-                    == AbstractInversionConfiguration
-                    .NZSlipRateConstraintWeightingType.NORMALIZED
-                    || config.getSlipRateWeightingType()
-                    == AbstractInversionConfiguration
-                    .NZSlipRateConstraintWeightingType.BOTH)) {
+                                    == AbstractInversionConfiguration
+                                            .NZSlipRateConstraintWeightingType.NORMALIZED
+                            || config.getSlipRateWeightingType()
+                                    == AbstractInversionConfiguration
+                                            .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
                         new SlipRateInversionConstraint(
                                 config.getSlipRateConstraintWt_normalized(),
@@ -87,11 +87,11 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
 
             if (config.getSlipRateConstraintWt_unnormalized() > 0d
                     && (config.getSlipRateWeightingType()
-                    == AbstractInversionConfiguration
-                    .NZSlipRateConstraintWeightingType.UNNORMALIZED
-                    || config.getSlipRateWeightingType()
-                    == AbstractInversionConfiguration
-                    .NZSlipRateConstraintWeightingType.BOTH)) {
+                                    == AbstractInversionConfiguration
+                                            .NZSlipRateConstraintWeightingType.UNNORMALIZED
+                            || config.getSlipRateWeightingType()
+                                    == AbstractInversionConfiguration
+                                            .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
                         new SlipRateInversionConstraint(
                                 config.getSlipRateConstraintWt_unnormalized(),
@@ -151,7 +151,6 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
 
         return constraints;
     }
-
 
     protected static double[] buildWaterLevel(
             AbstractInversionConfiguration config, FaultSystemRupSet rupSet) {
