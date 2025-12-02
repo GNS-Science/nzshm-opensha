@@ -352,8 +352,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                         rupSet,
                         inversionConfiguration,
                         paleoRateConstraints,
-                        null,
-                        null,
                         paleoProbabilityModel);
         setInversionInputGenerator(inversionInputGenerator);
 
