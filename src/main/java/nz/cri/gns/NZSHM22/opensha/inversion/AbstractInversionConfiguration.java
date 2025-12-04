@@ -21,12 +21,12 @@ public class AbstractInversionConfiguration implements XMLSaveable {
 
     // Setting slip-rate constraint weights to 0 does not disable them! To disable
     // one or the other (both cannot be), use slipConstraintRateWeightingType Below
-    static double SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED =
+    static double SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT =
             1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for
     // SlipRateConstraintWeightingType.BOTH) -- NOT USED if
     // UNNORMALIZED!
 
-    static double SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED =
+    static double SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT =
             100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used
     // for SlipRateConstraintWeightingType.BOTH) -- NOT USED if
     // NORMALIZED!
@@ -35,16 +35,16 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     // difference.
 
     // BOTH includes both normalized and unnormalized constraints.
-    static NZSlipRateConstraintWeightingType SLIP_RATE_WEIGHTING =
+    static NZSlipRateConstraintWeightingType SLIP_RATE_WEIGHTING_DEFAULT =
             NZSlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
 
     // weight of rupture-rate minimization constraint weights relative to slip-rate
     // constraint (recommended: 10,000)
     // (currently used to minimization rates of rups below sectMinMag)
-    static double MINIMIZATION_CONSTRAINT_WT = 10000;
+    static double MINIMIZATION_CONSTRAINT_WT_DEFAULT = 10000;
 
     // fraction of the minimum rupture rate basis to be used as initial rates
-    static double MINIMUM_RUPTURE_RATE_FRACTION = 0;
+    static double MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT = 0;
 
     private InversionTargetMFDs inversionTargetMfds;
     private double magnitudeEqualityConstraintWt;

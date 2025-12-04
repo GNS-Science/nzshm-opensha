@@ -125,14 +125,14 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
                                 .setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
                                 // Slip Rate config
                                 .setSlipRateConstraintWt_normalized(
-                                        SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED)
+                                        SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT)
                                 .setSlipRateConstraintWt_unnormalized(
-                                        SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED)
-                                .setSlipRateWeightingType(SLIP_RATE_WEIGHTING)
+                                        SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT)
+                                .setSlipRateWeightingType(SLIP_RATE_WEIGHTING_DEFAULT)
                                 .setMfdEqualityConstraints(mfdEqualityConstraints)
                                 .setMfdInequalityConstraints(mfdInequalityConstraints)
                                 // Rate Minimization config
-                                .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION)
+                                .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT)
                                 .setMinimumRuptureRateBasis(minimumRuptureRateBasis)
                                 .setInitialRupModel(initialRupModel)
                                 .setMfdConstraints(
@@ -146,7 +146,7 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
         // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
         // constraint
         if (!excludeMinMag) {
-            newConfig.setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT);
+            newConfig.setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
         }
 
         return newConfig;

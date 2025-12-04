@@ -105,13 +105,13 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
                         .setInversionTargetMfds(inversionMFDs)
                         // MFD config is now below
                         // Slip Rate config
-                        .setSlipRateConstraintWt_normalized(SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED)
+                        .setSlipRateConstraintWt_normalized(SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT)
                         .setSlipRateConstraintWt_unnormalized(
-                                SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED)
-                        .setSlipRateWeightingType(SLIP_RATE_WEIGHTING)
+                                SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT)
+                        .setSlipRateWeightingType(SLIP_RATE_WEIGHTING_DEFAULT)
                         // Rate Minimization config
-                        .setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT)
-                        .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION)
+                        .setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT)
+                        .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT)
                         .setMinimumRuptureRateBasis(minimumRuptureRateBasis)
                         .setInitialRupModel(initialRupModel)
                         .setMfdConstraints(
