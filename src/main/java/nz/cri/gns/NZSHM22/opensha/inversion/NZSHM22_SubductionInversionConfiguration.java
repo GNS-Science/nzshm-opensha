@@ -20,62 +20,8 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
  */
 public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionConfiguration {
 
-    protected static final boolean D = true; // for debugging
-
     /** */
     public NZSHM22_SubductionInversionConfiguration() {}
-
-    public static final double DEFAULT_MFD_EQUALITY_WT = 10;
-    public static final double DEFAULT_MFD_INEQUALITY_WT = 1000;
-
-    /**
-     * This generates an inversion configuration for the given inversion model and rupture set
-     *
-     * @param model
-     * @param rupSet
-     * @return
-     */
-    public static NZSHM22_SubductionInversionConfiguration forModel(
-            InversionModels model, NZSHM22_InversionFaultSystemRuptSet rupSet) {
-        double mfdEqualityConstraintWt = DEFAULT_MFD_EQUALITY_WT;
-        double mfdInequalityConstraintWt = DEFAULT_MFD_INEQUALITY_WT;
-        return forModel(model, rupSet, mfdEqualityConstraintWt, mfdInequalityConstraintWt);
-    }
-
-    /**
-     * This generates an inversion configuration for the given inversion model and rupture set
-     *
-     * @param model
-     * @param rupSet
-     * @param mfdEqualityConstraintWt weight of magnitude-distribution EQUALITY constraint relative
-     *     to slip-rate constraint (recommended: 10)
-     * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY constraint
-     *     relative to slip-rate constraint (recommended: 1000)
-     * @return
-     */
-    public static NZSHM22_SubductionInversionConfiguration forModel(
-            InversionModels model,
-            NZSHM22_InversionFaultSystemRuptSet rupSet,
-            double mfdEqualityConstraintWt,
-            double mfdInequalityConstraintWt) {
-        double totalRateM5 = 5;
-        double bValue = 1;
-        double mfdTransitionMag = 7.75;
-        double mfdMinMag = 7.05;
-        return forModel(
-                model,
-                rupSet,
-                null,
-                mfdEqualityConstraintWt,
-                mfdInequalityConstraintWt,
-                0,
-                0,
-                0.4,
-                totalRateM5,
-                bValue,
-                mfdTransitionMag,
-                mfdMinMag);
-    }
 
     /**
      * This generates an inversion configuration for the given inversion model and rupture set
@@ -89,7 +35,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
      * @param mfdUncertaintyWeightedConstraintScalar TODO
      * @param totalRateM5
      * @param bValue
-     * @param mfdTransitionMag
+     * @param mfdTransitionMag magnitude to switch from MFD equality to MFD inequality
      * @return
      */
     public static NZSHM22_SubductionInversionConfiguration forModel(
@@ -105,9 +51,6 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
             double bValue,
             double mfdTransitionMag,
             double mfdMinMag) {
-
-        double MFDTransitionMag =
-                mfdTransitionMag; // magnitude to switch from MFD equality to MFD inequality
 
         /*
          * ******************************************* COMMON TO ALL MODELS
@@ -172,8 +115,6 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
 
         //		NZSHM22_SubductionInversionTargetMFDs inversionTargetMfds =
         // (NZSHM22_SubductionInversionTargetMFDs) rupSet.getInversionTargetMFDs();
-
-        String metadata = "";
 
         //		/* *******************************************
         //		 * MODEL SPECIFIC
@@ -252,10 +193,10 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
             // inequality
             mfdEqualityConstraints =
                     MFDManipulation.restrictMFDConstraintMagRange(
-                            mfdConstraints, mfdConstraints.get(0).getMinX(), MFDTransitionMag);
+                            mfdConstraints, mfdConstraints.get(0).getMinX(), mfdTransitionMag);
             mfdInequalityConstraints =
                     MFDManipulation.restrictMFDConstraintMagRange(
-                            mfdConstraints, MFDTransitionMag, mfdConstraints.get(0).getMaxX());
+                            mfdConstraints, mfdTransitionMag, mfdConstraints.get(0).getMaxX());
             newConfig
                     .setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
                     .setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
@@ -319,7 +260,7 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
                 double fractRupInside = fractRupsInside[rup];
                 if (fractRupInside > 0)
                     if (mag < 8.5) // b/c the mfdInequalityConstraints only go to M8.5!
-                    startingModelMagFreqDist.add(mag, fractRupInside * initialRupModel[rup]);
+                        startingModelMagFreqDist.add(mag, fractRupInside * initialRupModel[rup]);
             }
 
             // Find the amount to adjust starting model MFD to be below or equal to Target MFD
