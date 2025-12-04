@@ -73,41 +73,6 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
             double mfdUncertWtdConstraintScalar,
             boolean excludeMinMag) {
 
-        /*
-         * ******************************************* COMMON TO ALL MODELS
-         * *******************************************
-         */
-        // Setting slip-rate constraint weights to 0 does not disable them! To disable
-        // one or the other (both cannot be), use slipConstraintRateWeightingType Below
-        double slipRateConstraintWt_normalized =
-                1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for
-        // SlipRateConstraintWeightingType.BOTH) -- NOT USED if
-        // UNNORMALIZED!
-        double slipRateConstraintWt_unnormalized =
-                100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used
-        // for SlipRateConstraintWeightingType.BOTH) -- NOT USED if
-        // NORMALIZED!
-        // If normalized, slip rate misfit is % difference for each section (recommended
-        // since it helps fit slow-moving faults). If unnormalized, misfit is absolute
-        // difference.
-        // BOTH includes both normalized and unnormalized constraints.
-        NZSlipRateConstraintWeightingType slipRateWeighting =
-                NZSlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
-
-        // weight of rupture-rate minimization constraint weights relative to slip-rate
-        // constraint (recommended: 10,000)
-        // (currently used to minimization rates of rups below sectMinMag)
-        double minimizationConstraintWt = 10000;
-
-        //        /* *******************************************
-        //         * MODEL SPECIFIC
-        //         * ******************************************* */
-        //        // fraction of the minimum rupture rate basis to be used as initial rates
-        double minimumRuptureRateFraction = 0;
-
-        double[] initialRupModel = null;
-        double[] minimumRuptureRateBasis = null;
-
         setRegionalData(rupSet, mMin_Sans, mMin_TVZ);
 
         // setup MFD constraints
@@ -125,25 +90,13 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
                         mfdUncertWtdConstraintPower,
                         mfdUncertWtdConstraintScalar);
         rupSet.setInversionTargetMFDs(inversionMFDs);
-        List<IncrementalMagFreqDist> mfdConstraints = inversionMFDs.getMFD_Constraints();
+
+        double[] initialRupModel = null;
+        double[] minimumRuptureRateBasis = null;
 
         if (model.isConstrained()) {
             // CONSTRAINED BRANCHES
             if (model == InversionModels.CHAR_CONSTRAINED) {
-                // For water level
-                minimumRuptureRateFraction = 0.0;
-
-                // >>                minimumRuptureRateBasis =
-                // UCERF3InversionConfiguration.adjustStartingModel(
-                // >>
-                // UCERF3InversionConfiguration.getSmoothStartingSolution(rupSet,
-                // targetOnFaultMFD),
-                // >>                        mfdConstraints, rupSet, true);
-
-                //                initialRupModel = adjustIsolatedSections(rupSet, initialRupModel);
-                //                if (mfdInequalityConstraintWt>0.0 || mfdEqualityConstraintWt>0.0)
-                // initialRupModel = adjustStartingModel(initialRupModel, mfdConstraints, rupSet,
-                // true);
 
                 //                initialRupModel = removeRupsBelowMinMag(rupSet, initialRupModel);
                 if (initialSolution != null) {
@@ -162,24 +115,6 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
         List<IncrementalMagFreqDist> mfdInequalityConstraints = new ArrayList<>();
         List<IncrementalMagFreqDist> mfdEqualityConstraints = new ArrayList<>();
 
-        if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
-            // we have both MFD constraints, apply a transition mag from equality to
-            // inequality
-
-            mfdEqualityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
-                            mfdConstraints, mfdConstraints.get(0).getMinX(), mfdTransitionMag);
-            mfdInequalityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
-                            mfdConstraints, mfdTransitionMag, mfdConstraints.get(0).getMaxX());
-        } else if (mfdEqualityConstraintWt > 0.0) {
-            mfdEqualityConstraints = mfdConstraints;
-        } else if (mfdInequalityConstraintWt > 0.0) {
-            mfdInequalityConstraints = mfdConstraints;
-        } else {
-            // no MFD constraints, do nothing
-        }
-
         // NSHM-style config using setter methods...
         NZSHM22_CrustalInversionConfiguration newConfig =
                 (NZSHM22_CrustalInversionConfiguration)
@@ -189,28 +124,29 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
                                 .setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt)
                                 .setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt)
                                 // Slip Rate config
-                                .setSlipRateConstraintWt_normalized(slipRateConstraintWt_normalized)
+                                .setSlipRateConstraintWt_normalized(
+                                        SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED)
                                 .setSlipRateConstraintWt_unnormalized(
-                                        slipRateConstraintWt_unnormalized)
-                                .setSlipRateWeightingType(slipRateWeighting)
+                                        SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED)
+                                .setSlipRateWeightingType(SLIP_RATE_WEIGHTING)
                                 .setMfdEqualityConstraints(mfdEqualityConstraints)
                                 .setMfdInequalityConstraints(mfdInequalityConstraints)
                                 // Rate Minimization config
-                                .setMinimumRuptureRateFraction(minimumRuptureRateFraction)
+                                .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION)
                                 .setMinimumRuptureRateBasis(minimumRuptureRateBasis)
-                                .setInitialRupModel(initialRupModel);
+                                .setInitialRupModel(initialRupModel)
+                                .setMfdConstraints(
+                                        inversionMFDs.getMFD_Constraints(),
+                                        mfdEqualityConstraintWt,
+                                        mfdInequalityConstraintWt,
+                                        mfdUncertWtdConstraintWt,
+                                        mfdTransitionMag,
+                                        inversionMFDs.getMfdUncertaintyConstraints());
 
         // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
         // constraint
         if (!excludeMinMag) {
-            newConfig.setMinimizationConstraintWt(minimizationConstraintWt);
-        }
-
-        if (mfdUncertWtdConstraintWt > 0.0) {
-            newConfig
-                    .setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertWtdConstraintWt)
-                    .setMfdUncertaintyWeightedConstraints(
-                            inversionMFDs.getMfdUncertaintyConstraints());
+            newConfig.setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT);
         }
 
         return newConfig;

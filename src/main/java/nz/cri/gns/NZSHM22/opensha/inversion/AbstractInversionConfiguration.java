@@ -10,12 +10,41 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 public class AbstractInversionConfiguration implements XMLSaveable {
 
-    public static enum NZSlipRateConstraintWeightingType {
+    public enum NZSlipRateConstraintWeightingType {
         NORMALIZED,
         UNNORMALIZED,
         BOTH,
         NORMALIZED_BY_UNCERTAINTY
     }
+
+    // default values
+
+    // Setting slip-rate constraint weights to 0 does not disable them! To disable
+    // one or the other (both cannot be), use slipConstraintRateWeightingType Below
+    static double SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED =
+            1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for
+    // SlipRateConstraintWeightingType.BOTH) -- NOT USED if
+    // UNNORMALIZED!
+
+    static double SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED =
+            100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used
+    // for SlipRateConstraintWeightingType.BOTH) -- NOT USED if
+    // NORMALIZED!
+    // If normalized, slip rate misfit is % difference for each section (recommended
+    // since it helps fit slow-moving faults). If unnormalized, misfit is absolute
+    // difference.
+
+    // BOTH includes both normalized and unnormalized constraints.
+    static NZSlipRateConstraintWeightingType SLIP_RATE_WEIGHTING =
+            NZSlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
+
+    // weight of rupture-rate minimization constraint weights relative to slip-rate
+    // constraint (recommended: 10,000)
+    // (currently used to minimization rates of rups below sectMinMag)
+    static double MINIMIZATION_CONSTRAINT_WT = 10000;
+
+    // fraction of the minimum rupture rate basis to be used as initial rates
+    static double MINIMUM_RUPTURE_RATE_FRACTION = 0;
 
     private InversionTargetMFDs inversionTargetMfds;
     private double magnitudeEqualityConstraintWt;
@@ -254,6 +283,44 @@ public class AbstractInversionConfiguration implements XMLSaveable {
 
     public AbstractInversionConfiguration setMFDTransitionMag(double mFDTransitionMag) {
         MFDTransitionMag = mFDTransitionMag;
+        return this;
+    }
+
+    public AbstractInversionConfiguration setMfdConstraints(
+            List<IncrementalMagFreqDist> mfdConstraints,
+            double mfdEqualityConstraintWt,
+            double mfdInequalityConstraintWt,
+            double mfdUncertaintyWeightedConstraintWt,
+            double mfdTransitionMag,
+            List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints) {
+
+        if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
+            // we have both MFD constraints, apply a transition mag from equality to
+            // inequality
+            List<IncrementalMagFreqDist> mfdEqualityConstraints =
+                    MFDManipulation.restrictMFDConstraintMagRange(
+                            mfdConstraints, mfdConstraints.get(0).getMinX(), mfdTransitionMag);
+            List<IncrementalMagFreqDist> mfdInequalityConstraints =
+                    MFDManipulation.restrictMFDConstraintMagRange(
+                            mfdConstraints, mfdTransitionMag, mfdConstraints.get(0).getMaxX());
+
+            setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt);
+            setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt);
+            setMfdEqualityConstraints(mfdEqualityConstraints);
+            setMfdInequalityConstraints(mfdInequalityConstraints);
+        } else if (mfdEqualityConstraintWt > 0.0) { // no ineq wt
+            setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt);
+            setMfdEqualityConstraints(mfdConstraints);
+        } else if (mfdInequalityConstraintWt > 0.0) { // no eq wt
+            setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt);
+            setMfdInequalityConstraints(mfdConstraints);
+        }
+
+        if (mfdUncertaintyWeightedConstraintWt > 0.0) {
+            setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt);
+            setMfdUncertaintyWeightedConstraints(mfdUncertaintyWeightedConstraints);
+        }
+
         return this;
     }
 
