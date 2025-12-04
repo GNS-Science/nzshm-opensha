@@ -132,7 +132,8 @@ public class NZSHM22_CrustalInversionConfiguration extends AbstractInversionConf
                                 .setMfdEqualityConstraints(mfdEqualityConstraints)
                                 .setMfdInequalityConstraints(mfdInequalityConstraints)
                                 // Rate Minimization config
-                                .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT)
+                                .setMinimumRuptureRateFraction(
+                                        MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT)
                                 .setMinimumRuptureRateBasis(minimumRuptureRateBasis)
                                 .setInitialRupModel(initialRupModel)
                                 .setMfdConstraints(
