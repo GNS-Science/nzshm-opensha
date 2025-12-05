@@ -1,6 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -27,10 +26,6 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
      *
      * @param model
      * @param rupSet
-     * @param mfdEqualityConstraintWt weight of magnitude-distribution EQUALITY constraint relative
-     *     to slip-rate constraint (recommended: 10)
-     * @param mfdInequalityConstraintWt weight of magnitude-distribution INEQUALITY constraint
-     *     relative to slip-rate constraint (recommended: 1000)
      * @param mfdUncertaintyWeightedConstraintScalar TODO
      * @param totalRateM5
      * @param bValue
@@ -38,11 +33,10 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
      * @return
      */
     public static NZSHM22_SubductionInversionConfiguration forModel(
+            NZSHM22_SubductionInversionRunner runner,
             InversionModels model,
             NZSHM22_InversionFaultSystemRuptSet rupSet,
             double[] initialSolution,
-            double mfdEqualityConstraintWt,
-            double mfdInequalityConstraintWt,
             double mfdUncertaintyWeightedConstraintWt,
             double mfdUncertaintyWeightedConstraintPower,
             double mfdUncertaintyWeightedConstraintScalar,
@@ -64,20 +58,15 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
                         mfdUncertaintyWeightedConstraintScalar);
         rupSet.setInversionTargetMFDs(inversionMFDs);
 
-        double[] initialRupModel = null;
         double[] minimumRuptureRateBasis = null;
-
-        @SuppressWarnings("unchecked")
-        List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
-        mfdConstraints.addAll(inversionMFDs.getMfdEqIneqConstraints());
-        mfdConstraints.addAll(inversionMFDs.getMfdUncertaintyConstraints());
-
-        IncrementalMagFreqDist targetOnFaultMFD = inversionMFDs.getTotalOnFaultSupraSeisMFD();
 
         if (model == InversionModels.CHAR_CONSTRAINED) {
 
-            // Made local copy of adjustStartingModel as it's private in
-            // UCERF3InversionConfiguration
+            List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
+            mfdConstraints.addAll(inversionMFDs.getMfdEqIneqConstraints());
+            mfdConstraints.addAll(inversionMFDs.getMfdUncertaintyConstraints());
+            IncrementalMagFreqDist targetOnFaultMFD = inversionMFDs.getTotalOnFaultSupraSeisMFD();
+
             minimumRuptureRateBasis =
                     adjustStartingModel(
                             UCERF3InversionConfiguration.getSmoothStartingSolution(
@@ -85,43 +74,18 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
                             mfdConstraints,
                             rupSet,
                             true);
-
-            if (initialSolution != null) {
-                Preconditions.checkArgument(
-                        rupSet.getNumRuptures() == initialSolution.length,
-                        "Initial solution is for the wrong number of ruptures.");
-                initialRupModel = initialSolution;
-            } else {
-                initialRupModel = new double[rupSet.getNumRuptures()];
-            }
         }
-
-        /* end MODIFIERS */
-
-        // NSHM-style config using setter methods...
 
         return (NZSHM22_SubductionInversionConfiguration)
                 new NZSHM22_SubductionInversionConfiguration()
                         .setInversionTargetMfds(inversionMFDs)
-                        // MFD config is now below
-                        // Slip Rate config
-                        .setSlipRateConstraintWt_normalized(
-                                SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT)
-                        .setSlipRateConstraintWt_unnormalized(
-                                SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT)
-                        .setSlipRateWeightingType(SLIP_RATE_WEIGHTING_DEFAULT)
-                        // Rate Minimization config
-                        .setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT)
-                        .setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT)
-                        .setMinimumRuptureRateBasis(minimumRuptureRateBasis)
-                        .setInitialRupModel(initialRupModel)
-                        .setMfdConstraints(
+                        .initialiseFromRunner(
+                                runner,
+                                model,
                                 inversionMFDs.getMfdEqIneqConstraints(),
-                                mfdEqualityConstraintWt,
-                                mfdInequalityConstraintWt,
-                                mfdUncertaintyWeightedConstraintWt,
-                                mfdTransitionMag,
-                                inversionMFDs.getMfdUncertaintyConstraints());
+                                inversionMFDs.getMfdUncertaintyConstraints(),
+                                initialSolution,
+                                minimumRuptureRateBasis);
     }
 
     /**

@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import java.util.List;
 import org.dom4j.Element;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -7,6 +8,7 @@ import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 public class AbstractInversionConfiguration implements XMLSaveable {
 
@@ -283,6 +285,52 @@ public class AbstractInversionConfiguration implements XMLSaveable {
 
     public AbstractInversionConfiguration setMFDTransitionMag(double mFDTransitionMag) {
         MFDTransitionMag = mFDTransitionMag;
+        return this;
+    }
+
+    public AbstractInversionConfiguration initialiseFromRunner(
+            NZSHM22_AbstractInversionRunner runner,
+            InversionModels model,
+            List<IncrementalMagFreqDist> mfdConstraints,
+            List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints,
+            double[] initialRupModel,
+            double[] minimumRuptureRateBasis) {
+
+        if (model == InversionModels.CHAR_CONSTRAINED) {
+            if (initialRupModel != null) {
+                Preconditions.checkArgument(
+                        runner.rupSet.getNumRuptures() == initialRupModel.length,
+                        "Initial solution is for the wrong number of ruptures.");
+            } else {
+                initialRupModel = new double[runner.rupSet.getNumRuptures()];
+            }
+        }
+
+        // xx do this
+        // .setInversionTargetMfds(inversionMFDs)
+
+        // MFD config is now below
+        // Slip Rate config
+        setSlipRateConstraintWt_normalized(SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT);
+        setSlipRateConstraintWt_unnormalized(SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT);
+        setSlipRateWeightingType(SLIP_RATE_WEIGHTING_DEFAULT);
+        setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT);
+        setMinimumRuptureRateBasis(minimumRuptureRateBasis);
+        setInitialRupModel(initialRupModel);
+        setMfdConstraints(
+                mfdConstraints,
+                runner.mfdEqualityConstraintWt,
+                runner.mfdInequalityConstraintWt,
+                runner.mfdUncertWtdConstraintWt,
+                runner.mfdTransitionMag,
+                mfdUncertaintyConstraints);
+
+        // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
+        // constraint
+        if (!runner.excludeRupturesBelowMinMag) {
+            setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
+        }
+
         return this;
     }
 
