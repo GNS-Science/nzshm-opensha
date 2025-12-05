@@ -57,11 +57,10 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
 
         NZSHM22_SubductionInversionConfiguration inversionConfiguration =
                 NZSHM22_SubductionInversionConfiguration.forModel(
+                        this,
                         inversionModel,
                         rupSet,
                         initialSolution,
-                        mfdEqualityConstraintWt,
-                        mfdInequalityConstraintWt,
                         mfdUncertWtdConstraintWt,
                         mfdUncertWtdConstraintPower,
                         mfdUncertWtdConstraintScalar,
