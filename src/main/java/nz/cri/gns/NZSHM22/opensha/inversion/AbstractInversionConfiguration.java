@@ -19,43 +19,20 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         NORMALIZED_BY_UNCERTAINTY
     }
 
-    // default values
-
-    // Setting slip-rate constraint weights to 0 does not disable them! To disable
-    // one or the other (both cannot be), use slipConstraintRateWeightingType Below
-    static double SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT =
-            1; // For SlipRateConstraintWeightingType.NORMALIZED (also used for
-    // SlipRateConstraintWeightingType.BOTH) -- NOT USED if
-    // UNNORMALIZED!
-
-    static double SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT =
-            100; // For SlipRateConstraintWeightingType.UNNORMALIZED (also used
-    // for SlipRateConstraintWeightingType.BOTH) -- NOT USED if
-    // NORMALIZED!
-    // If normalized, slip rate misfit is % difference for each section (recommended
-    // since it helps fit slow-moving faults). If unnormalized, misfit is absolute
-    // difference.
-
-    // BOTH includes both normalized and unnormalized constraints.
-    static NZSlipRateConstraintWeightingType SLIP_RATE_WEIGHTING_DEFAULT =
-            NZSlipRateConstraintWeightingType.BOTH; // (recommended: BOTH)
-
     // weight of rupture-rate minimization constraint weights relative to slip-rate
     // constraint (recommended: 10,000)
     // (currently used to minimization rates of rups below sectMinMag)
     static double MINIMIZATION_CONSTRAINT_WT_DEFAULT = 10000;
-
-    // fraction of the minimum rupture rate basis to be used as initial rates
-    static double MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT = 0;
 
     private InversionTargetMFDs inversionTargetMfds;
     private double magnitudeEqualityConstraintWt;
     private double magnitudeInequalityConstraintWt;
     private double mfdUncertaintyWeightedConstraintWt;
 
-    private double slipRateConstraintWt_normalized;
-    private double slipRateConstraintWt_unnormalized;
-    private NZSlipRateConstraintWeightingType slipRateWeighting;
+    private double slipRateConstraintWt_normalized = 1;
+    private double slipRateConstraintWt_unnormalized = 100;
+    private NZSlipRateConstraintWeightingType slipRateWeighting =
+            NZSlipRateConstraintWeightingType.BOTH;
 
     public static final String XML_METADATA_NAME = "InversionConfiguration";
 
@@ -84,7 +61,7 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     private List<IncrementalMagFreqDist> mfdEqualityConstraints;
     private List<IncrementalMagFreqDist> mfdInequalityConstraints;
     private List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
-    private double minimumRuptureRateFraction;
+    private double minimumRuptureRateFraction = 0;
     private boolean unmodifiedSlipRateStdvs;
 
     public AbstractInversionConfiguration() {
@@ -306,15 +283,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
             }
         }
 
-        // xx do this
-        // .setInversionTargetMfds(inversionMFDs)
-
-        // MFD config is now below
-        // Slip Rate config
-        setSlipRateConstraintWt_normalized(SLIP_WEIGHT_CONSTRAINT_WT_NORMALIZED_DEFAULT);
-        setSlipRateConstraintWt_unnormalized(SLIP_WEIGHT_CONSTRAINT_WT_UNNORMALIZED_DEFAULT);
-        setSlipRateWeightingType(SLIP_RATE_WEIGHTING_DEFAULT);
-        setMinimumRuptureRateFraction(MINIMUM_RUPTURE_RATE_FRACTION_DEFAULT);
         setMinimumRuptureRateBasis(minimumRuptureRateBasis);
         setInitialRupModel(initialRupModel);
         setMfdConstraints(
