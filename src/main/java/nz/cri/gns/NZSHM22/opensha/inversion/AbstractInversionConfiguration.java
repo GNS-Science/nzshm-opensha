@@ -265,6 +265,17 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         return this;
     }
 
+    /**
+     * Exceutes common setup steps.
+     *
+     * @param runner
+     * @param model
+     * @param mfdConstraints
+     * @param mfdUncertaintyConstraints
+     * @param initialRupModel
+     * @param minimumRuptureRateBasis
+     * @return
+     */
     public AbstractInversionConfiguration initialiseFromRunner(
             NZSHM22_AbstractInversionRunner runner,
             InversionModels model,
@@ -302,7 +313,7 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         return this;
     }
 
-    public AbstractInversionConfiguration setMfdConstraints(
+    public void setMfdConstraints(
             List<IncrementalMagFreqDist> mfdConstraints,
             double mfdEqualityConstraintWt,
             double mfdInequalityConstraintWt,
@@ -336,8 +347,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
             setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt);
             setMfdUncertaintyWeightedConstraints(mfdUncertaintyWeightedConstraints);
         }
-
-        return this;
     }
 
     @Override

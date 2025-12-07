@@ -21,6 +21,13 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
         super(rupSet, constraints, initialSolution, waterLevelRates);
     }
 
+    /**
+     * Build constraints that are shared by crustal and subduction inversion.
+     *
+     * @param rupSet
+     * @param config
+     * @return
+     */
     protected static List<InversionConstraint> buildSharedConstraints(
             NZSHM22_InversionFaultSystemRuptSet rupSet, AbstractInversionConfiguration config) {
 
