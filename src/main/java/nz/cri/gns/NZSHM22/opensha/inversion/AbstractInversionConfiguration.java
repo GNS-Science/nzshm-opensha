@@ -310,6 +310,25 @@ public class AbstractInversionConfiguration implements XMLSaveable {
             setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
         }
 
+        // set up slip rate
+
+        setSlipRateWeightingType(runner.slipRateWeightingType);
+        setUnmodifiedSlipRateStdvs(runner.unmodifiedSlipRateStdvs);
+        if (runner.slipRateWeightingType
+                == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
+                        .NORMALIZED_BY_UNCERTAINTY) {
+            System.out.println(
+                    "config for UNCERTAINTY_ADJUSTED "
+                            + runner.slipRateUncertaintyWeight
+                            + ", "
+                            + runner.slipRateUncertaintyScalingFactor);
+            setSlipRateUncertaintyConstraintWt(runner.slipRateUncertaintyWeight);
+            setSlipRateUncertaintyConstraintScalingFactor(runner.slipRateUncertaintyScalingFactor);
+        } else if (runner.slipRateWeightingType != null) {
+            setSlipRateConstraintWt_normalized(runner.slipRateConstraintWt_normalized);
+            setSlipRateConstraintWt_unnormalized(runner.slipRateConstraintWt_unnormalized);
+        }
+
         return this;
     }
 
