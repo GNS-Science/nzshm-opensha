@@ -285,28 +285,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                                 inversionConfiguration.getInversionTargetMfds())
                         .getReportingMFDConstraintComponentsV2();
 
-        // set up slip rate config
-        inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
-        inversionConfiguration.setUnmodifiedSlipRateStdvs(this.unmodifiedSlipRateStdvs);
-        if (this.slipRateWeightingType
-                == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
-                        .NORMALIZED_BY_UNCERTAINTY) {
-            System.out.println(
-                    "config for UNCERTAINTY_ADJUSTED "
-                            + this.slipRateUncertaintyWeight
-                            + ", "
-                            + this.slipRateUncertaintyScalingFactor);
-            inversionConfiguration.setSlipRateUncertaintyConstraintWt(
-                    this.slipRateUncertaintyWeight);
-            inversionConfiguration.setSlipRateUncertaintyConstraintScalingFactor(
-                    this.slipRateUncertaintyScalingFactor);
-        } else {
-            inversionConfiguration.setSlipRateConstraintWt_normalized(
-                    this.slipRateConstraintWt_normalized);
-            inversionConfiguration.setSlipRateConstraintWt_unnormalized(
-                    this.slipRateConstraintWt_unnormalized);
-        }
-
         /*
          * Build inversion inputs
          */

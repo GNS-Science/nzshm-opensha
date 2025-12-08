@@ -75,27 +75,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
                                 inversionConfiguration.getInversionTargetMfds())
                         .getMFDConstraintComponents();
 
-        if (this.slipRateWeightingType
-                == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
-                        .NORMALIZED_BY_UNCERTAINTY) {
-            System.out.println(
-                    "config for UNCERTAINTY_ADJUSTED "
-                            + this.slipRateUncertaintyWeight
-                            + ", "
-                            + this.slipRateUncertaintyScalingFactor);
-            inversionConfiguration.setSlipRateUncertaintyConstraintWt(
-                    this.slipRateUncertaintyWeight);
-            inversionConfiguration.setSlipRateUncertaintyConstraintScalingFactor(
-                    this.slipRateUncertaintyScalingFactor);
-        } else if (this.slipRateWeightingType != null) {
-            inversionConfiguration.setSlipRateWeightingType(this.slipRateWeightingType);
-            inversionConfiguration.setSlipRateConstraintWt_normalized(
-                    this.slipRateConstraintWt_normalized);
-            inversionConfiguration.setSlipRateConstraintWt_unnormalized(
-                    this.slipRateConstraintWt_unnormalized);
-        }
-        inversionConfiguration.setUnmodifiedSlipRateStdvs(unmodifiedSlipRateStdvs);
-
         NZSHM22_SubductionInversionInputGenerator inversionInputGenerator =
                 new NZSHM22_SubductionInversionInputGenerator(rupSet, inversionConfiguration);
         setInversionInputGenerator(inversionInputGenerator);
