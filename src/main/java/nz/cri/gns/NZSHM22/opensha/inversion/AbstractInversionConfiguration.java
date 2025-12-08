@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import java.util.List;
 import org.dom4j.Element;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -7,24 +8,31 @@ import org.opensha.commons.metadata.XMLSaveable;
 import org.opensha.commons.util.XMLUtils;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 public class AbstractInversionConfiguration implements XMLSaveable {
 
-    public static enum NZSlipRateConstraintWeightingType {
+    public enum NZSlipRateConstraintWeightingType {
         NORMALIZED,
         UNNORMALIZED,
         BOTH,
         NORMALIZED_BY_UNCERTAINTY
     }
 
+    // weight of rupture-rate minimization constraint weights relative to slip-rate
+    // constraint (recommended: 10,000)
+    // (currently used to minimization rates of rups below sectMinMag)
+    static double MINIMIZATION_CONSTRAINT_WT_DEFAULT = 10000;
+
     private InversionTargetMFDs inversionTargetMfds;
     private double magnitudeEqualityConstraintWt;
     private double magnitudeInequalityConstraintWt;
     private double mfdUncertaintyWeightedConstraintWt;
 
-    private double slipRateConstraintWt_normalized;
-    private double slipRateConstraintWt_unnormalized;
-    private NZSlipRateConstraintWeightingType slipRateWeighting;
+    private double slipRateConstraintWt_normalized = 1;
+    private double slipRateConstraintWt_unnormalized = 100;
+    private NZSlipRateConstraintWeightingType slipRateWeighting =
+            NZSlipRateConstraintWeightingType.BOTH;
 
     public static final String XML_METADATA_NAME = "InversionConfiguration";
 
@@ -53,7 +61,7 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     private List<IncrementalMagFreqDist> mfdEqualityConstraints;
     private List<IncrementalMagFreqDist> mfdInequalityConstraints;
     private List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
-    private double minimumRuptureRateFraction;
+    private double minimumRuptureRateFraction = 0;
     private boolean unmodifiedSlipRateStdvs;
 
     public AbstractInversionConfiguration() {
@@ -255,6 +263,90 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     public AbstractInversionConfiguration setMFDTransitionMag(double mFDTransitionMag) {
         MFDTransitionMag = mFDTransitionMag;
         return this;
+    }
+
+    /**
+     * Exceutes common setup steps.
+     *
+     * @param runner
+     * @param model
+     * @param mfdConstraints
+     * @param mfdUncertaintyConstraints
+     * @param initialRupModel
+     * @param minimumRuptureRateBasis
+     * @return
+     */
+    public AbstractInversionConfiguration initialiseFromRunner(
+            NZSHM22_AbstractInversionRunner runner,
+            InversionModels model,
+            List<IncrementalMagFreqDist> mfdConstraints,
+            List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints,
+            double[] initialRupModel,
+            double[] minimumRuptureRateBasis) {
+
+        if (model == InversionModels.CHAR_CONSTRAINED) {
+            if (initialRupModel != null) {
+                Preconditions.checkArgument(
+                        runner.rupSet.getNumRuptures() == initialRupModel.length,
+                        "Initial solution is for the wrong number of ruptures.");
+            } else {
+                initialRupModel = new double[runner.rupSet.getNumRuptures()];
+            }
+        }
+
+        setMinimumRuptureRateBasis(minimumRuptureRateBasis);
+        setInitialRupModel(initialRupModel);
+        setMfdConstraints(
+                mfdConstraints,
+                runner.mfdEqualityConstraintWt,
+                runner.mfdInequalityConstraintWt,
+                runner.mfdUncertWtdConstraintWt,
+                runner.mfdTransitionMag,
+                mfdUncertaintyConstraints);
+
+        // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
+        // constraint
+        if (!runner.excludeRupturesBelowMinMag) {
+            setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
+        }
+
+        return this;
+    }
+
+    public void setMfdConstraints(
+            List<IncrementalMagFreqDist> mfdConstraints,
+            double mfdEqualityConstraintWt,
+            double mfdInequalityConstraintWt,
+            double mfdUncertaintyWeightedConstraintWt,
+            double mfdTransitionMag,
+            List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints) {
+
+        if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
+            // we have both MFD constraints, apply a transition mag from equality to
+            // inequality
+            List<IncrementalMagFreqDist> mfdEqualityConstraints =
+                    MFDManipulation.restrictMFDConstraintMagRange(
+                            mfdConstraints, mfdConstraints.get(0).getMinX(), mfdTransitionMag);
+            List<IncrementalMagFreqDist> mfdInequalityConstraints =
+                    MFDManipulation.restrictMFDConstraintMagRange(
+                            mfdConstraints, mfdTransitionMag, mfdConstraints.get(0).getMaxX());
+
+            setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt);
+            setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt);
+            setMfdEqualityConstraints(mfdEqualityConstraints);
+            setMfdInequalityConstraints(mfdInequalityConstraints);
+        } else if (mfdEqualityConstraintWt > 0.0) { // no ineq wt
+            setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt);
+            setMfdEqualityConstraints(mfdConstraints);
+        } else if (mfdInequalityConstraintWt > 0.0) { // no eq wt
+            setMagnitudeInequalityConstraintWt(mfdInequalityConstraintWt);
+            setMfdInequalityConstraints(mfdConstraints);
+        }
+
+        if (mfdUncertaintyWeightedConstraintWt > 0.0) {
+            setMagnitudeUncertaintyWeightedConstraintWt(mfdUncertaintyWeightedConstraintWt);
+            setMfdUncertaintyWeightedConstraints(mfdUncertaintyWeightedConstraints);
+        }
     }
 
     @Override

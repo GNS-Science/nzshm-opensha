@@ -237,45 +237,37 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         if (maxMagType == NZSHM22_MagBounds.MaxMagType.MANIPULATE_MFD) {
             inversionConfiguration =
                     NZSHM22_CrustalInversionConfiguration.forModel(
+                            this,
                             inversionModel,
                             rupSet,
                             initialSolution,
-                            mfdEqualityConstraintWt,
-                            mfdInequalityConstraintWt,
                             totalRateM5_Sans,
                             totalRateM5_TVZ,
                             bValue_Sans,
                             bValue_TVZ,
-                            mfdTransitionMag,
                             minMag_Sans,
                             minMag_TVZ,
                             maxMagSans,
                             maxMagTVZ,
-                            mfdUncertWtdConstraintWt,
                             mfdUncertWtdConstraintPower,
-                            mfdUncertWtdConstraintScalar,
-                            excludeRupturesBelowMinMag);
+                            mfdUncertWtdConstraintScalar);
         } else {
             inversionConfiguration =
                     NZSHM22_CrustalInversionConfiguration.forModel(
+                            this,
                             inversionModel,
                             rupSet,
                             initialSolution,
-                            mfdEqualityConstraintWt,
-                            mfdInequalityConstraintWt,
                             totalRateM5_Sans,
                             totalRateM5_TVZ,
                             bValue_Sans,
                             bValue_TVZ,
-                            mfdTransitionMag,
                             minMag_Sans,
                             minMag_TVZ,
                             100,
                             100,
-                            mfdUncertWtdConstraintWt,
                             mfdUncertWtdConstraintPower,
-                            mfdUncertWtdConstraintScalar,
-                            excludeRupturesBelowMinMag);
+                            mfdUncertWtdConstraintScalar);
         }
 
         inversionConfiguration
@@ -352,8 +344,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                         rupSet,
                         inversionConfiguration,
                         paleoRateConstraints,
-                        null,
-                        null,
                         paleoProbabilityModel);
         setInversionInputGenerator(inversionInputGenerator);
 
