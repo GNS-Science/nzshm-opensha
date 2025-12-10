@@ -14,11 +14,6 @@ import scratch.UCERF3.utils.U3SectionMFD_constraint;
  */
 public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGenerator {
 
-    private static final boolean D = false;
-
-    // inputs
-    private AbstractInversionConfiguration config;
-
     public NZSHM22_CrustalInversionInputGenerator(
             NZSHM22_InversionFaultSystemRuptSet rupSet,
             NZSHM22_CrustalInversionConfiguration config,
@@ -29,8 +24,6 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
                 buildConstraints(rupSet, config, paleoRateConstraints, paleoProbabilityModel),
                 config.getInitialRupModel(),
                 buildWaterLevel(config, rupSet));
-        this.rupSet = rupSet;
-        this.config = config;
     }
 
     private static List<InversionConstraint> buildConstraints(
@@ -77,13 +70,5 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
         }
 
         return constraints;
-    }
-
-    public void generateInputs() {
-        generateInputs(null, D);
-    }
-
-    public AbstractInversionConfiguration getConfig() {
-        return config;
     }
 }

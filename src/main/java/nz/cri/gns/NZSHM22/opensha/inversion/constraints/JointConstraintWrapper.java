@@ -47,8 +47,8 @@ public class JointConstraintWrapper extends InversionConstraint {
 
     @Override
     protected void setA(DoubleMatrix2D A, int row, int col, double val) {
-        int sectionId = col-startRow;
-        if(config.covers(sectionId)) {
+        int sectionId = col - startRow;
+        if (config.covers(sectionId)) {
             int adjustedRow = config.mapToRow(sectionId) + startRow;
             super.setA(A, adjustedRow, col, val);
         }

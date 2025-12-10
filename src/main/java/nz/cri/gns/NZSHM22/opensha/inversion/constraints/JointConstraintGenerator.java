@@ -8,8 +8,19 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SlipRateInversionConstraintBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 
 public class JointConstraintGenerator {
+
+    public static List<InversionConstraint> generateCrustalConstraints(
+            NZSHM22_InversionFaultSystemRuptSet rupSet, ConstraintRegionConfig config) {
+        return buildSharedConstraints(rupSet, config);
+    }
+
+    public static List<InversionConstraint> generateSubductionConstraints(
+            NZSHM22_InversionFaultSystemRuptSet rupSet, ConstraintRegionConfig config) {
+        return buildSharedConstraints(rupSet, config);
+    }
 
     protected static List<InversionConstraint> buildSharedConstraints(
             NZSHM22_InversionFaultSystemRuptSet rupSet, ConstraintRegionConfig config) {
@@ -34,8 +45,7 @@ public class JointConstraintGenerator {
                                     == AbstractInversionConfiguration
                                             .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
-                        new JointSlipRateInversionConstraint(
-                                config,
+                        new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_normalized,
                                 ConstraintWeightingType.NORMALIZED,
                                 rupSet));
@@ -49,8 +59,7 @@ public class JointConstraintGenerator {
                                     == AbstractInversionConfiguration
                                             .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
-                        new JointSlipRateInversionConstraint(
-                                config,
+                        new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_unnormalized,
                                 ConstraintWeightingType.UNNORMALIZED,
                                 rupSet));
