@@ -12,8 +12,7 @@ public class NZSHM22_SubductionInversionInputGenerator extends BaseInversionInpu
 
     public NZSHM22_SubductionInversionInputGenerator(
             NZSHM22_InversionFaultSystemRuptSet rupSet,
-            NZSHM22_SubductionInversionConfiguration config
-            ) {
+            NZSHM22_SubductionInversionConfiguration config) {
         super(
                 rupSet,
                 buildSharedConstraints(rupSet, config),
@@ -24,5 +23,4 @@ public class NZSHM22_SubductionInversionInputGenerator extends BaseInversionInpu
     public void generateInputs() {
         generateInputs(null, D);
     }
-
 }

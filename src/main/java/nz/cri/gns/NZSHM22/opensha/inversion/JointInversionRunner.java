@@ -18,20 +18,24 @@ public class JointInversionRunner {
 
     public JointInversionRunner() {}
 
-    public void run(){
+    public void run() {
         List<InversionConstraint> constraints = new ArrayList<>();
 
-        if(crustalConfig != null) {
-            constraints.addAll(JointConstraintGenerator.generateCrustalConstraints(ruptureSet, crustalConfig));
+        if (crustalConfig != null) {
+            constraints.addAll(
+                    JointConstraintGenerator.generateCrustalConstraints(ruptureSet, crustalConfig));
         }
-        if(subductionConfig != null) {
-            constraints.addAll(JointConstraintGenerator.generateSubductionConstraints(ruptureSet, subductionConfig));
+        if (subductionConfig != null) {
+            constraints.addAll(
+                    JointConstraintGenerator.generateSubductionConstraints(
+                            ruptureSet, subductionConfig));
         }
 
         // FIXME: create joint ruptureset correctly.
         // FIXME: create joint LTB correctly.
         // FIXME: create joint inititalsolution and waterlevel
-        InversionInputGenerator inputGenerator = new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
+        InversionInputGenerator inputGenerator =
+                new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
     }
 
     public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
