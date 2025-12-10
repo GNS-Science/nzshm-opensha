@@ -486,6 +486,14 @@ public abstract class NZSHM22_AbstractInversionRunner {
         return this;
     }
 
+    /**
+     * If set to true, the variablePerturbationBasis is used as the initial solution. If the
+     * variablePerturbationBasis has not been set, it will be set to the
+     * defaultVariablePerturbationBasis first.
+     *
+     * @param value
+     * @return
+     */
     public NZSHM22_AbstractInversionRunner setVarPertBasisAsInititalSolution(boolean value) {
         varPertBasisAsInititalSolution = value;
         return this;
