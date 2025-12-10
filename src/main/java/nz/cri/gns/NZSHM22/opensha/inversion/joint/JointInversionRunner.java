@@ -1,11 +1,14 @@
-package nz.cri.gns.NZSHM22.opensha.inversion;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.inversion.constraints.ConstraintRegionConfig;
-import nz.cri.gns.NZSHM22.opensha.inversion.constraints.JointConstraintGenerator;
+
+import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintRegionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.faultSurface.FaultSection;

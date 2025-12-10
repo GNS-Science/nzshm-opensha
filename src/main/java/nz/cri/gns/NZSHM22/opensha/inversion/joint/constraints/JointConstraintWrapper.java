@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.inversion.constraints;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
