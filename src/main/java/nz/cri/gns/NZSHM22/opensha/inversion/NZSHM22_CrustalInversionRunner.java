@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModel
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.PaleoseismicConstraintData;
@@ -228,6 +230,16 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
+
+        if (varPertBasisAsInititalSolution) {
+            if (variablePerturbationBasis == null) {
+                variablePerturbationBasis = Inversions.getDefaultVariablePerturbationBasis(rupSet);
+            }
+            Preconditions.checkState(
+                    initialSolution == null,
+                    "Initial solution must be null if variablePerturbationBasis as initial solution.");
+            initialSolution = variablePerturbationBasis.clone();
+        }
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 

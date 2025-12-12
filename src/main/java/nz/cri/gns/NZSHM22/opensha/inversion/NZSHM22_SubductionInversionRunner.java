@@ -1,9 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
 
 /** Runs the standard NSHM inversion on a subduction rupture set. */
@@ -52,6 +54,16 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(
                         getRupSetInput(), branch);
+
+        if (varPertBasisAsInititalSolution) {
+            if (variablePerturbationBasis == null) {
+                variablePerturbationBasis = Inversions.getDefaultVariablePerturbationBasis(rupSet);
+            }
+            Preconditions.checkState(
+                    initialSolution == null,
+                    "Initial solution must be null if variablePerturbationBasis as initial solution.");
+            initialSolution = variablePerturbationBasis.clone();
+        }
 
         InversionModels inversionModel = branch.getValue(InversionModels.class);
 

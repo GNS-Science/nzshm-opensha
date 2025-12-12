@@ -109,6 +109,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected NZSHM22_ScalingRelationshipNode scalingRelationship;
     protected double[] initialSolution;
     protected double[] variablePerturbationBasis;
+    protected boolean varPertBasisAsInititalSolution;
     protected boolean excludeRupturesBelowMinMag = false;
     protected boolean unmodifiedSlipRateStdvs = false;
 
@@ -482,6 +483,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
      */
     public NZSHM22_AbstractInversionRunner setInitialSolution(String path) throws IOException {
         initialSolution = loadRates(path);
+        return this;
+    }
+
+    /**
+     * If set to true, the variablePerturbationBasis is used as the initial solution. If the
+     * variablePerturbationBasis has not been set, it will be set to the
+     * defaultVariablePerturbationBasis first.
+     *
+     * @param value
+     * @return
+     */
+    public NZSHM22_AbstractInversionRunner setVarPertBasisAsInititalSolution(boolean value) {
+        varPertBasisAsInititalSolution = value;
         return this;
     }
 
