@@ -35,6 +35,10 @@ public class ConstraintRegionConfig {
         return sectionIds.contains(sectionId);
     }
 
+    public int getNumSections(){
+        return sectionIds.size();
+    }
+
     public int mapToRow(int sectionId) {
         return mappingToARow.get(sectionId);
     }
