@@ -35,7 +35,7 @@ public class ConstraintRegionConfig {
         return sectionIds.contains(sectionId);
     }
 
-    public int getNumSections(){
+    public int getNumSections() {
         return sectionIds.size();
     }
 

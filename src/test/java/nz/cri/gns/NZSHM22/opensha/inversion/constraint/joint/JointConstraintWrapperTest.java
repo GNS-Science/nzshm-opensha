@@ -1,7 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.constraint.joint;
 
+import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSet;
+import static org.junit.Assert.*;
+
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
+import java.io.IOException;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintRegionConfig;
@@ -13,14 +18,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Constra
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSet;
 
 public class JointConstraintWrapperTest {
 
@@ -58,99 +56,62 @@ public class JointConstraintWrapperTest {
     @Test
     public void encodeTest() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = makeRupSet();
-        ConstraintRegionConfig cruConfig = new ConstraintRegionConfig(List.of(CRU_SECTION));
-        ConstraintRegionConfig subConfig = new ConstraintRegionConfig(List.of(SUB_SECTION));
-
         SlipRateInversionConstraint slipConstraint =
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.UNNORMALIZED, rupSet);
 
-        DoubleMatrix2D A =
-                new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
-        double[] d = new double[slipConstraint.getNumRows()];
+        // set up crustal constraint
+        ConstraintRegionConfig cruConfig = new ConstraintRegionConfig(List.of(CRU_SECTION));
+        JointConstraintWrapper crustalConstraint =
+                new JointConstraintWrapper(cruConfig, slipConstraint);
 
-        slipConstraint.encode(A, d, 0);
+        // set up subduction constraint
+        ConstraintRegionConfig subConfig = new ConstraintRegionConfig(List.of(SUB_SECTION));
+        JointConstraintWrapper subductionConstraint =
+                new JointConstraintWrapper(subConfig, slipConstraint);
 
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
+        // getNumRows()
+        assertEquals(rupSet.getNumSections(), slipConstraint.getNumRows());
+        assertEquals(1, crustalConstraint.getNumRows());
+        assertEquals(1, subductionConstraint.getNumRows());
 
-        ConstraintRegionConfig config =
-                new ConstraintRegionConfig(List.of(CRU_SECTION, SUB_SECTION));
-        JointConstraintWrapper wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
+        // encode
+        DoubleMatrix2D originalA = new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
+        double[] originalD = new double[slipConstraint.getNumRows()];
+        long originalResult = slipConstraint.encode(originalA, originalD, 0);
+        // We only care about the first two. Shortening for easier comparison.
+        originalD = new double[] {originalD[0], originalD[1]};
 
-        A = new DenseDoubleMatrix2D(wrappedConstraint.getNumRows(), rupSet.getNumRuptures());
-        d = new double[wrappedConstraint.getNumRows()];
+        DoubleMatrix2D crustalA = new DenseDoubleMatrix2D(1, rupSet.getNumRuptures());
+        double[] crustalD = new double[crustalConstraint.getNumRows()];
+        long crustalResult = crustalConstraint.encode(crustalA, crustalD, 0);
 
-        wrappedConstraint.encode(A, d, 0);
+        DoubleMatrix2D sbdA = new DenseDoubleMatrix2D(1, rupSet.getNumRuptures());
+        double[] sbdD = new double[subductionConstraint.getNumRows()];
+        long sbdResult = subductionConstraint.encode(sbdA, sbdD, 0);
 
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
+        assertEquals(originalResult, crustalResult + sbdResult);
+        // crustal matrix first row is identical to first row of original matrix
+        assertEquals(originalA.viewRow(0), crustalA.viewRow(0));
+        // subduction matrix first row is identical to second row of original matrix
+        assertEquals(originalA.viewRow(1), sbdA.viewRow(0));
 
-         config =
-                new ConstraintRegionConfig(List.of(CRU_SECTION));
-         wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
+        // The rows of the two wrapped constraints together equal the original matrix.
+        // This asserts that startRow is observed.
+        DoubleMatrix2D jointA = new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
+        double[] jointD =
+                new double[crustalConstraint.getNumRows() + subductionConstraint.getNumRows()];
+        crustalConstraint.encode(jointA, jointD, 0);
+        subductionConstraint.encode(jointA, jointD, 1);
+        assertEquals(originalA, jointA);
+        assertArrayEquals(originalD, jointD, 0.000000000000000001);
 
-        A = new DenseDoubleMatrix2D(wrappedConstraint.getNumRows(), rupSet.getNumRuptures());
-        d = new double[wrappedConstraint.getNumRows()];
-
-        wrappedConstraint.encode(A, d, 0);
-
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
-
-        config =
-                new ConstraintRegionConfig(List.of(SUB_SECTION));
-        wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
-
-        A = new DenseDoubleMatrix2D(wrappedConstraint.getNumRows(), rupSet.getNumRuptures());
-        d = new double[wrappedConstraint.getNumRows()];
-
-        wrappedConstraint.encode(A, d, 0);
-
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
-
-        A = new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
-        d = new double[2];
-
-        config =
-                new ConstraintRegionConfig(List.of(CRU_SECTION));
-        wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
-        wrappedConstraint.encode(A, d, 0);
-
-        config =
-                new ConstraintRegionConfig(List.of(SUB_SECTION));
-        wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
-        wrappedConstraint.encode(A, d, 1);
-
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
-
-        A = new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
-        d = new double[2];
-
-        config =
-                new ConstraintRegionConfig(List.of(CRU_SECTION));
-        wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
-        wrappedConstraint.encode(A, d, 0);
-
-        config =
-                new ConstraintRegionConfig(List.of(SUB_SECTION));
-         slipConstraint =
-                new SlipRateInversionConstraint(0.5, ConstraintWeightingType.UNNORMALIZED, rupSet);
-        wrappedConstraint =
-                new JointConstraintWrapper(config, slipConstraint);
-        wrappedConstraint.encode(A, d, 1);
-
-        System.out.println(A);
-        System.out.println(Arrays.toString(d));
-
-        // FIXME: check encode return value
-
+        // works without getGetsSets
+        slipConstraint.setQuickGetSets(false);
+        jointA = new DenseDoubleMatrix2D(2, rupSet.getNumRuptures());
+        jointD = new double[crustalConstraint.getNumRows() + subductionConstraint.getNumRows()];
+        crustalConstraint.encode(jointA, jointD, 0);
+        subductionConstraint.encode(jointA, jointD, 1);
+        assertEquals(originalA, jointA);
+        assertArrayEquals(originalD, jointD, 0.000000000000000001);
     }
 }

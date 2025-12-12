@@ -31,7 +31,7 @@ public class JointConstraintWrapper extends InversionConstraint {
         this.startRow = startRow;
         double[] buffer = new double[startRow + constraint.getNumRows()];
 
-        FilteredMatrix filteredA =  new FilteredMatrix(A);
+        FilteredMatrix filteredA = new FilteredMatrix(A);
 
         // let original constraint encode itself,
         // and filter out the rows for fault sections that the config does not cover.
@@ -48,11 +48,11 @@ public class JointConstraintWrapper extends InversionConstraint {
         return filteredA.getNonZeroElements();
     }
 
-    class FilteredMatrix extends DoubleMatrix2D{
+    class FilteredMatrix extends DoubleMatrix2D {
         final DoubleMatrix2D original;
         int nonZero = 0;
 
-        public FilteredMatrix(DoubleMatrix2D original){
+        public FilteredMatrix(DoubleMatrix2D original) {
             this.original = original;
         }
 
@@ -61,7 +61,7 @@ public class JointConstraintWrapper extends InversionConstraint {
             if (config.covers(sectionId)) {
                 int adjustedRow = config.mapToRow(sectionId) + startRow;
                 original.set(adjustedRow, col, value);
-                if(value!=0){
+                if (value != 0) {
                     nonZero++;
                 }
             }
@@ -72,13 +72,13 @@ public class JointConstraintWrapper extends InversionConstraint {
             if (config.covers(sectionId)) {
                 int adjustedRow = config.mapToRow(sectionId) + startRow;
                 original.setQuick(adjustedRow, col, value);
-                if(value!=0){
+                if (value != 0) {
                     nonZero++;
                 }
             }
         }
 
-        public int getNonZeroElements(){
+        public int getNonZeroElements() {
             return nonZero;
         }
 
@@ -91,7 +91,6 @@ public class JointConstraintWrapper extends InversionConstraint {
         public double getQuick(int i, int i1) {
             return 0;
         }
-
 
         @Override
         public DoubleMatrix2D like(int i, int i1) {
