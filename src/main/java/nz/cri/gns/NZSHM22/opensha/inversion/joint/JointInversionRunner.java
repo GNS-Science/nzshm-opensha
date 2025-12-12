@@ -1,7 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
@@ -15,23 +17,46 @@ import org.opensha.sha.faultSurface.FaultSection;
 public class JointInversionRunner {
 
     NZSHM22_InversionFaultSystemRuptSet ruptureSet;
+    List<ConstraintRegionConfig> configs;
     ConstraintRegionConfig crustalConfig;
     ConstraintRegionConfig subductionConfig;
 
-    public JointInversionRunner() {}
+    public JointInversionRunner() {
+        configs = new ArrayList<>();
+    }
+
+    protected void checkRegionConfigs() {
+        Set<Integer> seen = new HashSet<>();
+        List<Integer> doubleUps = new ArrayList<>();
+        for (ConstraintRegionConfig config : configs) {
+            for (Integer sectionId : config.getSectionIds()) {
+                if (seen.contains(sectionId)) {
+                    doubleUps.add(sectionId);
+                }
+                seen.add(sectionId);
+            }
+        }
+
+        if (!doubleUps.isEmpty()) {
+            System.out.println("Section id double-ups in region config");
+            System.out.println(doubleUps);
+            throw new IllegalStateException("Section id double-ups");
+        }
+    }
+
+    protected List<InversionConstraint> configure() {
+        checkRegionConfigs();
+
+        List<InversionConstraint> constraints = new ArrayList<>();
+        for (ConstraintRegionConfig config : configs) {
+            constraints.addAll(JointConstraintGenerator.buildSharedConstraints(ruptureSet, config));
+        }
+        return constraints;
+    }
 
     public void run() {
-        List<InversionConstraint> constraints = new ArrayList<>();
 
-        if (crustalConfig != null) {
-            constraints.addAll(
-                    JointConstraintGenerator.generateCrustalConstraints(ruptureSet, crustalConfig));
-        }
-        if (subductionConfig != null) {
-            constraints.addAll(
-                    JointConstraintGenerator.generateSubductionConstraints(
-                            ruptureSet, subductionConfig));
-        }
+        List<InversionConstraint> constraints = configure();
 
         // FIXME: create joint ruptureset correctly.
         // FIXME: create joint LTB correctly.
@@ -56,6 +81,7 @@ public class JointInversionRunner {
                             .map(FaultSection::getSectionId)
                             .collect(Collectors.toList());
             crustalConfig = new ConstraintRegionConfig(sectionIds);
+            configs.add(crustalConfig);
         }
         return crustalConfig;
     }
@@ -68,6 +94,7 @@ public class JointInversionRunner {
                             .map(FaultSection::getSectionId)
                             .collect(Collectors.toList());
             subductionConfig = new ConstraintRegionConfig(sectionIds);
+            configs.add(subductionConfig);
         }
         return subductionConfig;
     }
