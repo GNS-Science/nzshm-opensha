@@ -4,6 +4,12 @@ import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 
+/**
+ * Wraps an InversionConstraint and so that we can encode it for different configs. For each config,
+ * it writes only those lines into the matrix that are relevant for that config. Each line in the
+ * matrix id for one fault sub section and configs are for non-overlapping sets of fault section
+ * ids. Only tested with SlipRateInversionConstraint so far.
+ */
 public class JointConstraintWrapper extends InversionConstraint {
 
     final ConstraintRegionConfig config;
@@ -21,11 +27,16 @@ public class JointConstraintWrapper extends InversionConstraint {
         this.constraint = constraint;
     }
 
+    /** We want to write one row per section id. */
     @Override
     public int getNumRows() {
         return config.sectionIds.size();
     }
 
+    /**
+     * Encode only the rows we are interested in. The original constraint will write all rows as per
+     * normal, but this method filters out the rows that are nto relevant to the current config.
+     */
     @Override
     public long encode(DoubleMatrix2D A, double[] d, int startRow) {
         this.startRow = startRow;
@@ -48,6 +59,11 @@ public class JointConstraintWrapper extends InversionConstraint {
         return filteredA.getNonZeroElements();
     }
 
+    /**
+     * A DoubleMatrix2D that is filtered by the config. If a section is covered by the config, then
+     * we map it to the row we want before setting any cells. If a section is not covered by the
+     * config, we do not modify the matrix.
+     */
     class FilteredMatrix extends DoubleMatrix2D {
         final DoubleMatrix2D original;
         int nonZero = 0;
