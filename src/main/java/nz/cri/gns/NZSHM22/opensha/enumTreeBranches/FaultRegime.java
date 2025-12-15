@@ -6,7 +6,8 @@ import org.opensha.commons.logicTree.LogicTreeNode;
 
 public enum FaultRegime implements LogicTreeNode {
     CRUSTAL,
-    SUBDUCTION;
+    SUBDUCTION,
+    JOINT;
 
     @Override
     public String getName() {
