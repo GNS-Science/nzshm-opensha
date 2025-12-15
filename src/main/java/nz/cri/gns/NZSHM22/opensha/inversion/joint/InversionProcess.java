@@ -14,14 +14,14 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
 
-public class JointInversionRunner {
+public class InversionProcess {
 
     NZSHM22_InversionFaultSystemRuptSet ruptureSet;
     List<ConstraintRegionConfig> configs;
     ConstraintRegionConfig crustalConfig;
     ConstraintRegionConfig subductionConfig;
 
-    public JointInversionRunner() {
+    public InversionProcess() {
         configs = new ArrayList<>();
     }
 
@@ -63,6 +63,8 @@ public class JointInversionRunner {
         // FIXME: create joint inititalsolution and waterlevel
         InversionInputGenerator inputGenerator =
                 new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
+
+
     }
 
     public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
@@ -77,7 +79,7 @@ public class JointInversionRunner {
         if (crustalConfig == null) {
             List<Integer> sectionIds =
                     ruptureSet.getFaultSectionDataList().stream()
-                            .filter(Predicate.not(JointInversionRunner::isSubduction))
+                            .filter(Predicate.not(InversionProcess::isSubduction))
                             .map(FaultSection::getSectionId)
                             .collect(Collectors.toList());
             crustalConfig = new ConstraintRegionConfig(sectionIds);
@@ -90,7 +92,7 @@ public class JointInversionRunner {
         if (subductionConfig == null) {
             List<Integer> sectionIds =
                     ruptureSet.getFaultSectionDataList().stream()
-                            .filter(JointInversionRunner::isSubduction)
+                            .filter(InversionProcess::isSubduction)
                             .map(FaultSection::getSectionId)
                             .collect(Collectors.toList());
             subductionConfig = new ConstraintRegionConfig(sectionIds);
