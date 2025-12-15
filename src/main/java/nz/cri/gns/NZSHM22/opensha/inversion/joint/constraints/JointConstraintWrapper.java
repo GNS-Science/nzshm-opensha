@@ -5,8 +5,8 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 
 /**
- * Wraps an InversionConstraint and so that we can encode it for different configs. For each config,
- * it writes only those lines into the matrix that are relevant for that config. Each line in the
+ * Wraps an InversionConstraint so that we can encode it for different configs. For each config, it
+ * writes only those lines into the matrix that are relevant for that config. Each line in the
  * matrix id for one fault sub section and configs are for non-overlapping sets of fault section
  * ids. Only tested with SlipRateInversionConstraint so far.
  */
