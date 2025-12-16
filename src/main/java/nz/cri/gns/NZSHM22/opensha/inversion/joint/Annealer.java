@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
-
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -20,11 +19,11 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
-    
+
     AnnealingConfig config;
     NZSHM22_InversionFaultSystemRuptSet rupSet;
-    
-    public Annealer(AnnealingConfig config, NZSHM22_InversionFaultSystemRuptSet rupSet){
+
+    public Annealer(AnnealingConfig config, NZSHM22_InversionFaultSystemRuptSet rupSet) {
         this.config = config;
         this.rupSet = rupSet;
     }
@@ -65,7 +64,8 @@ public class Annealer {
         CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
         if (config.logStates != null) {
-            completionCriteria = new LoggingCompletionCriteria(completionCriteria, config.logStates, 500);
+            completionCriteria =
+                    new LoggingCompletionCriteria(completionCriteria, config.logStates, 500);
         }
         return completionCriteria;
     }
@@ -111,7 +111,8 @@ public class Annealer {
 
         if (config.repeatable) {
             Preconditions.checkState(
-                    config.iterationCompletionCriteria != null || config.energyChangeCompletionCriteria != null);
+                    config.iterationCompletionCriteria != null
+                            || config.energyChangeCompletionCriteria != null);
             Preconditions.checkState(config.selectionIterations != null);
         }
 
@@ -209,7 +210,8 @@ public class Annealer {
         return createSolution(tsa, progress);
     }
 
-    protected FaultSystemSolution createSolution(ThreadedSimulatedAnnealing tsa, ProgressTrackingCompletionCriteria progress)
+    protected FaultSystemSolution createSolution(
+            ThreadedSimulatedAnnealing tsa, ProgressTrackingCompletionCriteria progress)
             throws IOException {
         // now assemble the solution
         double[] solution_raw = tsa.getBestSolution();

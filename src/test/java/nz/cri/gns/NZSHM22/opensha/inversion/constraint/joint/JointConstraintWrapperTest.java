@@ -40,7 +40,7 @@ public class JointConstraintWrapperTest {
         FaultSection s0 = rupSet.getFaultSectionData(0);
         FaultSection s1 = rupSet.getFaultSectionData(1);
         s1.setSectionName("row:1");
-        rupSet.getFaultSectionDataList().removeIf((s)-> s.getSectionId() > 1);
+        rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;

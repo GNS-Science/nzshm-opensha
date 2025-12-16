@@ -29,8 +29,6 @@ public class AnnealingConfig {
     protected EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
     protected IterationCompletionCriteria iterationCompletionCriteria = null;
 
-
-
     protected InversionInputGenerator inversionInputGenerator;
 
     protected double[] variablePerturbationBasis;
