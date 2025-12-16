@@ -7,7 +7,7 @@ import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintRegionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
 import org.dom4j.DocumentException;
@@ -15,25 +15,25 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
 
-public class InversionRunnerBuilder {
+public class InversionRunner {
 
     NZSHM22_InversionFaultSystemRuptSet ruptureSet;
-    List<ConstraintRegionConfig> configs;
-    ConstraintRegionConfig crustalConfig;
-    ConstraintRegionConfig subductionConfig;
+    List<ConstraintConfig> configs;
+    ConstraintConfig crustalConfig;
+    ConstraintConfig subductionConfig;
 
-    public InversionRunnerBuilder() {
+    public InversionRunner() {
         configs = new ArrayList<>();
     }
 
     protected void initConfigs() {
-        for (ConstraintRegionConfig config : configs) {
+        for (ConstraintConfig config : configs) {
             config.init(ruptureSet);
         }
 
         Set<Integer> seen = new HashSet<>();
         List<Integer> doubleUps = new ArrayList<>();
-        for (ConstraintRegionConfig config : configs) {
+        for (ConstraintConfig config : configs) {
             for (Integer sectionId : config.getSectionIds()) {
                 if (seen.contains(sectionId)) {
                     doubleUps.add(sectionId);
@@ -67,7 +67,7 @@ public class InversionRunnerBuilder {
         initConfigs();
 
         List<InversionConstraint> constraints = new ArrayList<>();
-        for (ConstraintRegionConfig config : configs) {
+        for (ConstraintConfig config : configs) {
             constraints.addAll(JointConstraintGenerator.buildSharedConstraints(ruptureSet, config));
         }
         return constraints;
@@ -83,8 +83,8 @@ public class InversionRunnerBuilder {
         InversionInputGenerator inputGenerator =
                 new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
 
-        Annealer runner = new Annealer();
-        runner.setRupSet(ruptureSet);
+        AnnealingConfig annealingConfig = new AnnealingConfig();
+        Annealer runner = new Annealer(annealingConfig, ruptureSet);
         runner.runInversion(inputGenerator);
     }
 
@@ -92,17 +92,17 @@ public class InversionRunnerBuilder {
         this.ruptureSet = ruptureSet;
     }
 
-    public ConstraintRegionConfig getCrustalConfig() {
+    public ConstraintConfig getCrustalConfig() {
         if (crustalConfig == null) {
-            crustalConfig = new ConstraintRegionConfig(RegionPredicate.CRUSTAL);
+            crustalConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
             configs.add(crustalConfig);
         }
         return crustalConfig;
     }
 
-    public ConstraintRegionConfig getSubductionConfig() {
+    public ConstraintConfig getSubductionConfig() {
         if (subductionConfig == null) {
-            subductionConfig = new ConstraintRegionConfig(RegionPredicate.SUBDUCTION);
+            subductionConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
             configs.add(subductionConfig);
         }
         return subductionConfig;
@@ -122,11 +122,11 @@ public class InversionRunnerBuilder {
                                 "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"),
                         ltb);
 
-        InversionRunnerBuilder builder = new InversionRunnerBuilder();
+        InversionRunner builder = new InversionRunner();
         builder.setRuptureSet(rupSet);
         builder.serialiseConfig();
 
-        ConstraintRegionConfig crustalConfig = builder.getCrustalConfig();
+        ConstraintConfig crustalConfig = builder.getCrustalConfig();
 
         builder.run();
     }

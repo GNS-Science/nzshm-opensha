@@ -6,7 +6,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
-public class ConstraintRegionConfig {
+public class ConstraintConfig {
 
     final RegionPredicate region;
 
@@ -22,7 +22,7 @@ public class ConstraintRegionConfig {
     double slipRateUncertaintyConstraintScalingFactor;
     boolean unmodifiedSlipRateStdvs;
 
-    public ConstraintRegionConfig(RegionPredicate region) {
+    public ConstraintConfig(RegionPredicate region) {
         this.region = region;
     }
 

@@ -17,309 +17,21 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitS
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
-import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
-
-    protected long inversionSecs = 60;
-    protected long selectionInterval = 10;
-    protected Long selectionIterations = null;
-
-    protected String logStates = null;
-
-    private Integer inversionNumSolutionAverages = 1; // 1 means no averaging
-    private Integer inversionThreadsPerSelector = 1;
-    private Integer inversionAveragingIntervalSecs = null;
-    private Integer inversionAveragingIterations = null;
-    private boolean inversionAveragingEnabled = false;
-    private GenerationFunctionType perturbationFunction = GenerationFunctionType.UNIFORM_0p001;
-    private NonnegativityConstraintType nonNegAlgorithm =
-            NonnegativityConstraintType.LIMIT_ZERO_RATES;
-    private CoolingScheduleType coolingSchedule = null;
-
-    private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
-    private IterationCompletionCriteria iterationCompletionCriteria = null;
-
-    private ThreadedSimulatedAnnealing tsa;
-
-    private InversionInputGenerator inversionInputGenerator;
-
-    protected double[] variablePerturbationBasis;
-    protected boolean excludeRupturesBelowMinMag = false;
-
-    protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
-
-    protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
-
-    protected boolean repeatable = false;
-
-    public Annealer setRupSet(NZSHM22_InversionFaultSystemRuptSet rupSet) {
+    
+    AnnealingConfig config;
+    NZSHM22_InversionFaultSystemRuptSet rupSet;
+    
+    public Annealer(AnnealingConfig config, NZSHM22_InversionFaultSystemRuptSet rupSet){
+        this.config = config;
         this.rupSet = rupSet;
-        return this;
-    }
-
-    /**
-     * Enables logging of all inversion state values. To log at each step, set the following values:
-     * runner.setIterationCompletionCriteria(1000); // 1000 iterations in total
-     * runner.setSelectionIterations(1); // log at each iteration runner.setRepeatable(true); //
-     * make repeatable and single-threaded runner.setEnableInversionStateLogging("/tmp/stateLog/");
-     * // enable logging to the specified directory runner.setInversionAveraging(false); // disable
-     * averaging
-     *
-     * <p>Logs will be broken up into zip files that contain up to 500MB of data each when
-     * uncompressed. Data will be in headerless CSV files apart from meta.csv which has a header in
-     * each CSV file. See zip file names for the iteration range contained. See meta.csv for exact
-     * iteration for each row. Each CSV file will have a row for each iteration - unless empty.
-     *
-     * @param basePath where to log to
-     * @return this runner
-     */
-    public Annealer setEnableInversionStateLogging(String basePath) {
-        this.logStates = basePath;
-        return this;
-    }
-
-    /**
-     * Sets how many minutes the inversion runs for in minutes. Default is 1 minute.
-     *
-     * @param inversionMinutes the duration of the inversion in minutes.
-     * @return this runner.
-     */
-    public Annealer setInversionMinutes(long inversionMinutes) {
-        this.inversionSecs = inversionMinutes * 60;
-        return this;
-    }
-
-    /**
-     * Sets how many seconds the inversion runs for. Default is 60 seconds.
-     *
-     * @param inversionSeconds the duration of the inversion in seconds.
-     * @return this runner.
-     */
-    public Annealer setInversionSeconds(long inversionSeconds) {
-        this.inversionSecs = inversionSeconds;
-        return this;
-    }
-
-    public Annealer setReweightTargetQuantity(String quantity) {
-        this.reweightTargetQuantity = InversionMisfitStats.Quantity.valueOf(quantity);
-        return this;
-    }
-
-    /**
-     * @param energyDelta may be set to 0 to noop this method
-     * @param energyPercentDelta
-     * @param lookBackMins
-     * @return
-     */
-    public Annealer setEnergyChangeCompletionCriteria(
-            double energyDelta, double energyPercentDelta, double lookBackMins) {
-        if (energyDelta == 0.0d) return this;
-        this.energyChangeCompletionCriteria =
-                new EnergyChangeCompletionCriteria(energyDelta, energyPercentDelta, lookBackMins);
-        return this;
-    }
-
-    /**
-     * @param minIterations may be set to 0 to noop this method
-     * @return
-     */
-    public Annealer setIterationCompletionCriteria(long minIterations) {
-        if (minIterations == 0) this.iterationCompletionCriteria = null;
-        else this.iterationCompletionCriteria = new IterationCompletionCriteria(minIterations);
-        return this;
-    }
-
-    public Annealer setRepeatable(boolean repeatable) {
-        this.repeatable = repeatable;
-        return this;
-    }
-
-    /**
-     * Sets the length of time between inversion selections (syncs) in seconds. Default is 10
-     * seconds.
-     *
-     * @param syncInterval the interval in seconds.
-     * @return this runner.
-     */
-    @Deprecated
-    public Annealer setSyncInterval(long syncInterval) {
-        return setSelectionInterval(syncInterval);
-    }
-
-    /**
-     * Sets the number of threads per selector;
-     *
-     * <p>NB total threads allocated = (numSolutionAverages * numThreadsPerAvg)
-     *
-     * @param numThreads the number of threads per solution selector (which might also be an
-     *     averaging thread).
-     * @return this runner.
-     */
-    public Annealer setNumThreadsPerSelector(Integer numThreads) {
-        this.inversionThreadsPerSelector = numThreads;
-        return this;
-    }
-
-    /**
-     * Sets the length of time between sub-solution selections. Default is 10 seconds.
-     *
-     * @param interval the interval in seconds.
-     * @return this runner.
-     */
-    public Annealer setSelectionInterval(long interval) {
-        this.selectionInterval = interval;
-        return this;
-    }
-
-    /**
-     * Sets the iterations between sub-solution selections.
-     *
-     * @param iterations
-     * @return this runner.
-     */
-    public Annealer setSelectionIterations(long iterations) {
-        this.selectionIterations = iterations;
-        return this;
-    }
-
-    /**
-     * @param numSolutionAverages the number of inversionNumSolutionAverages
-     * @return
-     */
-    public Annealer setNumSolutionAverages(Integer numSolutionAverages) {
-        this.inversionNumSolutionAverages = numSolutionAverages;
-        return this;
-    }
-
-    /**
-     * Sets how long each averaging interval will be.
-     *
-     * @param seconds the duration of the averaging period in seconds.
-     * @return this runner.
-     */
-    public Annealer setInversionAveragingIntervalSecs(Integer seconds) {
-        this.inversionAveragingIntervalSecs = seconds;
-        return this;
-    }
-
-    /**
-     * Sets how long each averaging interval will be.
-     *
-     * @param iterations the duration of the averaging period
-     * @return this runner.
-     */
-    public Annealer setInversionAveragingIterations(Integer iterations) {
-        this.inversionAveragingIterations = iterations;
-        return this;
-    }
-
-    /**
-     * Set up inversion averaging with one method call;
-     *
-     * <p>This will also determine the total threads allocated = (numSolutionAverages *
-     * numThreadsPerAvg)
-     *
-     * @param numSolutionAverages the number of parallel selectors to average over
-     * @param averagingIntervalSecs
-     * @return
-     */
-    public Annealer setInversionAveraging(
-            Integer numSolutionAverages, Integer averagingIntervalSecs) {
-        this.inversionAveragingEnabled = true;
-        this.setNumSolutionAverages(numSolutionAverages);
-        this.setInversionAveragingIntervalSecs(averagingIntervalSecs);
-        return this;
-    }
-
-    /**
-     * Enable/disable inversion averaging behaviour.
-     *
-     * @param enabled
-     * @return
-     */
-    public Annealer setInversionAveraging(boolean enabled) {
-        this.inversionAveragingEnabled = enabled;
-        return this;
-    }
-
-    /**
-     * @param coolingSchedule (from CLASSICAL_SA, FAST_SA (default), VERYFAST_SA, LINEAR )
-     * @return
-     */
-    public Annealer setCoolingSchedule(String coolingSchedule) {
-        return setCoolingSchedule(CoolingScheduleType.valueOf(coolingSchedule));
-    }
-
-    /**
-     * configure the cooling schedule
-     *
-     * @param coolingSchedule
-     * @return
-     */
-    public Annealer setCoolingSchedule(CoolingScheduleType coolingSchedule) {
-        this.coolingSchedule = coolingSchedule;
-        return this;
-    }
-
-    /**
-     * @param perturbationFunction
-     * @return
-     */
-    public Annealer setPerturbationFunction(String perturbationFunction) {
-        return setPerturbationFunction(GenerationFunctionType.valueOf(perturbationFunction));
-    }
-
-    /**
-     * configure the perturbation function
-     *
-     * @param perturbationFunction
-     * @return
-     */
-    public Annealer setPerturbationFunction(GenerationFunctionType perturbationFunction) {
-        this.perturbationFunction = perturbationFunction;
-        return this;
-    }
-
-    /**
-     * configure how Inversion treats values when they perturb < 0
-     *
-     * @param nonNegAlgorithm
-     * @return
-     */
-    public Annealer setNonnegativityConstraintType(String nonNegAlgorithm) {
-        return this.setNonnegativityConstraintType(
-                NonnegativityConstraintType.valueOf(nonNegAlgorithm));
-    }
-
-    /**
-     * @param nonNegAlgorithm
-     * @return
-     */
-    public Annealer setNonnegativityConstraintType(
-            NonnegativityConstraintType nonNegAlgorithm) {
-        this.nonNegAlgorithm = nonNegAlgorithm;
-        return this;
-    }
-
-    /**
-     * Exclude ruptures that are below MinMag. false by default.
-     *
-     * @param excludeRupturesBelowMinMag
-     * @return
-     */
-    public Annealer setExcludeRupturesBelowMinMag(boolean excludeRupturesBelowMinMag) {
-        this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
-        return this;
     }
 
     protected Set<Integer> createSamplerExclusions() {
         Set<Integer> exclusions = new HashSet<>();
-        if (excludeRupturesBelowMinMag) {
+        if (config.excludeRupturesBelowMinMag) {
             for (int r = 0; r < rupSet.getNumRuptures(); r++) {
                 if (rupSet.isRuptureBelowSectMinMag(r)) {
                     exclusions.add(r);
@@ -343,17 +55,17 @@ public class Annealer {
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();
         // inversion completion criteria (how long it will run)
-        if (!repeatable)
-            completionCriterias.add(TimeCompletionCriteria.getInSeconds(inversionSecs));
-        if (!(this.energyChangeCompletionCriteria == null))
-            completionCriterias.add(this.energyChangeCompletionCriteria);
-        if (!(this.iterationCompletionCriteria == null))
-            completionCriterias.add(this.iterationCompletionCriteria);
+        if (!config.repeatable)
+            completionCriterias.add(TimeCompletionCriteria.getInSeconds(config.inversionSecs));
+        if (!(config.energyChangeCompletionCriteria == null))
+            completionCriterias.add(config.energyChangeCompletionCriteria);
+        if (!(config.iterationCompletionCriteria == null))
+            completionCriterias.add(config.iterationCompletionCriteria);
 
         CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
-        if (logStates != null) {
-            completionCriteria = new LoggingCompletionCriteria(completionCriteria, logStates, 500);
+        if (config.logStates != null) {
+            completionCriteria = new LoggingCompletionCriteria(completionCriteria, config.logStates, 500);
         }
         return completionCriteria;
     }
@@ -365,22 +77,22 @@ public class Annealer {
         // criteria, we only allow
         // one criteria here. See https://github.com/GNS-Science/nzshm-opensha/issues/360
         CompletionCriteria subCompletionCriteria;
-        if (selectionIterations != null) {
-            subCompletionCriteria = new IterationCompletionCriteria(selectionIterations);
+        if (config.selectionIterations != null) {
+            subCompletionCriteria = new IterationCompletionCriteria(config.selectionIterations);
         } else {
-            subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
+            subCompletionCriteria = TimeCompletionCriteria.getInSeconds(config.selectionInterval);
         }
         return subCompletionCriteria;
     }
 
     protected CompletionCriteria createAvgSubCompletionCriteria() {
         List<CompletionCriteria> criteriaList = new ArrayList<>();
-        if (inversionAveragingIterations != null) {
-            criteriaList.add(new IterationCompletionCriteria(inversionAveragingIterations));
+        if (config.inversionAveragingIterations != null) {
+            criteriaList.add(new IterationCompletionCriteria(config.inversionAveragingIterations));
         }
-        if (inversionAveragingIntervalSecs != null && !repeatable) {
+        if (config.inversionAveragingIntervalSecs != null && !config.repeatable) {
             criteriaList.add(
-                    TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs));
+                    TimeCompletionCriteria.getInSeconds(config.inversionAveragingIntervalSecs));
         }
         return new CompoundCompletionCriteria(criteriaList);
     }
@@ -394,13 +106,13 @@ public class Annealer {
      */
     public FaultSystemSolution runInversion(InversionInputGenerator inversionInputGenerator)
             throws IOException, DocumentException {
-        this.inversionInputGenerator = inversionInputGenerator;
+        config.inversionInputGenerator = inversionInputGenerator;
         UCERF3InversionConfiguration.setMagNorm(8.1);
 
-        if (repeatable) {
+        if (config.repeatable) {
             Preconditions.checkState(
-                    iterationCompletionCriteria != null || energyChangeCompletionCriteria != null);
-            Preconditions.checkState(selectionIterations != null);
+                    config.iterationCompletionCriteria != null || config.energyChangeCompletionCriteria != null);
+            Preconditions.checkState(config.selectionIterations != null);
         }
 
         inversionInputGenerator.generateInputs(true);
@@ -414,18 +126,20 @@ public class Annealer {
 
         CompletionCriteria subCompletionCriteria = createSubCompletionCriteria();
 
-        if (repeatable) {
-            inversionThreadsPerSelector = 1;
-            inversionNumSolutionAverages = 1;
+        if (config.repeatable) {
+            config.inversionThreadsPerSelector = 1;
+            config.inversionNumSolutionAverages = 1;
         }
 
-        if (inversionAveragingEnabled) {
+        ThreadedSimulatedAnnealing tsa;
+
+        if (config.inversionAveragingEnabled) {
 
             CompletionCriteria avgSubCompletionCriteria = createAvgSubCompletionCriteria();
 
             // arrange lower-level (actual worker) SAs
             List<SimulatedAnnealing> tsas = new ArrayList<>();
-            for (int i = 0; i < inversionNumSolutionAverages; i++) {
+            for (int i = 0; i < config.inversionNumSolutionAverages; i++) {
                 tsas.add(
                         new ThreadedSimulatedAnnealing(
                                 inversionInputGenerator.getA(),
@@ -434,7 +148,7 @@ public class Annealer {
                                 0d,
                                 inversionInputGenerator.getA_ineq(),
                                 inversionInputGenerator.getD_ineq(),
-                                inversionThreadsPerSelector,
+                                config.inversionThreadsPerSelector,
                                 subCompletionCriteria));
             }
             tsa = new ThreadedSimulatedAnnealing(tsas, avgSubCompletionCriteria);
@@ -448,7 +162,7 @@ public class Annealer {
                             0d,
                             inversionInputGenerator.getA_ineq(),
                             inversionInputGenerator.getD_ineq(),
-                            inversionThreadsPerSelector,
+                            config.inversionThreadsPerSelector,
                             subCompletionCriteria);
         }
         progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
@@ -460,25 +174,25 @@ public class Annealer {
         }
 
         tsa.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
-        if (reweightTargetQuantity != null) {
-            tsa = new ReweightEvenFitSimulatedAnnealing(tsa, reweightTargetQuantity);
+        if (config.reweightTargetQuantity != null) {
+            tsa = new ReweightEvenFitSimulatedAnnealing(tsa, config.reweightTargetQuantity);
         }
 
-        if (repeatable) {
+        if (config.repeatable) {
             tsa.setRandom(new Random(1));
         }
 
-        tsa.setPerturbationFunc(perturbationFunction);
-        if (perturbationFunction.isVariable()) {
-            double[] basis = variablePerturbationBasis;
+        tsa.setPerturbationFunc(config.perturbationFunction);
+        if (config.perturbationFunction.isVariable()) {
+            double[] basis = config.variablePerturbationBasis;
             if (basis == null) {
                 basis = Inversions.getDefaultVariablePerturbationBasis(rupSet);
             }
             tsa.setVariablePerturbationBasis(basis);
         }
 
-        tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
-        if (!(this.coolingSchedule == null)) tsa.setCoolingFunc(this.coolingSchedule);
+        tsa.setNonnegativeityConstraintAlgorithm(config.nonNegAlgorithm);
+        if (!(config.coolingSchedule == null)) tsa.setCoolingFunc(config.coolingSchedule);
 
         IntegerSampler sampler = createSampler();
         if (sampler != null) {
@@ -492,17 +206,17 @@ public class Annealer {
             ((Closeable) completionCriteria).close();
         }
 
-        return createSolution(progress);
+        return createSolution(tsa, progress);
     }
 
-    protected FaultSystemSolution createSolution(ProgressTrackingCompletionCriteria progress)
+    protected FaultSystemSolution createSolution(ThreadedSimulatedAnnealing tsa, ProgressTrackingCompletionCriteria progress)
             throws IOException {
         // now assemble the solution
         double[] solution_raw = tsa.getBestSolution();
 
         // adjust for minimum rates if applicable
         double[] solution_adjusted =
-                inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
+                config.inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
 
         FaultSystemSolution solution = new FaultSystemSolution(rupSet, solution_adjusted);
         solution.addModule(progress.getProgress());

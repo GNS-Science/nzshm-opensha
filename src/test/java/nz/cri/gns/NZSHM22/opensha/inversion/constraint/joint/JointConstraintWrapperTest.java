@@ -9,8 +9,9 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintRegionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintWrapper;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -18,6 +19,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Constra
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
 public class JointConstraintWrapperTest {
@@ -34,6 +36,11 @@ public class JointConstraintWrapperTest {
                                 List.of(CRU_SECTION),
                                 List.of(SUB_SECTION),
                                 List.of(CRU_SECTION, SUB_SECTION)));
+
+        FaultSection s0 = rupSet.getFaultSectionData(0);
+        FaultSection s1 = rupSet.getFaultSectionData(1);
+        s1.setSectionName("row:1");
+        rupSet.getFaultSectionDataList().removeIf((s)-> s.getSectionId() > 1);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;
@@ -60,12 +67,14 @@ public class JointConstraintWrapperTest {
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.UNNORMALIZED, rupSet);
 
         // set up crustal constraint
-        ConstraintRegionConfig cruConfig = new ConstraintRegionConfig(List.of(CRU_SECTION));
+        ConstraintConfig cruConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
+        cruConfig.init(rupSet);
         JointConstraintWrapper crustalConstraint =
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
         // set up subduction constraint
-        ConstraintRegionConfig subConfig = new ConstraintRegionConfig(List.of(SUB_SECTION));
+        ConstraintConfig subConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
+        subConfig.init(rupSet);
         JointConstraintWrapper subductionConstraint =
                 new JointConstraintWrapper(subConfig, slipConstraint);
 

@@ -12,12 +12,12 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Inversi
  */
 public class JointConstraintWrapper extends InversionConstraint {
 
-    final ConstraintRegionConfig config;
+    final ConstraintConfig config;
     final InversionConstraint constraint;
 
     int startRow;
 
-    public JointConstraintWrapper(ConstraintRegionConfig config, InversionConstraint constraint) {
+    public JointConstraintWrapper(ConstraintConfig config, InversionConstraint constraint) {
         super(
                 constraint.getName(),
                 constraint.getShortName(),
