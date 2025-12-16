@@ -189,6 +189,10 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.customModel = customModel;
     }
 
+    public String getCustomModel() {
+        return customModel;
+    }
+
     public InputStream getStream(String fileName) {
         return getClass().getResourceAsStream(RESOURCE_PATH + fileName);
     }

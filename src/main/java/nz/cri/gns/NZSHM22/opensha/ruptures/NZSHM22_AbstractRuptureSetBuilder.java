@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -11,10 +12,8 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.GitVersion;
-import org.opensha.commons.util.XMLUtils;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
@@ -362,15 +361,15 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
             faultModel.fetchFaultSections(subSections);
+            if (fsdFile != null) {
+                String customModel = Files.readString(fsdFile.toPath());
+                faultModel.setCustomModel(customModel);
+            }
         }
         if (downDipFile != null) {
             try (FileInputStream in = new FileInputStream(downDipFile)) {
                 DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
             }
-        }
-        if (fsdFile != null) {
-            Document doc = XMLUtils.loadDocument(fsdFile);
-            NZSHM22_FaultModels.loadStoredFaultSections(subSections, doc);
         }
 
         if (faultModel == null && downDipFile == null && fsdFile == null) {
@@ -391,7 +390,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
         applyDepthScalars(subSections);
 
-        if (fsdFile != null || (faultModel != null && faultModel.isCrustal())) {
+        if (faultModel != null && faultModel.isCrustal()) {
 
             for (FaultFilter filter : faultFilters) {
                 filter.filter(subSections);

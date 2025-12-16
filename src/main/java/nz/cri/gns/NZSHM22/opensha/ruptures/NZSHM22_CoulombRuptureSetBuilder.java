@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Range;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -133,13 +132,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
     @Override
     public FaultSystemRupSet buildRuptureSet() throws DocumentException, IOException {
-
-        String customModel = null;
-
-        if (fsdFile != null) {
-            customModel = Files.readString(fsdFile.toPath());
-            faultModel.setCustomModel(customModel);
-        }
 
         loadFaults();
 
@@ -697,8 +689,8 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         .addModule(createBuildInfo())
                         .build();
 
-        if (customModel != null) {
-            rupSet.addModule(new CustomFaultModel(customModel));
+        if (faultModel != null && faultModel.getCustomModel() != null) {
+            rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
         }
 
         return rupSet;
