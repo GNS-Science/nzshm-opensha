@@ -1,27 +1,18 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import com.google.common.base.Preconditions;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
-import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.*;
+
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
-import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
-import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
-import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.IntegerSampler;
-import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
-import org.opensha.commons.data.function.HistogramFunction;
-import org.opensha.commons.geo.json.FeatureProperties;
-import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
-import org.opensha.commons.util.io.archive.ArchiveInput;
-import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
-import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
@@ -29,24 +20,10 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalarValues;
-import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
-import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
-/**
- * @author chrisbc
- */
-public abstract class InversionRunner {
+public class Annealer {
 
     protected long inversionSecs = 60;
     protected long selectionInterval = 10;
@@ -80,6 +57,11 @@ public abstract class InversionRunner {
 
     protected boolean repeatable = false;
 
+    public Annealer setRupSet(NZSHM22_InversionFaultSystemRuptSet rupSet) {
+        this.rupSet = rupSet;
+        return this;
+    }
+
     /**
      * Enables logging of all inversion state values. To log at each step, set the following values:
      * runner.setIterationCompletionCriteria(1000); // 1000 iterations in total
@@ -96,7 +78,7 @@ public abstract class InversionRunner {
      * @param basePath where to log to
      * @return this runner
      */
-    public InversionRunner setEnableInversionStateLogging(String basePath) {
+    public Annealer setEnableInversionStateLogging(String basePath) {
         this.logStates = basePath;
         return this;
     }
@@ -107,7 +89,7 @@ public abstract class InversionRunner {
      * @param inversionMinutes the duration of the inversion in minutes.
      * @return this runner.
      */
-    public InversionRunner setInversionMinutes(long inversionMinutes) {
+    public Annealer setInversionMinutes(long inversionMinutes) {
         this.inversionSecs = inversionMinutes * 60;
         return this;
     }
@@ -118,12 +100,12 @@ public abstract class InversionRunner {
      * @param inversionSeconds the duration of the inversion in seconds.
      * @return this runner.
      */
-    public InversionRunner setInversionSeconds(long inversionSeconds) {
+    public Annealer setInversionSeconds(long inversionSeconds) {
         this.inversionSecs = inversionSeconds;
         return this;
     }
 
-    public InversionRunner setReweightTargetQuantity(String quantity) {
+    public Annealer setReweightTargetQuantity(String quantity) {
         this.reweightTargetQuantity = InversionMisfitStats.Quantity.valueOf(quantity);
         return this;
     }
@@ -134,7 +116,7 @@ public abstract class InversionRunner {
      * @param lookBackMins
      * @return
      */
-    public InversionRunner setEnergyChangeCompletionCriteria(
+    public Annealer setEnergyChangeCompletionCriteria(
             double energyDelta, double energyPercentDelta, double lookBackMins) {
         if (energyDelta == 0.0d) return this;
         this.energyChangeCompletionCriteria =
@@ -146,13 +128,13 @@ public abstract class InversionRunner {
      * @param minIterations may be set to 0 to noop this method
      * @return
      */
-    public InversionRunner setIterationCompletionCriteria(long minIterations) {
+    public Annealer setIterationCompletionCriteria(long minIterations) {
         if (minIterations == 0) this.iterationCompletionCriteria = null;
         else this.iterationCompletionCriteria = new IterationCompletionCriteria(minIterations);
         return this;
     }
 
-    public InversionRunner setRepeatable(boolean repeatable) {
+    public Annealer setRepeatable(boolean repeatable) {
         this.repeatable = repeatable;
         return this;
     }
@@ -165,7 +147,7 @@ public abstract class InversionRunner {
      * @return this runner.
      */
     @Deprecated
-    public InversionRunner setSyncInterval(long syncInterval) {
+    public Annealer setSyncInterval(long syncInterval) {
         return setSelectionInterval(syncInterval);
     }
 
@@ -178,7 +160,7 @@ public abstract class InversionRunner {
      *     averaging thread).
      * @return this runner.
      */
-    public InversionRunner setNumThreadsPerSelector(Integer numThreads) {
+    public Annealer setNumThreadsPerSelector(Integer numThreads) {
         this.inversionThreadsPerSelector = numThreads;
         return this;
     }
@@ -189,7 +171,7 @@ public abstract class InversionRunner {
      * @param interval the interval in seconds.
      * @return this runner.
      */
-    public InversionRunner setSelectionInterval(long interval) {
+    public Annealer setSelectionInterval(long interval) {
         this.selectionInterval = interval;
         return this;
     }
@@ -200,7 +182,7 @@ public abstract class InversionRunner {
      * @param iterations
      * @return this runner.
      */
-    public InversionRunner setSelectionIterations(long iterations) {
+    public Annealer setSelectionIterations(long iterations) {
         this.selectionIterations = iterations;
         return this;
     }
@@ -209,7 +191,7 @@ public abstract class InversionRunner {
      * @param numSolutionAverages the number of inversionNumSolutionAverages
      * @return
      */
-    public InversionRunner setNumSolutionAverages(Integer numSolutionAverages) {
+    public Annealer setNumSolutionAverages(Integer numSolutionAverages) {
         this.inversionNumSolutionAverages = numSolutionAverages;
         return this;
     }
@@ -220,7 +202,7 @@ public abstract class InversionRunner {
      * @param seconds the duration of the averaging period in seconds.
      * @return this runner.
      */
-    public InversionRunner setInversionAveragingIntervalSecs(Integer seconds) {
+    public Annealer setInversionAveragingIntervalSecs(Integer seconds) {
         this.inversionAveragingIntervalSecs = seconds;
         return this;
     }
@@ -231,7 +213,7 @@ public abstract class InversionRunner {
      * @param iterations the duration of the averaging period
      * @return this runner.
      */
-    public InversionRunner setInversionAveragingIterations(Integer iterations) {
+    public Annealer setInversionAveragingIterations(Integer iterations) {
         this.inversionAveragingIterations = iterations;
         return this;
     }
@@ -246,7 +228,7 @@ public abstract class InversionRunner {
      * @param averagingIntervalSecs
      * @return
      */
-    public InversionRunner setInversionAveraging(
+    public Annealer setInversionAveraging(
             Integer numSolutionAverages, Integer averagingIntervalSecs) {
         this.inversionAveragingEnabled = true;
         this.setNumSolutionAverages(numSolutionAverages);
@@ -260,7 +242,7 @@ public abstract class InversionRunner {
      * @param enabled
      * @return
      */
-    public InversionRunner setInversionAveraging(boolean enabled) {
+    public Annealer setInversionAveraging(boolean enabled) {
         this.inversionAveragingEnabled = enabled;
         return this;
     }
@@ -269,7 +251,7 @@ public abstract class InversionRunner {
      * @param coolingSchedule (from CLASSICAL_SA, FAST_SA (default), VERYFAST_SA, LINEAR )
      * @return
      */
-    public InversionRunner setCoolingSchedule(String coolingSchedule) {
+    public Annealer setCoolingSchedule(String coolingSchedule) {
         return setCoolingSchedule(CoolingScheduleType.valueOf(coolingSchedule));
     }
 
@@ -279,7 +261,7 @@ public abstract class InversionRunner {
      * @param coolingSchedule
      * @return
      */
-    public InversionRunner setCoolingSchedule(CoolingScheduleType coolingSchedule) {
+    public Annealer setCoolingSchedule(CoolingScheduleType coolingSchedule) {
         this.coolingSchedule = coolingSchedule;
         return this;
     }
@@ -288,7 +270,7 @@ public abstract class InversionRunner {
      * @param perturbationFunction
      * @return
      */
-    public InversionRunner setPerturbationFunction(String perturbationFunction) {
+    public Annealer setPerturbationFunction(String perturbationFunction) {
         return setPerturbationFunction(GenerationFunctionType.valueOf(perturbationFunction));
     }
 
@@ -298,8 +280,7 @@ public abstract class InversionRunner {
      * @param perturbationFunction
      * @return
      */
-    public InversionRunner setPerturbationFunction(
-            GenerationFunctionType perturbationFunction) {
+    public Annealer setPerturbationFunction(GenerationFunctionType perturbationFunction) {
         this.perturbationFunction = perturbationFunction;
         return this;
     }
@@ -310,7 +291,7 @@ public abstract class InversionRunner {
      * @param nonNegAlgorithm
      * @return
      */
-    public InversionRunner setNonnegativityConstraintType(String nonNegAlgorithm) {
+    public Annealer setNonnegativityConstraintType(String nonNegAlgorithm) {
         return this.setNonnegativityConstraintType(
                 NonnegativityConstraintType.valueOf(nonNegAlgorithm));
     }
@@ -319,7 +300,7 @@ public abstract class InversionRunner {
      * @param nonNegAlgorithm
      * @return
      */
-    public InversionRunner setNonnegativityConstraintType(
+    public Annealer setNonnegativityConstraintType(
             NonnegativityConstraintType nonNegAlgorithm) {
         this.nonNegAlgorithm = nonNegAlgorithm;
         return this;
@@ -331,24 +312,9 @@ public abstract class InversionRunner {
      * @param excludeRupturesBelowMinMag
      * @return
      */
-    public InversionRunner setExcludeRupturesBelowMinMag(
-            boolean excludeRupturesBelowMinMag) {
+    public Annealer setExcludeRupturesBelowMinMag(boolean excludeRupturesBelowMinMag) {
         this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
         return this;
-    }
-
-    /**
-     * @param inputGen
-     * @return
-     */
-    public InversionRunner setInversionInputGenerator(
-            InversionInputGenerator inputGen) {
-        this.inversionInputGenerator = inputGen;
-        return this;
-    }
-
-    public InversionInputGenerator getInversionInputGenerator() {
-        return inversionInputGenerator;
     }
 
     protected Set<Integer> createSamplerExclusions() {
@@ -403,7 +369,6 @@ public abstract class InversionRunner {
             subCompletionCriteria = new IterationCompletionCriteria(selectionIterations);
         } else {
             subCompletionCriteria = TimeCompletionCriteria.getInSeconds(selectionInterval);
-
         }
         return subCompletionCriteria;
     }
@@ -417,8 +382,7 @@ public abstract class InversionRunner {
             criteriaList.add(
                     TimeCompletionCriteria.getInSeconds(this.inversionAveragingIntervalSecs));
         }
-        return        new CompoundCompletionCriteria(criteriaList);
-
+        return new CompoundCompletionCriteria(criteriaList);
     }
 
     /**
@@ -428,8 +392,9 @@ public abstract class InversionRunner {
      * @throws IOException
      * @throws DocumentException
      */
-    public FaultSystemSolution runInversion() throws IOException, DocumentException {
-
+    public FaultSystemSolution runInversion(InversionInputGenerator inversionInputGenerator)
+            throws IOException, DocumentException {
+        this.inversionInputGenerator = inversionInputGenerator;
         UCERF3InversionConfiguration.setMagNorm(8.1);
 
         if (repeatable) {
@@ -527,10 +492,11 @@ public abstract class InversionRunner {
             ((Closeable) completionCriteria).close();
         }
 
-       return createSolution(progress);
+        return createSolution(progress);
     }
 
-    protected FaultSystemSolution createSolution(ProgressTrackingCompletionCriteria progress) throws IOException {
+    protected FaultSystemSolution createSolution(ProgressTrackingCompletionCriteria progress)
+            throws IOException {
         // now assemble the solution
         double[] solution_raw = tsa.getBestSolution();
 
@@ -546,5 +512,4 @@ public abstract class InversionRunner {
         }
         return solution;
     }
-
 }
