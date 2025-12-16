@@ -1,0 +1,33 @@
+{
+  "annealingConfig": {
+    "inversionSecs": 42,
+    "selectionInterval": 10,
+    "inversionNumSolutionAverages": 1,
+    "inversionThreadsPerSelector": 1,
+    "inversionAveragingEnabled": false,
+    "perturbationFunction": "UNIFORM_0p001",
+    "nonNegAlgorithm": "LIMIT_ZERO_RATES",
+    "excludeRupturesBelowMinMag": false,
+    "repeatable": false
+  },
+  "constraintConfigs": [
+    {
+      "region": "SUBDUCTION",
+      "slipRateConstraintWt_normalized": 1.0,
+      "slipRateConstraintWt_unnormalized": 100.0,
+      "slipRateWeightingType": "BOTH",
+      "slipRateUncertaintyConstraintWt": 0.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": false
+    },
+    {
+      "region": "CRUSTAL",
+      "slipRateConstraintWt_normalized": 1.0,
+      "slipRateConstraintWt_unnormalized": 100.0,
+      "slipRateWeightingType": "BOTH",
+      "slipRateUncertaintyConstraintWt": 0.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": false
+    }
+  ]
+}
