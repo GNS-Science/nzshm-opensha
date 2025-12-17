@@ -139,9 +139,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         if (faultModel != null) {
             description = description + "_FM(" + faultModel.name() + ")";
         }
-        if (fsdFile != null) {
-            description = description + "_FF(" + fsdFile.getName() + ")";
-        }
+
         if (downDipFile != null) {
             description = description + "_SF(" + downDipFile.getName() + ")";
         }
@@ -360,11 +358,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     protected void loadFaults() throws IOException, DocumentException {
         if (faultModel != null) {
-            faultModel.fetchFaultSections(subSections);
             if (fsdFile != null) {
                 String customModel = Files.readString(fsdFile.toPath());
                 faultModel.setCustomModel(customModel);
             }
+            faultModel.fetchFaultSections(subSections);
         }
         if (downDipFile != null) {
             try (FileInputStream in = new FileInputStream(downDipFile)) {

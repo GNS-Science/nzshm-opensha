@@ -8,6 +8,8 @@ public class CustomFaultModel implements FileBackedModule {
 
     String modelData;
 
+    public CustomFaultModel() {}
+
     public CustomFaultModel(String data) {
         modelData = data;
     }
@@ -25,6 +27,7 @@ public class CustomFaultModel implements FileBackedModule {
     public void writeToStream(OutputStream out) throws IOException {
         Writer writer = new OutputStreamWriter(out);
         writer.write(modelData);
+        writer.flush();
     }
 
     @Override
