@@ -1,12 +1,17 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.faultSurface.FaultSection;
 
-public class ConstraintRegionConfig {
+public class ConstraintConfig {
 
-    final List<Integer> sectionIds;
-    final Map<Integer, Integer> mappingToARow;
+    final RegionPredicate region;
+
+    transient List<Integer> sectionIds;
+    transient Map<Integer, Integer> mappingToARow;
 
     // slip rate section
     double slipRateConstraintWt_normalized = 1;
@@ -17,12 +22,24 @@ public class ConstraintRegionConfig {
     double slipRateUncertaintyConstraintScalingFactor;
     boolean unmodifiedSlipRateStdvs;
 
-    public ConstraintRegionConfig(Collection<Integer> sectionIds) {
-        this.sectionIds = new ArrayList<>(sectionIds);
+    public ConstraintConfig(RegionPredicate region) {
+        this.region = region;
+    }
+
+    public void init(FaultSystemRupSet ruptureSet) {
+        sectionIds =
+                ruptureSet.getFaultSectionDataList().stream()
+                        .filter(region::matches)
+                        .map(FaultSection::getSectionId)
+                        .collect(Collectors.toList());
         mappingToARow = new HashMap<>();
         for (int i = 0; i < sectionIds.size(); i++) {
-            mappingToARow.put(this.sectionIds.get(i), i);
+            mappingToARow.put(sectionIds.get(i), i);
         }
+    }
+
+    public RegionPredicate getRegion() {
+        return region;
     }
 
     /**

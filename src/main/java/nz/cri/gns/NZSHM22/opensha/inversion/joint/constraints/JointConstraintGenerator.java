@@ -13,7 +13,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 public class JointConstraintGenerator {
 
     public static List<InversionConstraint> buildSharedConstraints(
-            NZSHM22_InversionFaultSystemRuptSet rupSet, ConstraintRegionConfig config) {
+            NZSHM22_InversionFaultSystemRuptSet rupSet, ConstraintConfig config) {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
