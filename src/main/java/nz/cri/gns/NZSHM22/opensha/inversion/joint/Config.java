@@ -1,7 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,44 +11,50 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
 
-    protected AnnealingConfig annealingConfig;
-    protected List<ConstraintConfig> constraintConfigs;
-    protected transient ConstraintConfig crustalConfig;
-    protected transient ConstraintConfig subductionConfig;
+    protected String ruptureSetPath;
+    protected AnnealingConfig annealing;
+    protected List<ConstraintConfig> constraints;
 
     public Config() {
-        constraintConfigs = new ArrayList<>();
-        annealingConfig = new AnnealingConfig();
+        constraints = new ArrayList<>();
+        annealing = new AnnealingConfig();
+    }
+
+    public Config setRuptureSet(String ruptureSetPath) {
+        this.ruptureSetPath = ruptureSetPath;
+        return this;
     }
 
     public AnnealingConfig getAnnealingConfig() {
-        return annealingConfig;
+        return annealing;
     }
 
-    public ConstraintConfig getCrustalConfig() {
-        if (crustalConfig == null) {
-            crustalConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
-            constraintConfigs.add(crustalConfig);
-        }
+    public ConstraintConfig createCrustalConfig() {
+        ConstraintConfig crustalConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
+        constraints.add(crustalConfig);
         return crustalConfig;
     }
 
-    public ConstraintConfig getSubductionConfig() {
-        if (subductionConfig == null) {
-            subductionConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
-            constraintConfigs.add(subductionConfig);
-        }
+    public ConstraintConfig createSubductionConfig() {
+        ConstraintConfig subductionConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
+        constraints.add(subductionConfig);
         return subductionConfig;
     }
 
     protected void init(FaultSystemRupSet ruptureSet) {
-        for (ConstraintConfig config : constraintConfigs) {
+
+        if (constraints.isEmpty()) {
+            System.err.println("No constraint configs");
+            throw new IllegalStateException("No constraint configs");
+        }
+
+        for (ConstraintConfig config : constraints) {
             config.init(ruptureSet);
         }
 
         Set<Integer> seen = new HashSet<>();
         List<Integer> doubleUps = new ArrayList<>();
-        for (ConstraintConfig config : constraintConfigs) {
+        for (ConstraintConfig config : constraints) {
             for (Integer sectionId : config.getSectionIds()) {
                 if (seen.contains(sectionId)) {
                     doubleUps.add(sectionId);
@@ -77,15 +81,5 @@ public class Config {
                         "Section " + section.getSectionId() + " is not covered by a config.");
             }
         }
-    }
-
-    public String toJson() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(this);
-    }
-
-    public static Config fromJson(String json) {
-        Gson gson = new Gson();
-        return gson.fromJson(json, Config.class);
     }
 }

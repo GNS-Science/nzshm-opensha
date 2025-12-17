@@ -2,8 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
@@ -11,16 +9,21 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 
 public class InversionRunner {
 
     NZSHM22_InversionFaultSystemRuptSet ruptureSet;
-    Config config;
+    public Config config;
 
     public InversionRunner() {
         config = new Config();
+    }
+
+    public InversionRunner(Config config) {
+        this.config = config;
     }
 
     public Config getConfig() {
@@ -30,13 +33,13 @@ public class InversionRunner {
     protected List<InversionConstraint> generateConstraints() {
 
         List<InversionConstraint> constraints = new ArrayList<>();
-        for (ConstraintConfig config : config.constraintConfigs) {
+        for (ConstraintConfig config : config.constraints) {
             constraints.addAll(JointConstraintGenerator.buildSharedConstraints(ruptureSet, config));
         }
         return constraints;
     }
 
-    public void run() throws DocumentException, IOException {
+    public FaultSystemSolution run() throws DocumentException, IOException {
 
         config.init(ruptureSet);
 
@@ -48,9 +51,11 @@ public class InversionRunner {
         InversionInputGenerator inputGenerator =
                 new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
 
-        AnnealingConfig annealingConfig = new AnnealingConfig();
-        Annealer runner = new Annealer(annealingConfig, ruptureSet);
-        runner.runInversion(inputGenerator);
+        Annealer runner = new Annealer(config.getAnnealingConfig(), ruptureSet);
+        FaultSystemSolution solution = runner.runInversion(inputGenerator);
+        solution.addModule(new ConfigModule(config));
+
+        return solution;
     }
 
     public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
@@ -58,9 +63,6 @@ public class InversionRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-
-        String configJson = Files.readString(Path.of("config.json"));
-        Config c = Config.fromJson(configJson);
 
         NZSHM22_LogicTreeBranch ltb = NZSHM22_LogicTreeBranch.crustalInversion();
         NZSHM22_InversionFaultSystemRuptSet rupSet =
@@ -70,14 +72,14 @@ public class InversionRunner {
                         // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip"),
                         ltb);
 
-        InversionRunner builder = new InversionRunner();
+        Config config = new Config();
+        config.createCrustalConfig();
+        config.createSubductionConfig();
+        InversionRunner builder = new InversionRunner(config);
         builder.setRuptureSet(rupSet);
-        Config config = builder.getConfig();
-        config.getSubductionConfig();
-        config.getCrustalConfig();
 
-        System.out.println(config.toJson());
+        FaultSystemSolution solution = builder.run();
 
-        // builder.run();
+        solution.write(new File("/tmp/spikeInversionSolution.zip"));
     }
 }
