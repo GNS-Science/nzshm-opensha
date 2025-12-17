@@ -689,6 +689,10 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         .addModule(createBuildInfo())
                         .build();
 
+        if (faultModel != null && faultModel.getCustomModel() != null) {
+            rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
+        }
+
         return rupSet;
 
         //        if (numAzCached < distAzCalc.getNumCachedAzimuths()
