@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class MFDPlotBuilder {
@@ -54,9 +56,21 @@ public class MFDPlotBuilder {
                 faultModel = branch.getValue(NZSHM22_FaultModels.class);
             }
         }
+
         if (faultModel != null) {
+
+            CustomFaultModel customFaultModel =
+                    solution.getRupSet().getModule(CustomFaultModel.class);
+            if (customFaultModel != null) {
+                faultModel.setCustomModel(customFaultModel.getModelData());
+            }
+
             parentSections = new HashMap<>();
-            Map<String, List<Integer>> namedFaultsMap = faultModel.getNamedFaultsMapAlt();
+
+            NamedFaults namedFaults = solution.getRupSet().getModule(NamedFaults.class);
+
+            Map<String, List<Integer>> namedFaultsMap =
+                    namedFaults != null ? namedFaults.get() : faultModel.getNamedFaultsMapAlt();
             if (namedFaultsMap != null) {
                 for (String name : namedFaultsMap.keySet()) {
                     parentSections.put(name, Sets.newHashSet(namedFaultsMap.get(name)));

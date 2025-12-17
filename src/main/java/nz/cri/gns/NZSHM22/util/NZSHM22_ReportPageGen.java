@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
@@ -187,6 +188,18 @@ public class NZSHM22_ReportPageGen {
                 this.solution != null
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
+
+        NZSHM22_LogicTreeBranch branch =
+                solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+        NZSHM22_FaultModels faultModel =
+                branch != null ? branch.getValue(NZSHM22_FaultModels.class) : null;
+        if (faultModel != null) {
+            CustomFaultModel customFaultModel =
+                    solution.getRupSet().getModule(CustomFaultModel.class);
+            if (customFaultModel != null) {
+                faultModel.setCustomModel(customFaultModel.getModelData());
+            }
+        }
         addNamedFaults(solution.getRupSet());
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
 
@@ -219,6 +232,15 @@ public class NZSHM22_ReportPageGen {
 
         FaultSystemRupSet rupSet =
                 this.rupSet != null ? this.rupSet : FaultSystemRupSet.load(new File(solutionPath));
+        NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+        NZSHM22_FaultModels faultModel =
+                branch != null ? branch.getValue(NZSHM22_FaultModels.class) : null;
+        if (faultModel != null) {
+            CustomFaultModel customFaultModel = rupSet.getModule(CustomFaultModel.class);
+            if (customFaultModel != null) {
+                faultModel.setCustomModel(customFaultModel.getModelData());
+            }
+        }
         addNamedFaults(rupSet);
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, rupSet));
 
