@@ -4,10 +4,16 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 
+/**
+ * This module gets added to a rupture set when the user has specified a CUSTOM fault model in a
+ * file. It gets injected into the logic tree's fault model in
+ * NZSHM22_InversionFaultSystemRuptSet.init()
+ */
 public class CustomFaultModel implements FileBackedModule {
 
     String modelData;
 
+    // default constructor for deserialisation
     public CustomFaultModel() {}
 
     public CustomFaultModel(String data) {
