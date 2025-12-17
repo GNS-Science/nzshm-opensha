@@ -154,6 +154,8 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
     private Map<String, List<Integer>> namedFaultsMapAlt;
 
+    private String customModel;
+
     NZSHM22_FaultModels(String modelName, String fileName) {
         this.modelName = modelName;
         this.fileName = fileName;
@@ -178,6 +180,19 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.tvzDomain = null;
     }
 
+    /**
+     * Sets the custom model as text data (XML for crustal, CSV for subduction)
+     *
+     * @param customModel
+     */
+    public void setCustomModel(String customModel) {
+        this.customModel = customModel;
+    }
+
+    public String getCustomModel() {
+        return customModel;
+    }
+
     public InputStream getStream(String fileName) {
         return getClass().getResourceAsStream(RESOURCE_PATH + fileName);
     }
@@ -191,11 +206,15 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
      */
     public void fetchFaultSections(FaultSectionList sections)
             throws IOException, DocumentException {
-        if (this == CUSTOM) {
-            return;
+        if (customModel != null) {
+            try (InputStream in = new ByteArrayInputStream(customModel.getBytes())) {
+                fetchFaultSections(sections, in, crustal, id, modelName);
+            }
         }
-        try (InputStream in = getStream(fileName)) {
-            fetchFaultSections(sections, in, crustal, id, modelName);
+        if (fileName != null) {
+            try (InputStream in = getStream(fileName)) {
+                fetchFaultSections(sections, in, crustal, id, modelName);
+            }
         }
     }
 
