@@ -2,15 +2,14 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.faultSurface.FaultSection;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
 
@@ -19,12 +18,12 @@ public class Config {
     protected transient ConstraintConfig crustalConfig;
     protected transient ConstraintConfig subductionConfig;
 
-    public Config(){
+    public Config() {
         constraintConfigs = new ArrayList<>();
         annealingConfig = new AnnealingConfig();
     }
 
-    public AnnealingConfig getAnnealingConfig(){
+    public AnnealingConfig getAnnealingConfig() {
         return annealingConfig;
     }
 
@@ -85,7 +84,7 @@ public class Config {
         return gson.toJson(this);
     }
 
-    public static Config fromJson(String json){
+    public static Config fromJson(String json) {
         Gson gson = new Gson();
         return gson.fromJson(json, Config.class);
     }
