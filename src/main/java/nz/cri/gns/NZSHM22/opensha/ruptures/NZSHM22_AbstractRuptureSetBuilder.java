@@ -34,6 +34,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     ClusterRuptureBuilder builder;
 
     File fsdFile = null;
+    File namedFaultsFile = null;
     File downDipFile = null;
     String downDipFaultName = null;
     NZSHM22_FaultModels faultModel = null;
@@ -206,6 +207,17 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return setFaultModelFile(new File(fsdFileName));
     }
 
+    /**
+     * Sets or overwrites the named faults file
+     *
+     * @param namedFaultsFileName the name of a textfile in the named faults format
+     * @return this builder
+     */
+    public NZSHM22_AbstractRuptureSetBuilder setNamedFaultsFile(String namedFaultsFileName) {
+        namedFaultsFile = new File(namedFaultsFileName);
+        return this;
+    }
+
     public NZSHM22_AbstractRuptureSetBuilder setScalingRelationship(
             RupSetScalingRelationship scalingRelationship) {
         this.scalingRelationship = scalingRelationship;
@@ -361,6 +373,10 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             if (fsdFile != null) {
                 String customModel = Files.readString(fsdFile.toPath());
                 faultModel.setCustomModel(customModel);
+            }
+            if (namedFaultsFile != null) {
+                String customNamedFaults = Files.readString(namedFaultsFile.toPath());
+                faultModel.setCustomNamedFaults(customNamedFaults);
             }
             faultModel.fetchFaultSections(subSections);
         }

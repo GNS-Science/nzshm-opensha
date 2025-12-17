@@ -692,6 +692,9 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         if (faultModel != null && faultModel.getCustomModel() != null) {
             rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
         }
+        if (faultModel != null && faultModel.getCustomNamedFaults() != null) {
+            rupSet.addModule(new CustomNamedFaults(faultModel.getCustomNamedFaults()));
+        }
 
         return rupSet;
 

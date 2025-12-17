@@ -8,6 +8,7 @@ import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomNamedFaults;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -207,6 +208,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
         if (customFaultModel != null) {
             NZSHM22_FaultModels faultModel = branch.getValue(NZSHM22_FaultModels.class);
             faultModel.setCustomModel(customFaultModel.getModelData());
+        }
+
+        CustomNamedFaults customNamedFaults = getModule(CustomNamedFaults.class);
+        if (customNamedFaults != null) {
+            NZSHM22_FaultModels faultModel = branch.getValue(NZSHM22_FaultModels.class);
+            faultModel.setCustomNamedFaults(customNamedFaults.getNamedFaults());
         }
 
         // overwrite behaviour of super class

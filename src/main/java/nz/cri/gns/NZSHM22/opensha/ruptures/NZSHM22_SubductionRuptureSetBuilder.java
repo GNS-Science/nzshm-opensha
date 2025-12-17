@@ -302,6 +302,9 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         if (faultModel != null && faultModel.getCustomModel() != null) {
             rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
         }
+        if (faultModel != null && faultModel.getCustomNamedFaults() != null) {
+            rupSet.addModule(new CustomNamedFaults(faultModel.getCustomNamedFaults()));
+        }
 
         return rupSet;
     }
