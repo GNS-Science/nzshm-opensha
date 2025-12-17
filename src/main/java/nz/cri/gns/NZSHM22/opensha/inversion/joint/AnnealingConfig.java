@@ -38,7 +38,6 @@ public class AnnealingConfig {
 
     protected transient InversionInputGenerator inversionInputGenerator;
 
-
     /**
      * Enables logging of all inversion state values. To log at each step, set the following values:
      * runner.setIterationCompletionCriteria(1000); // 1000 iterations in total
