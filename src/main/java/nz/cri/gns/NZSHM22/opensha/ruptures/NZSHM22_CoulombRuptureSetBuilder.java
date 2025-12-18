@@ -694,11 +694,8 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         if (faultModel != null && faultModel.getCustomModel() != null) {
             rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
         }
-        if (faultModel != null && faultModel.getCustomNamedFaults() != null) {
-            rupSet.addModule(new CustomNamedFaults(faultModel.getCustomNamedFaults()));
-
+        if (faultModel != null) {
             Map<String, List<Integer>> mapping = faultModel.getNamedFaultsMapAlt();
-
             if (mapping != null) {
                 NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
                 rupSet.addModule(namedFaults);
