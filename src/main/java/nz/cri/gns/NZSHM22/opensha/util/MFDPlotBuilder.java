@@ -17,7 +17,6 @@ public class MFDPlotBuilder {
 
     FaultSystemSolution solution;
     File outputDir;
-    NZSHM22_FaultModels faultModel;
 
     public MFDPlotBuilder() {}
 
@@ -38,12 +37,12 @@ public class MFDPlotBuilder {
 
     public void plot() throws IOException {
         HashMap<String, Set<Integer>> parentSections = null;
-        if (faultModel == null) {
-            NZSHM22_LogicTreeBranch branch =
-                    solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
-            if (branch != null) {
-                faultModel = branch.getValue(NZSHM22_FaultModels.class);
-            }
+        NZSHM22_FaultModels faultModel = null;
+
+        NZSHM22_LogicTreeBranch branch =
+                solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+        if (branch != null) {
+            faultModel = branch.getValue(NZSHM22_FaultModels.class);
         }
 
         if (faultModel != null) {
