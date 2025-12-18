@@ -3,9 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import org.dom4j.DocumentException;
@@ -61,16 +59,9 @@ public class InversionRunner {
 
     public static void main(String[] args) throws IOException, DocumentException {
 
-        NZSHM22_LogicTreeBranch ltb = NZSHM22_LogicTreeBranch.crustalInversion();
-        NZSHM22_InversionFaultSystemRuptSet rupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                        new File(
-                                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip"),
-                        // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip"),
-                        ltb);
-
         Config config = new Config();
-        config.setRuptureSet(rupSet);
+        config.setRuptureSet(
+                "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip");
         config.createCrustalConfig();
         config.createSubductionConfig();
 
