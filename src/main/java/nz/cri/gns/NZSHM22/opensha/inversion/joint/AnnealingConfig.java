@@ -29,14 +29,14 @@ public class AnnealingConfig {
     protected EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
     protected IterationCompletionCriteria iterationCompletionCriteria = null;
 
-    protected InversionInputGenerator inversionInputGenerator;
-
     protected double[] variablePerturbationBasis;
     protected boolean excludeRupturesBelowMinMag = false;
 
     protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
 
     protected boolean repeatable = false;
+
+    protected transient InversionInputGenerator inversionInputGenerator;
 
     /**
      * Enables logging of all inversion state values. To log at each step, set the following values:
