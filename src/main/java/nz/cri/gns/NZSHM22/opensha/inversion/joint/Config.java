@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
@@ -18,6 +19,8 @@ public class Config {
     protected String ruptureSetPath;
     protected AnnealingConfig annealing;
     protected List<ConstraintConfig> constraints;
+
+    protected NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
 
     // TODO: should this be on the runner instead since it's not a config?
     protected transient FaultSystemRupSet ruptureSet;
@@ -33,6 +36,10 @@ public class Config {
 
     public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
         this.ruptureSet = ruptureSet;
+    }
+
+    public void setDeformationModel(String modelName) {
+        deformationModel = NZSHM22_DeformationModel.valueOf(modelName);
     }
 
     public AnnealingConfig getAnnealingConfig() {
