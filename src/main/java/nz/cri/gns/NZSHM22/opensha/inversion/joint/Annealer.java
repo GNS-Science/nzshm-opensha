@@ -32,9 +32,9 @@ public class Annealer {
         Set<Integer> exclusions = new HashSet<>();
         for (int r = 0; r < rupSet.getNumRuptures(); r++) {
             // FIXME work out what to do
-//            if (rupSet.isRuptureBelowSectMinMag(r)) {
-//                exclusions.add(r);
-//            }
+            //            if (rupSet.isRuptureBelowSectMinMag(r)) {
+            //                exclusions.add(r);
+            //            }
         }
         if (!exclusions.isEmpty()) {
             return new IntegerSampler.ExclusionIntegerSampler(
