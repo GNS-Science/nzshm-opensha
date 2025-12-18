@@ -6,16 +6,17 @@ import java.io.IOException;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import nz.cri.gns.NZSHM22.util.MFDPlot;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class MFDPlotBuilder {
 
     FaultSystemSolution solution;
     File outputDir;
-    NZSHM22_FaultModels faultModel;
 
     public MFDPlotBuilder() {}
 
@@ -29,17 +30,6 @@ public class MFDPlotBuilder {
         return this;
     }
 
-    /**
-     * Optional. Set this if you want to only plot named faults.
-     *
-     * @param faultModelName
-     * @return
-     */
-    public MFDPlotBuilder setFaultModel(String faultModelName) {
-        faultModel = NZSHM22_FaultModels.valueOf(faultModelName);
-        return this;
-    }
-
     public MFDPlotBuilder setOutputDir(String dir) {
         this.outputDir = new File(dir);
         return this;
@@ -47,16 +37,28 @@ public class MFDPlotBuilder {
 
     public void plot() throws IOException {
         HashMap<String, Set<Integer>> parentSections = null;
-        if (faultModel == null) {
-            NZSHM22_LogicTreeBranch branch =
-                    solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
-            if (branch != null) {
-                faultModel = branch.getValue(NZSHM22_FaultModels.class);
-            }
+        NZSHM22_FaultModels faultModel = null;
+
+        NZSHM22_LogicTreeBranch branch =
+                solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+        if (branch != null) {
+            faultModel = branch.getValue(NZSHM22_FaultModels.class);
         }
+
         if (faultModel != null) {
+
+            CustomFaultModel customFaultModel =
+                    solution.getRupSet().getModule(CustomFaultModel.class);
+            if (customFaultModel != null) {
+                faultModel.setCustomModel(customFaultModel.getModelData());
+            }
+
             parentSections = new HashMap<>();
-            Map<String, List<Integer>> namedFaultsMap = faultModel.getNamedFaultsMapAlt();
+
+            NamedFaults namedFaults = solution.getRupSet().getModule(NamedFaults.class);
+
+            Map<String, List<Integer>> namedFaultsMap =
+                    namedFaults != null ? namedFaults.get() : faultModel.getNamedFaultsMapAlt();
             if (namedFaultsMap != null) {
                 for (String name : namedFaultsMap.keySet()) {
                     parentSections.put(name, Sets.newHashSet(namedFaultsMap.get(name)));
@@ -89,8 +91,6 @@ public class MFDPlotBuilder {
 
         new MFDPlotBuilder()
                 .setOutputDir("/tmp/mfd")
-                .setFaultModel(
-                        "CFM_0_9_SANSTVZ_D90") // optional, set if you only want to plot named
                 // faults
                 .setCrustalSolution(solution)
                 .plot();

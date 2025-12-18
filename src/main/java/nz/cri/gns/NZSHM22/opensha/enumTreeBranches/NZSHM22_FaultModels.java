@@ -155,6 +155,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     private Map<String, List<Integer>> namedFaultsMapAlt;
 
     private String customModel;
+    private String customNamedFaults;
 
     NZSHM22_FaultModels(String modelName, String fileName) {
         this.modelName = modelName;
@@ -191,6 +192,14 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
     public String getCustomModel() {
         return customModel;
+    }
+
+    public void setCustomNamedFaults(String customNamedFaults) {
+        this.customNamedFaults = customNamedFaults;
+    }
+
+    public String getCustomNamedFaults() {
+        return customNamedFaults;
     }
 
     public InputStream getStream(String fileName) {
@@ -252,7 +261,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         if (namedFaultsMapAlt == null) {
             synchronized (this) {
                 if (namedFaultsMapAlt == null) {
-                    InputStream in = getStream(fileName + ".FaultsByNameAlt.txt");
+                    InputStream in;
+                    if (customNamedFaults != null) {
+                        in = new ByteArrayInputStream(customNamedFaults.getBytes());
+                    } else {
+                        in = getStream(fileName + ".FaultsByNameAlt.txt");
+                    }
                     if (in != null) {
                         try (Reader reader = new InputStreamReader(in)) {
                             namedFaultsMapAlt = FaultModels.parseNamedFaultsAltFile(reader);
