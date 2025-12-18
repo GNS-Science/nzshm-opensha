@@ -11,6 +11,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
@@ -20,7 +21,7 @@ public class Config {
     protected List<ConstraintConfig> constraints;
 
     // TODO: should this be on the runner instead since it's not a config?
-    protected transient NZSHM22_InversionFaultSystemRuptSet ruptureSet;
+    protected transient FaultSystemRupSet ruptureSet;
 
     public Config() {
         constraints = new ArrayList<>();
@@ -54,10 +55,7 @@ public class Config {
     protected void init() throws IOException {
 
         if (ruptureSet == null && ruptureSetPath != null) {
-            // FIXME, make this agnostic
-            ruptureSet =
-                    NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                            new File(ruptureSetPath), NZSHM22_LogicTreeBranch.crustalInversion());
+            ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
         }
 
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");

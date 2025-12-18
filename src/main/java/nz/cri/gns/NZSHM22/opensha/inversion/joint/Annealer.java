@@ -5,10 +5,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.IntegerSampler;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
@@ -21,27 +21,21 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 public class Annealer {
 
     AnnealingConfig config;
-    NZSHM22_InversionFaultSystemRuptSet rupSet;
+    FaultSystemRupSet rupSet;
 
-    public Annealer(AnnealingConfig config, NZSHM22_InversionFaultSystemRuptSet rupSet) {
+    public Annealer(AnnealingConfig config, FaultSystemRupSet rupSet) {
         this.config = config;
         this.rupSet = rupSet;
     }
 
-    protected Set<Integer> createSamplerExclusions() {
-        Set<Integer> exclusions = new HashSet<>();
-        if (config.excludeRupturesBelowMinMag) {
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                if (rupSet.isRuptureBelowSectMinMag(r)) {
-                    exclusions.add(r);
-                }
-            }
-        }
-        return exclusions;
-    }
-
     protected IntegerSampler createSampler() {
-        Set<Integer> exclusions = createSamplerExclusions();
+        Set<Integer> exclusions = new HashSet<>();
+        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+            // FIXME work out what to do
+//            if (rupSet.isRuptureBelowSectMinMag(r)) {
+//                exclusions.add(r);
+//            }
+        }
         if (!exclusions.isEmpty()) {
             return new IntegerSampler.ExclusionIntegerSampler(
                     0, rupSet.getNumRuptures(), exclusions);
@@ -195,11 +189,13 @@ public class Annealer {
         tsa.setNonnegativeityConstraintAlgorithm(config.nonNegAlgorithm);
         if (!(config.coolingSchedule == null)) tsa.setCoolingFunc(config.coolingSchedule);
 
-        IntegerSampler sampler = createSampler();
-        if (sampler != null) {
-            tsa.setRuptureSampler(sampler);
-        }
+        if (config.excludeRupturesBelowMinMag) {
 
+            IntegerSampler sampler = createSampler();
+            if (sampler != null) {
+                tsa.setRuptureSampler(sampler);
+            }
+        }
         tsa.iterate(progress);
         tsa.shutdown();
 
