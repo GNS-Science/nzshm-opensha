@@ -15,7 +15,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Inversi
 
 public class InversionRunner {
 
-    NZSHM22_InversionFaultSystemRuptSet ruptureSet;
     public Config config;
 
     public InversionRunner() {
@@ -33,15 +32,17 @@ public class InversionRunner {
     protected List<InversionConstraint> generateConstraints() {
 
         List<InversionConstraint> constraints = new ArrayList<>();
-        for (ConstraintConfig config : config.constraints) {
-            constraints.addAll(JointConstraintGenerator.buildSharedConstraints(ruptureSet, config));
+        for (ConstraintConfig constraintConfig : config.constraints) {
+            constraints.addAll(
+                    JointConstraintGenerator.buildSharedConstraints(
+                            config.ruptureSet, constraintConfig));
         }
         return constraints;
     }
 
     public FaultSystemSolution run() throws DocumentException, IOException {
 
-        config.init(ruptureSet);
+        config.init();
 
         List<InversionConstraint> constraints = generateConstraints();
 
@@ -49,17 +50,13 @@ public class InversionRunner {
         // FIXME: create joint LTB correctly.
         // FIXME: create joint inititalsolution and waterlevel
         InversionInputGenerator inputGenerator =
-                new BaseInversionInputGenerator(ruptureSet, constraints, null, null);
+                new BaseInversionInputGenerator(config.ruptureSet, constraints, null, null);
 
-        Annealer runner = new Annealer(config.getAnnealingConfig(), ruptureSet);
+        Annealer runner = new Annealer(config.getAnnealingConfig(), config.ruptureSet);
         FaultSystemSolution solution = runner.runInversion(inputGenerator);
         solution.addModule(new ConfigModule(config));
 
         return solution;
-    }
-
-    public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
-        this.ruptureSet = ruptureSet;
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
@@ -73,10 +70,11 @@ public class InversionRunner {
                         ltb);
 
         Config config = new Config();
+        config.setRuptureSet(rupSet);
         config.createCrustalConfig();
         config.createSubductionConfig();
+
         InversionRunner builder = new InversionRunner(config);
-        builder.setRuptureSet(rupSet);
 
         FaultSystemSolution solution = builder.run();
 

@@ -1,12 +1,16 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
+import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
@@ -15,14 +19,20 @@ public class Config {
     protected AnnealingConfig annealing;
     protected List<ConstraintConfig> constraints;
 
+    // TODO: should this be on the runner instead since it's not a config?
+    protected transient NZSHM22_InversionFaultSystemRuptSet ruptureSet;
+
     public Config() {
         constraints = new ArrayList<>();
         annealing = new AnnealingConfig();
     }
 
-    public Config setRuptureSet(String ruptureSetPath) {
+    public void setRuptureSet(String ruptureSetPath) {
         this.ruptureSetPath = ruptureSetPath;
-        return this;
+    }
+
+    public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
+        this.ruptureSet = ruptureSet;
     }
 
     public AnnealingConfig getAnnealingConfig() {
@@ -41,12 +51,17 @@ public class Config {
         return subductionConfig;
     }
 
-    protected void init(FaultSystemRupSet ruptureSet) {
+    protected void init() throws IOException {
 
-        if (constraints.isEmpty()) {
-            System.err.println("No constraint configs");
-            throw new IllegalStateException("No constraint configs");
+        if (ruptureSet == null && ruptureSetPath != null) {
+            // FIXME, make this agnostic
+            ruptureSet =
+                    NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                            new File(ruptureSetPath), NZSHM22_LogicTreeBranch.crustalInversion());
         }
+
+        Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
+        Preconditions.checkState(!constraints.isEmpty(), "No constraint configs specified");
 
         for (ConstraintConfig config : constraints) {
             config.init(ruptureSet);
@@ -63,23 +78,18 @@ public class Config {
             }
         }
 
-        if (!doubleUps.isEmpty()) {
-            System.err.println("Section id double-ups in region config");
-            System.err.println(doubleUps);
-            throw new IllegalStateException("Section id double-ups");
-        }
+        Preconditions.checkState(
+                doubleUps.isEmpty(), doubleUps.size() + " section id double-ups in region config");
+        Preconditions.checkState(
+                seen.size() == ruptureSet.getNumSections(),
+                "Config constraint sections do not match rupture set sections");
 
-        if (seen.size() != ruptureSet.getNumSections()) {
-            System.err.println("Config sections do not match rupture set sections");
-            throw new IllegalStateException("Config section don't match rupture set.");
-        }
         for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
-            if (!seen.contains(section.getSectionId())) {
-                System.err.println(
-                        "Section " + section.getSectionId() + " is not covered by a config.");
-                throw new IllegalStateException(
-                        "Section " + section.getSectionId() + " is not covered by a config.");
-            }
+            Preconditions.checkState(
+                    seen.contains(section.getSectionId()),
+                    "Section "
+                            + section.getSectionId()
+                            + " is not covered by a constraint config.");
         }
     }
 }
