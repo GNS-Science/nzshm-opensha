@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
@@ -13,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.FaultTypeSeparationConnection
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
@@ -301,6 +303,14 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 
         if (faultModel != null && faultModel.getCustomModel() != null) {
             rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
+        }
+        if (faultModel != null) {
+            Map<String, List<Integer>> mapping = faultModel.getNamedFaultsMapAlt();
+
+            if (mapping != null) {
+                NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
+                rupSet.addModule(namedFaults);
+            }
         }
 
         return rupSet;

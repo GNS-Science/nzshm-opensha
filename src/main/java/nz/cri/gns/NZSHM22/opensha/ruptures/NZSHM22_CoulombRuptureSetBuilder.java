@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -691,6 +693,13 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
         if (faultModel != null && faultModel.getCustomModel() != null) {
             rupSet.addModule(new CustomFaultModel(faultModel.getCustomModel()));
+        }
+        if (faultModel != null) {
+            Map<String, List<Integer>> mapping = faultModel.getNamedFaultsMapAlt();
+            if (mapping != null) {
+                NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
+                rupSet.addModule(namedFaults);
+            }
         }
 
         return rupSet;
