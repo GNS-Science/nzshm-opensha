@@ -31,17 +31,6 @@ public class MFDPlotBuilder {
         return this;
     }
 
-    /**
-     * Optional. Set this if you want to only plot named faults.
-     *
-     * @param faultModelName
-     * @return
-     */
-    public MFDPlotBuilder setFaultModel(String faultModelName) {
-        faultModel = NZSHM22_FaultModels.valueOf(faultModelName);
-        return this;
-    }
-
     public MFDPlotBuilder setOutputDir(String dir) {
         this.outputDir = new File(dir);
         return this;
@@ -103,8 +92,6 @@ public class MFDPlotBuilder {
 
         new MFDPlotBuilder()
                 .setOutputDir("/tmp/mfd")
-                .setFaultModel(
-                        "CFM_0_9_SANSTVZ_D90") // optional, set if you only want to plot named
                 // faults
                 .setCrustalSolution(solution)
                 .plot();
