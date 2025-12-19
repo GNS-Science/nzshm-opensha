@@ -7,11 +7,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
@@ -22,7 +26,13 @@ public class Config {
 
     protected NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
 
-    // TODO: should this be on the runner instead since it's not a config?
+    protected String scalingRelationshipName = "SIMPLE_CRUSTAL";
+    protected double scalingCValDipSlip = 4.2;
+    protected double scalingCValStrikeSlip = 4.2;
+    protected double scalingCVal;
+
+    // hydrated values
+    protected transient RupSetScalingRelationship scalingRelationship;
     protected transient FaultSystemRupSet ruptureSet;
 
     public Config() {
@@ -58,11 +68,33 @@ public class Config {
         return subductionConfig;
     }
 
-    protected void init() throws IOException {
+    protected void hydrateScalingRelationship() {
+        if (scalingRelationshipName == null) {
+            NZSHM22_LogicTreeBranch ltb = ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
+            scalingRelationship = ltb.getValue(NZSHM22_ScalingRelationshipNode.class);
+        } else if (scalingRelationshipName.equals("SIMPLE_CRUSTAL")) {
+            SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
+            sr.setupCrustal(scalingCValDipSlip, scalingCValStrikeSlip);
+            scalingRelationship = sr;
+        } else if (scalingRelationshipName.equals("SIMPLE_SUBDUCTION")) {
+            SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
+            sr.setupSubduction(scalingCVal);
+            scalingRelationship = sr;
+        } else {
+            scalingRelationship =
+                    NZSHM22_ScalingRelationshipNode.createRelationShip(scalingRelationshipName);
+        }
+    }
+
+    protected void hydrate() throws IOException {
 
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
         }
+        
+        hydrateScalingRelationship();
+
+        RuptureSetSetup.setup(this);
 
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
         Preconditions.checkState(!constraints.isEmpty(), "No constraint configs specified");

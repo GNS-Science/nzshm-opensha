@@ -2,6 +2,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
@@ -40,7 +42,7 @@ public class InversionRunner {
 
     public FaultSystemSolution run() throws DocumentException, IOException {
 
-        config.init();
+        config.hydrate();
 
         List<InversionConstraint> constraints = generateConstraints();
 
@@ -59,13 +61,17 @@ public class InversionRunner {
 
     public static void main(String[] args) throws IOException, DocumentException {
 
-        Config config = new Config();
-        config.setRuptureSet(
-                //
-                // "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip");
-                "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip");
-        config.createCrustalConfig();
-        config.createSubductionConfig();
+        //        Config config = new Config();
+        //        config.setRuptureSet(
+        //                //
+        //                //
+        // "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip");
+        //
+        // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip");
+        //        config.createCrustalConfig();
+        //        config.createSubductionConfig();
+
+        Config config = ConfigModule.fromJson(Files.readString(Path.of("NZSHM_config.json")));
 
         InversionRunner builder = new InversionRunner(config);
 

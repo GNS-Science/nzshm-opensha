@@ -1,0 +1,39 @@
+{
+  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip",
+  "annealing": {
+    "inversionSecs": 60,
+    "selectionInterval": 10,
+    "inversionNumSolutionAverages": 1,
+    "inversionThreadsPerSelector": 1,
+    "inversionAveragingEnabled": false,
+    "perturbationFunction": "UNIFORM_0p001",
+    "nonNegAlgorithm": "LIMIT_ZERO_RATES",
+    "excludeRupturesBelowMinMag": false,
+    "repeatable": false
+  },
+  "constraints": [
+    {
+      "region": "CRUSTAL",
+      "slipRateConstraintWt_normalized": 1.0,
+      "slipRateConstraintWt_unnormalized": 100.0,
+      "slipRateWeightingType": "BOTH",
+      "slipRateUncertaintyConstraintWt": 0.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": false
+    },
+    {
+      "region": "SUBDUCTION",
+      "slipRateConstraintWt_normalized": 1.0,
+      "slipRateConstraintWt_unnormalized": 100.0,
+      "slipRateWeightingType": "BOTH",
+      "slipRateUncertaintyConstraintWt": 0.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": false
+    }
+  ],
+  "deformationModel": "FAULT_MODEL",
+  "scalingRelationshipName": "SIMPLE_CRUSTAL",
+  "scalingCValDipSlip": 4.2,
+  "scalingCValStrikeSlip": 4.2,
+  "scalingCVal": 0.0
+}
