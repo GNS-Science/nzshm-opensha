@@ -91,7 +91,7 @@ public class Config {
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
         }
-        
+
         hydrateScalingRelationship();
 
         RuptureSetSetup.setup(this);
