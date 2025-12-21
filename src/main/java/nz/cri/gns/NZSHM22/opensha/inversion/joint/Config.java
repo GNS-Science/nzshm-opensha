@@ -30,6 +30,7 @@ public class Config {
     protected double scalingCValDipSlip = 4.2;
     protected double scalingCValStrikeSlip = 4.2;
     protected double scalingCVal;
+    protected boolean recalcMags = false;
 
     // hydrated values
     protected transient RupSetScalingRelationship scalingRelationship;
@@ -86,7 +87,7 @@ public class Config {
         }
     }
 
-    protected void hydrate() throws IOException {
+    protected void apply() throws IOException {
 
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));

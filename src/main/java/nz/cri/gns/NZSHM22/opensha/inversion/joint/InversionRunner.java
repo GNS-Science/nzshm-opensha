@@ -42,7 +42,7 @@ public class InversionRunner {
 
     public FaultSystemSolution run() throws DocumentException, IOException {
 
-        config.hydrate();
+        config.apply();
 
         List<InversionConstraint> constraints = generateConstraints();
 
