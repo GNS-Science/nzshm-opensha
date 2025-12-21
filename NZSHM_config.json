@@ -35,5 +35,6 @@
   "scalingRelationshipName": "SIMPLE_CRUSTAL",
   "scalingCValDipSlip": 4.2,
   "scalingCValStrikeSlip": 4.2,
-  "scalingCVal": 0.0
+  "scalingCVal": 0.0,
+  "recalcMags" : true
 }
