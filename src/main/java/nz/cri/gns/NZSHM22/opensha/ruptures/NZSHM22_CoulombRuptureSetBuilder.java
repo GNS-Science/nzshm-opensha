@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -32,6 +33,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutof
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveBilateralRuptureGrowingStrategy.SecondaryVariations;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.PlausibleClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
@@ -701,6 +703,16 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 rupSet.addModule(namedFaults);
             }
         }
+
+        FaultSectionProperties extraProperties = new FaultSectionProperties();
+        for (FaultSection section : subSections) {
+            NZFaultSection nzSection = (NZFaultSection) section;
+            if (nzSection.getDomainNo() != null) {
+                extraProperties.set(section.getSectionId(), "domain", nzSection.getDomainNo());
+            }
+        }
+
+        rupSet.addModule(extraProperties);
 
         return rupSet;
 
