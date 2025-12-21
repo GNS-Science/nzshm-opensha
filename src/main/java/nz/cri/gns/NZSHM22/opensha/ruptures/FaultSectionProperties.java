@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 
@@ -17,7 +18,8 @@ public class FaultSectionProperties implements FileBackedModule {
     public FaultSectionProperties() {}
 
     public void set(int sectionId, String property, Object value) {
-        Map<String, Object> properties = data.computeIfAbsent(sectionId, k -> new HashMap<>());
+        Map<String, Object> properties =
+                data.computeIfAbsent(sectionId, k -> new LinkedHashMap<>());
         properties.put(property, value);
     }
 
@@ -40,7 +42,7 @@ public class FaultSectionProperties implements FileBackedModule {
 
     @Override
     public void writeToStream(OutputStream out) throws IOException {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().create();
         String json = gson.toJson(data);
         out.write(json.getBytes());
         out.flush();

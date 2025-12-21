@@ -702,17 +702,20 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
                 rupSet.addModule(namedFaults);
             }
-        }
 
-        FaultSectionProperties extraProperties = new FaultSectionProperties();
-        for (FaultSection section : subSections) {
-            NZFaultSection nzSection = (NZFaultSection) section;
-            if (nzSection.getDomainNo() != null) {
-                extraProperties.set(section.getSectionId(), "domain", nzSection.getDomainNo());
+            FaultSectionProperties extraProperties = new FaultSectionProperties();
+            FaultSectionList parentSections = new FaultSectionList();
+            faultModel.fetchFaultSections(parentSections);
+            for (FaultSection section : subSections) {
+                NZFaultSection nzSection =
+                        (NZFaultSection) parentSections.get(section.getParentSectionId());
+                if (nzSection.getDomainNo() != null) {
+                    extraProperties.set(section.getSectionId(), "domain", nzSection.getDomainNo());
+                }
             }
-        }
 
-        rupSet.addModule(extraProperties);
+            rupSet.addModule(extraProperties);
+        }
 
         return rupSet;
 
