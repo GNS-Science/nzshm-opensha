@@ -2,7 +2,10 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -125,6 +128,11 @@ public class Annealer {
             config.inversionThreadsPerSelector = 1;
             config.inversionNumSolutionAverages = 1;
         }
+
+        Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
+        Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+//        Files.writeString(Path.of("A_ineq.txt"), inversionInputGenerator.getA_ineq().toString());
+//        Files.writeString(Path.of("D_ineq.txt"), Arrays.toString(inversionInputGenerator.getD_ineq()));
 
         ThreadedSimulatedAnnealing tsa;
 

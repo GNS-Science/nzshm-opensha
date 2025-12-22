@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -709,8 +710,14 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             for (FaultSection section : subSections) {
                 NZFaultSection nzSection =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
-                if (nzSection.getDomainNo() != null) {
-                    extraProperties.set(section.getSectionId(), "domain", nzSection.getDomainNo());
+                if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {
+                    if (faultModel.getTvzDomain().equals(nzSection.getDomainNo())) {
+                        extraProperties.set(
+                                section.getSectionId(), RegionPredicate.TVZ.name(), true);
+                    } else {
+                        extraProperties.set(
+                                section.getSectionId(), RegionPredicate.SANS_TVZ.name(), true);
+                    }
                 }
             }
 

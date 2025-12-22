@@ -36,5 +36,8 @@
   "scalingCValDipSlip": 4.2,
   "scalingCValStrikeSlip": 4.2,
   "scalingCVal": 0.0,
-  "recalcMags" : true
+  "recalcMags" : true,
+
+  "sansSlipRateFactor" : -1,
+  "tvzSlipRateFactor" : -1
 }

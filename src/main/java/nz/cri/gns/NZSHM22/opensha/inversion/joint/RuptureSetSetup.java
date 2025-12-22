@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.IOException;
+import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
@@ -31,6 +32,25 @@ public class RuptureSetSetup {
         }
     }
 
+    protected static void applySlipRateFactor(
+            RegionPredicate region, double slipRateFactor, FaultSystemRupSet rupSet) {
+        if (slipRateFactor < 0) {
+            return;
+        }
+        IntPredicate inRegion = region.getPredicate(rupSet);
+        SectSlipRates origSlips = rupSet.getModule(SectSlipRates.class);
+        double[] slipRates = origSlips.getSlipRates();
+
+        for (int i = 0; i < slipRates.length; i++) {
+            if (inRegion.test(i)) {
+                slipRates[i] *= slipRateFactor;
+            }
+        }
+
+        rupSet.addModule(
+                SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
+    }
+
     public static void setup(Config config) throws IOException {
 
         config.ruptureSet = recalcMags(config);
@@ -52,5 +72,8 @@ public class RuptureSetSetup {
         ruptureSet.addModule(AveSlipModule.forModel(ruptureSet, config.scalingRelationship));
 
         applyDeformationModel(ruptureSet, config.deformationModel);
+
+        applySlipRateFactor(RegionPredicate.TVZ, config.tvzSlipRateFactor, ruptureSet);
+        applySlipRateFactor(RegionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
     }
 }

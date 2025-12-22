@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 import java.util.*;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
