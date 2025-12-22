@@ -14,17 +14,17 @@
   "constraints": [
     {
       "region": "CRUSTAL",
-      "slipRateConstraintWt_normalized": 1.0,
-      "slipRateConstraintWt_unnormalized": 100.0,
-      "slipRateWeightingType": "BOTH",
-      "slipRateUncertaintyConstraintWt": 0.0,
-      "slipRateUncertaintyConstraintScalingFactor": 0.0,
-      "unmodifiedSlipRateStdvs": false
+      "slipRateConstraintWt_normalized": 0,
+      "slipRateConstraintWt_unnormalized": 0,
+      "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
+      "slipRateUncertaintyConstraintWt": 1.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0,
+      "unmodifiedSlipRateStdvs": true
     },
     {
       "region": "SUBDUCTION",
-      "slipRateConstraintWt_normalized": 1.0,
-      "slipRateConstraintWt_unnormalized": 100.0,
+      "slipRateConstraintWt_normalized": 1000.0,
+      "slipRateConstraintWt_unnormalized": 100000.0,
       "slipRateWeightingType": "BOTH",
       "slipRateUncertaintyConstraintWt": 0.0,
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
@@ -38,6 +38,6 @@
   "scalingCVal": 0.0,
   "recalcMags" : true,
 
-  "sansSlipRateFactor" : -1,
-  "tvzSlipRateFactor" : -1
+  "sansSlipRateFactor" : 0.9,
+  "tvzSlipRateFactor" : 0.7
 }
