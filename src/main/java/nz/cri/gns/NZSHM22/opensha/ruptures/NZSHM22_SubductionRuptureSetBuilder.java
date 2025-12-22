@@ -313,6 +313,12 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
             }
         }
 
+        FaultSectionProperties extraProperties = new FaultSectionProperties();
+        for (int s = 0; s < rupSet.getNumSections(); s++) {
+            extraProperties.set(s, "subduction", true);
+        }
+        rupSet.addModule(extraProperties);
+
         return rupSet;
     }
 
