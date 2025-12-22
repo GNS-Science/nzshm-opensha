@@ -1,5 +1,5 @@
 ;; NZSHM22 Puysegur Rupture Set
-;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/RmlsZToxMjkwOTg0
+;; https://weka.gns.cri.nz/File/RmlsZToxMjkwOTg0
 
 fault_model	SBD_0_2_PUY_15
 min_aspect_ratio	2.0
