@@ -6,29 +6,36 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 
 public class FaultSectionProperties implements FileBackedModule {
 
-    public Map<Integer, Map<String, Object>> data = new HashMap<>();
+    protected List<Map<String, Object>> data = new ArrayList<>();
 
     public FaultSectionProperties() {}
 
     public void set(int sectionId, String property, Object value) {
-        Map<String, Object> properties =
-                data.computeIfAbsent(sectionId, k -> new LinkedHashMap<>());
+        while (data.size() <= sectionId) {
+            data.add(null);
+        }
+        Map<String, Object> properties = data.get(sectionId);
+        if (properties == null) {
+            properties = new LinkedHashMap<>();
+            data.set(sectionId, properties);
+        }
         properties.put(property, value);
     }
 
     public Map<String, Object> get(int sectionId) {
+        if (data.size() < sectionId + 1) {
+            return null;
+        }
         return data.get(sectionId);
     }
 
     public Object get(int sectionId, String property) {
-        Map<String, Object> properties = data.get(sectionId);
+        Map<String, Object> properties = get(sectionId);
         if (properties != null) {
             return properties.get(property);
         }
@@ -53,7 +60,7 @@ public class FaultSectionProperties implements FileBackedModule {
         byte[] bytes = in.readAllBytes();
         String json = new String(bytes, StandardCharsets.UTF_8);
         Gson gson = new Gson();
-        data = gson.fromJson(json, Map.class);
+        data = gson.fromJson(json, List.class);
     }
 
     @Override

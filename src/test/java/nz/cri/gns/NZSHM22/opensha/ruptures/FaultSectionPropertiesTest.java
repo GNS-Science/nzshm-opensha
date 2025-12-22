@@ -20,20 +20,55 @@ public class FaultSectionPropertiesTest {
         properties.set(0, "d", null);
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             properties.writeToStream(out);
-            assertEquals("{\"0\":{\"a\":42,\"b\":true,\"c\":\"x\"}}", out.toString());
+            assertEquals("[{\"a\":42,\"b\":true,\"c\":\"x\"}]", out.toString());
         }
     }
 
     @Test
-    public void readDifferentTypes() throws IOException{
+    public void testWriteWithGap() throws IOException {
         FaultSectionProperties properties = new FaultSectionProperties();
-        byte[] data = "{\"0\":{\"a\":42,\"b\":true,\"c\":\"x\"}}".getBytes();
-        try(ByteArrayInputStream in = new ByteArrayInputStream(data)){
+        properties.set(0, "a", true);
+        properties.set(10, "a", true);
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            properties.writeToStream(out);
+            assertEquals(
+                    "[{\"a\":true},null,null,null,null,null,null,null,null,null,{\"a\":true}]",
+                    out.toString());
+        }
+    }
+
+    @Test
+    public void readDifferentTypes() throws IOException {
+        FaultSectionProperties properties = new FaultSectionProperties();
+        byte[] data = "[{\"a\":42,\"b\":true,\"c\":\"x\"}]".getBytes();
+        try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
             properties.initFromStream(new BufferedInputStream(in));
-            assertEquals(42, properties.get(0, "a"));
+            assertEquals(42.0, properties.get(0, "a"));
             assertEquals(true, properties.get(0, "b"));
             assertEquals("x", properties.get(0, "c"));
             assertNull(properties.get(0, "d"));
         }
+    }
+
+    @Test
+    public void readWithGaps() throws IOException {
+        FaultSectionProperties properties = new FaultSectionProperties();
+        byte[] data =
+                "[{\"a\":true},null,null,null,null,null,null,null,null,null,{\"a\":true}]"
+                        .getBytes();
+        try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
+            properties.initFromStream(new BufferedInputStream(in));
+            assertEquals(true, properties.get(0, "a"));
+            assertEquals(true, properties.get(10, "a"));
+            assertNull(properties.get(1, "a"));
+        }
+    }
+
+    @Test
+    public void readOutOfBounds() {
+        FaultSectionProperties properties = new FaultSectionProperties();
+        properties.set(0, "a", 42);
+
+        assertNull(properties.get(100));
     }
 }
