@@ -13,7 +13,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 
 public class BaseInversionInputGenerator extends InversionInputGenerator {
 
-    public static final boolean SLIP_ONLY = true;
+    public static final boolean SLIP_ONLY = false;
 
     public BaseInversionInputGenerator(
             FaultSystemRupSet rupSet,

@@ -46,7 +46,6 @@ public class RuptureSetSetup {
                 slipRates[i] *= slipRateFactor;
             }
         }
-        // FIXME: this needs to work with the deformation model!
         rupSet.addModule(
                 SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
     }
