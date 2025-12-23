@@ -5,8 +5,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
@@ -496,6 +496,11 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_xhk_lockedtrench_Mmin8_exp_perturbation5b.csv"),
+
+    JOINT_1(
+            "For joint rupture sets. Combines SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A and SBD_0_1_PUY_30_0PT7",
+            "joint rupture sets based on NZSHM22 rupture sets",
+            "joint1.csv"),
     ;
 
     String description;
@@ -511,7 +516,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     }
 
     public static class DeformationHelper {
-        List<SlipDeformation> deformations = null;
+        Map<Integer, SlipDeformation> deformations = null;
         String fileName;
 
         public DeformationHelper(String fileName) {
@@ -529,15 +534,15 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             double stdv;
         }
 
-        protected static List<SlipDeformation> loadDeformations(InputStream deformationsFile)
-                throws IOException {
-            List<SlipDeformation> result = new ArrayList<>();
+        protected static Map<Integer, SlipDeformation> loadDeformations(
+                InputStream deformationsFile) throws IOException {
+            Map<Integer, SlipDeformation> result = new HashMap<>();
             try (BufferedReader in = new BufferedReader(new InputStreamReader(deformationsFile))) {
-                String line = null;
+                String line;
                 int rowNum = 0;
                 while ((line = in.readLine()) != null) {
                     try {
-                        if (line.startsWith("%")) {
+                        if (line.startsWith("%") || line.startsWith("//")) {
                             continue;
                         }
                         String[] data = line.split(",");
@@ -546,11 +551,11 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                         deformation.parentId = Integer.parseInt(data[1].trim());
                         deformation.slip = Double.parseDouble(data[2].trim());
                         deformation.stdv = Double.parseDouble(data[3].trim());
-                        result.add(deformation);
+                        result.put(deformation.sectionId, deformation);
                     } catch (Exception x) {
-                        System.out.println("Error parsing deformation model at line " + rowNum);
+                        System.err.println("Error parsing deformation model at line " + rowNum);
                         x.printStackTrace();
-                        System.out.println(x);
+                        System.err.println(x);
                         throw x;
                     }
                     rowNum++;
@@ -559,7 +564,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             }
         }
 
-        protected List<SlipDeformation> getDeformations() {
+        protected Map<Integer, SlipDeformation> getDeformations() {
             if (deformations == null) {
                 try {
                     deformations = loadDeformations(getStream());
@@ -575,19 +580,18 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
 
         public void applyTo(FaultSystemRupSet rupSet) {
-            Preconditions.checkArgument(
-                    getDeformations().size() == rupSet.getNumSections(),
-                    "Deformation model length does not match number of sections.");
             for (FaultSection section : rupSet.getFaultSectionDataList()) {
                 SlipDeformation deformation = getDeformation(section);
-                Preconditions.checkArgument(
-                        deformation.sectionId == section.getSectionId(),
-                        "Deformation section id does not match section id.");
-                Preconditions.checkArgument(
-                        deformation.parentId == section.getParentSectionId(),
-                        "Deformation parent id does not match section parent id.");
-                section.setAveSlipRate(deformation.slip);
-                section.setSlipRateStdDev(deformation.stdv);
+                if (deformation != null) {
+                    Preconditions.checkArgument(
+                            deformation.sectionId == section.getSectionId(),
+                            "Deformation section id does not match section id.");
+                    Preconditions.checkArgument(
+                            deformation.parentId == section.getParentSectionId(),
+                            "Section " + section.getSectionId() + " Deformation parent" + deformation.parentId + " id does not match section parent id "+section.getParentSectionId());
+                    section.setAveSlipRate(deformation.slip);
+                    section.setSlipRateStdDev(deformation.stdv);
+                }
             }
             rupSet.removeModuleInstances(SectSlipRates.class);
             SectSlipRates rates = SectSlipRates.fromFaultSectData(rupSet);

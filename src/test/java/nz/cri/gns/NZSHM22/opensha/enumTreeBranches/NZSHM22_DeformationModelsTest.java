@@ -47,37 +47,21 @@ public class NZSHM22_DeformationModelsTest {
             assertEquals(section.getSectionId(), section.getOrigSlipRateStdDev(), 0.000000001);
         }
 
-        // Testing that we check the length
-        helper =
-                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        return new ArrayList<>();
-                    }
-                };
-
-        String message = null;
-        try {
-            helper.applyTo(ruptSet);
-        } catch (IllegalArgumentException x) {
-            message = x.getMessage();
-        }
-        assertEquals("Deformation model length does not match number of sections.", message);
-
         // Testing that we check the parent section id
         helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        List<SlipDeformation> result = new ArrayList<>();
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
                         for (int i = 0; i < ruptSet.getNumSections(); i++) {
                             SlipDeformation deformation = new SlipDeformation();
                             deformation.sectionId = i;
-                            result.add(deformation);
+                            result.put(i, deformation);
                         }
                         return result;
                     }
                 };
 
-        message = null;
+        String message = null;
         try {
             helper.applyTo(ruptSet);
         } catch (IllegalArgumentException x) {
