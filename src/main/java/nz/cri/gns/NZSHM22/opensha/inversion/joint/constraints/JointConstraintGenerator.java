@@ -17,6 +17,10 @@ public class JointConstraintGenerator {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
+        if (config.getNumSections() == 0) {
+            return constraints;
+        }
+
         if (config.slipRateWeightingType
                 == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
                         .NORMALIZED_BY_UNCERTAINTY) {
