@@ -33,8 +33,8 @@
       "unmodifiedSlipRateStdvs": false
     }
   ],
-  "deformationModel": "FAULT_MODEL",
-  "scalingRelationshipName": "SIMPLE_CRUSTAL",
+  "deformationModel": "SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A",
+  "scalingRelationshipName": "SIMPLE_SUBDUCTION",
   "scalingCValDipSlip": 4.2,
   "scalingCValStrikeSlip": 4.2,
   "scalingCVal": 4.0,
