@@ -1,5 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.SLIP_ONLY;
+
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.File;
@@ -787,20 +789,30 @@ public abstract class NZSHM22_AbstractInversionRunner {
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
 
-        Files.writeString(Path.of("crustal_A.txt"), inversionInputGenerator.getA().toString());
-        Files.writeString(
-                Path.of("crustal_D.txt"), Arrays.toString(inversionInputGenerator.getD()));
-        if (inversionInputGenerator.getA_ineq() != null) {
+        if (SLIP_ONLY) {
+            NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+            FaultRegime regime = branch.getValue(FaultRegime.class);
+
+            String prefix = regime == FaultRegime.CRUSTAL ? "cru" : "sbd";
+
             Files.writeString(
-                    Path.of("crustal_A_ineq.txt"), inversionInputGenerator.getA_ineq().toString());
-        }
-        if (inversionInputGenerator.getD_ineq() != null) {
+                    Path.of(prefix + "_A.txt"), inversionInputGenerator.getA().toString());
             Files.writeString(
-                    Path.of("crustal_D_ineq.txt"),
-                    Arrays.toString(inversionInputGenerator.getD_ineq()));
+                    Path.of(prefix + "_D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+            if (inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_A_ineq.txt"),
+                        inversionInputGenerator.getA_ineq().toString());
+            }
+            if (inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_D_ineq.txt"),
+                        Arrays.toString(inversionInputGenerator.getD_ineq()));
+            }
+
+            System.exit(0);
         }
 
-        System.exit(0);
         List<CompletionCriteria> completionCriterias = new ArrayList<>();
         // inversion completion criteria (how long it will run)
         if (!repeatable)
