@@ -13,6 +13,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 
 public class BaseInversionInputGenerator extends InversionInputGenerator {
 
+    public static final boolean SLIP_ONLY = true;
+
     public BaseInversionInputGenerator(
             FaultSystemRupSet rupSet,
             List<InversionConstraint> constraints,
@@ -105,6 +107,10 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
                                 ConstraintWeightingType.UNNORMALIZED,
                                 rupSet));
             }
+        }
+
+        if (SLIP_ONLY) {
+            return constraints;
         }
 
         // Rupture rate minimization constraint
