@@ -588,7 +588,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                             "Deformation section id does not match section id.");
                     Preconditions.checkArgument(
                             deformation.parentId == section.getParentSectionId(),
-                            "Section " + section.getSectionId() + " Deformation parent" + deformation.parentId + " id does not match section parent id "+section.getParentSectionId());
+                            "Section "
+                                    + section.getSectionId()
+                                    + " Deformation parent id "
+                                    + deformation.parentId
+                                    + " does not match section parent id "
+                                    + section.getParentSectionId());
                     section.setAveSlipRate(deformation.slip);
                     section.setSlipRateStdDev(deformation.stdv);
                 }

@@ -67,7 +67,8 @@ public class NZSHM22_DeformationModelsTest {
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }
-        assertEquals("Deformation parent id does not match section parent id.", message);
+        assertEquals(
+                "Section 1 Deformation parent id 0 does not match section parent id 1", message);
     }
 
     @Test
