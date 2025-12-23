@@ -13,4 +13,4 @@
 # Config
 
 - runzi has extra logic to map from its config to opensha config. Makes it hard
-
+- still need to do deformationmodel
