@@ -1,9 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.SLIP_ONLY;
+
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -784,6 +788,30 @@ public abstract class NZSHM22_AbstractInversionRunner {
         inversionInputGenerator.generateInputs(true);
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
+
+        if (SLIP_ONLY) {
+            NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+            FaultRegime regime = branch.getValue(FaultRegime.class);
+
+            String prefix = regime == FaultRegime.CRUSTAL ? "cru" : "sbd";
+
+            Files.writeString(
+                    Path.of(prefix + "_A.txt"), inversionInputGenerator.getA().toString());
+            Files.writeString(
+                    Path.of(prefix + "_D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+            if (inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_A_ineq.txt"),
+                        inversionInputGenerator.getA_ineq().toString());
+            }
+            if (inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_D_ineq.txt"),
+                        Arrays.toString(inversionInputGenerator.getD_ineq()));
+            }
+
+            System.exit(0);
+        }
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();
         // inversion completion criteria (how long it will run)

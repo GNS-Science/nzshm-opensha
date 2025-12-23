@@ -13,7 +13,6 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -31,6 +30,9 @@ public class Config {
     protected double scalingCValStrikeSlip = 4.2;
     protected double scalingCVal;
     protected boolean recalcMags = false;
+
+    protected double sansSlipRateFactor = -1;
+    protected double tvzSlipRateFactor = -1;
 
     // hydrated values
     protected transient RupSetScalingRelationship scalingRelationship;

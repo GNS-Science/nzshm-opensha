@@ -47,11 +47,17 @@ public class NZSHM22_DeformationModelsTest {
             assertEquals(section.getSectionId(), section.getOrigSlipRateStdDev(), 0.000000001);
         }
 
-        // Testing that we check the length
+        // Testing that we check the parent section id
         helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        return new ArrayList<>();
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
+                        for (int i = 0; i < ruptSet.getNumSections(); i++) {
+                            SlipDeformation deformation = new SlipDeformation();
+                            deformation.sectionId = i;
+                            result.put(i, deformation);
+                        }
+                        return result;
                     }
                 };
 
@@ -61,29 +67,8 @@ public class NZSHM22_DeformationModelsTest {
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }
-        assertEquals("Deformation model length does not match number of sections.", message);
-
-        // Testing that we check the parent section id
-        helper =
-                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        List<SlipDeformation> result = new ArrayList<>();
-                        for (int i = 0; i < ruptSet.getNumSections(); i++) {
-                            SlipDeformation deformation = new SlipDeformation();
-                            deformation.sectionId = i;
-                            result.add(deformation);
-                        }
-                        return result;
-                    }
-                };
-
-        message = null;
-        try {
-            helper.applyTo(ruptSet);
-        } catch (IllegalArgumentException x) {
-            message = x.getMessage();
-        }
-        assertEquals("Deformation parent id does not match section parent id.", message);
+        assertEquals(
+                "Section 1 Deformation parent id 0 does not match section parent id 1", message);
     }
 
     @Test

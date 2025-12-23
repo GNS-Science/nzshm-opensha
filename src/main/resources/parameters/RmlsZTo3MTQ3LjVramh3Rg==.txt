@@ -1,5 +1,5 @@
 ;; NZSHM22 Hikurangi Rupture Set
-;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/RmlsZTo3MTQ3LjVramh3Rg==
+;; https://weka.gns.cri.nz/File/RmlsZTo3MTQ3LjVramh3Rg==
 fault_model	SBD_0_3_HKR_LR_30
 min_aspect_ratio	2.0
 max_aspect_ratio	5.0

@@ -24,8 +24,9 @@ public class ConfigModule implements FileBackedModule {
     }
 
     public static Config fromJson(String json) {
+        String cleanJson = json.replaceAll("[ \t]//.*\n", "");
         Gson gson = new Gson();
-        return gson.fromJson(json, Config.class);
+        return gson.fromJson(cleanJson, Config.class);
     }
 
     @Override

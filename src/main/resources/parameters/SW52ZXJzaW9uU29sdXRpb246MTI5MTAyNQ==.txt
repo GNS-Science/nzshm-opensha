@@ -1,5 +1,5 @@
 ;; NZSHM22 Standard Puysegur inversion
-;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/InversionSolution/SW52ZXJzaW9uU29sdXRpb246MTI5MTAyNQ==
+;; https://weka.gns.cri.nz/InversionSolution/SW52ZXJzaW9uU29sdXRpb246MTI5MTAyNQ==
 round	0
 config_type	subduction
 rupture_set_file_id	RmlsZToxMjkwOTg0

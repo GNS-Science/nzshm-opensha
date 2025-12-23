@@ -126,6 +126,13 @@ public class Annealer {
             config.inversionNumSolutionAverages = 1;
         }
 
+        // Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
+        // Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+        //        Files.writeString(Path.of("A_ineq.txt"),
+        // inversionInputGenerator.getA_ineq().toString());
+        //        Files.writeString(Path.of("D_ineq.txt"),
+        // Arrays.toString(inversionInputGenerator.getD_ineq()));
+
         ThreadedSimulatedAnnealing tsa;
 
         if (config.inversionAveragingEnabled) {
