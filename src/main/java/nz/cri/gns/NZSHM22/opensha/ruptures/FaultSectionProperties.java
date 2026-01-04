@@ -99,29 +99,43 @@ public class FaultSectionProperties implements FileBackedModule {
         return "FaultSectionProperties";
     }
 
-    public static void main(String[] args) throws IOException, DocumentException {
+    public static void backfill() throws IOException, DocumentException {
         // Backfill module for existing rupture set
         // This should work for all crustal, subduction, and joint rupture sets.
         // Ensure to use the correct fault model if there are crustal sections.
         // Crustal sections must come before subduction sections so that section ids line up.
 
         String ruptureSetName =
-                "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
+                "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
         NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
 
         FaultSectionProperties properties = new FaultSectionProperties();
         FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
 
-        if (faultModel.isCrustal() && faultModel.getTvzDomain() != null) {
-            FaultSectionList sections = new FaultSectionList();
-            faultModel.fetchFaultSections(sections);
-            for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
+        FaultSectionList parentSections = new FaultSectionList();
+        faultModel.fetchFaultSections(parentSections);
 
-                if (section.getSectionName().contains("row:")) {
-                    continue;
+        int hikurangiCount = 0;
+        int puysegurCount = 0;
+
+        for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
+            if (section.getSectionName().contains("row:")) {
+                //  Backfill subduction props
+                properties.set(section.getSectionId(), "origParent", 10000);
+                if (section.getSectionName().contains("Hikurangi")) {
+                    properties.set(section.getSectionId(), RegionPredicate.HIKURANGI.name(), true);
+                    properties.set(section.getSectionId(), "origId", hikurangiCount);
+                    hikurangiCount++;
                 }
-
-                NZFaultSection parent = (NZFaultSection) sections.get(section.getParentSectionId());
+                if (section.getSectionName().contains("Puysegur")) {
+                    properties.set(section.getSectionId(), RegionPredicate.PUYSEGUR.name(), true);
+                    properties.set(section.getSectionId(), "origId", puysegurCount);
+                    puysegurCount++;
+                }
+            } else {
+                // backfill crustal props
+                NZFaultSection parent =
+                        (NZFaultSection) parentSections.get(section.getParentSectionId());
                 // verify that we're actually using the correct fault model
                 //                System.out.println(
                 //                        " orig: "
@@ -131,7 +145,9 @@ public class FaultSectionProperties implements FileBackedModule {
                 Preconditions.checkState(
                         section.getParentSectionName().equals(parent.getSectionName()));
 
-                if (faultModel.getTvzDomain().equals(parent.getDomainNo())) {
+                properties.set(section.getSectionId(), RegionPredicate.CRUSTAL.name(), true);
+                if (faultModel.getTvzDomain() != null
+                        && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
                     properties.set(section.getSectionId(), RegionPredicate.TVZ.name(), true);
                 } else {
                     properties.set(section.getSectionId(), RegionPredicate.SANS_TVZ.name(), true);
@@ -139,15 +155,12 @@ public class FaultSectionProperties implements FileBackedModule {
             }
         }
 
-        //  Backfill subduction flag
-        for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
-            if (section.getSectionName().contains("row:")) {
-                properties.set(section.getSectionId(), RegionPredicate.SUBDUCTION.name(), true);
-            }
-        }
-
         ruptureSet.addModule(properties);
 
-        ruptureSet.write(new File(ruptureSetName + "props.zip"));
+        ruptureSet.write(new File(ruptureSetName + "props2.zip"));
+    }
+
+    public static void main(String[] args) throws IOException, DocumentException {
+        backfill();
     }
 }

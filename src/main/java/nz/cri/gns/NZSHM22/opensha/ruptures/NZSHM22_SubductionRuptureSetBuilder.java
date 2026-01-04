@@ -314,9 +314,14 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
             }
         }
 
+        String sourceName =
+                subSections.get(0).getName().contains("Hikurangi")
+                        ? RegionPredicate.HIKURANGI.name()
+                        : RegionPredicate.PUYSEGUR.name();
+
         FaultSectionProperties extraProperties = new FaultSectionProperties();
         for (int s = 0; s < rupSet.getNumSections(); s++) {
-            extraProperties.set(s, RegionPredicate.SUBDUCTION.name(), true);
+            extraProperties.set(s, sourceName, true);
         }
         rupSet.addModule(extraProperties);
 

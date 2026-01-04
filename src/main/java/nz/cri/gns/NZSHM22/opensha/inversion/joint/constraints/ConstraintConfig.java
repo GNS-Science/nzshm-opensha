@@ -30,8 +30,9 @@ public class ConstraintConfig {
     public void init(FaultSystemRupSet ruptureSet) {
         sectionIds =
                 ruptureSet.getFaultSectionDataList().stream()
-                        .filter(region::matches)
-                        .map(FaultSection::getSectionId)
+                        .mapToInt(FaultSection::getSectionId)
+                        .filter(region.getPredicate(ruptureSet))
+                        .boxed()
                         .collect(Collectors.toList());
         mappingToARow = new HashMap<>();
         for (int i = 0; i < sectionIds.size(); i++) {

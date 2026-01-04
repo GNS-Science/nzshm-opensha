@@ -708,6 +708,8 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             FaultSectionList parentSections = new FaultSectionList();
             faultModel.fetchFaultSections(parentSections);
             for (FaultSection section : subSections) {
+                extraProperties.set(section.getSectionId(), RegionPredicate.CRUSTAL.name(), true);
+
                 NZFaultSection nzSection =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
                 if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {

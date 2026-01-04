@@ -59,18 +59,6 @@ public class Config {
         return annealing;
     }
 
-    public ConstraintConfig createCrustalConfig() {
-        ConstraintConfig crustalConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
-        constraints.add(crustalConfig);
-        return crustalConfig;
-    }
-
-    public ConstraintConfig createSubductionConfig() {
-        ConstraintConfig subductionConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
-        constraints.add(subductionConfig);
-        return subductionConfig;
-    }
-
     protected void hydrateScalingRelationship() {
         if (scalingRelationshipName == null) {
             NZSHM22_LogicTreeBranch ltb = ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
