@@ -12,6 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintWrapper;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -41,6 +42,11 @@ public class JointConstraintWrapperTest {
         FaultSection s1 = rupSet.getFaultSectionData(1);
         s1.setSectionName("row:1");
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
+
+        FaultSectionProperties props = new FaultSectionProperties();
+        props.set(CRU_SECTION, RegionPredicate.CRUSTAL.name(), true);
+        props.set(SUB_SECTION, RegionPredicate.HIKURANGI.name(), true);
+        rupSet.addModule(props);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;
@@ -73,7 +79,7 @@ public class JointConstraintWrapperTest {
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
         // set up subduction constraint
-        ConstraintConfig subConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
+        ConstraintConfig subConfig = new ConstraintConfig(RegionPredicate.HIKURANGI);
         subConfig.init(rupSet);
         JointConstraintWrapper subductionConstraint =
                 new JointConstraintWrapper(subConfig, slipConstraint);
