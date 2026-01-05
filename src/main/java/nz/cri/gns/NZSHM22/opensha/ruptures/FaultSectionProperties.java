@@ -12,7 +12,7 @@ import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -123,12 +123,14 @@ public class FaultSectionProperties implements FileBackedModule {
                 //  Backfill subduction props
                 properties.set(section.getSectionId(), "origParent", 10000);
                 if (section.getSectionName().contains("Hikurangi")) {
-                    properties.set(section.getSectionId(), RegionPredicate.HIKURANGI.name(), true);
+                    properties.set(
+                            section.getSectionId(), PartitionPredicate.HIKURANGI.name(), true);
                     properties.set(section.getSectionId(), "origId", hikurangiCount);
                     hikurangiCount++;
                 }
                 if (section.getSectionName().contains("Puysegur")) {
-                    properties.set(section.getSectionId(), RegionPredicate.PUYSEGUR.name(), true);
+                    properties.set(
+                            section.getSectionId(), PartitionPredicate.PUYSEGUR.name(), true);
                     properties.set(section.getSectionId(), "origId", puysegurCount);
                     puysegurCount++;
                 }
@@ -145,12 +147,13 @@ public class FaultSectionProperties implements FileBackedModule {
                 Preconditions.checkState(
                         section.getParentSectionName().equals(parent.getSectionName()));
 
-                properties.set(section.getSectionId(), RegionPredicate.CRUSTAL.name(), true);
+                properties.set(section.getSectionId(), PartitionPredicate.CRUSTAL.name(), true);
                 if (faultModel.getTvzDomain() != null
                         && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
-                    properties.set(section.getSectionId(), RegionPredicate.TVZ.name(), true);
+                    properties.set(section.getSectionId(), PartitionPredicate.TVZ.name(), true);
                 } else {
-                    properties.set(section.getSectionId(), RegionPredicate.SANS_TVZ.name(), true);
+                    properties.set(
+                            section.getSectionId(), PartitionPredicate.SANS_TVZ.name(), true);
                 }
             }
         }

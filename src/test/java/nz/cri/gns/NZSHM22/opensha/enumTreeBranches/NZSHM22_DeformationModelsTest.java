@@ -37,7 +37,7 @@ public class NZSHM22_DeformationModelsTest {
                 };
 
         // set slip to be equal section ID
-        helper.applyTo(ruptSet);
+        helper.applyTo(ruptSet, null);
 
         assertEquals(0.0, ruptSet.getSlipRateForSection(0), 0.0000001);
         assertEquals(0.001, ruptSet.getSlipRateForSection(1), 0.0000001);
@@ -63,7 +63,7 @@ public class NZSHM22_DeformationModelsTest {
 
         String message = null;
         try {
-            helper.applyTo(ruptSet);
+            helper.applyTo(ruptSet, null);
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }

@@ -4,7 +4,7 @@ import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
-public enum RegionPredicate {
+public enum PartitionPredicate {
     TVZ,
     SANS_TVZ,
     CRUSTAL,

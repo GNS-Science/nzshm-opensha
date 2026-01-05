@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -32,7 +31,7 @@ public class InversionRunner {
     protected List<InversionConstraint> generateConstraints() {
 
         List<InversionConstraint> constraints = new ArrayList<>();
-        for (ConstraintConfig constraintConfig : config.constraints) {
+        for (PartitionConfig constraintConfig : config.partitions) {
             constraints.addAll(
                     JointConstraintGenerator.buildSharedConstraints(
                             config.ruptureSet, constraintConfig));

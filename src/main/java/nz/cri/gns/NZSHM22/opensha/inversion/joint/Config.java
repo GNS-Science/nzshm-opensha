@@ -8,11 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -21,9 +19,7 @@ public class Config {
 
     protected String ruptureSetPath;
     protected AnnealingConfig annealing;
-    protected List<ConstraintConfig> constraints;
-
-    protected NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
+    protected List<PartitionConfig> partitions;
 
     protected String scalingRelationshipName = "SIMPLE_CRUSTAL";
     protected double scalingCValDipSlip = 4.2;
@@ -39,7 +35,7 @@ public class Config {
     protected transient FaultSystemRupSet ruptureSet;
 
     public Config() {
-        constraints = new ArrayList<>();
+        partitions = new ArrayList<>();
         annealing = new AnnealingConfig();
     }
 
@@ -49,10 +45,6 @@ public class Config {
 
     public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
         this.ruptureSet = ruptureSet;
-    }
-
-    public void setDeformationModel(String modelName) {
-        deformationModel = NZSHM22_DeformationModel.valueOf(modelName);
     }
 
     public AnnealingConfig getAnnealingConfig() {
@@ -88,15 +80,15 @@ public class Config {
         RuptureSetSetup.setup(this);
 
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
-        Preconditions.checkState(!constraints.isEmpty(), "No constraint configs specified");
+        Preconditions.checkState(!partitions.isEmpty(), "No constraint configs specified");
 
-        for (ConstraintConfig config : constraints) {
+        for (PartitionConfig config : partitions) {
             config.init(ruptureSet);
         }
 
         Set<Integer> seen = new HashSet<>();
         List<Integer> doubleUps = new ArrayList<>();
-        for (ConstraintConfig config : constraints) {
+        for (PartitionConfig config : partitions) {
             for (Integer sectionId : config.getSectionIds()) {
                 if (seen.contains(sectionId)) {
                     doubleUps.add(sectionId);

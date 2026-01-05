@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintWrapper;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
@@ -44,8 +44,8 @@ public class JointConstraintWrapperTest {
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
 
         FaultSectionProperties props = new FaultSectionProperties();
-        props.set(CRU_SECTION, RegionPredicate.CRUSTAL.name(), true);
-        props.set(SUB_SECTION, RegionPredicate.HIKURANGI.name(), true);
+        props.set(CRU_SECTION, PartitionPredicate.CRUSTAL.name(), true);
+        props.set(SUB_SECTION, PartitionPredicate.HIKURANGI.name(), true);
         rupSet.addModule(props);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
@@ -73,13 +73,13 @@ public class JointConstraintWrapperTest {
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.UNNORMALIZED, rupSet);
 
         // set up crustal constraint
-        ConstraintConfig cruConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
+        PartitionConfig cruConfig = new PartitionConfig(PartitionPredicate.CRUSTAL);
         cruConfig.init(rupSet);
         JointConstraintWrapper crustalConstraint =
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
         // set up subduction constraint
-        ConstraintConfig subConfig = new ConstraintConfig(RegionPredicate.HIKURANGI);
+        PartitionConfig subConfig = new PartitionConfig(PartitionPredicate.HIKURANGI);
         subConfig.init(rupSet);
         JointConstraintWrapper subductionConstraint =
                 new JointConstraintWrapper(subConfig, slipConstraint);

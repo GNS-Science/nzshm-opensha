@@ -7,13 +7,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public enum NZSHM22_DeformationModel implements LogicTreeNode {
@@ -575,34 +576,39 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             return deformations;
         }
 
-        protected SlipDeformation getDeformation(FaultSection section) {
-            return getDeformations().get(section.getSectionId());
-        }
-
-        public void applyTo(FaultSystemRupSet rupSet) {
+        public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
+            FaultSectionProperties props = rupSet.getModule(FaultSectionProperties.class);
             for (FaultSection section : rupSet.getFaultSectionDataList()) {
-                SlipDeformation deformation = getDeformation(section);
+                if (predicate != null && !predicate.test(section.getSectionId())) {
+                    continue;
+                }
+
+                int sectionId = section.getSectionId();
+                if (props.get(sectionId, "origId") != null) {
+                    sectionId = (Integer) props.get(sectionId, "origId");
+                }
+                int parentId = section.getParentSectionId();
+                if (props.get(sectionId, "origParent") != null) {
+                    parentId = (Integer) props.get(sectionId, "origParent");
+                }
+
+                SlipDeformation deformation = getDeformations().get(sectionId);
                 if (deformation != null) {
                     Preconditions.checkArgument(
-                            deformation.sectionId == section.getSectionId(),
+                            deformation.sectionId == sectionId,
                             "Deformation section id does not match section id.");
                     Preconditions.checkArgument(
-                            deformation.parentId == section.getParentSectionId(),
+                            deformation.parentId == parentId,
                             "Section "
                                     + section.getSectionId()
                                     + " Deformation parent id "
                                     + deformation.parentId
                                     + " does not match section parent id "
-                                    + section.getParentSectionId());
+                                    + parentId);
                     section.setAveSlipRate(deformation.slip);
                     section.setSlipRateStdDev(deformation.stdv);
                 }
             }
-            rupSet.removeModuleInstances(SectSlipRates.class);
-            SectSlipRates rates = SectSlipRates.fromFaultSectData(rupSet);
-            rupSet.addModule(
-                    SectSlipRates.precomputed(
-                            rupSet, rates.getSlipRates(), rates.getSlipRateStdDevs()));
         }
     }
 
@@ -613,12 +619,9 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
     }
 
-    public boolean applyTo(FaultSystemRupSet rupSet) {
+    public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
         if (fileName != null) {
-            helper.applyTo(rupSet);
-            return true;
-        } else {
-            return false;
+            helper.applyTo(rupSet, predicate);
         }
     }
 

@@ -1,47 +1,47 @@
-package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.*;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
-public class ConstraintConfig {
+public class PartitionConfig {
 
-    final RegionPredicate region;
+    final PartitionPredicate partition;
 
-    transient List<Integer> sectionIds;
-    transient Map<Integer, Integer> mappingToARow;
+    public transient List<Integer> sectionIds;
+    public transient Map<Integer, Integer> mappingToARow;
+    public transient IntPredicate partitionPredicate;
 
     // slip rate section
-    double slipRateConstraintWt_normalized = 1;
-    double slipRateConstraintWt_unnormalized = 100;
-    AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType =
+    public double slipRateConstraintWt_normalized = 1;
+    public double slipRateConstraintWt_unnormalized = 100;
+    public AbstractInversionConfiguration.NZSlipRateConstraintWeightingType slipRateWeightingType =
             AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.BOTH;
-    double slipRateUncertaintyConstraintWt;
-    double slipRateUncertaintyConstraintScalingFactor;
-    boolean unmodifiedSlipRateStdvs;
+    public double slipRateUncertaintyConstraintWt;
+    public double slipRateUncertaintyConstraintScalingFactor;
+    public boolean unmodifiedSlipRateStdvs;
+    public NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
 
-    public ConstraintConfig(RegionPredicate region) {
-        this.region = region;
+    public PartitionConfig(PartitionPredicate partition) {
+        this.partition = partition;
     }
 
     public void init(FaultSystemRupSet ruptureSet) {
+        partitionPredicate = partition.getPredicate(ruptureSet);
         sectionIds =
                 ruptureSet.getFaultSectionDataList().stream()
                         .mapToInt(FaultSection::getSectionId)
-                        .filter(region.getPredicate(ruptureSet))
+                        .filter(partitionPredicate)
                         .boxed()
                         .collect(Collectors.toList());
         mappingToARow = new HashMap<>();
         for (int i = 0; i < sectionIds.size(); i++) {
             mappingToARow.put(sectionIds.get(i), i);
         }
-    }
-
-    public RegionPredicate getRegion() {
-        return region;
     }
 
     /**
@@ -51,7 +51,7 @@ public class ConstraintConfig {
      * @return
      */
     public boolean covers(int sectionId) {
-        return sectionIds.contains(sectionId);
+        return partitionPredicate.test(sectionId);
     }
 
     public List<Integer> getSectionIds() {

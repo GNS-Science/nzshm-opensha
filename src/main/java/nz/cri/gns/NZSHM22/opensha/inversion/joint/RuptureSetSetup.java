@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.IOException;
 import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
@@ -22,18 +21,21 @@ public class RuptureSetSetup {
         return config.ruptureSet;
     }
 
-    protected static void applyDeformationModel(
-            FaultSystemRupSet ruptureSet, NZSHM22_DeformationModel deformationModel) {
-        if (deformationModel == null || !deformationModel.applyTo(ruptureSet)) {
-            SectSlipRates rates = SectSlipRates.fromFaultSectData(ruptureSet);
-            ruptureSet.addModule(
-                    SectSlipRates.precomputed(
-                            ruptureSet, rates.getSlipRates(), rates.getSlipRateStdDevs()));
+    protected static void applyDeformationModel(Config config) {
+
+        FaultSystemRupSet ruptureSet = config.ruptureSet;
+        for (PartitionConfig partition : config.partitions) {
+            partition.deformationModel.applyTo(
+                    ruptureSet, partition.partition.getPredicate(ruptureSet));
         }
+        SectSlipRates rates = SectSlipRates.fromFaultSectData(ruptureSet);
+        ruptureSet.addModule(
+                SectSlipRates.precomputed(
+                        ruptureSet, rates.getSlipRates(), rates.getSlipRateStdDevs()));
     }
 
     protected static void applySlipRateFactor(
-            RegionPredicate region, double slipRateFactor, FaultSystemRupSet rupSet) {
+            PartitionPredicate region, double slipRateFactor, FaultSystemRupSet rupSet) {
         if (slipRateFactor < 0) {
             return;
         }
@@ -70,9 +72,9 @@ public class RuptureSetSetup {
 
         ruptureSet.addModule(AveSlipModule.forModel(ruptureSet, config.scalingRelationship));
 
-        applyDeformationModel(ruptureSet, config.deformationModel);
+        applyDeformationModel(config);
 
-        applySlipRateFactor(RegionPredicate.TVZ, config.tvzSlipRateFactor, ruptureSet);
-        applySlipRateFactor(RegionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
+        applySlipRateFactor(PartitionPredicate.TVZ, config.tvzSlipRateFactor, ruptureSet);
+        applySlipRateFactor(PartitionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
     }
 }

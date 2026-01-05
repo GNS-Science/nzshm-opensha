@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.RegionPredicate;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.FaultTypeSeparationConnectionStrategy;
@@ -316,8 +316,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
 
         String sourceName =
                 subSections.get(0).getName().contains("Hikurangi")
-                        ? RegionPredicate.HIKURANGI.name()
-                        : RegionPredicate.PUYSEGUR.name();
+                        ? PartitionPredicate.HIKURANGI.name()
+                        : PartitionPredicate.PUYSEGUR.name();
 
         FaultSectionProperties extraProperties = new FaultSectionProperties();
         for (int s = 0; s < rupSet.getNumSections(); s++) {

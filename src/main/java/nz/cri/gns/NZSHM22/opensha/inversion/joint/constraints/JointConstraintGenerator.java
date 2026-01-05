@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SlipRateInversionConstraintBuilder;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
@@ -13,7 +14,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 public class JointConstraintGenerator {
 
     public static List<InversionConstraint> buildSharedConstraints(
-            FaultSystemRupSet rupSet, ConstraintConfig config) {
+            FaultSystemRupSet rupSet, PartitionConfig config) {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
