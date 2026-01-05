@@ -78,8 +78,12 @@ public class FaultSectionProperties implements FileBackedModule {
         if (value == null) {
             return null;
         }
+        // Should only be an Integer if the data does not come from json. For example, in tests.
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
         double dValue = (Double) value;
-        Preconditions.checkState(Math.floor(dValue) == Math.ceil(dValue));
+        Preconditions.checkState(Math.rint(dValue) == dValue);
         return (int) dValue;
     }
 
