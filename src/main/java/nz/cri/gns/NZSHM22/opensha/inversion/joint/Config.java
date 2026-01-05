@@ -69,18 +69,14 @@ public class Config {
         }
     }
 
-    protected void apply() throws IOException {
-
+    protected void init() throws IOException {
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
         }
+        Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
+        Preconditions.checkState(!partitions.isEmpty(), "No partition configs specified");
 
         hydrateScalingRelationship();
-
-        RuptureSetSetup.setup(this);
-
-        Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
-        Preconditions.checkState(!partitions.isEmpty(), "No constraint configs specified");
 
         for (PartitionConfig config : partitions) {
             config.init(ruptureSet);
@@ -110,5 +106,10 @@ public class Config {
                             + section.getSectionId()
                             + " is not covered by a constraint config.");
         }
+    }
+
+    protected void apply() throws IOException {
+        init();
+        RuptureSetSetup.setup(this);
     }
 }

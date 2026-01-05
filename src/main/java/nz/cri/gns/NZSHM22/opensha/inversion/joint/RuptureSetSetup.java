@@ -25,8 +25,7 @@ public class RuptureSetSetup {
 
         FaultSystemRupSet ruptureSet = config.ruptureSet;
         for (PartitionConfig partition : config.partitions) {
-            partition.deformationModel.applyTo(
-                    ruptureSet, partition.partition.getPredicate(ruptureSet));
+            partition.deformationModel.applyTo(ruptureSet, partition.partitionPredicate);
         }
         SectSlipRates rates = SectSlipRates.fromFaultSectData(ruptureSet);
         ruptureSet.addModule(

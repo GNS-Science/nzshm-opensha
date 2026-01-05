@@ -73,6 +73,16 @@ public class FaultSectionProperties implements FileBackedModule {
         return null;
     }
 
+    public Integer getInt(int sectionId, String property) {
+        Object value = get(sectionId, property);
+        if (value == null) {
+            return null;
+        }
+        double dValue = (Double) value;
+        Preconditions.checkState(Math.floor(dValue) == Math.ceil(dValue));
+        return (int) dValue;
+    }
+
     @Override
     public String getFileName() {
         return "NZSHM_FaultSectionProperties.json";

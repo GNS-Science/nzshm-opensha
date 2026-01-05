@@ -496,13 +496,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     SBD_0_2A_HKR_MMIN8_EXP_LTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation5b.csv"),
-
-    JOINT_1(
-            "For joint rupture sets. Combines SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A and SBD_0_1_PUY_30_0PT7",
-            "joint rupture sets based on NZSHM22 rupture sets",
-            "joint1.csv"),
-    ;
+            "dm_xhk_lockedtrench_Mmin8_exp_perturbation5b.csv");
 
     String description;
     String fileName;
@@ -585,11 +579,11 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
                 int sectionId = section.getSectionId();
                 if (props != null && props.get(sectionId, "origId") != null) {
-                    sectionId = (Integer) props.get(sectionId, "origId");
+                    sectionId = props.getInt(sectionId, "origId");
                 }
                 int parentId = section.getParentSectionId();
                 if (props != null && props.get(section.getSectionId(), "origParent") != null) {
-                    parentId = (Integer) props.get(section.getSectionId(), "origParent");
+                    parentId = props.getInt(section.getSectionId(), "origParent");
                 }
 
                 SlipDeformation deformation = getDeformations().get(sectionId);
