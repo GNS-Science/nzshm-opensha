@@ -22,7 +22,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
 
-    final static boolean LOG_MATRIX_ONLY = false;
+    static final boolean LOG_MATRIX_ONLY = false;
 
     AnnealingConfig config;
     FaultSystemRupSet rupSet;
@@ -130,16 +130,17 @@ public class Annealer {
             config.inversionNumSolutionAverages = 1;
         }
 
-        if(LOG_MATRIX_ONLY) {
+        if (LOG_MATRIX_ONLY) {
 
             Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
             Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
-            if(inversionInputGenerator.getA_ineq() != null) {
-                Files.writeString(Path.of("A_ineq.txt"),
-                        inversionInputGenerator.getA_ineq().toString());
+            if (inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(
+                        Path.of("A_ineq.txt"), inversionInputGenerator.getA_ineq().toString());
             }
-            if(inversionInputGenerator.getD_ineq() != null) {
-                Files.writeString(Path.of("D_ineq.txt"),
+            if (inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(
+                        Path.of("D_ineq.txt"),
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
