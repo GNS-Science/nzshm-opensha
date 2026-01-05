@@ -121,6 +121,7 @@ public class FaultSectionProperties implements FileBackedModule {
 
         String ruptureSetName =
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
+        ruptureSetName = "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
         NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
 
         FaultSectionProperties properties = new FaultSectionProperties();

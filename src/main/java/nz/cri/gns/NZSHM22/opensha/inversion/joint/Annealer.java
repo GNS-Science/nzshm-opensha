@@ -3,6 +3,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -19,6 +21,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
+
+    final static boolean LOG_MATRIX_ONLY = false;
 
     AnnealingConfig config;
     FaultSystemRupSet rupSet;
@@ -126,12 +130,21 @@ public class Annealer {
             config.inversionNumSolutionAverages = 1;
         }
 
-        // Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
-        // Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
-        //        Files.writeString(Path.of("A_ineq.txt"),
-        // inversionInputGenerator.getA_ineq().toString());
-        //        Files.writeString(Path.of("D_ineq.txt"),
-        // Arrays.toString(inversionInputGenerator.getD_ineq()));
+        if(LOG_MATRIX_ONLY) {
+
+            Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
+            Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+            if(inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(Path.of("A_ineq.txt"),
+                        inversionInputGenerator.getA_ineq().toString());
+            }
+            if(inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(Path.of("D_ineq.txt"),
+                        Arrays.toString(inversionInputGenerator.getD_ineq()));
+            }
+
+            System.exit(0);
+        }
 
         ThreadedSimulatedAnnealing tsa;
 

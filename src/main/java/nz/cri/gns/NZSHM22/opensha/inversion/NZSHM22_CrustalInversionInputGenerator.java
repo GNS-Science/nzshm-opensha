@@ -34,10 +34,6 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
 
         List<InversionConstraint> constraints = buildSharedConstraints(rupSet, config);
 
-        if (SLIP_ONLY) {
-            return constraints;
-        }
-
         if (config.getPaleoRateConstraintWt() > 0) {
             constraints.add(
                     new PaleoRateInversionConstraint(
@@ -61,6 +57,10 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
                                 config.getpaleoParentRateSmoothnessConstraintWeight(),
                                 paleoParentIDs));
             }
+        }
+
+        if (SLIP_ONLY) {
+            return constraints;
         }
 
         // MFD Subsection nucleation MFD constraint

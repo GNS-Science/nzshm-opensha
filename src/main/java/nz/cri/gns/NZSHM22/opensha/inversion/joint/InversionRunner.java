@@ -111,13 +111,14 @@ public class InversionRunner {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
-        constraints.addAll(generatePaleoConstraints());
-
         for (PartitionConfig constraintConfig : config.partitions) {
             constraints.addAll(
                     JointConstraintGenerator.buildSharedConstraints(
                             config.ruptureSet, constraintConfig));
         }
+
+        constraints.addAll(generatePaleoConstraints());
+
         return constraints;
     }
 
