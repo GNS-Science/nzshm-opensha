@@ -588,8 +588,8 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                     sectionId = (Integer) props.get(sectionId, "origId");
                 }
                 int parentId = section.getParentSectionId();
-                if (props != null && props.get(sectionId, "origParent") != null) {
-                    parentId = (Integer) props.get(sectionId, "origParent");
+                if (props != null && props.get(section.getSectionId(), "origParent") != null) {
+                    parentId = (Integer) props.get(section.getSectionId(), "origParent");
                 }
 
                 SlipDeformation deformation = getDeformations().get(sectionId);

@@ -46,6 +46,7 @@ public class NZSHM22_DeformationModelsTest {
         }
     }
 
+    // deformation model honours origId and origParent
     @Test
     public void testApplyToProps() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
@@ -94,6 +95,49 @@ public class NZSHM22_DeformationModelsTest {
         assertEquals(3.14, section.getOrigSlipRateStdDev(), DELTA);
     }
 
+    // honour partition predicate
+    @Test
+    public void testApplyToPartition() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        FaultSection s = ruptSet.getFaultSectionData(0);
+        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
+        s = ruptSet.getFaultSectionData(1);
+        assertEquals(0.02, s.getOrigAveSlipRate(), 0.00000001);
+
+        NZSHM22_DeformationModel.DeformationHelper helper =
+                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
+                        SlipDeformation deformation = new SlipDeformation();
+                        deformation.sectionId = 0;
+                        deformation.parentId = 0;
+                        deformation.slip = 42;
+                        deformation.stdv = 3.14;
+                        result.put(0, deformation);
+                        deformation = new SlipDeformation();
+                        deformation.sectionId = 1;
+                        deformation.parentId = 1;
+                        deformation.slip = 6;
+                        deformation.stdv = 7;
+                        result.put(1, deformation);
+                        return result;
+                    }
+                };
+
+        // only apply deformation model to section 1
+        helper.applyTo(ruptSet, (sectionId) -> sectionId == 1);
+
+        // section 0 is unchanged
+        FaultSection section = ruptSet.getFaultSectionData(0);
+        assertEquals(0.2, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(0.15, section.getOrigSlipRateStdDev(), DELTA);
+
+        // section 1 is modified
+        section = ruptSet.getFaultSectionData(1);
+        assertEquals(6, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(7, section.getOrigSlipRateStdDev(), DELTA);
+    }
+
     @Test
     public void testApplyToError() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
@@ -121,6 +165,7 @@ public class NZSHM22_DeformationModelsTest {
                 "Section 1 Deformation parent id 0 does not match section parent id 1", message);
     }
 
+    // we can parse all deformation models
     @Test
     public void testLoad() {
         for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
