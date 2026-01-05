@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -27,8 +29,16 @@ public class Config {
     protected double scalingCVal;
     protected boolean recalcMags = false;
 
+    // TVZ slip
     protected double sansSlipRateFactor = -1;
     protected double tvzSlipRateFactor = -1;
+
+    // paleo
+    protected double paleoRateConstraintWt = 0;
+    protected double paleoParentRateSmoothnessConstraintWeight = 0;
+    protected NZSHM22_PaleoRates paleoRates;
+    protected NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+    protected String extraPaleoRatesFile;
 
     // hydrated values
     protected transient RupSetScalingRelationship scalingRelationship;

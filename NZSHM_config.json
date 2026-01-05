@@ -52,5 +52,11 @@
   "recalcMags" : true,
 
   "sansSlipRateFactor" : 0.9,
-  "tvzSlipRateFactor" : 0.7
+  "tvzSlipRateFactor" : 0.7,
+
+  "paleoRateConstraintWt": 1,
+  "paleoParentRateSmoothnessConstraintWeight": 100000.0,
+  "paleoRates":	"PALEO_RI_GEOLOGIC_MAY24",
+  "paleoProbabilityModel": "NZSHM22_C_42",
+  "extraPaleoRatesFile": null
 }
