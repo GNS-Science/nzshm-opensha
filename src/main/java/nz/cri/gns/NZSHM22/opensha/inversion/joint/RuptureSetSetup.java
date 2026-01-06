@@ -62,6 +62,7 @@ public class RuptureSetSetup {
         ruptureSet.removeModuleInstances(SectSlipRates.class);
         ruptureSet.removeModuleInstances(AveSlipModule.class);
 
+        // TODO: do we actually need a fault model? does this make sense for joint ruptures?
         CustomFaultModel customFaultModel = ruptureSet.getModule(CustomFaultModel.class);
         if (customFaultModel != null) {
             NZSHM22_LogicTreeBranch ltb = ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
