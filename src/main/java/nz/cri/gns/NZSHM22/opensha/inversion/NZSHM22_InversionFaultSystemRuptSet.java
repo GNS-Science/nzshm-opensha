@@ -223,18 +223,23 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
                 SectSlipRates.precomputed(this, rates.getSlipRates(), rates.getSlipRateStdDevs()));
 
         FaultRegime regime = branch.getValue(FaultRegime.class);
-        if (regime == FaultRegime.SUBDUCTION) {
-            addAvailableModule(
-                    new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
-                        @Override
-                        public NZSHM22_SubductionInversionTargetMFDs call() throws Exception {
-                            return new NZSHM22_SubductionInversionTargetMFDs(
-                                    NZSHM22_InversionFaultSystemRuptSet.this);
-                        }
-                    },
-                    NZSHM22_SubductionInversionTargetMFDs.class);
 
-        } else if (regime == FaultRegime.CRUSTAL) {
+        // oakley: this looks like a garbage module with default values that will be overwritten later
+
+//        if (regime == FaultRegime.SUBDUCTION) {
+//            addAvailableModule(
+//                    new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
+//                        @Override
+//                        public NZSHM22_SubductionInversionTargetMFDs call() throws Exception {
+//                            return new NZSHM22_SubductionInversionTargetMFDs(
+//                                    NZSHM22_InversionFaultSystemRuptSet.this);
+//                        }
+//                    },
+//                    NZSHM22_SubductionInversionTargetMFDs.class);
+//
+//        } else
+            if (regime == FaultRegime.CRUSTAL) {
+            // TODO joint: faultpolymgr
             addModule(faultPolyMgr(this, branch));
             if (branch.hasValue(NZSHM22_FaultModels.class)) {
                 addModule(new TvzDomainSections(this));

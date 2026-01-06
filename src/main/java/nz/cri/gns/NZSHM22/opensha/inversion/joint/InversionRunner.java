@@ -143,21 +143,11 @@ public class InversionRunner {
 
     public static void main(String[] args) throws IOException, DocumentException {
 
-        //        Config config = new Config();
-        //        config.setRuptureSet(
-        //                //
-        //                //
-        // "C:\\Users\\volkertj\\Downloads\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==(1).zip");
-        //
-        // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip");
-        //        config.createCrustalConfig();
-        //        config.createSubductionConfig();
-
         Config config = ConfigModule.fromJson(Files.readString(Path.of("NZSHM_config.json")));
 
-        InversionRunner builder = new InversionRunner(config);
+        InversionRunner runner = new InversionRunner(config);
 
-        FaultSystemSolution solution = builder.run();
+        FaultSystemSolution solution = runner.run();
 
         solution.write(new File("/tmp/spikeInversionSolution.zip"));
     }

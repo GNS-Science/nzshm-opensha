@@ -231,6 +231,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
 
+        // XXX joint here?
+
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {
                 variablePerturbationBasis = Inversions.getDefaultVariablePerturbationBasis(rupSet);

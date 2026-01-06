@@ -49,10 +49,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 
     protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 
-    public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
-        this(invRupSet, 0.7, 1.1, 7.85, 7.05, 0, 0, 0.4);
-    }
-
     public NZSHM22_SubductionInversionTargetMFDs(
             NZSHM22_InversionFaultSystemRuptSet invRupSet,
             double totalRateM5,
@@ -67,7 +63,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 
         // make the total target GR MFD
-        // TODO: why MIN_MAG = 0 ??
         GutenbergRichterMagFreqDist totalTargetGR =
                 new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
         if (MFD_STATS) {
