@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
@@ -369,9 +368,6 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
-            System.out.println(row);
-        }
         return solution;
     }
 
@@ -392,9 +388,6 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
-            System.out.println(row);
-        }
         return solution;
     }
 

@@ -289,16 +289,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                 .setpaleoParentRateSmoothnessConstraintWeight(
                         paleoParentRateSmoothnessConstraintWeight);
 
-        solutionMfds =
-                ((NZSHM22_CrustalInversionTargetMFDs)
-                                inversionConfiguration.getInversionTargetMfds())
-                        .getReportingMFDConstraintComponents();
-
-        solutionMfdsV2 =
-                ((NZSHM22_CrustalInversionTargetMFDs)
-                                inversionConfiguration.getInversionTargetMfds())
-                        .getReportingMFDConstraintComponentsV2();
-
         /*
          * Build inversion inputs
          */

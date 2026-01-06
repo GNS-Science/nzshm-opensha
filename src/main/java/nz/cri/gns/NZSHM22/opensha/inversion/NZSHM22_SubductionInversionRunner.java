@@ -81,12 +81,6 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
                         mfdTransitionMag,
                         mfdMinMag);
 
-        // CBC This may not be needed long term
-        solutionMfds =
-                ((NZSHM22_SubductionInversionTargetMFDs)
-                                inversionConfiguration.getInversionTargetMfds())
-                        .getMFDConstraintComponents();
-
         NZSHM22_SubductionInversionInputGenerator inversionInputGenerator =
                 new NZSHM22_SubductionInversionInputGenerator(rupSet, inversionConfiguration);
         setInversionInputGenerator(inversionInputGenerator);

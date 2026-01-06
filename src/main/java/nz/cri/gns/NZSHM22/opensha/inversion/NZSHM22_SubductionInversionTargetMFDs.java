@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
-import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -58,9 +57,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             double mfdUncertaintyWeightedConstraintWt,
             double mfdUncertaintyWeightedConstraintPower,
             double mfdUncertaintyWeightedConstraintScalar) {
-
-        // convert mMaxOffFault to bin center
-        List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
 
         // make the total target GR MFD
         GutenbergRichterMagFreqDist totalTargetGR =
