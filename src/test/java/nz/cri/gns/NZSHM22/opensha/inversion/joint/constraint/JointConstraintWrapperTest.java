@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.inversion.constraint.joint;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint;
 
 import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSet;
 import static org.junit.Assert.*;
@@ -20,7 +20,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Constra
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
 public class JointConstraintWrapperTest {
@@ -38,9 +37,6 @@ public class JointConstraintWrapperTest {
                                 List.of(SUB_SECTION),
                                 List.of(CRU_SECTION, SUB_SECTION)));
 
-        FaultSection s0 = rupSet.getFaultSectionData(0);
-        FaultSection s1 = rupSet.getFaultSectionData(1);
-        s1.setSectionName("row:1");
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
 
         FaultSectionProperties props = new FaultSectionProperties();

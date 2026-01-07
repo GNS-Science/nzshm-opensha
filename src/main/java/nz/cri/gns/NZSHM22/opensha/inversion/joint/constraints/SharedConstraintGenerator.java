@@ -71,6 +71,9 @@ public class SharedConstraintGenerator {
         List<IncrementalMagFreqDist> mfdEqualityConstraints = config.mfdConstraints;
         List<IncrementalMagFreqDist> mfdInequalityConstraints = config.mfdConstraints;
 
+        PartitionFaultSystemRupSet partitionRupSet =
+                new PartitionFaultSystemRupSet(rupSet, config.partitionPredicate);
+
         if (config.mfdEqualityConstraintWt > 0.0 && config.mfdInequalityConstraintWt > 0.0) {
             // we have both MFD constraints, apply a transition mag from equality to
             // inequality
@@ -92,7 +95,10 @@ public class SharedConstraintGenerator {
         if (config.mfdEqualityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            rupSet, config.mfdEqualityConstraintWt, false, mfdEqualityConstraints));
+                            partitionRupSet,
+                            config.mfdEqualityConstraintWt,
+                            false,
+                            mfdEqualityConstraints));
         }
 
         // Prepare MFD Inequality Constraint (not added to A matrix directly since it's
@@ -100,7 +106,7 @@ public class SharedConstraintGenerator {
         if (config.mfdInequalityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            rupSet,
+                            partitionRupSet,
                             config.mfdInequalityConstraintWt,
                             true,
                             mfdInequalityConstraints));
@@ -110,7 +116,7 @@ public class SharedConstraintGenerator {
         if (config.mfdUncertaintyWeight > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            rupSet,
+                            partitionRupSet,
                             config.mfdUncertaintyWeight,
                             false,
                             ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
