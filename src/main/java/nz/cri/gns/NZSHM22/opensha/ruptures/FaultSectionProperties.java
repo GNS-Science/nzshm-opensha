@@ -123,11 +123,14 @@ public class FaultSectionProperties implements FileBackedModule {
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
         ruptureSetName =
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-        NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
+        ruptureSetName =
+                "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
 
         FaultSectionProperties properties = new FaultSectionProperties();
         FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
 
+        // faultmodel is only used for crustal sections
+        NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
         FaultSectionList parentSections = new FaultSectionList();
         faultModel.fetchFaultSections(parentSections);
 

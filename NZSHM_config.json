@@ -1,7 +1,7 @@
 {
   //"ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zipprops2.zip",
-   "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
-  //"ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zipprops.zip",
+ //  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
+  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zipprops2.zip",
   "annealing": {
     "inversionSecs": 60,
     "selectionInterval": 10,
@@ -32,7 +32,16 @@
       "slipRateUncertaintyConstraintWt": 0.0,
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": false,
-      "deformationModel": "SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A"
+      "deformationModel": "SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A",
+      "totalRateM5": 21.5,
+      "bValue": 1.097,
+      "minMag": 7.5,
+      "mfdTransitionMag": 9.15,
+      "mfdEqualityConstraintWt": 10000,
+      "mfdInequalityConstraintWt": 0,
+      "mfdUncertaintyWeight": 0,
+      "mfdUncertaintyPower": 0.001,
+      "mfdUncertaintyScalar": 0.1
     },
     {
       "partition": "PUYSEGUR",
@@ -45,8 +54,8 @@
       "deformationModel": "SBD_0_1_PUY_30_0PT7"
     }
   ],
-  //"scalingRelationshipName": "SIMPLE_SUBDUCTION",
-  "scalingRelationshipName": "SIMPLE_CRUSTAL",
+  "scalingRelationshipName": "SIMPLE_SUBDUCTION",
+  //"scalingRelationshipName": "SIMPLE_CRUSTAL",
   "scalingCValDipSlip": 4.2,
   "scalingCValStrikeSlip": 4.2,
   "scalingCVal": 4.0,

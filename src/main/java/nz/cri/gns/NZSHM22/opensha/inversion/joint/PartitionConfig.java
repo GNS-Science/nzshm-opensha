@@ -5,8 +5,10 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 public class PartitionConfig {
 
@@ -30,15 +32,15 @@ public class PartitionConfig {
     public double totalRateM5;
     public double bValue;
     public double minMag;
-    public double maxMag;
     public double mfdTransitionMag;
+    public double mfdEqualityConstraintWt;
+    public double mfdInequalityConstraintWt;
+    public double mfdUncertaintyWeight;
     public double mfdUncertaintyPower;
-    // for subduction, this doubles as mfdUncertaintyWeightedConstraintWt which was only used as a flag > 0
     public double mfdUncertaintyScalar;
 
-    public double magnitudeEqualityConstraintWt;
-    public double magnitudeInequalityConstraintWt;
-    public double mfdUncertaintyWeightedConstraintWt;
+    public transient List<IncrementalMagFreqDist> mfdConstraints;
+    public transient List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
 
     public PartitionConfig(PartitionPredicate partition) {
         this.partition = partition;

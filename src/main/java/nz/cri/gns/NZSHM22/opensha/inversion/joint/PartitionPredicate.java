@@ -33,4 +33,12 @@ public enum PartitionPredicate {
         }
         throw new IllegalStateException("Unknown RegionPredicate");
     }
+
+    public boolean isSubduction() {
+        return (this == PUYSEGUR || this == HIKURANGI);
+    }
+
+    public boolean isCrustal() {
+        return !isSubduction();
+    }
 }

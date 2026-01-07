@@ -22,7 +22,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Pa
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
-import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
 public class InversionRunner {
 
@@ -115,26 +114,30 @@ public class InversionRunner {
 
         for (PartitionConfig partitionConfig : config.partitions) {
 
-            U3InversionTargetMFDs targetMfds;
-
-            // TODO join: how do we stick our target MFDs as modules into the rupture set? we probably need them for reporting
+            // TODO join: how do we stick our target MFDs as modules into the rupture set? we
+            // probably need them for reporting
             // how did UCERF3 do this for north and south california?
 
             if (partitionConfig.partition == PartitionPredicate.PUYSEGUR
                     || partitionConfig.partition == PartitionPredicate.HIKURANGI) {
-                targetMfds =
+                NZSHM22_SubductionInversionTargetMFDs targetMfds =
                         new NZSHM22_SubductionInversionTargetMFDs(
-                                // TODO join: ruptureset might have to return partition-specific maxMag
+                                // TODO join: ruptureset might have to return partition-specific
+                                // maxMag
                                 config.ruptureSet,
                                 partitionConfig.totalRateM5,
                                 partitionConfig.bValue,
                                 partitionConfig.mfdTransitionMag,
                                 partitionConfig.minMag,
-                                partitionConfig.mfdUncertaintyScalar,
+                                partitionConfig.mfdUncertaintyWeight,
                                 partitionConfig.mfdUncertaintyPower,
                                 partitionConfig.mfdUncertaintyScalar);
+
+                partitionConfig.mfdConstraints = targetMfds.getMfdEqIneqConstraints();
+                partitionConfig.mfdUncertaintyWeightedConstraints =
+                        targetMfds.getMfdUncertaintyConstraints();
             } else {
-  // TODO simplify crustal MFDs
+                // TODO simplify crustal MFDs
             }
 
             constraints.addAll(
