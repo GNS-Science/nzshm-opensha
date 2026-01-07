@@ -12,7 +12,7 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 public class PartitionConfig {
 
-    final PartitionPredicate partition;
+    public final PartitionPredicate partition;
 
     public transient List<Integer> sectionIds;
     public transient Map<Integer, Integer> mappingToARow;

@@ -19,30 +19,30 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
 
-    protected String ruptureSetPath;
-    protected AnnealingConfig annealing;
-    protected List<PartitionConfig> partitions;
+    public String ruptureSetPath;
+    public AnnealingConfig annealing;
+    public List<PartitionConfig> partitions;
 
-    protected String scalingRelationshipName = "SIMPLE_CRUSTAL";
-    protected double scalingCValDipSlip = 4.2;
-    protected double scalingCValStrikeSlip = 4.2;
-    protected double scalingCVal;
-    protected boolean recalcMags = false;
+    public String scalingRelationshipName = "SIMPLE_CRUSTAL";
+    public double scalingCValDipSlip = 4.2;
+    public double scalingCValStrikeSlip = 4.2;
+    public double scalingCVal;
+    public boolean recalcMags = false;
 
     // TVZ slip
-    protected double sansSlipRateFactor = -1;
-    protected double tvzSlipRateFactor = -1;
+    public double sansSlipRateFactor = -1;
+    public double tvzSlipRateFactor = -1;
 
     // paleo
-    protected double paleoRateConstraintWt = 0;
-    protected double paleoParentRateSmoothnessConstraintWeight = 0;
-    protected NZSHM22_PaleoRates paleoRates;
-    protected NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
-    protected String extraPaleoRatesFile;
+    public double paleoRateConstraintWt = 0;
+    public double paleoParentRateSmoothnessConstraintWeight = 0;
+    public NZSHM22_PaleoRates paleoRates;
+    public NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+    public String extraPaleoRatesFile;
 
     // hydrated values
-    protected transient RupSetScalingRelationship scalingRelationship;
-    protected transient FaultSystemRupSet ruptureSet;
+    public transient RupSetScalingRelationship scalingRelationship;
+    public transient FaultSystemRupSet ruptureSet;
 
     public Config() {
         partitions = new ArrayList<>();
@@ -79,7 +79,7 @@ public class Config {
         }
     }
 
-    protected void init() throws IOException {
+    public void init() throws IOException {
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
         }
@@ -116,10 +116,5 @@ public class Config {
                             + section.getSectionId()
                             + " is not covered by a constraint config.");
         }
-    }
-
-    protected void apply() throws IOException {
-        init();
-        RuptureSetSetup.setup(this);
     }
 }

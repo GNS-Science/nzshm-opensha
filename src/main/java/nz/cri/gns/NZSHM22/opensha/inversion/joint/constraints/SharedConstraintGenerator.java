@@ -13,7 +13,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MF
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
-public class JointConstraintGenerator {
+public class SharedConstraintGenerator {
 
     public static List<InversionConstraint> buildSlipRateConstraints(
             FaultSystemRupSet rupSet, PartitionConfig config) {
@@ -129,24 +129,6 @@ public class JointConstraintGenerator {
         }
 
         constraints.addAll(buildSlipRateConstraints(rupSet, config));
-
-        // TDODO: this is deprecated since '21 but the alternative is not yet used
-
-        //        // Rupture rate minimization constraint
-        //        // Minimize the rates of ruptures below SectMinMag (strongly so that they have
-        //        // zero rates)
-        //        if (config.getMinimizationConstraintWt() > 0.0) {
-        //            List<Integer> belowMinIndexes = new ArrayList<>();
-        //            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-        //                if (rupSet.isRuptureBelowSectMinMag(r)) {
-        //                    belowMinIndexes.add(r);
-        //                }
-        //            }
-        //            constraints.add(
-        //                    new RupRateMinimizationConstraint(
-        //                            config.getMinimizationConstraintWt(), belowMinIndexes));
-        //        }
-
         constraints.addAll(buildMfdConstraints(rupSet, config));
 
         return constraints;

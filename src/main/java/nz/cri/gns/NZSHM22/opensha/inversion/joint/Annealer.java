@@ -22,7 +22,7 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
 
-    static final boolean LOG_MATRIX_ONLY = false;
+    static final boolean LOG_MATRIX_ONLY = true;
 
     AnnealingConfig config;
     FaultSystemRupSet rupSet;

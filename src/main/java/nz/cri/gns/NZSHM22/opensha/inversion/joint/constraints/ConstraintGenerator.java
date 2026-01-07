@@ -1,0 +1,135 @@
+package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.LaplacianSmoothingInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoRateInversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
+import org.opensha.sha.faultSurface.FaultSection;
+
+public class ConstraintGenerator {
+
+    public static List<InversionConstraint> generatePaleoConstraints(Config config)
+            throws FileNotFoundException {
+
+        List<InversionConstraint> results = new ArrayList<>();
+
+        if (config.paleoRateConstraintWt <= 0) {
+            return results;
+        }
+
+        IntPredicate isCrustal = PartitionPredicate.CRUSTAL.getPredicate(config.ruptureSet);
+
+        List<FaultSection> crustalSections =
+                config.ruptureSet.getFaultSectionDataList().stream()
+                        .filter((section) -> isCrustal.test(section.getSectionId()))
+                        .collect(Collectors.toList());
+
+        List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints =
+                new ArrayList<>();
+        if (config.paleoRates != null) {
+            paleoRateConstraints.addAll(config.paleoRates.fetchConstraints(crustalSections));
+        }
+        if (config.extraPaleoRatesFile != null) {
+            List<UncertainDataConstraint.SectMappedUncertainDataConstraint> extraConstraints =
+                    NZSHM22_PaleoRates.fetchConstraints(
+                            crustalSections, new FileInputStream(config.extraPaleoRatesFile));
+            for (UncertainDataConstraint.SectMappedUncertainDataConstraint extraConstraint :
+                    extraConstraints) {
+                for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
+                        paleoRateConstraints) {
+                    if (constraint.dataLocation.equals(extraConstraint.dataLocation)) {
+                        throw new IllegalStateException(
+                                "Paleo rate location double-up at " + extraConstraint.dataLocation);
+                    }
+                }
+                paleoRateConstraints.add(extraConstraint);
+            }
+        }
+
+        PaleoProbabilityModel paleoProbabilityModel = null;
+        if (config.paleoProbabilityModel != null) {
+            paleoProbabilityModel = config.paleoProbabilityModel.fetchModel();
+        }
+
+        results.add(
+                new PaleoRateInversionConstraint(
+                        config.ruptureSet,
+                        config.paleoRateConstraintWt,
+                        paleoRateConstraints,
+                        paleoProbabilityModel));
+
+        if (config.paleoParentRateSmoothnessConstraintWeight > 0) {
+            HashSet<Integer> paleoParentIDs = new HashSet<>();
+            for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
+                    paleoRateConstraints) {
+                paleoParentIDs.add(
+                        config.ruptureSet
+                                .getFaultSectionDataList()
+                                .get(constraint.sectionIndex)
+                                .getParentSectionId());
+            }
+            results.add(
+                    new LaplacianSmoothingInversionConstraint(
+                            config.ruptureSet,
+                            config.paleoParentRateSmoothnessConstraintWeight,
+                            paleoParentIDs));
+        }
+
+        return results;
+    }
+
+    public static List<InversionConstraint> generateConstraints(Config config)
+            throws FileNotFoundException {
+
+        List<InversionConstraint> constraints = new ArrayList<>();
+
+        for (PartitionConfig partitionConfig : config.partitions) {
+
+            // TODO join: how do we stick our target MFDs as modules into the rupture set? we
+            // probably need them for reporting
+            // how did UCERF3 do this for north and south california?
+
+            if (partitionConfig.partition.isSubduction()) {
+                NZSHM22_SubductionInversionTargetMFDs targetMfds =
+                        new NZSHM22_SubductionInversionTargetMFDs(
+                                // TODO join: ruptureset might have to return partition-specific
+                                // maxMag
+                                config.ruptureSet,
+                                partitionConfig.totalRateM5,
+                                partitionConfig.bValue,
+                                partitionConfig.mfdTransitionMag,
+                                partitionConfig.minMag,
+                                partitionConfig.mfdUncertaintyWeight,
+                                partitionConfig.mfdUncertaintyPower,
+                                partitionConfig.mfdUncertaintyScalar);
+
+                partitionConfig.mfdConstraints = targetMfds.getMfdEqIneqConstraints();
+                partitionConfig.mfdUncertaintyWeightedConstraints =
+                        targetMfds.getMfdUncertaintyConstraints();
+            } else {
+                // TODO simplify crustal MFDs
+            }
+
+            constraints.addAll(
+                    SharedConstraintGenerator.buildSharedConstraints(
+                            config.ruptureSet, partitionConfig));
+        }
+
+        constraints.addAll(ConstraintGenerator.generatePaleoConstraints(config));
+
+        return constraints;
+    }
+}
