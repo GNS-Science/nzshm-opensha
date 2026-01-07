@@ -128,6 +128,19 @@ The advantage of this is that we do not need to modify and maintain existing wor
 ### Dependencies
 - magnitude
 
+## `MFDInversionConstraint` (once target MFDs have been created)
+
+### Encoding
+- one row per bin in each MFD
+- columns of ruptures that are in that bin are set to rate of that bin * modifiers
+- if a rupture is only partially in the MFD's region, the rupture's rate is scaled proportionally
+
+
+`MFDInversionConstraint` relies on rupset to get min and max mag and fraction of rupture in region. We could create a
+new rupset class that returns those values based on a partition.  
+
+
+
 # Unresolved Questions
 
 - Scaling Relationship

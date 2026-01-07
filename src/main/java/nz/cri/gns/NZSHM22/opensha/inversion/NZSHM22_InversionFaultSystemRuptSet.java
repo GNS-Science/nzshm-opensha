@@ -224,22 +224,6 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
         FaultRegime regime = branch.getValue(FaultRegime.class);
 
-        // oakley: this looks like a garbage module with default values that will be overwritten
-        // later
-
-        //        if (regime == FaultRegime.SUBDUCTION) {
-        //            addAvailableModule(
-        //                    new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
-        //                        @Override
-        //                        public NZSHM22_SubductionInversionTargetMFDs call() throws
-        // Exception {
-        //                            return new NZSHM22_SubductionInversionTargetMFDs(
-        //                                    NZSHM22_InversionFaultSystemRuptSet.this);
-        //                        }
-        //                    },
-        //                    NZSHM22_SubductionInversionTargetMFDs.class);
-        //
-        //        } else
         if (regime == FaultRegime.CRUSTAL) {
             // TODO joint: faultpolymgr
             addModule(faultPolyMgr(this, branch));
