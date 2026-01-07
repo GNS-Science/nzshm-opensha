@@ -26,6 +26,20 @@ public class PartitionConfig {
     public boolean unmodifiedSlipRateStdvs;
     public NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
 
+    // MFD section
+    public double totalRateM5;
+    public double bValue;
+    public double minMag;
+    public double maxMag;
+    public double mfdTransitionMag;
+    public double mfdUncertaintyPower;
+    // for subduction, this doubles as mfdUncertaintyWeightedConstraintWt which was only used as a flag > 0
+    public double mfdUncertaintyScalar;
+
+    public double magnitudeEqualityConstraintWt;
+    public double magnitudeInequalityConstraintWt;
+    public double mfdUncertaintyWeightedConstraintWt;
+
     public PartitionConfig(PartitionPredicate partition) {
         this.partition = partition;
     }

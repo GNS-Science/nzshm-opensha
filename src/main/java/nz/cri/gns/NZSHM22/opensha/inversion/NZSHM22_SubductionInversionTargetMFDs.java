@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -49,7 +50,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
     protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 
     public NZSHM22_SubductionInversionTargetMFDs(
-            NZSHM22_InversionFaultSystemRuptSet invRupSet,
+            FaultSystemRupSet invRupSet,
             double totalRateM5,
             double bValue,
             double mfdTransitionMag,

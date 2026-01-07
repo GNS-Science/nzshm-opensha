@@ -340,6 +340,7 @@ public class AbstractInversionConfiguration implements XMLSaveable {
             double mfdTransitionMag,
             List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints) {
 
+        // FIXME joint: do this first!
         if (mfdEqualityConstraintWt > 0.0 && mfdInequalityConstraintWt > 0.0) {
             // we have both MFD constraints, apply a transition mag from equality to
             // inequality

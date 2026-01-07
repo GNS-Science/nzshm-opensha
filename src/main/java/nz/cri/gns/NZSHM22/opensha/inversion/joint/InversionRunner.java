@@ -11,6 +11,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintGenerator;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -21,6 +22,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Pa
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
 import org.opensha.sha.faultSurface.FaultSection;
+import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
 public class InversionRunner {
 
@@ -111,10 +113,33 @@ public class InversionRunner {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
-        for (PartitionConfig constraintConfig : config.partitions) {
+        for (PartitionConfig partitionConfig : config.partitions) {
+
+            U3InversionTargetMFDs targetMfds;
+
+            // TODO join: how do we stick our target MFDs as modules into the rupture set? we probably need them for reporting
+            // how did UCERF3 do this for north and south california?
+
+            if (partitionConfig.partition == PartitionPredicate.PUYSEGUR
+                    || partitionConfig.partition == PartitionPredicate.HIKURANGI) {
+                targetMfds =
+                        new NZSHM22_SubductionInversionTargetMFDs(
+                                // TODO join: ruptureset might have to return partition-specific maxMag
+                                config.ruptureSet,
+                                partitionConfig.totalRateM5,
+                                partitionConfig.bValue,
+                                partitionConfig.mfdTransitionMag,
+                                partitionConfig.minMag,
+                                partitionConfig.mfdUncertaintyScalar,
+                                partitionConfig.mfdUncertaintyPower,
+                                partitionConfig.mfdUncertaintyScalar);
+            } else {
+  // TODO simplify crustal MFDs
+            }
+
             constraints.addAll(
                     JointConstraintGenerator.buildSharedConstraints(
-                            config.ruptureSet, constraintConfig));
+                            config.ruptureSet, partitionConfig));
         }
 
         constraints.addAll(generatePaleoConstraints());
