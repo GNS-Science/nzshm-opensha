@@ -46,8 +46,9 @@ public class InversionRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-        InversionRunner runner = new InversionRunner("NZSHM_config.json");
+        // InversionRunner runner = new InversionRunner("NZSHM_config.json");
+        InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
         FaultSystemSolution solution = runner.run();
-        solution.write(new File("/tmp/spikeInversionSolution.zip"));
+        solution.write(new File("/tmp/spikeSubductionInversionSolution.zip"));
     }
 }

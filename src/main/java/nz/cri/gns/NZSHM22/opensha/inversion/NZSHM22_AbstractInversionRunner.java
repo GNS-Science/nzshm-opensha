@@ -797,7 +797,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            System.exit(0);
+            // System.exit(0);
         }
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();

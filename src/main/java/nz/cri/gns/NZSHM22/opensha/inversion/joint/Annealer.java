@@ -56,8 +56,9 @@ public class Annealer {
             completionCriterias.add(TimeCompletionCriteria.getInSeconds(config.inversionSecs));
         if (!(config.energyChangeCompletionCriteria == null))
             completionCriterias.add(config.energyChangeCompletionCriteria);
-        if (!(config.iterationCompletionCriteria == null))
-            completionCriterias.add(config.iterationCompletionCriteria);
+        if (config.iterationCompletionCriteria != 0)
+            completionCriterias.add(
+                    new IterationCompletionCriteria(config.iterationCompletionCriteria));
 
         CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
@@ -75,7 +76,7 @@ public class Annealer {
         // criteria, we only allow
         // one criteria here. See https://github.com/GNS-Science/nzshm-opensha/issues/360
         CompletionCriteria subCompletionCriteria;
-        if (config.selectionIterations != null) {
+        if (config.selectionIterations != 0) {
             subCompletionCriteria = new IterationCompletionCriteria(config.selectionIterations);
         } else {
             subCompletionCriteria = TimeCompletionCriteria.getInSeconds(config.selectionInterval);
@@ -109,9 +110,9 @@ public class Annealer {
 
         if (config.repeatable) {
             Preconditions.checkState(
-                    config.iterationCompletionCriteria != null
+                    config.iterationCompletionCriteria != 0
                             || config.energyChangeCompletionCriteria != null);
-            Preconditions.checkState(config.selectionIterations != null);
+            Preconditions.checkState(config.selectionIterations != 0);
         }
 
         inversionInputGenerator.generateInputs(true);
@@ -144,7 +145,7 @@ public class Annealer {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            System.exit(0);
+            //  System.exit(0);
         }
 
         ThreadedSimulatedAnnealing tsa;

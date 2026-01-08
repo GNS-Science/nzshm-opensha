@@ -160,5 +160,6 @@ new rupset class that returns those values based on a partition.
   - How do we make this work with subduction faults? 
   - Do we limit this to crustal? 
   - Why is this in the paleo section?
-- Why do we hydrate a custom fault model in RuptureSetSetup? Are we using a fault model somewhere?
-- Do we not need to build `SlipAlongRuptureModel`? Do we always take what's in the rupture set?
+- Do we not need to set `SlipAlongRuptureModel`? Do we always take what's in the rupture set?
+- Annealing: NZSHM22 uses different parameters for crustal and subduction. I'm assuming we will want to use 
+  the same settings for all regimes for joint ruptures.

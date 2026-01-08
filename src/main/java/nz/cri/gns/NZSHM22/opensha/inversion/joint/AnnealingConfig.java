@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.EnergyChangeCompletionCriteria;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.IterationCompletionCriteria;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
@@ -12,7 +11,7 @@ public class AnnealingConfig {
 
     protected long inversionSecs = 60;
     protected long selectionInterval = 10;
-    protected Long selectionIterations = null;
+    protected long selectionIterations = 0;
 
     protected String logStates = null;
 
@@ -27,7 +26,7 @@ public class AnnealingConfig {
     protected CoolingScheduleType coolingSchedule = null;
 
     protected EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
-    protected IterationCompletionCriteria iterationCompletionCriteria = null;
+    protected long iterationCompletionCriteria;
 
     protected double[] variablePerturbationBasis;
     protected boolean excludeRupturesBelowMinMag = false;
@@ -105,8 +104,7 @@ public class AnnealingConfig {
      * @return
      */
     public AnnealingConfig setIterationCompletionCriteria(long minIterations) {
-        if (minIterations == 0) this.iterationCompletionCriteria = null;
-        else this.iterationCompletionCriteria = new IterationCompletionCriteria(minIterations);
+        this.iterationCompletionCriteria = minIterations;
         return this;
     }
 
