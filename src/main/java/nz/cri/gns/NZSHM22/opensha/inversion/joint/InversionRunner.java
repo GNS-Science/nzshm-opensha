@@ -34,7 +34,6 @@ public class InversionRunner {
         // generate constraints
         List<InversionConstraint> constraints = generateConstraints(config);
 
-        // FIXME: create joint inititalsolution and waterlevel
         InversionInputGenerator inputGenerator =
                 new BaseInversionInputGenerator(config.ruptureSet, constraints, null, null);
 

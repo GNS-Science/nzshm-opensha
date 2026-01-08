@@ -68,7 +68,14 @@ Constraints are encoded in
  - a vector d with a target for each row in the matrix A
 
 For different partitions (crustal, Hikurangi, Puysegur), constraints may be set up differently. For example, crustal slip 
-rate constraints have different parameters to subduction slip rate constraints. Each slip rate constraint is set up for 
+rate constraints have different parameters to subduction slip rate constraints. 
+
+## Joint Constraints
+
+
+
+
+Each slip rate constraint is set up for 
 a single fault section. This means that we can use the constraint parameters for the partition of that fault section. 
 Joint ruptures will have non-zero entries in crustal and subduction constraints.
 
