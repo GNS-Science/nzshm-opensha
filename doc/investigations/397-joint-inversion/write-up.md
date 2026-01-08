@@ -48,6 +48,18 @@ A number of modules need to be created before constraints are created.
 - SectSlipRates
   - potentially alternatives slip rates and stdevs as compared to data on sections
 
+# Water Level
+
+We have code to build a water level, but we never run it. The `minimumRuptureRateFraction` that is used to 
+set the water level is always 0.
+
+# Initial Solution
+
+Probably can't use `variablePerturbationBasis` as the initial solution as this relies on a single set of MFDs. This was
+only put in as an experimental option to help Chris R and was not used for NZSHM22.
+
+Should be trivial to load an initial solution from file. Is not used for NZSHM22 and will not be implemented as part of 
+this epic as it is not necessary to reproduce old results. 
 
 # Constraints
 
