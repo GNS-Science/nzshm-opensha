@@ -133,6 +133,13 @@ southern California.
 
 This model is currently implemented for MFD constraints for joint inversions.
 
+### Merging
+
+Instead of having separate MFD constraints for separate partitions, we can create MFDs separately and 
+then merge (add) them to create joint MFD constraints.
+
+This is the (unused) NZSHM22 implementation of MFD regions.
+
 ## Discussion
 
 While the fault section based model is more efficient because it results in fewer rows, the rupture-based approach is 
@@ -163,6 +170,6 @@ sectionId 3  | 4*0.5X             4X |     |4X|
 Note how each of the two constraints is encoded in 3 rows with their weight, modified by the fraction of the rupture 
 inside the partition.
 
-
 This approach would also allow us to treat subduction parts of ruptures differently for paleo rate constraints. We could
 have different weight, or even different paleo probabilities (if it makes sense to do so).
+
