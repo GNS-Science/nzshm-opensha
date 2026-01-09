@@ -1,15 +1,28 @@
 # Joint Constraints
 
-## NZSHM22 Implementation
+This document describes how inversion constraints are currently implemented, and how they could work for joint 
+inversion.
+
+## General terms
 
 Constraints are encoded in
 - a matrix A where each row is a single constraint and each column is a rupture.
 - a vector d with a target for each row in the matrix A
 
+Note that the word "constraint" does double lifting here. For example, an MFD constraint is encoded as several rows in
+the matrix.
+
+"Partition": for the purposes of this document, joint rupture sets can be split into three partitions: 
+CRUSTAL, HIKURANGI, and PUYSEGUR. Each fault section is part of exactly one partition. We might want to configure
+constraints differently for different partitions. A partition is similar to a region, but is based on attributes 
+rather than a polygon.
+
+## NZSHM22 Implementation
+
 ### Slip Rate Constraints
 
-Rows on A correspond to fault section. In each row, each rupture that has that particular fault section will be set to a 
-value based on the slip rate. 
+Rows on A correspond to a fault section each. In each row, each rupture that has that particular fault section will be 
+set to a value based on the slip rate. 
 
 The matrix values are based on the slip on the section in the rupture (based on `calcSlipOnSectionsForRup()`).
 The target is based on the section's slip rate.
@@ -68,10 +81,10 @@ These follow the two basic shapes (rows are MFD bins or fault sections).
 
 ## Joint Constraint Models
 
-We want to be able to set up constraints differently for different partitions (crustal, hikurangi, puysegur). For
+We want to be able to configure constraints differently for different partitions (crustal, hikurangi, puysegur). For
 example with different weights.
 
-The resulting encoded constraints must be identical to NZSHM22 if we only have fault sections from a single partition.
+The resulting encoded constraints must be identical to NZSHM22 if we only use fault sections from a single partition.
 
 ### Fault Section-Based
 
@@ -126,7 +139,7 @@ While the fault section based model is more efficient because it results in fewe
 more universal as it would work for every constraint. It might be valuable to be consistent in how we create joint
 constraints.
 
-This is what slip rate constraint example would look like:
+This is what the slip rate constraint example would look like:
 
 Example:
 - slip rate constraint with weight 2 for CRUSTAL partition
@@ -152,4 +165,4 @@ inside the partition.
 
 
 This approach would also allow us to treat subduction parts of ruptures differently for paleo rate constraints. We could
-a have different weight, or even different paleo probabilities (if it makes sense to do so).
+have different weight, or even different paleo probabilities (if it makes sense to do so).
