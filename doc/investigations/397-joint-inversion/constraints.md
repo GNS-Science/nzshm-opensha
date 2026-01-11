@@ -77,7 +77,8 @@ Other constraints used are
 - `RupRateMinimizationConstraint` (deprecated)
 - `U3MFDSubSectNuclInversionConstraint`
 
-These follow the two basic shapes (rows are MFD bins or fault sections).
+These follow the two basic shapes (rows are MFD bins or fault sections). Might have to look closer into this to see 
+if we need to do anything special.
 
 ## Joint Constraint Models
 
