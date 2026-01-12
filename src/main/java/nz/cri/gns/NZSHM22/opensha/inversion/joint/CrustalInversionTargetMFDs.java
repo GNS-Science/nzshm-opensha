@@ -21,13 +21,13 @@ import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SubSeismoOnFaultMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
-import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
 /**
@@ -70,7 +70,7 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         return mfdUncertaintyConstraints;
     }
 
-    public CrustalInversionTargetMFDs(InversionFaultSystemRupSet rupSet, PartitionConfig config) {
+    public CrustalInversionTargetMFDs(FaultSystemRupSet rupSet, PartitionConfig config) {
         init(rupSet, config);
     }
 
@@ -218,7 +218,7 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         }
     }
 
-    protected void init(InversionFaultSystemRupSet rupSet, PartitionConfig config) {
+    protected void init(FaultSystemRupSet rupSet, PartitionConfig config) {
 
         setParent(rupSet);
 
@@ -227,7 +227,10 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                         rupSet,
                         NewZealandRegions.NZ,
                         PartitionPredicate.CRUSTAL.getPredicate(rupSet),
-                        config.minMag);
+                        config.spatialSeisPDF,
+                        config.minMag,
+                        config.polygonBufferSize,
+                        config.polygonMinBufferSize);
 
         sansTvz = new RegionalTargetMFDs(regionalData, config);
 

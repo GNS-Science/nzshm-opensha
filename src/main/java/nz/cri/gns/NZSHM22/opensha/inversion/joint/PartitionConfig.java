@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -40,6 +41,12 @@ public class PartitionConfig {
     public double mfdUncertaintyWeight;
     public double mfdUncertaintyPower;
     public double mfdUncertaintyScalar;
+    // crustal only
+    public NZSHM22_SpatialSeisPDF spatialSeisPDF;
+    // crustal only
+    public double polygonBufferSize;
+    // crustal only
+    public double polygonMinBufferSize;
 
     public transient List<IncrementalMagFreqDist> mfdConstraints;
     public transient List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;

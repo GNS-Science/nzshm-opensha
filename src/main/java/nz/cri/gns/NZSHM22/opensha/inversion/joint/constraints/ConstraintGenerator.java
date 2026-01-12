@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
@@ -120,7 +121,11 @@ public class ConstraintGenerator {
                 partitionConfig.mfdUncertaintyWeightedConstraints =
                         targetMfds.getMfdUncertaintyConstraints();
             } else {
-                // TODO simplify crustal MFDs
+                CrustalInversionTargetMFDs targetMFDs =
+                        new CrustalInversionTargetMFDs(config.ruptureSet, partitionConfig);
+                partitionConfig.mfdConstraints = targetMFDs.getMFD_Constraints();
+                partitionConfig.mfdUncertaintyWeightedConstraints =
+                        targetMFDs.getMfdUncertaintyConstraints();
             }
 
             constraints.addAll(
