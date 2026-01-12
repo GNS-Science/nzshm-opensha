@@ -32,6 +32,8 @@ public class PartitionConfig {
     public double totalRateM5;
     public double bValue;
     public double minMag;
+    // only required for crustal
+    public double maxMag;
     public double mfdTransitionMag;
     public double mfdEqualityConstraintWt;
     public double mfdInequalityConstraintWt;
