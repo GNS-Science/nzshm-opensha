@@ -20,6 +20,24 @@ import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 
     /**
+     * Like Math.max(), but does its best to return a value. If one value is null or NaN, it will
+     * return the other value.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
+    public static double max(Double a, Double b) {
+        if (a == null || Double.isNaN(a)) {
+            return b;
+        }
+        if (b == null || Double.isNaN(b)) {
+            return a;
+        }
+        return Math.max(a, b);
+    }
+
+    /**
      * Override the UCERF3 implementation which does something special when ID==Parkfield
      *
      * @param fltSystRupSet
@@ -36,8 +54,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
         for (int s = 0; s < sectDataList.size(); s++) {
             double minSeismoMag = fltSystRupSet.getMinMagForSection(s);
             int parentId = sectDataList.get(s).getParentSectionId();
-            magForParSectMap.compute(
-                    parentId, (k, v) -> v == null ? minSeismoMag : Math.max(v, minSeismoMag));
+            magForParSectMap.compute(parentId, (k, v) -> max(v, minSeismoMag));
         }
 
         // now set the value for each section in the array, giving a value of
@@ -45,7 +62,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
         // if the parent section value falls below this
         for (int s = 0; s < sectDataList.size(); s++) {
             double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionId());
-            minMagForSect[s] = Math.max(minMag, systemWideMinSeismoMag);
+            minMagForSect[s] = max(minMag, systemWideMinSeismoMag);
         }
 
         return minMagForSect;
