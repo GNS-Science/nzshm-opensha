@@ -59,10 +59,6 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
             }
         }
 
-        if (SLIP_ONLY) {
-            return constraints;
-        }
-
         // MFD Subsection nucleation MFD constraint
         ArrayList<U3SectionMFD_constraint> MFDConstraints = null;
         if (config.getNucleationMFDConstraintWt() > 0.0) {

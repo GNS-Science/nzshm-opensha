@@ -27,7 +27,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
      * @param b
      * @return
      */
-    public static double max(Double a, Double b) {
+    public static double safeMax(Double a, Double b) {
         if (a == null || Double.isNaN(a)) {
             return b;
         }
@@ -54,7 +54,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
         for (int s = 0; s < sectDataList.size(); s++) {
             double minSeismoMag = fltSystRupSet.getMinMagForSection(s);
             int parentId = sectDataList.get(s).getParentSectionId();
-            magForParSectMap.compute(parentId, (k, v) -> max(v, minSeismoMag));
+            magForParSectMap.compute(parentId, (k, v) -> safeMax(v, minSeismoMag));
         }
 
         // now set the value for each section in the array, giving a value of
@@ -62,7 +62,7 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
         // if the parent section value falls below this
         for (int s = 0; s < sectDataList.size(); s++) {
             double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionId());
-            minMagForSect[s] = max(minMag, systemWideMinSeismoMag);
+            minMagForSect[s] = safeMax(minMag, systemWideMinSeismoMag);
         }
 
         return minMagForSect;

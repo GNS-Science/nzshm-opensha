@@ -107,7 +107,11 @@ public class Config {
                 doubleUps.isEmpty(), doubleUps.size() + " section id double-ups in region config");
         Preconditions.checkState(
                 seen.size() == ruptureSet.getNumSections(),
-                "Config constraint sections do not match rupture set sections");
+                "Config constraint sections ("
+                        + seen.size()
+                        + ") do not match rupture set sections ("
+                        + ruptureSet.getNumSections()
+                        + ")");
 
         for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
             Preconditions.checkState(
