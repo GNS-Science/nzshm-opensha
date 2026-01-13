@@ -45,9 +45,9 @@ public class InversionRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-         InversionRunner runner = new InversionRunner("NZSHM_config.json");
+        InversionRunner runner = new InversionRunner("NZSHM_config.json");
         //   InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
-        //InversionRunner runner = new InversionRunner("crustal-reproducible.json");
+        // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
         FaultSystemSolution solution = runner.run();
         solution.write(new File("/tmp/spikeCrustalInversionSolution.zip"));
     }
