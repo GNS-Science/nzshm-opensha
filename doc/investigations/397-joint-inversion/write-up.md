@@ -14,6 +14,9 @@ Problems:
 - how can we maintain flexibility if not every input is valid for each partition?
 - runzi has extra logic to map from its config to opensha config. Makes it tricky to translate
     - example: reweight
+- Consider turning double values into Double values so that we can write validation that enforces these to be set?
+- Helpful validation is required (if a is set, b needs to be set as well, etc)
+- Can we ensure that no stray properties appear in config files?
 
 # Logic Tree Branch
 
@@ -47,11 +50,6 @@ A number of modules need to be created before constraints are created.
   - depends on scaling relationship
 - SectSlipRates
   - potentially alternatives slip rates and stdevs as compared to data on sections
-
-# Water Level
-
-We have code to build a water level, but we never run it. The `minimumRuptureRateFraction` that is used to 
-set the water level is always 0.
 
 # Initial Solution
 
@@ -158,7 +156,18 @@ The advantage of this is that we do not need to modify and maintain existing wor
 `MFDInversionConstraint` relies on rupset to get min and max mag and fraction of rupture in region. We could create a
 new rupset class that returns those values based on a partition.  
 
+# Unused Features
 
+## Waterlevel
+
+This is guarded by `minimumRuptureRateFraction` in `AbstractInversionConfiguration` which is never set. Code is at 
+`BaseInversionInputGenerator.buildWaterLevel()`
+
+## Crustal Nucleation Constraints
+
+This is guarded by `nucleationMFDConstraintWt` in `AbstractInversionConfiguration`, which is never set. Code is at 
+the bottom of `NZSHM22_CrustalInversionInputGenerator.buildConstraints()`. Looking at how these are created,
+the code will probably fail as it requires a UCERF2 fault model.
 
 # Unresolved Questions
 

@@ -16,13 +16,25 @@
   "partitions": [
     {
       "partition": "CRUSTAL",
-      "slipRateConstraintWt_normalized": 0,
-      "slipRateConstraintWt_unnormalized": 0,
+
       "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
       "slipRateUncertaintyConstraintWt": 1.0,
-      "slipRateUncertaintyConstraintScalingFactor": 0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": true,
-      "deformationModel": "FAULT_MODEL"
+
+      "deformationModel": "FAULT_MODEL",
+      "totalRateM5": 3.4,
+      "bValue": 0.959,
+      "minMag": 6.799,
+      "maxMag": 10.0,
+      "maxMagType": "MANIPULATE_MFD",
+      "mfdTransitionMag": 7.85,
+      "mfdUncertaintyWeight": 1,
+      "mfdUncertaintyPower": 0.25,
+      "mfdUncertaintyScalar": 0.1,
+      "spatialSeisPDF": "FLOOR_ADDOPTIEEPASCOMB_CRU",
+      "polygonBufferSize": 12,
+      "polygonMinBufferSize": 0
     },
     {
       "partition": "HIKURANGI",
@@ -51,7 +63,16 @@
       "slipRateUncertaintyConstraintWt": 0.0,
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": false,
-      "deformationModel": "SBD_0_1_PUY_30_0PT7"
+      "deformationModel": "SBD_0_1_PUY_30_0PT7",
+      "totalRateM5": 4.6,
+      "bValue": 0.902,
+      "minMag": 7.0,
+      "mfdTransitionMag": 9.15,
+      "mfdEqualityConstraintWt": 10000,
+      "mfdInequalityConstraintWt": 0,
+      "mfdUncertaintyWeight": 0,
+      "mfdUncertaintyPower": 0.001,
+      "mfdUncertaintyScalar": 0.1
     }
   ],
   "scalingRelationshipName": "SIMPLE_SUBDUCTION",
