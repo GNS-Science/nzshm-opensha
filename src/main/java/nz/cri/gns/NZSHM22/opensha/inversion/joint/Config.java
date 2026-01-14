@@ -87,7 +87,7 @@ public class Config {
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
         Preconditions.checkState(!partitions.isEmpty(), "No partition configs specified");
 
-        if(ruptureSet.hasModule(LogicTreeBranch.class)){
+        if (ruptureSet.hasModule(LogicTreeBranch.class)) {
             LogicTreeBranch ltb = ruptureSet.getModule(LogicTreeBranch.class);
             ruptureSet.removeModule(ltb);
         }
