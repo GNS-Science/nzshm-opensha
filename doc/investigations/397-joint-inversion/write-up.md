@@ -1,5 +1,9 @@
 # Experimental Joint Inversion
 
+# Not yet implemented
+
+- exclusions (deprecated and new approach). careful: requires overriden rupset method `isRuptureBelowSectMinMag()`
+
 # Config
 
 Goals:
@@ -20,7 +24,8 @@ Problems:
 
 # Logic Tree Branch
 
-Currently, the code is not creating an LTB at all. 
+We are neither using nor creating an LTB. We had used an LTB like a config that could be pulled from a rupture set. The
+new config is significantly more flexible and makes config data flow a bit easier to trace.
 
 # `FaultSectionProperties`
 
