@@ -13,6 +13,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -85,6 +86,11 @@ public class Config {
         }
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
         Preconditions.checkState(!partitions.isEmpty(), "No partition configs specified");
+
+        if(ruptureSet.hasModule(LogicTreeBranch.class)){
+            LogicTreeBranch ltb = ruptureSet.getModule(LogicTreeBranch.class);
+            ruptureSet.removeModule(ltb);
+        }
 
         hydrateScalingRelationship();
 
