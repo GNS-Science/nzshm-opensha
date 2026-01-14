@@ -19,7 +19,8 @@
     "iterationCompletionCriteria": 100,
     "selectionIterations": 1,
     // TODO: do we need this for subduction as well?
-    "reweightTargetQuantity": "MAD"
+    "reweightTargetQuantity": "MAD",
+    "completionEnergy": 0
   },
   "partitions": [
     {

@@ -98,6 +98,8 @@ public class Config {
             config.init(ruptureSet);
         }
 
+        annealing.init();
+
         Set<Integer> seen = new HashSet<>();
         List<Integer> doubleUps = new ArrayList<>();
         for (PartitionConfig config : partitions) {

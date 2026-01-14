@@ -25,7 +25,8 @@ public class AnnealingConfig {
             NonnegativityConstraintType.LIMIT_ZERO_RATES;
     protected CoolingScheduleType coolingSchedule = null;
 
-    protected EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
+    protected transient EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
+    protected double completionEenergy;
     protected long iterationCompletionCriteria;
 
     protected double[] variablePerturbationBasis;
@@ -36,6 +37,11 @@ public class AnnealingConfig {
     protected boolean repeatable = false;
 
     protected transient InversionInputGenerator inversionInputGenerator;
+
+    public void init() {
+        energyChangeCompletionCriteria =
+                new EnergyChangeCompletionCriteria(0, completionEenergy, 1);
+    }
 
     /**
      * Enables logging of all inversion state values. To log at each step, set the following values:

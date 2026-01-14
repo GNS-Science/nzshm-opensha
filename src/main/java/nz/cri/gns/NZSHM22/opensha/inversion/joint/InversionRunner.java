@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
+import nz.cri.gns.NZSHM22.util.TraceTool;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -45,10 +46,13 @@ public class InversionRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-        InversionRunner runner = new InversionRunner("NZSHM_config.json");
+        // InversionRunner runner = new InversionRunner("NZSHM_config.json");
         //   InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
-        // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
+
+        InversionRunner runner = new InversionRunner("crustal-reproducible.json");
         FaultSystemSolution solution = runner.run();
-        solution.write(new File("/tmp/spikeCrustalInversionSolution.zip"));
+        solution.write(new File("/tmp/spikeInversionSolution.zip"));
+
+        System.out.println(TraceTool.getTraces());
     }
 }

@@ -5,6 +5,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import nz.cri.gns.NZSHM22.util.TraceTool;
 import org.opensha.commons.calc.FaultMomentCalc;
 import org.opensha.commons.eq.MagUtils;
 import org.opensha.commons.logicTree.LogicTreeBranch;
@@ -36,6 +37,7 @@ public class SimplifiedScalingRelationship implements RupSetScalingRelationship 
     @Override
     public double getAveSlip(
             double area, double length, double width, double origWidth, double aveRake) {
+        TraceTool.trace();
         double mag = magAreaRel.getMedianMag(area * 1e-6, aveRake);
         double moment = MagUtils.magToMoment(mag);
         return FaultMomentCalc.getSlip(area, moment);
@@ -44,6 +46,7 @@ public class SimplifiedScalingRelationship implements RupSetScalingRelationship 
     @Override
     public double getMag(
             double area, double length, double width, double origWidth, double aveRake) {
+        TraceTool.trace();
         return magAreaRel.getMedianMag(area * 1e-6, aveRake);
     }
 

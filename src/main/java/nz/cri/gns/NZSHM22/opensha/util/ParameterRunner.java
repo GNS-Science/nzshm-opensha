@@ -322,16 +322,21 @@ public class ParameterRunner {
     public void saveSolution(FaultSystemSolution solution) throws IOException {
         File solutionFile = new File(outputPath, "InversionSolution.zip");
         solution.write(solutionFile);
+        System.out.println("Saved solution as " + solutionFile);
     }
 
     public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_CoulombRuptureSetBuilder builder)
             throws IOException {
-        rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
+        File file = new File(outputPath, builder.getDescriptiveName() + ".zip");
+        rupSet.write(file);
+        System.out.println("Saved rupture set as " + file);
     }
 
     public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_SubductionRuptureSetBuilder builder)
             throws IOException {
-        rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
+        File file = new File(outputPath, builder.getDescriptiveName() + ".zip");
+        rupSet.write(file);
+        System.out.println("Saved rupture set as " + file);
     }
 
     /**
