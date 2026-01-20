@@ -9,9 +9,11 @@
   "annealing": {
     "inversionSecs": 60,
     "selectionInterval": 10,
-    "inversionNumSolutionAverages": 1,
-    "inversionThreadsPerSelector": 1,
+//    "inversionNumSolutionAverages": 4,
+//    "inversionAveragingIntervalSecs": 30,
+//    "inversionAveragingEnabled": true,
     "inversionAveragingEnabled": false,
+    "inversionThreadsPerSelector": 1,
     "perturbationFunction": "EXPONENTIAL_SCALE",
     "nonNegAlgorithm": "TRY_ZERO_RATES_OFTEN",
     "excludeRupturesBelowMinMag": false,
@@ -20,6 +22,7 @@
     "selectionIterations": 1,
     // TODO: do we need this for subduction as well?
     "reweightTargetQuantity": "MAD",
+    "coolingSchedule": "FAST_SA",
     "completionEnergy": 0
   },
   "partitions": [

@@ -27,6 +27,7 @@ public class AnnealingConfig {
 
     protected transient EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
     protected double completionEenergy;
+    protected double energyDelta;
     protected long iterationCompletionCriteria;
 
     protected double[] variablePerturbationBasis;
@@ -39,8 +40,10 @@ public class AnnealingConfig {
     protected transient InversionInputGenerator inversionInputGenerator;
 
     public void init() {
-        energyChangeCompletionCriteria =
-                new EnergyChangeCompletionCriteria(0, completionEenergy, 1);
+        if(energyDelta != 0) {
+            energyChangeCompletionCriteria =
+                    new EnergyChangeCompletionCriteria(0, completionEenergy, 1);
+        }
     }
 
     /**
