@@ -8,14 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.SimplifiedJointScalingRelationship;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
@@ -42,7 +42,7 @@ public class Config {
     public String extraPaleoRatesFile;
 
     // hydrated values
-    public transient RupSetScalingRelationship scalingRelationship;
+    public transient JointScalingRelationship scalingRelationship;
     public transient FaultSystemRupSet ruptureSet;
 
     public Config() {
@@ -63,20 +63,28 @@ public class Config {
     }
 
     protected void hydrateScalingRelationship() {
-        if (scalingRelationshipName == null) {
-            NZSHM22_LogicTreeBranch ltb = ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
-            scalingRelationship = ltb.getValue(NZSHM22_ScalingRelationshipNode.class);
-        } else if (scalingRelationshipName.equals("SIMPLE_CRUSTAL")) {
+        // not supporting arbitrary scaling relationships in order
+        // to make joint scaling relationships simpler
+        //        if (scalingRelationshipName == null) {
+        //            NZSHM22_LogicTreeBranch ltb =
+        // ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
+        //            scalingRelationship = ltb.getValue(NZSHM22_ScalingRelationshipNode.class);
+        //        } else
+
+        if (scalingRelationshipName.equals("SIMPLE_CRUSTAL")) {
             SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
             sr.setupCrustal(scalingCValDipSlip, scalingCValStrikeSlip);
-            scalingRelationship = sr;
+            scalingRelationship = new SimplifiedJointScalingRelationship(sr);
         } else if (scalingRelationshipName.equals("SIMPLE_SUBDUCTION")) {
             SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
             sr.setupSubduction(scalingCVal);
+            scalingRelationship = new SimplifiedJointScalingRelationship(sr);
+        } else if (scalingRelationshipName.equals("JOIN_ESTIMATE")) {
+            EstimatedJointScalingRelationship sr = new EstimatedJointScalingRelationship();
             scalingRelationship = sr;
         } else {
-            scalingRelationship =
-                    NZSHM22_ScalingRelationshipNode.createRelationShip(scalingRelationshipName);
+            throw new RuntimeException(
+                    "Unknown or unsupported scaling relationship " + scalingRelationshipName);
         }
     }
 

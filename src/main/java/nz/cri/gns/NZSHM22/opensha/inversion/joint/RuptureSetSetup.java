@@ -9,14 +9,34 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
+import org.opensha.sha.faultSurface.FaultSection;
 
 public class RuptureSetSetup {
 
     public static FaultSystemRupSet recalcMags(Config config) {
         if (config.scalingRelationship != null && config.recalcMags) {
-            return FaultSystemRupSet.buildFromExisting(config.ruptureSet)
-                    .forScalingRelationship(config.scalingRelationship)
-                    .build();
+            double[] mags = config.ruptureSet.getMagForAllRups();
+            double[] aveSlips = new double[mags.length];
+            IntPredicate isCrustal = PartitionPredicate.CRUSTAL.getPredicate(config.ruptureSet);
+            for (int rupture = 0; rupture < mags.length; rupture++) {
+                double aveRake = config.ruptureSet.getAveRakeForRup(rupture);
+                double crustalArea = 0;
+                double subductionArea = 0;
+                for (FaultSection section :
+                        config.ruptureSet.getFaultSectionDataForRupture(rupture)) {
+                    if (isCrustal.test(section.getSectionId())) {
+                        crustalArea += section.getArea(true);
+                    } else {
+                        subductionArea += section.getArea(true);
+                    }
+                }
+                mags[rupture] =
+                        config.scalingRelationship.getMag(crustalArea, subductionArea, aveRake);
+                aveSlips[rupture] =
+                        config.scalingRelationship.getAveSlip(crustalArea, subductionArea, aveRake);
+            }
+            config.ruptureSet.removeModuleInstances(AveSlipModule.class);
+            config.ruptureSet.addModule(AveSlipModule.precomputed(config.ruptureSet, aveSlips));
         }
         return config.ruptureSet;
     }
@@ -69,8 +89,6 @@ public class RuptureSetSetup {
             NZSHM22_FaultModels faultModel = ltb.getValue(NZSHM22_FaultModels.class);
             faultModel.setCustomModel(customFaultModel.getModelData());
         }
-
-        ruptureSet.addModule(AveSlipModule.forModel(ruptureSet, config.scalingRelationship));
 
         applyDeformationModel(config);
 

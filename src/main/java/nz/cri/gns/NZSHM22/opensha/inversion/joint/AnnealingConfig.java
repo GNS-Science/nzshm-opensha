@@ -40,7 +40,7 @@ public class AnnealingConfig {
     protected transient InversionInputGenerator inversionInputGenerator;
 
     public void init() {
-        if(energyDelta != 0) {
+        if (energyDelta != 0) {
             energyChangeCompletionCriteria =
                     new EnergyChangeCompletionCriteria(0, completionEenergy, 1);
         }

@@ -119,18 +119,6 @@ public class Annealer {
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
 
-        CompletionCriteria completionCriteria = createCompletionCriteria();
-
-        ProgressTrackingCompletionCriteria progress =
-                new ProgressTrackingCompletionCriteria(completionCriteria);
-
-        CompletionCriteria subCompletionCriteria = createSubCompletionCriteria();
-
-        if (config.repeatable) {
-            config.inversionThreadsPerSelector = 1;
-            config.inversionNumSolutionAverages = 1;
-        }
-
         if (LOG_MATRIX_ONLY) {
 
             Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
@@ -146,6 +134,18 @@ public class Annealer {
             }
 
             //  System.exit(0);
+        }
+
+        CompletionCriteria completionCriteria = createCompletionCriteria();
+
+        ProgressTrackingCompletionCriteria progress =
+                new ProgressTrackingCompletionCriteria(completionCriteria);
+
+        CompletionCriteria subCompletionCriteria = createSubCompletionCriteria();
+
+        if (config.repeatable) {
+            config.inversionThreadsPerSelector = 1;
+            config.inversionNumSolutionAverages = 1;
         }
 
         ThreadedSimulatedAnnealing tsa;

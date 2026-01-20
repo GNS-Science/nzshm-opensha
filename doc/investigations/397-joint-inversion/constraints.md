@@ -46,8 +46,8 @@ based on that bin's rate. The target is also based on the bin's rate.
         rup1 rup2 rup3 rup4    target
        ┌                  ┐     ┌ ┐
 bin 1  | X    X           |     |X|
-bin 2  |      X    X      |     |X|
-bin 3  | X              X |     |X|
+bin 2  |           X      |     |X|
+bin 3  |                X |     |X|
        └                  ┘     └ ┘
 ```
 
