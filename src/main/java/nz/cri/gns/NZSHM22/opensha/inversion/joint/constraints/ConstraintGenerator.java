@@ -9,15 +9,14 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.*;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.LaplacianSmoothingInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoProbabilityModel;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.PaleoRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.UncertainDataConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class ConstraintGenerator {
@@ -92,6 +91,18 @@ public class ConstraintGenerator {
         return results;
     }
 
+    public static void storeTargetMFDs(
+            FaultSystemRupSet ruptureSet,
+            PartitionPredicate partition,
+            InversionTargetMFDs targetMFDs) {
+        PartitionMfds mfdsModule = ruptureSet.getModule(PartitionMfds.class);
+        if (mfdsModule == null) {
+            mfdsModule = new PartitionMfds();
+            ruptureSet.addModule(mfdsModule);
+        }
+        mfdsModule.add(partition, targetMFDs);
+    }
+
     public static List<InversionConstraint> generateConstraints(Config config)
             throws FileNotFoundException {
 
@@ -99,12 +110,8 @@ public class ConstraintGenerator {
 
         for (PartitionConfig partitionConfig : config.partitions) {
 
-            // TODO join: how do we stick our target MFDs as modules into the rupture set? we
-            // probably need them for reporting
-            // how did UCERF3 do this for north and south california?
-
             if (partitionConfig.partition.isSubduction()) {
-                NZSHM22_SubductionInversionTargetMFDs targetMfds =
+                NZSHM22_SubductionInversionTargetMFDs targetMFDs =
                         new NZSHM22_SubductionInversionTargetMFDs(
                                 // TODO join: ruptureset might have to return partition-specific
                                 // maxMag
@@ -117,15 +124,20 @@ public class ConstraintGenerator {
                                 partitionConfig.mfdUncertaintyPower,
                                 partitionConfig.mfdUncertaintyScalar);
 
-                partitionConfig.mfdConstraints = targetMfds.getMfdEqIneqConstraints();
+                partitionConfig.mfdConstraints = targetMFDs.getMfdEqIneqConstraints();
                 partitionConfig.mfdUncertaintyWeightedConstraints =
-                        targetMfds.getMfdUncertaintyConstraints();
+                        targetMFDs.getMfdUncertaintyConstraints();
+
+                storeTargetMFDs(config.ruptureSet, partitionConfig.partition, targetMFDs);
+
             } else {
                 CrustalInversionTargetMFDs targetMFDs =
                         new CrustalInversionTargetMFDs(config.ruptureSet, partitionConfig);
                 partitionConfig.mfdConstraints = targetMFDs.getMFD_Constraints();
                 partitionConfig.mfdUncertaintyWeightedConstraints =
                         targetMFDs.getMfdUncertaintyConstraints();
+
+                storeTargetMFDs(config.ruptureSet, partitionConfig.partition, targetMFDs);
             }
 
             constraints.addAll(
