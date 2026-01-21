@@ -72,6 +72,7 @@ public class RuptureSetSetup {
 
     /**
      * Sets up the various required modules of the rupture set
+     *
      * @param config
      * @throws IOException
      */
