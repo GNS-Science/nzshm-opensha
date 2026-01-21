@@ -75,11 +75,7 @@
       "mfdUncertaintyScalar": 0.1
     }
   ],
-  "scalingRelationshipName": "SIMPLE_SUBDUCTION",
-  //"scalingRelationshipName": "SIMPLE_CRUSTAL",
-  "scalingCValDipSlip": 4.2,
-  "scalingCValStrikeSlip": 4.2,
-  "scalingCVal": 4.0,
+  "scalingRelationshipName": "JOIN_ESTIMATE",
   "recalcMags" : true,
 
   "sansSlipRateFactor" : 0.9,

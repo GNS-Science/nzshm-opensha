@@ -13,7 +13,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class RuptureSetSetup {
 
-    public static FaultSystemRupSet recalcMags(Config config) {
+    public static void applyScalingRelationship(Config config) {
         if (config.scalingRelationship != null && config.recalcMags) {
             double[] mags = config.ruptureSet.getMagForAllRups();
             double[] aveSlips = new double[mags.length];
@@ -38,7 +38,6 @@ public class RuptureSetSetup {
             config.ruptureSet.removeModuleInstances(AveSlipModule.class);
             config.ruptureSet.addModule(AveSlipModule.precomputed(config.ruptureSet, aveSlips));
         }
-        return config.ruptureSet;
     }
 
     protected static void applyDeformationModel(Config config) {
@@ -71,16 +70,18 @@ public class RuptureSetSetup {
                 SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
     }
 
+    /**
+     * Sets up the various required modules of the rupture set
+     * @param config
+     * @throws IOException
+     */
     public static void setup(Config config) throws IOException {
 
-        config.ruptureSet = recalcMags(config);
-
-        // shortcut
         FaultSystemRupSet ruptureSet = config.ruptureSet;
-
         ruptureSet.removeModuleInstances(FaultGridAssociations.class);
         ruptureSet.removeModuleInstances(SectSlipRates.class);
-        ruptureSet.removeModuleInstances(AveSlipModule.class);
+
+        applyScalingRelationship(config);
 
         // TODO: do we actually need a fault model? does this make sense for joint ruptures?
         CustomFaultModel customFaultModel = ruptureSet.getModule(CustomFaultModel.class);
