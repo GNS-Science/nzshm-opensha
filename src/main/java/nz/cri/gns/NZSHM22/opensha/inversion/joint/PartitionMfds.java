@@ -1,5 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
+import static org.opensha.commons.util.modules.helpers.FileBackedModule.getInputStream;
+import static org.opensha.commons.util.modules.helpers.FileBackedModule.initEntry;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,10 +10,12 @@ import java.util.stream.Collectors;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ArchivableModule;
-import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 
+/** Module that can store multiple InversionTargetMFDs modules in one archive. */
 public class PartitionMfds implements ArchivableModule {
+
+    public static final String FILE_NAME = "NZSHM_MFD_index.csv";
 
     public Map<PartitionPredicate, InversionTargetMFDs> mfds;
 
@@ -46,7 +51,7 @@ public class PartitionMfds implements ArchivableModule {
                 mfds.keySet().stream()
                         .map(PartitionPredicate::name)
                         .collect(Collectors.joining(","));
-        FileBackedModule.initEntry(output, entryPrefix, "NZSHM_MFD_index.csv");
+        initEntry(output, entryPrefix, FILE_NAME);
         OutputStreamWriter out = new OutputStreamWriter(output.getOutputStream());
         out.write(index);
         out.flush();
@@ -59,5 +64,24 @@ public class PartitionMfds implements ArchivableModule {
     }
 
     @Override
-    public void initFromArchive(ArchiveInput input, String entryPrefix) throws IOException {}
+    public void initFromArchive(ArchiveInput input, String entryPrefix) throws IOException {
+        BufferedInputStream zin = getInputStream(input, entryPrefix, FILE_NAME);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(zin));
+        String[] partitionNames = reader.readLine().split(",");
+        zin.close();
+
+        for (String partitionName : partitionNames) {
+            PartitionPredicate partition = PartitionPredicate.valueOf(partitionName);
+            InversionTargetMFDs mfds = new PrecomputedTargetMFDs();
+            mfds.initFromArchive(input, entryPrefix + partitionName + "_");
+            this.mfds.put(partition, mfds);
+        }
+    }
+
+    // we need to have access to the default constructor
+    static class PrecomputedTargetMFDs extends InversionTargetMFDs.Precomputed {
+        public PrecomputedTargetMFDs() {
+            super();
+        }
+    }
 }
