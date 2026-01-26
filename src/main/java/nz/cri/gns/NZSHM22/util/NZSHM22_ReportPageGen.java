@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
 
 public class NZSHM22_ReportPageGen {
 
@@ -174,6 +175,16 @@ public class NZSHM22_ReportPageGen {
         return rupSet;
     }
 
+    public FaultSystemSolution setUpJointMFDs(FaultSystemSolution solution) throws IOException {
+
+        // wrap ruptureset so that it can use partition regions
+        ReportFaultSystemRuptSet rupset = new ReportFaultSystemRuptSet(solution.getRupSet());
+        solution = FaultSystemSolution.load(new File(solutionPath), rupset);
+        PartitionMfds mfds = solution.getRupSet().getModule(PartitionMfds.class);
+        rupset.addModule(mfds.synthesize(rupSet));
+return solution;
+    }
+
     public void generatePage() throws IOException {
 
         int available = Runtime.getRuntime().availableProcessors();
@@ -188,6 +199,8 @@ public class NZSHM22_ReportPageGen {
                 this.solution != null
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
+
+        solution = setUpJointMFDs(solution);
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);

@@ -1,16 +1,25 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
+import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_NUM_BINS;
 import static org.opensha.commons.util.modules.helpers.FileBackedModule.getInputStream;
 import static org.opensha.commons.util.modules.helpers.FileBackedModule.initEntry;
+import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ArchivableModule;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import org.opensha.sha.magdist.SummedMagFreqDist;
 
 /** Module that can store multiple InversionTargetMFDs modules in one archive. */
 public class PartitionMfds implements ArchivableModule {
@@ -42,7 +51,37 @@ public class PartitionMfds implements ArchivableModule {
 
     @Override
     public String getName() {
-        return "";
+        return "PartitionMfds";
+    }
+
+    public InversionTargetMFDs synthesize(FaultSystemRupSet rupSet) {
+        SummedMagFreqDist totalRegionalMFD =
+                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        SummedMagFreqDist onFaultSupraSeisMFD =
+                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        SummedMagFreqDist onFaultSubSeisMFD =
+                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        SummedMagFreqDist trulyOffFaultMFD =
+                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
+        //         SubSeismoOnFaultMFDs subSeisOnFaultMFDs= null;
+        //         ImmutableList<? extends IncrementalMagFreqDist> supraSeisOnFaultNuclMFDs= null;
+
+        for (PartitionPredicate partition : mfds.keySet()) {
+            NewZealandRegions.PartitionRegion region =
+                    new NewZealandRegions.PartitionRegion(partition);
+            InversionTargetMFDs partitionMFDs = mfds.get(partition);
+            totalRegionalMFD.addIncrementalMagFreqDist(partitionMFDs.getTotalRegionalMFD());
+            onFaultSupraSeisMFD.addIncrementalMagFreqDist(
+                    partitionMFDs.getTotalOnFaultSupraSeisMFD());
+            //onFaultSubSeisMFD.addIncrementalMagFreqDist(partitionMFDs.getTotalOnFaultSubSeisMFD());
+            //trulyOffFaultMFD.addIncrementalMagFreqDist(partitionMFDs.getTrulyOffFaultMFD());
+            for (IncrementalMagFreqDist constraint : partitionMFDs.getMFD_Constraints()) {
+                constraint.setRegion(region);
+                mfdConstraints.add(constraint);
+            }
+        }
+        return new InversionTargetMFDs.Precomputed(rupSet,totalRegionalMFD, onFaultSupraSeisMFD, onFaultSubSeisMFD, trulyOffFaultMFD, mfdConstraints, null, null);
     }
 
     @Override
