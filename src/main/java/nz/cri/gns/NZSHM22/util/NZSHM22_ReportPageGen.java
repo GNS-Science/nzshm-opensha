@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.*;
 
 public class NZSHM22_ReportPageGen {
 
@@ -174,6 +177,54 @@ public class NZSHM22_ReportPageGen {
         return rupSet;
     }
 
+    /**
+     * Print stats on the types of joint ruptures
+     *
+     * @param solution
+     */
+    public static void jointStats(FaultSystemSolution solution) {
+        if (!solution.getRupSet().hasModule(PartitionMfds.class)) {
+            return;
+        }
+        Map<String, Integer> stats = new HashMap<>();
+        IntPredicate crustal = PartitionPredicate.CRUSTAL.getPredicate(solution.getRupSet());
+        IntPredicate hikurangi = PartitionPredicate.HIKURANGI.getPredicate(solution.getRupSet());
+        IntPredicate puysegur = PartitionPredicate.PUYSEGUR.getPredicate(solution.getRupSet());
+        for (List<Integer> sections : solution.getRupSet().getSectionIndicesForAllRups()) {
+            if (sections.stream().mapToInt(s -> s).allMatch(crustal)) {
+                stats.compute("CRUSTAL", (k, v) -> v == null ? 1 : v + 1);
+                continue;
+            }
+            if (sections.stream().mapToInt(s -> s).allMatch(hikurangi)) {
+                stats.compute("HIKURANGI", (k, v) -> v == null ? 1 : v + 1);
+                continue;
+            }
+            if (sections.stream().mapToInt(s -> s).allMatch(puysegur)) {
+                stats.compute("PUYSEGUR", (k, v) -> v == null ? 1 : v + 1);
+                continue;
+            }
+            stats.compute("JOINT", (k, v) -> v == null ? 1 : v + 1);
+        }
+        for (String key : stats.keySet()) {
+            System.out.println(key + " : " + stats.get(key));
+        }
+    }
+
+    /** wrap ruptureset so that it can use partition regions */
+    public FaultSystemSolution setUpJointMFDs(FaultSystemSolution solution) throws IOException {
+        if (!solution.getRupSet().hasModule(PartitionMfds.class)) {
+            return solution;
+        }
+
+        ReportFaultSystemRuptSet rupset = new ReportFaultSystemRuptSet(solution.getRupSet());
+        solution = FaultSystemSolution.load(new File(solutionPath), rupset);
+        PartitionMfds mfds = solution.getRupSet().getModule(PartitionMfds.class);
+        rupset.addModule(mfds.synthesize(rupSet));
+
+        jointStats(solution);
+        return solution;
+    }
+
     public void generatePage() throws IOException {
 
         int available = Runtime.getRuntime().availableProcessors();
@@ -188,6 +239,8 @@ public class NZSHM22_ReportPageGen {
                 this.solution != null
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
+
+        solution = setUpJointMFDs(solution);
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
