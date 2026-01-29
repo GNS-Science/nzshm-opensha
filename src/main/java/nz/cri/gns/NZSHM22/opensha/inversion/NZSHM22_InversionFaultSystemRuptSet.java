@@ -222,18 +222,9 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
         applyDeformationModel(branch);
 
         FaultRegime regime = branch.getValue(FaultRegime.class);
-        if (regime == FaultRegime.SUBDUCTION) {
-            addAvailableModule(
-                    new Callable<NZSHM22_SubductionInversionTargetMFDs>() {
-                        @Override
-                        public NZSHM22_SubductionInversionTargetMFDs call() throws Exception {
-                            return new NZSHM22_SubductionInversionTargetMFDs(
-                                    NZSHM22_InversionFaultSystemRuptSet.this);
-                        }
-                    },
-                    NZSHM22_SubductionInversionTargetMFDs.class);
 
-        } else if (regime == FaultRegime.CRUSTAL) {
+        if (regime == FaultRegime.CRUSTAL) {
+            // TODO joint: faultpolymgr
             addModule(faultPolyMgr(this, branch));
             if (branch.hasValue(NZSHM22_FaultModels.class)) {
                 addModule(new TvzDomainSections(this));
