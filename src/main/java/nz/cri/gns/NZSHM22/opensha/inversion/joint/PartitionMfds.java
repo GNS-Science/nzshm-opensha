@@ -54,15 +54,22 @@ public class PartitionMfds implements ArchivableModule {
         return "PartitionMfds";
     }
 
+    public static SummedMagFreqDist safeAdd(SummedMagFreqDist base, IncrementalMagFreqDist added) {
+        if (added == null) {
+            return base;
+        }
+        if (base == null) {
+            base = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        }
+        base.addIncrementalMagFreqDist(added);
+        return base;
+    }
+
     public InversionTargetMFDs synthesize(FaultSystemRupSet rupSet) {
-        SummedMagFreqDist totalRegionalMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        SummedMagFreqDist onFaultSupraSeisMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        SummedMagFreqDist onFaultSubSeisMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        SummedMagFreqDist trulyOffFaultMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        SummedMagFreqDist totalRegionalMFD = null;
+        SummedMagFreqDist onFaultSupraSeisMFD = null;
+        SummedMagFreqDist onFaultSubSeisMFD = null;
+        SummedMagFreqDist trulyOffFaultMFD = null;
         List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
         //         SubSeismoOnFaultMFDs subSeisOnFaultMFDs= null;
         //         ImmutableList<? extends IncrementalMagFreqDist> supraSeisOnFaultNuclMFDs= null;
@@ -71,17 +78,26 @@ public class PartitionMfds implements ArchivableModule {
             NewZealandRegions.PartitionRegion region =
                     new NewZealandRegions.PartitionRegion(partition);
             InversionTargetMFDs partitionMFDs = mfds.get(partition);
-            totalRegionalMFD.addIncrementalMagFreqDist(partitionMFDs.getTotalRegionalMFD());
-            onFaultSupraSeisMFD.addIncrementalMagFreqDist(
-                    partitionMFDs.getTotalOnFaultSupraSeisMFD());
-            //onFaultSubSeisMFD.addIncrementalMagFreqDist(partitionMFDs.getTotalOnFaultSubSeisMFD());
-            //trulyOffFaultMFD.addIncrementalMagFreqDist(partitionMFDs.getTrulyOffFaultMFD());
+            totalRegionalMFD = safeAdd(totalRegionalMFD, partitionMFDs.getTotalRegionalMFD());
+            onFaultSupraSeisMFD =
+                    safeAdd(onFaultSupraSeisMFD, partitionMFDs.getTotalOnFaultSupraSeisMFD());
+            onFaultSubSeisMFD =
+                    safeAdd(onFaultSubSeisMFD, partitionMFDs.getTotalOnFaultSubSeisMFD());
+            trulyOffFaultMFD = safeAdd(trulyOffFaultMFD, partitionMFDs.getTrulyOffFaultMFD());
             for (IncrementalMagFreqDist constraint : partitionMFDs.getMFD_Constraints()) {
                 constraint.setRegion(region);
                 mfdConstraints.add(constraint);
             }
         }
-        return new InversionTargetMFDs.Precomputed(rupSet,totalRegionalMFD, onFaultSupraSeisMFD, onFaultSubSeisMFD, trulyOffFaultMFD, mfdConstraints, null, null);
+        return new InversionTargetMFDs.Precomputed(
+                rupSet,
+                totalRegionalMFD,
+                onFaultSupraSeisMFD,
+                onFaultSubSeisMFD,
+                trulyOffFaultMFD,
+                mfdConstraints,
+                null,
+                null);
     }
 
     @Override
