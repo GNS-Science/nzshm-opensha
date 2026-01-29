@@ -10,6 +10,7 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
 import org.junit.Test;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
@@ -70,5 +71,34 @@ public class NZSHM22_FaultSystemRupSetCalcTest {
         for (int index = 0; index < bin725; index++) {
             assertTrue(actual.get(0).getY(index) > 0);
         }
+    }
+
+    @Test
+    public void testComputeMinSeismoMagForSections() {
+        FaultSection sectionA = mock(FaultSection.class);
+        FaultSection sectionB = mock(FaultSection.class);
+        FaultSection sectionC = mock(FaultSection.class);
+        when(sectionA.getParentSectionId()).thenReturn(0);
+        when(sectionB.getParentSectionId()).thenReturn(0);
+        when(sectionC.getParentSectionId()).thenReturn(1);
+        List faultSections = List.of(sectionA, sectionB, sectionC);
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getFaultSectionDataList()).thenReturn(faultSections);
+        when(rupSet.getMinMagForSection(0)).thenReturn(0.15);
+        when(rupSet.getMinMagForSection(1)).thenReturn(0.2);
+        when(rupSet.getMinMagForSection(2)).thenReturn(0.05);
+
+        double systemWideMinSeismoMag = 0.1;
+
+        double[] actual =
+                NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(
+                        rupSet, systemWideMinSeismoMag);
+
+        // the parent section of 0 and 1 has a max minseismomag of 0.2
+        assertEquals(0.2, actual[0], 0.0001);
+        assertEquals(0.2, actual[1], 0.0001);
+        // the parent section of 2 has a minmseismomag of 0.05, so her the system wide min value
+        // takes effect
+        assertEquals(systemWideMinSeismoMag, actual[2], 0.0001);
     }
 }

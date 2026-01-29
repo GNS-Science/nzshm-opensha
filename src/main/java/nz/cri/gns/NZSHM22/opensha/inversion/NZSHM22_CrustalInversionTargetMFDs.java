@@ -48,8 +48,6 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
  */
 public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
-    static boolean MFD_STATS = true; // print some curves for analytics
-
     public static final double NZ_MIN_MAG = 5.05; // used instead of UCERF3 value 0.05
     public static final int NZ_NUM_BINS = 40; // used instead of UCERF3 value 90
 
@@ -58,27 +56,6 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
     protected List<IncrementalMagFreqDist> mfdConstraints;
     protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints;
-
-    protected List<IncrementalMagFreqDist> reportingMFDConstraintComponents;
-    protected List<IncrementalMagFreqDist> reportingMFDConstraintComponentsV2;
-
-    /**
-     * For NZ reporting only
-     *
-     * @return
-     */
-    public List<IncrementalMagFreqDist> getReportingMFDConstraintComponents() {
-        return reportingMFDConstraintComponents;
-    }
-
-    /**
-     * For NZ reporting. Version 2, with all the regional and total MFDs.
-     *
-     * @return
-     */
-    public List<IncrementalMagFreqDist> getReportingMFDConstraintComponentsV2() {
-        return reportingMFDConstraintComponentsV2;
-    }
 
     @Override
     public List<IncrementalMagFreqDist> getMFD_Constraints() {
@@ -446,32 +423,6 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         trulyOffFaultMFD.setName("trulyOffFaultMFD.all");
         totalSubSeismoOnFaultMFD.setName("totalSubSeismoOnFaultMFD.all");
         targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD.all");
-
-        //	Reporting MFD components
-        this.reportingMFDConstraintComponents = new ArrayList<>();
-        this.reportingMFDConstraintComponents.add(trulyOffFaultMFD);
-        this.reportingMFDConstraintComponents.add(sansTvz.targetOnFaultSupraSeisMFDs);
-        if (!tvz.isEmpty) {
-            this.reportingMFDConstraintComponents.add(tvz.targetOnFaultSupraSeisMFDs);
-        }
-        this.reportingMFDConstraintComponents.add(totalSubSeismoOnFaultMFD);
-
-        //	Reporting MFD components V2
-        this.reportingMFDConstraintComponentsV2 = new ArrayList<>();
-        this.reportingMFDConstraintComponentsV2.add(totalTargetGR);
-        this.reportingMFDConstraintComponentsV2.add(trulyOffFaultMFD);
-        this.reportingMFDConstraintComponentsV2.add(targetOnFaultSupraSeisMFD);
-        this.reportingMFDConstraintComponentsV2.add(totalSubSeismoOnFaultMFD);
-        if (!tvz.isEmpty) {
-            this.reportingMFDConstraintComponentsV2.add(tvz.totalTargetGR);
-            this.reportingMFDConstraintComponentsV2.add(sansTvz.totalTargetGR);
-            this.reportingMFDConstraintComponentsV2.add(tvz.trulyOffFaultMFD);
-            this.reportingMFDConstraintComponentsV2.add(sansTvz.trulyOffFaultMFD);
-            this.reportingMFDConstraintComponentsV2.add(tvz.targetOnFaultSupraSeisMFDs);
-            this.reportingMFDConstraintComponentsV2.add(sansTvz.targetOnFaultSupraSeisMFDs);
-            this.reportingMFDConstraintComponentsV2.add(tvz.totalSubSeismoOnFaultMFD);
-            this.reportingMFDConstraintComponentsV2.add(sansTvz.totalSubSeismoOnFaultMFD);
-        }
 
         JupyterLogger.logger().addMarkDown("## Total MFDs");
         CSVCell csvCell =

@@ -20,6 +20,24 @@ import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
 
     /**
+     * Like Math.max(), but does its best to return a value. If one value is null or NaN, it will
+     * return the other value.
+     *
+     * @param a
+     * @param b
+     * @return
+     */
+    public static double safeMax(Double a, Double b) {
+        if (a == null || Double.isNaN(a)) {
+            return b;
+        }
+        if (b == null || Double.isNaN(b)) {
+            return a;
+        }
+        return Math.max(a, b);
+    }
+
+    /**
      * Override the UCERF3 implementation which does something special when ID==Parkfield
      *
      * @param fltSystRupSet
@@ -28,66 +46,26 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
      */
     public static double[] computeMinSeismoMagForSections(
             FaultSystemRupSet fltSystRupSet, double systemWideMinSeismoMag) {
-        double[] minMagForSect = new double[fltSystRupSet.getNumSections()];
-        String prevParSectName = "junk_imp0ss!ble_fault_name_1067487@#";
         List<? extends FaultSection> sectDataList = fltSystRupSet.getFaultSectionDataList();
+        double[] minMagForSect = new double[sectDataList.size()];
 
-        // make map between parent section name and maximum magnitude (magForParSectMap)
-        HashMap<String, Double> magForParSectMap = new HashMap<String, Double>();
-        double maxMinSeismoMag = 0;
-        double minMinSeismoMag = 0; // this is for testing
+        // make map between parent section name and maximum minimum magnitude
+        HashMap<Integer, Double> magForParSectMap = new HashMap<>();
         for (int s = 0; s < sectDataList.size(); s++) {
-            String parSectName = sectDataList.get(s).getParentSectionName();
             double minSeismoMag = fltSystRupSet.getMinMagForSection(s);
-            if (!parSectName.equals(prevParSectName)) { // it's a new parent section
-                // set the previous result
-                if (!prevParSectName.equals("junk")) {
-                    magForParSectMap.put(prevParSectName, maxMinSeismoMag);
-                }
-                // reset maxMinSeismoMag & prevParSectName
-                maxMinSeismoMag = minSeismoMag;
-                minMinSeismoMag = minSeismoMag;
-                prevParSectName = parSectName;
-
-            } else {
-                if (maxMinSeismoMag < minSeismoMag) maxMinSeismoMag = minSeismoMag;
-                if (minMinSeismoMag > minSeismoMag) minMinSeismoMag = minSeismoMag;
-            }
+            int parentId = sectDataList.get(s).getParentSectionId();
+            magForParSectMap.compute(parentId, (k, v) -> safeMax(v, minSeismoMag));
         }
-        // do the last one:
-        magForParSectMap.put(prevParSectName, maxMinSeismoMag);
-
-        // for(String parName:magForParSectMap.keySet())
-        // System.out.println(parName+"\t"+magForParSectMap.get(parName));
 
         // now set the value for each section in the array, giving a value of
         // systemWideMinMinSeismoMag
         // if the parent section value falls below this
         for (int s = 0; s < sectDataList.size(); s++) {
-            double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionName());
-            if (minMag > systemWideMinSeismoMag) minMagForSect[s] = minMag;
-            else minMagForSect[s] = systemWideMinSeismoMag;
+            double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionId());
+            minMagForSect[s] = safeMax(minMag, systemWideMinSeismoMag);
         }
 
         return minMagForSect;
-
-        //		// test result:
-        //		try {
-        //			FileWriter fw = new FileWriter("TestHereItIs");
-        //			for(int s=0; s< sectDataList.size();s++) {
-        //				String sectName = sectDataList.get(s).getSectionName();
-        //				double tempMag = magForParSectMap.get(sectDataList.get(s).getParentSectionName());
-        //				double origSlipRate = sectDataList.get(s).getOrigAveSlipRate();
-        //				double aseisSlipFactor = sectDataList.get(s).getAseismicSlipFactor();
-        //
-        //	fw.write(sectName+"\t"+getMinMagForSection(s)+"\t"+tempMag+"\t"+minMagForSect[s]+"\t"+origSlipRate+"\t"+aseisSlipFactor+"\n");
-        //			}
-        //			fw.close ();
-        //		}
-        //		catch (IOException e) {
-        //			System.out.println ("IO exception = " + e );
-        //		}
-
     }
 
     /**

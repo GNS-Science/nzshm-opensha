@@ -1,5 +1,5 @@
 ;; NZSHM22 Crustal Rupture Set
-;; http://simple-toshi-ui.s3-website-ap-southeast-2.amazonaws.com/FileDetail/RmlsZToxMDAwODc=
+;; https://weka.gns.cri.nz/File/RmlsZToxMDAwODc=
 
 max_sections	2000
 fault_model	CFM_1_0A_DOM_SANSTVZ
