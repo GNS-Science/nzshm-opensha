@@ -7,23 +7,46 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
+import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.SimplifiedJointScalingRelationship;
+import org.opensha.commons.logicTree.LogicTreeBranch;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
 public class Config {
 
-    protected String ruptureSetPath;
-    protected AnnealingConfig annealing;
-    protected List<ConstraintConfig> constraints;
+    public String ruptureSetPath;
+    public AnnealingConfig annealing;
+    public List<PartitionConfig> partitions;
 
-    // TODO: should this be on the runner instead since it's not a config?
-    protected transient NZSHM22_InversionFaultSystemRuptSet ruptureSet;
+    public String scalingRelationshipName = "SIMPLE_CRUSTAL";
+    public double scalingCValDipSlip = 4.2;
+    public double scalingCValStrikeSlip = 4.2;
+    public double scalingCVal;
+    public boolean recalcMags = false;
+
+    // TVZ slip
+    public double sansSlipRateFactor = -1;
+    public double tvzSlipRateFactor = -1;
+
+    // paleo
+    public double paleoRateConstraintWt = 0;
+    public double paleoParentRateSmoothnessConstraintWeight = 0;
+    public NZSHM22_PaleoRates paleoRates;
+    public NZSHM22_PaleoProbabilityModel paleoProbabilityModel;
+    public String extraPaleoRatesFile;
+
+    // hydrated values
+    public transient JointScalingRelationship scalingRelationship;
+    public transient FaultSystemRupSet ruptureSet;
 
     public Config() {
-        constraints = new ArrayList<>();
+        partitions = new ArrayList<>();
         annealing = new AnnealingConfig();
     }
 
@@ -39,37 +62,55 @@ public class Config {
         return annealing;
     }
 
-    public ConstraintConfig createCrustalConfig() {
-        ConstraintConfig crustalConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
-        constraints.add(crustalConfig);
-        return crustalConfig;
+    protected void hydrateScalingRelationship() {
+        // not supporting arbitrary scaling relationships in order
+        // to make joint scaling relationships simpler
+        //        if (scalingRelationshipName == null) {
+        //            NZSHM22_LogicTreeBranch ltb =
+        // ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
+        //            scalingRelationship = ltb.getValue(NZSHM22_ScalingRelationshipNode.class);
+        //        } else
+
+        if (scalingRelationshipName.equals("SIMPLE_CRUSTAL")) {
+            SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
+            sr.setupCrustal(scalingCValDipSlip, scalingCValStrikeSlip);
+            scalingRelationship = new SimplifiedJointScalingRelationship(sr);
+        } else if (scalingRelationshipName.equals("SIMPLE_SUBDUCTION")) {
+            SimplifiedScalingRelationship sr = new SimplifiedScalingRelationship();
+            sr.setupSubduction(scalingCVal);
+            scalingRelationship = new SimplifiedJointScalingRelationship(sr);
+        } else if (scalingRelationshipName.equals("JOIN_ESTIMATE")) {
+            EstimatedJointScalingRelationship sr = new EstimatedJointScalingRelationship();
+            scalingRelationship = sr;
+        } else {
+            throw new RuntimeException(
+                    "Unknown or unsupported scaling relationship " + scalingRelationshipName);
+        }
     }
 
-    public ConstraintConfig createSubductionConfig() {
-        ConstraintConfig subductionConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
-        constraints.add(subductionConfig);
-        return subductionConfig;
-    }
-
-    protected void init() throws IOException {
-
+    public void init() throws IOException {
         if (ruptureSet == null && ruptureSetPath != null) {
-            // FIXME, make this agnostic
-            ruptureSet =
-                    NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                            new File(ruptureSetPath), NZSHM22_LogicTreeBranch.crustalInversion());
+            ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
+        }
+        Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
+        Preconditions.checkState(!partitions.isEmpty(), "No partition configs specified");
+
+        if (ruptureSet.hasModule(LogicTreeBranch.class)) {
+            LogicTreeBranch ltb = ruptureSet.getModule(LogicTreeBranch.class);
+            ruptureSet.removeModule(ltb);
         }
 
-        Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
-        Preconditions.checkState(!constraints.isEmpty(), "No constraint configs specified");
+        hydrateScalingRelationship();
 
-        for (ConstraintConfig config : constraints) {
+        for (PartitionConfig config : partitions) {
             config.init(ruptureSet);
         }
 
+        annealing.init();
+
         Set<Integer> seen = new HashSet<>();
         List<Integer> doubleUps = new ArrayList<>();
-        for (ConstraintConfig config : constraints) {
+        for (PartitionConfig config : partitions) {
             for (Integer sectionId : config.getSectionIds()) {
                 if (seen.contains(sectionId)) {
                     doubleUps.add(sectionId);
@@ -82,7 +123,11 @@ public class Config {
                 doubleUps.isEmpty(), doubleUps.size() + " section id double-ups in region config");
         Preconditions.checkState(
                 seen.size() == ruptureSet.getNumSections(),
-                "Config constraint sections do not match rupture set sections");
+                "Config constraint sections ("
+                        + seen.size()
+                        + ") do not match rupture set sections ("
+                        + ruptureSet.getNumSections()
+                        + ")");
 
         for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
             Preconditions.checkState(
