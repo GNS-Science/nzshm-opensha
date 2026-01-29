@@ -1,21 +1,21 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.SLIP_ONLY;
+
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
-import org.apache.commons.math3.util.Precision;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.IntegerSampler;
-import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
-import org.opensha.commons.data.function.HistogramFunction;
 import org.opensha.commons.geo.json.FeatureProperties;
-import org.opensha.commons.util.DataUtils.MinMaxAveTracker;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -35,13 +35,8 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.TimeC
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.CoolingScheduleType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.GenerationFunctionType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.params.NonnegativityConstraintType;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
-import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalarValues;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
-import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 /**
@@ -79,11 +74,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     private double[] initialState;
     private FaultSystemSolution solution;
 
-    private Map<String, Double> finalEnergies = new HashMap<String, Double>();
     private InversionInputGenerator inversionInputGenerator;
-
-    protected List<IncrementalMagFreqDist> solutionMfds;
-    protected List<IncrementalMagFreqDist> solutionMfdsV2;
 
     protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
             slipRateWeightingType;
@@ -785,6 +776,30 @@ public abstract class NZSHM22_AbstractInversionRunner {
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
 
+        if (SLIP_ONLY) {
+            NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
+            FaultRegime regime = branch.getValue(FaultRegime.class);
+
+            String prefix = regime == FaultRegime.CRUSTAL ? "cru" : "sbd";
+
+            Files.writeString(
+                    Path.of(prefix + "_A.txt"), inversionInputGenerator.getA().toString());
+            Files.writeString(
+                    Path.of(prefix + "_D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+            if (inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_A_ineq.txt"),
+                        inversionInputGenerator.getA_ineq().toString());
+            }
+            if (inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(
+                        Path.of(prefix + "_D_ineq.txt"),
+                        Arrays.toString(inversionInputGenerator.getD_ineq()));
+            }
+
+            // System.exit(0);
+        }
+
         List<CompletionCriteria> completionCriterias = new ArrayList<>();
         // inversion completion criteria (how long it will run)
         if (!repeatable)
@@ -945,263 +960,5 @@ public abstract class NZSHM22_AbstractInversionRunner {
             solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
         }
         return solution;
-    }
-
-    @SuppressWarnings("deprecation")
-    public Map<String, String> getSolutionMetrics() {
-        Map<String, String> metrics = new HashMap<String, String>();
-
-        // Completion
-        //		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
-        int numRups = initialState.length;
-
-        //		metrics.put("total_perturbations", Long.toString(numPerturbs));
-        metrics.put("total_ruptures", Integer.toString(numRups));
-
-        int rupsPerturbed = 0;
-        double[] solution_no_min_rates = tsa.getBestSolution();
-        int numAboveWaterlevel = 0;
-        for (int i = 0; i < numRups; i++) {
-            if ((float) solution_no_min_rates[i] != (float) initialState[i]) rupsPerturbed++;
-            if (solution_no_min_rates[i] > 0) numAboveWaterlevel++;
-        }
-
-        metrics.put("perturbed_ruptures", Integer.toString(rupsPerturbed));
-        //		metrics.put("avg_perturbs_per_pertubed_rupture",
-        //				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
-        //		metrics.put("ruptures_above_water_level_ratio",
-        //				new Double((double) numAboveWaterlevel / (double) numRups).toString());
-
-        for (String range : finalEnergies.keySet()) {
-            String metric_name = "final_energy_" + range.replaceAll("\\s+", "_").toLowerCase();
-            System.out.println(metric_name + " : " + finalEnergies.get(range).toString());
-            metrics.put(metric_name, finalEnergies.get(range).toString());
-        }
-
-        return metrics;
-    }
-
-    //	public String completionCriteriaMetrics() {
-    //		String info = "";
-    //		ProgressTrackingCompletionCriteria pComp = (ProgressTrackingCompletionCriteria)
-    // completionCriteria;
-    //		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
-    //		int numRups = initialState.length;
-    //		info += "\nAvg Perturbs Per Rup: " + numPerturbs + "/" + numRups + " = "
-    //				+ ((double) numPerturbs / (double) numRups);
-    //		int rupsPerturbed = 0;
-    //		double[] solution_no_min_rates = tsa.getBestSolution();
-    //		int numAboveWaterlevel = 0;
-    //		for (int i = 0; i < numRups; i++) {
-    //			if ((float) solution_no_min_rates[i] != (float) initialState[i])
-    //				rupsPerturbed++;
-    //			if (solution_no_min_rates[i] > 0)
-    //				numAboveWaterlevel++;
-    //		}
-    //		info += "\nNum rups actually perturbed: " + rupsPerturbed + "/" + numRups + " ("
-    //				+ (float) (100d * ((double) rupsPerturbed / (double) numRups)) + " %)";
-    //		info += "\nAvg Perturbs Per Perturbed Rup: " + numPerturbs + "/" + rupsPerturbed + " = "
-    //				+ ((double) numPerturbs / (double) rupsPerturbed);
-    //		info += "\nNum rups above waterlevel: " + numAboveWaterlevel + "/" + numRups + " ("
-    //				+ (float) (100d * ((double) numAboveWaterlevel / (double) numRups)) + " %)";
-    //		info += "\n";
-    //		return info;
-    //	}
-
-    //	public String momentAndRateMetrics() {
-    //		String info = "";
-    //		// add moments to info string
-    //		info += "\n\n****** Moment and Rupture Rate Metatdata ******";
-    //		info += "\nNum Ruptures: " + rupSet.getNumRuptures();
-    //		int numNonZeros = 0;
-    //		for (double rate : solution.getRateForAllRups())
-    //			if (rate != 0)
-    //				numNonZeros++;
-    //
-    //		float percent = (float) numNonZeros / rupSet.getNumRuptures() * 100f;
-    //		info += "\nNum Non-Zero Rups: " + numNonZeros + "/" + rupSet.getNumRuptures() + " (" +
-    // percent + " %)";
-    //		info += "\nOrig (creep reduced) Fault Moment Rate: " + rupSet.getTotalOrigMomentRate();
-    //
-    //		double momRed = rupSet.getTotalMomentRateReduction();
-    //		info += "\nMoment Reduction (for subseismogenic ruptures only): " + momRed;
-    //		info += "\nSubseismo Moment Reduction Fraction (relative to creep reduced): "
-    //				+ rupSet.getTotalMomentRateReductionFraction();
-    //		info += "\nFault Target Supra Seis Moment Rate (subseismo and creep reduced): "
-    //				+ rupSet.getTotalReducedMomentRate();
-    //
-    //		double totalSolutionMoment = solution.getTotalFaultSolutionMomentRate();
-    //		info += "\nFault Solution Supra Seis Moment Rate: " + totalSolutionMoment;
-    //
-    //		/*
-    //		 * TODO : Matt, are these useful in NSHM ?? Priority ??
-    //		 */
-    ////		info += "\nFault Target Sub Seis Moment Rate: "
-    ////				+rupSet.getInversionTargetMFDs().getTotalSubSeismoOnFaultMFD().getTotalMomentRate();
-    ////		info += "\nFault Solution Sub Seis Moment Rate: "
-    ////				+solution.getFinalTotalSubSeismoOnFaultMFD().getTotalMomentRate();
-    ////		info += "\nTruly Off Fault Target Moment Rate: "
-    ////				+rupSet.getInversionTargetMFDs().getTrulyOffFaultMFD().getTotalMomentRate();
-    ////		info += "\nTruly Off Fault Solution Moment Rate: "
-    ////				+solution.getFinalTrulyOffFaultMFD().getTotalMomentRate();
-    ////
-    ////		try {
-    ////			//					double totalOffFaultMomentRate = invSol.getTotalOffFaultSeisMomentRate(); // TODO
-    // replace - what is off fault moment rate now?
-    ////			//					info += "\nTotal Off Fault Seis Moment Rate (excluding subseismogenic): "
-    ////			//							+(totalOffFaultMomentRate-momRed);
-    ////			//					info += "\nTotal Off Fault Seis Moment Rate (inluding subseismogenic): "
-    ////			//							+totalOffFaultMomentRate;
-    ////			info += "\nTotal Moment Rate From Off Fault MFD:
-    // "+solution.getFinalTotalGriddedSeisMFD().getTotalMomentRate();
-    ////			//					info += "\nTotal Model Seis Moment Rate: "
-    ////			//							+(totalOffFaultMomentRate+totalSolutionMoment);
-    ////		} catch (Exception e1) {
-    ////			e1.printStackTrace();
-    ////			System.out.println("WARNING: InversionFaultSystemSolution could not be instantiated!");
-    ////		}
-    //
-    //		info += "\n";
-    //		return info;
-    //	}
-
-    public String byFaultNameMetrics() {
-        String info = "";
-        info += "\n\n****** byFaultNameMetrics Metadata ******";
-        //		double totalMultiplyNamedM7Rate =
-        // FaultSystemRupSetCalc.calcTotRateMultiplyNamedFaults((InversionFaultSystemSolution)
-        // solution, 7d, null);
-        //		double totalMultiplyNamedPaleoVisibleRate =
-        // FaultSystemRupSetCalc.calcTotRateMultiplyNamedFaults((InversionFaultSystemSolution)
-        // solution, 0d, paleoProbabilityModel);
-
-        double totalM7Rate = FaultSystemRupSetCalc.calcTotRateAboveMag(solution, 7d, null);
-        //		double totalPaleoVisibleRate = FaultSystemRupSetCalc.calcTotRateAboveMag(sol, 0d,
-        // paleoProbabilityModel);
-
-        info += "\n\nTotal rupture rate (M7+): " + totalM7Rate;
-        //		info += "\nTotal multiply named rupture rate (M7+): "+totalMultiplyNamedM7Rate;
-        //		info += "\n% of M7+ rate that are multiply named: "
-        //			+(100d * totalMultiplyNamedM7Rate / totalM7Rate)+" %";
-        //		info += "\nTotal paleo visible rupture rate: "+totalPaleoVisibleRate;
-        //		info += "\nTotal multiply named paleo visible rupture rate:
-        // "+totalMultiplyNamedPaleoVisibleRate;
-        //		info += "\n% of paleo visible rate that are multiply named: "
-        //			+(100d * totalMultiplyNamedPaleoVisibleRate / totalPaleoVisibleRate)+" %";
-        info += "\n";
-        return info;
-    }
-
-    //	public String parentFaultMomentRates() {
-    //		// parent fault moment rates
-    //		String info = "";
-    //		ArrayList<CommandLineInversionRunner.ParentMomentRecord> parentMoRates =
-    // CommandLineInversionRunner
-    //				.getSectionMoments((SlipEnabledSolution) solution);
-    //		info += "\n\n****** Larges Moment Rate Discrepancies ******";
-    //		for (int i = 0; i < 10 && i < parentMoRates.size(); i++) {
-    //			CommandLineInversionRunner.ParentMomentRecord p = parentMoRates.get(i);
-    //			info += "\n" + p.parentID + ". " + p.name + "\ttarget: " + p.targetMoment + "\tsolution: "
-    //					+ p.solutionMoment + "\tdiff: " + p.getDiff();
-    //		}
-    //		info += "\n";
-    //		return info;
-    //	}
-
-    public List<IncrementalMagFreqDist> getSolutionMfds() {
-        return solutionMfds;
-    }
-
-    public List<IncrementalMagFreqDist> getSolutionMfdsV2() {
-        return solutionMfdsV2;
-    }
-
-    /**
-     * build an MFD from the inversion solution
-     *
-     * @param rateWeighted if false, returns the count of ruptures by magnitude, irrespective of
-     *     rate.
-     * @return
-     */
-    public HistogramFunction solutionMagFreqHistogram(boolean rateWeighted) {
-
-        ClusterRuptures cRups = solution.getRupSet().getModule(ClusterRuptures.class);
-
-        HistScalarValues scalarVals =
-                new HistScalarValues(
-                        HistScalar.MAG, solution.getRupSet(), solution, cRups.getAll(), null);
-
-        MinMaxAveTracker track = new MinMaxAveTracker();
-        List<Integer> includeIndexes = new ArrayList<>();
-        for (int r = 0; r < scalarVals.getRupSet().getNumRuptures(); r++) includeIndexes.add(r);
-        for (int r : includeIndexes) track.addValue(scalarVals.getValues().get(r));
-
-        HistScalar histScalar = scalarVals.getScalar();
-        HistogramFunction histogram = histScalar.getHistogram(track);
-        boolean logX = histScalar.isLogX();
-
-        for (int i = 0; i < includeIndexes.size(); i++) {
-            int rupIndex = includeIndexes.get(i);
-            double scalar = scalarVals.getValues().get(i);
-            double y = rateWeighted ? scalarVals.getSol().getRateForRup(rupIndex) : 1;
-            int index;
-            if (logX) index = scalar <= 0 ? 0 : histogram.getClosestXIndex(Math.log10(scalar));
-            else index = histogram.getClosestXIndex(scalar);
-            histogram.add(index, y);
-        }
-        return histogram;
-    }
-
-    private void appendMfdRows(
-            EvenlyDiscretizedFunc mfd, ArrayList<ArrayList<String>> rows, int series) {
-        ArrayList<String> row;
-        for (int i = 0; i < mfd.size(); i++) {
-            row = new ArrayList<String>();
-            if (mfd.getY(i) > 0) {
-                row.add(Integer.toString(series));
-                row.add(mfd.getName());
-                row.add(Double.toString(Precision.round(mfd.getX(i), 2)));
-                row.add(Double.toString(mfd.getY(i)));
-                rows.add(row);
-            }
-        }
-    }
-
-    public ArrayList<ArrayList<String>> getTabularSolutionMfds() {
-        ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-
-        int series = 0;
-        for (IncrementalMagFreqDist mfd : getSolutionMfds()) {
-            appendMfdRows(mfd, rows, series);
-            series++;
-        }
-
-        HistogramFunction magHist = solutionMagFreqHistogram(true);
-        magHist.setName("solutionMFD_rateWeighted");
-        appendMfdRows(magHist, rows, series);
-        series++;
-
-        magHist = solutionMagFreqHistogram(false);
-        magHist.setName("solutionMFD_unweighted");
-        appendMfdRows(magHist, rows, series);
-
-        return rows;
-    }
-
-    public ArrayList<ArrayList<String>> getTabularSolutionMfdsV2() {
-        ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-
-        int series = 0;
-        for (IncrementalMagFreqDist mfd : getSolutionMfdsV2()) {
-            appendMfdRows(mfd, rows, series);
-            series++;
-        }
-
-        HistogramFunction magHist = solutionMagFreqHistogram(true);
-        magHist.setName("solutionMFD");
-        appendMfdRows(magHist, rows, series);
-        series++;
-
-        return rows;
     }
 }

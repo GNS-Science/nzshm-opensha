@@ -43,7 +43,7 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
     public void testMFDConstraints() throws DocumentException, URISyntaxException, IOException {
         NZSHM22_InversionFaultSystemRuptSet ruptSet = loadRupSet();
         NZSHM22_SubductionInversionTargetMFDs mfds =
-                new NZSHM22_SubductionInversionTargetMFDs(ruptSet);
+                new NZSHM22_SubductionInversionTargetMFDs(ruptSet, 0.7, 1.1, 7.85, 7.05, 0, 0, 0.4);
 
         List<IncrementalMagFreqDist> actual = mfds.getMFD_Constraints();
 

@@ -3,7 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
-import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
@@ -49,12 +49,8 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
 
     protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 
-    public NZSHM22_SubductionInversionTargetMFDs(NZSHM22_InversionFaultSystemRuptSet invRupSet) {
-        this(invRupSet, 0.7, 1.1, 7.85, 7.05, 0, 0, 0.4);
-    }
-
     public NZSHM22_SubductionInversionTargetMFDs(
-            NZSHM22_InversionFaultSystemRuptSet invRupSet,
+            FaultSystemRupSet invRupSet,
             double totalRateM5,
             double bValue,
             double mfdTransitionMag,
@@ -63,11 +59,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             double mfdUncertaintyWeightedConstraintPower,
             double mfdUncertaintyWeightedConstraintScalar) {
 
-        // convert mMaxOffFault to bin center
-        List<? extends FaultSection> faultSectionData = invRupSet.getFaultSectionDataList();
-
         // make the total target GR MFD
-        // TODO: why MIN_MAG = 0 ??
         GutenbergRichterMagFreqDist totalTargetGR =
                 new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
         if (MFD_STATS) {

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
@@ -200,6 +199,7 @@ public class ParameterRunner {
             runner.setReweightTargetQuantity("MAD");
         }
 
+        // XXX oakley here
         if (arguments.get("slip_use_scaling") != null) {
             // V3x config
             double weight =
@@ -322,16 +322,21 @@ public class ParameterRunner {
     public void saveSolution(FaultSystemSolution solution) throws IOException {
         File solutionFile = new File(outputPath, "InversionSolution.zip");
         solution.write(solutionFile);
+        System.out.println("Saved solution as " + solutionFile);
     }
 
     public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_CoulombRuptureSetBuilder builder)
             throws IOException {
-        rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
+        File file = new File(outputPath, builder.getDescriptiveName() + ".zip");
+        rupSet.write(file);
+        System.out.println("Saved rupture set as " + file);
     }
 
     public void saveRupSet(FaultSystemRupSet rupSet, NZSHM22_SubductionRuptureSetBuilder builder)
             throws IOException {
-        rupSet.write(new File(outputPath, builder.getDescriptiveName() + ".zip"));
+        File file = new File(outputPath, builder.getDescriptiveName() + ".zip");
+        rupSet.write(file);
+        System.out.println("Saved rupture set as " + file);
     }
 
     /**
@@ -369,9 +374,6 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
-            System.out.println(row);
-        }
         return solution;
     }
 
@@ -392,9 +394,6 @@ public class ParameterRunner {
         parameterRunner.setUpSubductionInversionRunner(runner);
         FaultSystemSolution solution = runner.runInversion();
         parameterRunner.saveSolution(solution);
-        for (ArrayList<String> row : runner.getTabularSolutionMfds()) {
-            System.out.println(row);
-        }
         return solution;
     }
 
