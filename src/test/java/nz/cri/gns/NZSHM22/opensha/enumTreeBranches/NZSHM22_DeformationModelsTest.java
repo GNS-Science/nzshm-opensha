@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 
 import java.io.*;
 import java.util.*;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -12,14 +13,14 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class NZSHM22_DeformationModelsTest {
 
+    static final double DELTA = 1e-9;
+
     @Test
     public void testApplyTo() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
         assertEquals(0, s.getSectionId());
-        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
-        assertEquals(2.0E-4, ruptSet.getSlipRateForSection(0), 0.0000001);
-        assertEquals(2.0E-5, ruptSet.getSlipRateForSection(1), 0.0000001);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
 
         NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
@@ -37,55 +38,134 @@ public class NZSHM22_DeformationModelsTest {
                 };
 
         // set slip to be equal section ID
-        helper.applyTo(ruptSet);
-
-        assertEquals(0.0, ruptSet.getSlipRateForSection(0), 0.0000001);
-        assertEquals(0.001, ruptSet.getSlipRateForSection(1), 0.0000001);
+        helper.applyTo(ruptSet, (sectionId) -> true);
 
         for (FaultSection section : ruptSet.getFaultSectionDataList()) {
-            assertEquals(section.getSectionId(), section.getOrigAveSlipRate(), 0.000000001);
-            assertEquals(section.getSectionId(), section.getOrigSlipRateStdDev(), 0.000000001);
+            assertEquals(section.getSectionId(), section.getOrigAveSlipRate(), DELTA);
+            assertEquals(section.getSectionId(), section.getOrigSlipRateStdDev(), DELTA);
         }
+    }
 
-        // Testing that we check the length
-        helper =
+    // deformation model honours origId and origParent
+    @Test
+    public void testApplyToProps() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        FaultSection s = ruptSet.getFaultSectionData(0);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
+        s = ruptSet.getFaultSectionData(1);
+        assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
+
+        // deformation model will be applied based on original is
+        FaultSectionProperties props = new FaultSectionProperties();
+        props.set(0, "origId", 1000);
+        props.set(0, "origParent", 1200);
+        props.set(1, "origId", 1001);
+        props.set(1, "origParent", 1001);
+        ruptSet.addModule(props);
+
+        NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        return new ArrayList<>();
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
+                        SlipDeformation deformation = new SlipDeformation();
+                        deformation.sectionId = 1001;
+                        deformation.parentId = 1001;
+                        deformation.slip = 42;
+                        deformation.stdv = 3.14;
+                        result.put(1001, deformation);
+                        deformation = new SlipDeformation();
+                        deformation.sectionId = 1000;
+                        deformation.parentId = 1200;
+                        deformation.slip = 6;
+                        deformation.stdv = 7;
+                        result.put(1000, deformation);
+                        return result;
                     }
                 };
 
-        String message = null;
-        try {
-            helper.applyTo(ruptSet);
-        } catch (IllegalArgumentException x) {
-            message = x.getMessage();
-        }
-        assertEquals("Deformation model length does not match number of sections.", message);
+        // set slip to be equal section ID
+        helper.applyTo(ruptSet, (sectionId) -> true);
 
-        // Testing that we check the parent section id
-        helper =
+        FaultSection section = ruptSet.getFaultSectionData(0);
+        assertEquals(6, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(7, section.getOrigSlipRateStdDev(), DELTA);
+
+        section = ruptSet.getFaultSectionData(1);
+        assertEquals(42, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(3.14, section.getOrigSlipRateStdDev(), DELTA);
+    }
+
+    // honour partition predicate
+    @Test
+    public void testApplyToPartition() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        FaultSection s = ruptSet.getFaultSectionData(0);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
+        s = ruptSet.getFaultSectionData(1);
+        assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
+
+        NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
-                    public List<SlipDeformation> getDeformations() {
-                        List<SlipDeformation> result = new ArrayList<>();
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
+                        SlipDeformation deformation = new SlipDeformation();
+                        deformation.sectionId = 0;
+                        deformation.parentId = 0;
+                        deformation.slip = 42;
+                        deformation.stdv = 3.14;
+                        result.put(0, deformation);
+                        deformation = new SlipDeformation();
+                        deformation.sectionId = 1;
+                        deformation.parentId = 1;
+                        deformation.slip = 6;
+                        deformation.stdv = 7;
+                        result.put(1, deformation);
+                        return result;
+                    }
+                };
+
+        // only apply deformation model to section 1
+        helper.applyTo(ruptSet, (sectionId) -> sectionId == 1);
+
+        // section 0 is unchanged
+        FaultSection section = ruptSet.getFaultSectionData(0);
+        assertEquals(0.2, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(0.15, section.getOrigSlipRateStdDev(), DELTA);
+
+        // section 1 is modified
+        section = ruptSet.getFaultSectionData(1);
+        assertEquals(6, section.getOrigAveSlipRate(), DELTA);
+        assertEquals(7, section.getOrigSlipRateStdDev(), DELTA);
+    }
+
+    @Test
+    public void testApplyToError() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        // Testing that we check the parent section id
+        NZSHM22_DeformationModel.DeformationHelper helper =
+                new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
+                    public Map<Integer, SlipDeformation> getDeformations() {
+                        Map<Integer, SlipDeformation> result = new HashMap<>();
                         for (int i = 0; i < ruptSet.getNumSections(); i++) {
                             SlipDeformation deformation = new SlipDeformation();
                             deformation.sectionId = i;
-                            result.add(deformation);
+                            result.put(i, deformation);
                         }
                         return result;
                     }
                 };
 
-        message = null;
+        String message = null;
         try {
-            helper.applyTo(ruptSet);
+            helper.applyTo(ruptSet, null);
         } catch (IllegalArgumentException x) {
             message = x.getMessage();
         }
-        assertEquals("Deformation parent id does not match section parent id.", message);
+        assertEquals(
+                "Section 1 Deformation parent id 0 does not match section parent id 1", message);
     }
 
+    // we can parse all deformation models
     @Test
     public void testLoad() {
         for (NZSHM22_DeformationModel model : NZSHM22_DeformationModel.values()) {
