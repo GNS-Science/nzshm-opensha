@@ -1,4 +1,4 @@
-package nz.cri.gns.NZSHM22.opensha.inversion.constraint.joint;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint;
 
 import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSet;
 import static org.junit.Assert.*;
@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.ConstraintConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintWrapper;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.RegionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -19,7 +20,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Constra
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
-import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
 public class JointConstraintWrapperTest {
@@ -37,10 +37,12 @@ public class JointConstraintWrapperTest {
                                 List.of(SUB_SECTION),
                                 List.of(CRU_SECTION, SUB_SECTION)));
 
-        FaultSection s0 = rupSet.getFaultSectionData(0);
-        FaultSection s1 = rupSet.getFaultSectionData(1);
-        s1.setSectionName("row:1");
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
+
+        FaultSectionProperties props = new FaultSectionProperties();
+        props.set(CRU_SECTION, PartitionPredicate.CRUSTAL.name(), true);
+        props.set(SUB_SECTION, PartitionPredicate.HIKURANGI.name(), true);
+        rupSet.addModule(props);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;
@@ -67,13 +69,13 @@ public class JointConstraintWrapperTest {
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.UNNORMALIZED, rupSet);
 
         // set up crustal constraint
-        ConstraintConfig cruConfig = new ConstraintConfig(RegionPredicate.CRUSTAL);
+        PartitionConfig cruConfig = new PartitionConfig(PartitionPredicate.CRUSTAL);
         cruConfig.init(rupSet);
         JointConstraintWrapper crustalConstraint =
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
         // set up subduction constraint
-        ConstraintConfig subConfig = new ConstraintConfig(RegionPredicate.SUBDUCTION);
+        PartitionConfig subConfig = new PartitionConfig(PartitionPredicate.HIKURANGI);
         subConfig.init(rupSet);
         JointConstraintWrapper subductionConstraint =
                 new JointConstraintWrapper(subConfig, slipConstraint);

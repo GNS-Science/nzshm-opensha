@@ -15,11 +15,12 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class RegionalRupSetData {
 
-    FaultSystemRupSet original;
     GriddedRegion region;
     NZSHM22_SpatialSeisPDF spatialSeisPDF;
     double minSeismoMag;
     boolean empty = false;
+    double bufferSize = -1;
+    double minBufferSize = -1;
 
     PolygonFaultGridAssociations polygonFaultGridAssociations;
     List<FaultSection> sections = new ArrayList<>();
@@ -34,7 +35,6 @@ public class RegionalRupSetData {
             GriddedRegion region,
             IntPredicate sectionIdFilter,
             double minSeismoMag) {
-        this.original = original;
         this.region = region;
         this.spatialSeisPDF =
                 original.getModule(NZSHM22_LogicTreeBranch.class)
@@ -44,11 +44,32 @@ public class RegionalRupSetData {
             empty = true;
             originalSectionIncluded = new boolean[original.getNumSections()];
         } else {
-            filter(sectionIdFilter);
+            filter(original, sectionIdFilter);
         }
     }
 
-    protected void filter(IntPredicate sectionPredicate) {
+    public RegionalRupSetData(
+            FaultSystemRupSet original,
+            GriddedRegion region,
+            IntPredicate sectionIdFilter,
+            NZSHM22_SpatialSeisPDF spatialSeisPDF,
+            double minSeismoMag,
+            double bufferSize,
+            double minBufferSize) {
+        this.region = region;
+        this.spatialSeisPDF = spatialSeisPDF;
+        this.bufferSize = bufferSize;
+        this.minBufferSize = minBufferSize;
+        this.minSeismoMag = minSeismoMag;
+        if (region instanceof NewZealandRegions.NZ_EMPTY_GRIDDED) {
+            empty = true;
+            originalSectionIncluded = new boolean[original.getNumSections()];
+        } else {
+            filter(original, sectionIdFilter);
+        }
+    }
+
+    protected void filter(FaultSystemRupSet original, IntPredicate sectionPredicate) {
         List<? extends FaultSection> originalSections = original.getFaultSectionDataList();
         originalMinMags =
                 NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(
@@ -68,15 +89,15 @@ public class RegionalRupSetData {
                 }
             }
         }
-        NZSHM22_FaultPolyParameters parameters =
-                original.getModule(NZSHM22_LogicTreeBranch.class)
-                        .getValue(NZSHM22_FaultPolyParameters.class);
+        if (minBufferSize == -1) {
+            NZSHM22_FaultPolyParameters parameters =
+                    original.getModule(NZSHM22_LogicTreeBranch.class)
+                            .getValue(NZSHM22_FaultPolyParameters.class);
+            minBufferSize = parameters.getMinBufferSize();
+            bufferSize = parameters.getBufferSize();
+        }
         polygonFaultGridAssociations =
-                NZSHM22_FaultPolyMgr.create(
-                        sections,
-                        parameters.getBufferSize(),
-                        parameters.getMinBufferSize(),
-                        region);
+                NZSHM22_FaultPolyMgr.create(sections, bufferSize, minBufferSize, region);
         spatialSeisPDF.normaliseRegion(region);
     }
 

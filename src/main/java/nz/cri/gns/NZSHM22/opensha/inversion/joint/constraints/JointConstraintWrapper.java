@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 
 /**
@@ -12,12 +13,12 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.Inversi
  */
 public class JointConstraintWrapper extends InversionConstraint {
 
-    final ConstraintConfig config;
+    final PartitionConfig config;
     final InversionConstraint constraint;
 
     int startRow;
 
-    public JointConstraintWrapper(ConstraintConfig config, InversionConstraint constraint) {
+    public JointConstraintWrapper(PartitionConfig config, InversionConstraint constraint) {
         super(
                 constraint.getName(),
                 constraint.getShortName(),
