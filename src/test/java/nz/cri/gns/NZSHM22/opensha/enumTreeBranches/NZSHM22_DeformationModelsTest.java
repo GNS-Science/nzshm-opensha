@@ -13,14 +13,14 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public class NZSHM22_DeformationModelsTest {
 
-    static final double DELTA = 0.000000001;
+    static final double DELTA = 1e-9;
 
     @Test
     public void testApplyTo() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
         assertEquals(0, s.getSectionId());
-        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
 
         NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
@@ -51,9 +51,9 @@ public class NZSHM22_DeformationModelsTest {
     public void testApplyToProps() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
-        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
         s = ruptSet.getFaultSectionData(1);
-        assertEquals(0.02, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
 
         // deformation model will be applied based on original is
         FaultSectionProperties props = new FaultSectionProperties();
@@ -100,9 +100,9 @@ public class NZSHM22_DeformationModelsTest {
     public void testApplyToPartition() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
-        assertEquals(0.2, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.2, s.getOrigAveSlipRate(), DELTA);
         s = ruptSet.getFaultSectionData(1);
-        assertEquals(0.02, s.getOrigAveSlipRate(), 0.00000001);
+        assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
 
         NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
