@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.data.region;
 
 import java.io.BufferedReader;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_DataUtils;
 import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.GriddedRegion;
@@ -120,6 +121,26 @@ public class NewZealandRegions {
                     NZSHM22_GriddedData.GRID_SPACING,
                     ANCHOR_0_0);
             this.setName("NZ_RECTANGLE Gridded Region");
+        }
+    }
+
+    /** Used for MFD constraints in MFD reports */
+    public static class PartitionRegion extends GriddedRegion {
+
+        PartitionPredicate partition;
+
+        public PartitionRegion(PartitionPredicate partition) {
+            super(
+                    readCoords("nz_rectangle.coords"),
+                    BorderType.MERCATOR_LINEAR,
+                    NZSHM22_GriddedData.GRID_SPACING,
+                    ANCHOR_0_0);
+            this.setName(partition.name() + " partition");
+            this.partition = partition;
+        }
+
+        public PartitionPredicate getPartition() {
+            return partition;
         }
     }
 
