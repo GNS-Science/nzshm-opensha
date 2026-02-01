@@ -24,7 +24,9 @@ public class ConfigModule implements FileBackedModule {
     }
 
     public static Config fromJson(String json) {
-        String cleanJson = json.replaceAll("[ \t]//.*\n", "");
+        // Remove all comments (lines that only have a comment that starts with //).
+        // We don't allow comments at the end of a line because then we'd have to parse strings.
+        String cleanJson = json.replaceAll("(?m)^\\s*//.*$", "");
         Gson gson = new Gson();
         return gson.fromJson(cleanJson, Config.class);
     }
