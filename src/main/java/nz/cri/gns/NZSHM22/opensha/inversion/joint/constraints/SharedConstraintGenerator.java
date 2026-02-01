@@ -13,6 +13,10 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MF
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
+/**
+ * Specifies how to generate constraints based on a partition configuration. This class takes care
+ * of constraints that are relevant for each partition.
+ */
 public class SharedConstraintGenerator {
 
     public static List<InversionConstraint> buildSlipRateConstraints(

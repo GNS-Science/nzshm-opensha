@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
+import com.google.common.base.Preconditions;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -19,9 +20,23 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Un
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 
+/**
+ * Generates constraints as specified by the configuration. Uses SharedConstraintGenerator for
+ * constraints shared by crustal and subduction fault models.
+ */
 public class ConstraintGenerator {
 
-    public static List<InversionConstraint> generatePaleoConstraints(Config config)
+    /**
+     * Generates paleo constraints. Paleo sites are matched to crustal sections. Constraints are
+     * applied to each rupture that contains one of these sections.
+     *
+     * <p>Also adds a LaplacianSmoothingInversionConstraint if the appropriate weight is set.
+     *
+     * @param config the config
+     * @return the constraints
+     * @throws FileNotFoundException
+     */
+    static List<InversionConstraint> generatePaleoConstraints(Config config)
             throws FileNotFoundException {
 
         List<InversionConstraint> results = new ArrayList<>();
@@ -29,6 +44,10 @@ public class ConstraintGenerator {
         if (config.paleoRateConstraintWt <= 0) {
             return results;
         }
+
+        Preconditions.checkState(
+                config.paleoRates != null,
+                "paleo rates must be set if paleo cinstraint weight is set");
 
         IntPredicate isCrustal = PartitionPredicate.CRUSTAL.getPredicate(config.ruptureSet);
 
@@ -39,9 +58,11 @@ public class ConstraintGenerator {
 
         List<UncertainDataConstraint.SectMappedUncertainDataConstraint> paleoRateConstraints =
                 new ArrayList<>();
+        // fetch paleo rates constraints base don crustal section matches
         if (config.paleoRates != null) {
             paleoRateConstraints.addAll(config.paleoRates.fetchConstraints(crustalSections));
         }
+        // load extra paleo rates site
         if (config.extraPaleoRatesFile != null) {
             List<UncertainDataConstraint.SectMappedUncertainDataConstraint> extraConstraints =
                     NZSHM22_PaleoRates.fetchConstraints(
@@ -91,7 +112,14 @@ public class ConstraintGenerator {
         return results;
     }
 
-    public static void storeTargetMFDs(
+    /**
+     * Store a set of targetMFDs in the PartitionMfds module
+     *
+     * @param ruptureSet
+     * @param partition
+     * @param targetMFDs
+     */
+    static void storeTargetMFDs(
             FaultSystemRupSet ruptureSet,
             PartitionPredicate partition,
             InversionTargetMFDs targetMFDs) {
@@ -103,6 +131,13 @@ public class ConstraintGenerator {
         mfdsModule.add(partition, targetMFDs);
     }
 
+    /**
+     * Generate all constraints
+     *
+     * @param config the config
+     * @return a list of all constraints, ready to be turned into a matrix
+     * @throws FileNotFoundException
+     */
     public static List<InversionConstraint> generateConstraints(Config config)
             throws FileNotFoundException {
 
@@ -145,7 +180,7 @@ public class ConstraintGenerator {
                             config.ruptureSet, partitionConfig));
         }
 
-        constraints.addAll(ConstraintGenerator.generatePaleoConstraints(config));
+        constraints.addAll(generatePaleoConstraints(config));
 
         return constraints;
     }
