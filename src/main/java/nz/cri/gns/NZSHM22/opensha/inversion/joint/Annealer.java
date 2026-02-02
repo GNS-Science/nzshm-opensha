@@ -3,12 +3,14 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.IntegerSampler;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
@@ -20,28 +22,24 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
 
-    AnnealingConfig config;
-    NZSHM22_InversionFaultSystemRuptSet rupSet;
+    static final boolean LOG_MATRIX_ONLY = true;
 
-    public Annealer(AnnealingConfig config, NZSHM22_InversionFaultSystemRuptSet rupSet) {
+    AnnealingConfig config;
+    FaultSystemRupSet rupSet;
+
+    public Annealer(AnnealingConfig config, FaultSystemRupSet rupSet) {
         this.config = config;
         this.rupSet = rupSet;
     }
 
-    protected Set<Integer> createSamplerExclusions() {
-        Set<Integer> exclusions = new HashSet<>();
-        if (config.excludeRupturesBelowMinMag) {
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                if (rupSet.isRuptureBelowSectMinMag(r)) {
-                    exclusions.add(r);
-                }
-            }
-        }
-        return exclusions;
-    }
-
     protected IntegerSampler createSampler() {
-        Set<Integer> exclusions = createSamplerExclusions();
+        Set<Integer> exclusions = new HashSet<>();
+        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+            // FIXME work out what to do
+            //            if (rupSet.isRuptureBelowSectMinMag(r)) {
+            //                exclusions.add(r);
+            //            }
+        }
         if (!exclusions.isEmpty()) {
             return new IntegerSampler.ExclusionIntegerSampler(
                     0, rupSet.getNumRuptures(), exclusions);
@@ -58,8 +56,9 @@ public class Annealer {
             completionCriterias.add(TimeCompletionCriteria.getInSeconds(config.inversionSecs));
         if (!(config.energyChangeCompletionCriteria == null))
             completionCriterias.add(config.energyChangeCompletionCriteria);
-        if (!(config.iterationCompletionCriteria == null))
-            completionCriterias.add(config.iterationCompletionCriteria);
+        if (config.iterationCompletionCriteria != 0)
+            completionCriterias.add(
+                    new IterationCompletionCriteria(config.iterationCompletionCriteria));
 
         CompletionCriteria completionCriteria = new CompoundCompletionCriteria(completionCriterias);
 
@@ -77,7 +76,7 @@ public class Annealer {
         // criteria, we only allow
         // one criteria here. See https://github.com/GNS-Science/nzshm-opensha/issues/360
         CompletionCriteria subCompletionCriteria;
-        if (config.selectionIterations != null) {
+        if (config.selectionIterations != 0) {
             subCompletionCriteria = new IterationCompletionCriteria(config.selectionIterations);
         } else {
             subCompletionCriteria = TimeCompletionCriteria.getInSeconds(config.selectionInterval);
@@ -111,14 +110,31 @@ public class Annealer {
 
         if (config.repeatable) {
             Preconditions.checkState(
-                    config.iterationCompletionCriteria != null
+                    config.iterationCompletionCriteria != 0
                             || config.energyChangeCompletionCriteria != null);
-            Preconditions.checkState(config.selectionIterations != null);
+            Preconditions.checkState(config.selectionIterations != 0);
         }
 
         inversionInputGenerator.generateInputs(true);
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
+
+        if (LOG_MATRIX_ONLY) {
+
+            Files.writeString(Path.of("A.txt"), inversionInputGenerator.getA().toString());
+            Files.writeString(Path.of("D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+            if (inversionInputGenerator.getA_ineq() != null) {
+                Files.writeString(
+                        Path.of("A_ineq.txt"), inversionInputGenerator.getA_ineq().toString());
+            }
+            if (inversionInputGenerator.getD_ineq() != null) {
+                Files.writeString(
+                        Path.of("D_ineq.txt"),
+                        Arrays.toString(inversionInputGenerator.getD_ineq()));
+            }
+
+            //  System.exit(0);
+        }
 
         CompletionCriteria completionCriteria = createCompletionCriteria();
 
@@ -195,11 +211,13 @@ public class Annealer {
         tsa.setNonnegativeityConstraintAlgorithm(config.nonNegAlgorithm);
         if (!(config.coolingSchedule == null)) tsa.setCoolingFunc(config.coolingSchedule);
 
-        IntegerSampler sampler = createSampler();
-        if (sampler != null) {
-            tsa.setRuptureSampler(sampler);
-        }
+        if (config.excludeRupturesBelowMinMag) {
 
+            IntegerSampler sampler = createSampler();
+            if (sampler != null) {
+                tsa.setRuptureSampler(sampler);
+            }
+        }
         tsa.iterate(progress);
         tsa.shutdown();
 

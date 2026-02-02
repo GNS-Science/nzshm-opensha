@@ -1,0 +1,66 @@
+{
+  // this is equivalent to new ParameterRunner(Parameters.NZSHM22.INVERSION_CRUSTAL) with
+  // runner.setRepeatable(true);
+  // runner.setIterationCompletionCriteria(100);
+  // runner.setSelectionIterations(1);
+  // runner.setInversionAveraging(false);
+
+  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
+  "annealing": {
+    "inversionSecs": 60,
+    "selectionInterval": 10,
+//    "inversionNumSolutionAverages": 4,
+//    "inversionAveragingIntervalSecs": 30,
+//    "inversionAveragingEnabled": true,
+    "inversionAveragingEnabled": false,
+    "inversionThreadsPerSelector": 1,
+    "perturbationFunction": "EXPONENTIAL_SCALE",
+    "nonNegAlgorithm": "TRY_ZERO_RATES_OFTEN",
+    "excludeRupturesBelowMinMag": false,
+    "repeatable": true,
+    "iterationCompletionCriteria": 100,
+    "selectionIterations": 1,
+    // TODO: do we need this for subduction as well?
+    "reweightTargetQuantity": "MAD",
+    "coolingSchedule": "FAST_SA",
+    "completionEnergy": 0
+  },
+  "partitions": [
+    {
+      "partition": "CRUSTAL",
+
+      "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
+      "slipRateUncertaintyConstraintWt": 1.0,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": true,
+
+      "deformationModel": "FAULT_MODEL",
+      "totalRateM5": 3.4,
+      "bValue": 0.959,
+      "minMag": 6.799,
+      "maxMag": 10.0,
+      "maxMagType": "MANIPULATE_MFD",
+      "mfdTransitionMag": 7.85,
+      "mfdUncertaintyWeight": 1,
+      "mfdUncertaintyPower": 0.25,
+      "mfdUncertaintyScalar": 0.1,
+      "spatialSeisPDF": "FLOOR_ADDOPTIEEPASCOMB_CRU",
+      "polygonBufferSize": 12,
+      "polygonMinBufferSize": 0
+    }
+  ],
+  "scalingRelationshipName": "SIMPLE_CRUSTAL",
+  "scalingCValDipSlip": 4.2,
+  "scalingCValStrikeSlip": 4.2,
+  "scalingCVal": 4.0,
+  "recalcMags" : true,
+
+  "sansSlipRateFactor" : 0.9,
+  "tvzSlipRateFactor" : 0.7,
+
+  "paleoRateConstraintWt": 1,
+  "paleoParentRateSmoothnessConstraintWeight": 100000.0,
+  "paleoRates":	"PALEO_RI_GEOLOGIC_MAY24",
+  "paleoProbabilityModel": "NZSHM22_C_42",
+  "extraPaleoRatesFile": null
+}
