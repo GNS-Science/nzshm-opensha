@@ -57,7 +57,7 @@ Each row on A corresponds to a paleo site and its matching fault section. Column
 corresponding rupture contains the fault section. Paleo constraints are only applied during crustal inversion.
 
 Values in A are based on the paleo rate, modified by the paleo probability.
-Values in D are only based on the paleo rate.
+Values in d are only based on the paleo rate.
 
 The encoded constraints have the same shape as slip rate constraints.
 
