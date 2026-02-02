@@ -47,7 +47,7 @@ public class ConstraintGenerator {
 
         Preconditions.checkState(
                 config.paleoRates != null,
-                "paleo rates must be set if paleo cinstraint weight is set");
+                "paleo rates must be set if paleo constraint weight is set");
 
         IntPredicate isCrustal = PartitionPredicate.CRUSTAL.getPredicate(config.ruptureSet);
 
