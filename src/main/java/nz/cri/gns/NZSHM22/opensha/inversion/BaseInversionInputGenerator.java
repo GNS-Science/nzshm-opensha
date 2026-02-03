@@ -109,23 +109,21 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
             }
         }
 
-        if (!SLIP_ONLY) {
-
-            // Rupture rate minimization constraint
-            // Minimize the rates of ruptures below SectMinMag (strongly so that they have
-            // zero rates)
-            if (config.getMinimizationConstraintWt() > 0.0) {
-                List<Integer> belowMinIndexes = new ArrayList<>();
-                for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                    if (rupSet.isRuptureBelowSectMinMag(r)) {
-                        belowMinIndexes.add(r);
-                    }
+        // Rupture rate minimization constraint
+        // Minimize the rates of ruptures below SectMinMag (strongly so that they have
+        // zero rates)
+        if (config.getMinimizationConstraintWt() > 0.0) {
+            List<Integer> belowMinIndexes = new ArrayList<>();
+            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+                if (rupSet.isRuptureBelowSectMinMag(r)) {
+                    belowMinIndexes.add(r);
                 }
-                constraints.add(
-                        new RupRateMinimizationConstraint(
-                                config.getMinimizationConstraintWt(), belowMinIndexes));
             }
+            constraints.add(
+                    new RupRateMinimizationConstraint(
+                            config.getMinimizationConstraintWt(), belowMinIndexes));
         }
+
         // Constrain Solution MFD to equal the Target MFD
         // This is for equality constraints only -- inequality constraints must be
         // encoded into the A_ineq matrix instead since they are nonlinear
