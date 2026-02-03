@@ -9,6 +9,8 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -63,6 +65,44 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
         for (int s = 0; s < sectDataList.size(); s++) {
             double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionId());
             minMagForSect[s] = safeMax(minMag, systemWideMinSeismoMag);
+        }
+
+        return minMagForSect;
+    }
+
+    public static double getMinSeismoMag(int sectionId, Config config) {
+        for (PartitionConfig partitionConfig : config.partitions) {
+            if (partitionConfig.covers(sectionId)) {
+                return partitionConfig.minMag;
+            }
+        }
+        throw new IllegalStateException("No partition config found for section " + sectionId);
+    }
+
+    /**
+     * Version of computeMinSeismoMagForSections that works for joint rupture sets
+     *
+     * @return an array with the minSeismoMag for each section (the maximum minimum mag of all
+     *     ruptures for that section)
+     */
+    public static double[] computeMinSeismoMagForSections(Config config) {
+        List<? extends FaultSection> sectDataList = config.ruptureSet.getFaultSectionDataList();
+        double[] minMagForSect = new double[sectDataList.size()];
+
+        // make map between parent section name and maximum minimum magnitude
+        HashMap<Integer, Double> magForParSectMap = new HashMap<>();
+        for (int s = 0; s < sectDataList.size(); s++) {
+            double minSeismoMag = config.ruptureSet.getMinMagForSection(s);
+            int parentId = sectDataList.get(s).getParentSectionId();
+            magForParSectMap.compute(parentId, (k, v) -> safeMax(v, minSeismoMag));
+        }
+
+        // now set the value for each section in the array, giving a value of
+        // minMag for the partition the section is in,
+        // if the parent section value falls below this
+        for (int s = 0; s < sectDataList.size(); s++) {
+            double minMag = magForParSectMap.get(sectDataList.get(s).getParentSectionId());
+            minMagForSect[s] = safeMax(minMag, getMinSeismoMag(s, config));
         }
 
         return minMagForSect;

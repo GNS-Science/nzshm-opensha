@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import org.dom4j.DocumentException;
@@ -18,6 +19,7 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitS
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
@@ -32,13 +34,20 @@ public class Annealer {
         this.rupSet = rupSet;
     }
 
-    protected IntegerSampler createSampler() {
+    /**
+     * Creates a sampler that excludes ruptures that are below the minMag of any of its sections.
+     *
+     * @return an IntegerSampler or null
+     */
+    protected IntegerSampler createExclusionSampler() {
         Set<Integer> exclusions = new HashSet<>();
+        boolean[] isBelowMinMag =
+                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(
+                        rupSet, rupSet.getModule(ModSectMinMags.class));
         for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-            // FIXME work out what to do
-            //            if (rupSet.isRuptureBelowSectMinMag(r)) {
-            //                exclusions.add(r);
-            //            }
+            if (isBelowMinMag[r]) {
+                exclusions.add(r);
+            }
         }
         if (!exclusions.isEmpty()) {
             return new IntegerSampler.ExclusionIntegerSampler(
@@ -212,8 +221,7 @@ public class Annealer {
         if (!(config.coolingSchedule == null)) tsa.setCoolingFunc(config.coolingSchedule);
 
         if (config.excludeRupturesBelowMinMag) {
-
-            IntegerSampler sampler = createSampler();
+            IntegerSampler sampler = createExclusionSampler();
             if (sampler != null) {
                 tsa.setRuptureSampler(sampler);
             }
