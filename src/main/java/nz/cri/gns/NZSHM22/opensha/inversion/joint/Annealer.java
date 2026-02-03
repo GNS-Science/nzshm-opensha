@@ -50,6 +50,8 @@ public class Annealer {
             }
         }
         if (!exclusions.isEmpty()) {
+            System.out.println(
+                    "Excluding " + exclusions.size() + " ruptures that are below section minMag.");
             return new IntegerSampler.ExclusionIntegerSampler(
                     0, rupSet.getNumRuptures(), exclusions);
         } else {

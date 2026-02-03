@@ -741,6 +741,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected IntegerSampler createSampler() {
         Set<Integer> exclusions = createSamplerExclusions();
         if (!exclusions.isEmpty()) {
+            System.out.println(
+                    "Excluding " + exclusions.size() + " ruptures that are below section minMag.");
             printRuptureExclusionStats(exclusions, "sampler_");
             return new IntegerSampler.ExclusionIntegerSampler(
                     0, rupSet.getNumRuptures(), exclusions);
