@@ -125,4 +125,23 @@ public class JointConstraintWrapperTest {
         assertEquals(originalA, jointA);
         assertArrayEquals(originalD, jointD, 0.000000000000000001);
     }
+
+    @Test
+    public void attributesTest() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = makeRupSet();
+        SlipRateInversionConstraint slipConstraint =
+                new SlipRateInversionConstraint(
+                        42, ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, rupSet);
+
+        PartitionConfig cruConfig = new PartitionConfig(PartitionPredicate.CRUSTAL);
+        cruConfig.init(rupSet);
+        JointConstraintWrapper crustalConstraint =
+                new JointConstraintWrapper(cruConfig, slipConstraint);
+
+        assertEquals(slipConstraint.getWeight(), crustalConstraint.getWeight(), 0.00000001);
+        assertEquals(slipConstraint.getName(), crustalConstraint.getName());
+        assertEquals(slipConstraint.getShortName(), crustalConstraint.getShortName());
+        assertEquals(slipConstraint.getWeightingType(), crustalConstraint.getWeightingType());
+        assertEquals(slipConstraint.getName(), crustalConstraint.getName());
+    }
 }
