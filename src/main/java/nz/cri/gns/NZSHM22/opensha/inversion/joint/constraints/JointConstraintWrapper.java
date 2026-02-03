@@ -23,7 +23,8 @@ public class JointConstraintWrapper extends InversionConstraint {
                 constraint.getName(),
                 constraint.getShortName(),
                 constraint.getWeight(),
-                constraint.isInequality());
+                constraint.isInequality(),
+                constraint.getWeightingType());
         this.config = config;
         this.constraint = constraint;
     }
