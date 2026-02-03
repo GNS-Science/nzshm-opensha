@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -97,8 +100,47 @@ public class NZSHM22_FaultSystemRupSetCalcTest {
         // the parent section of 0 and 1 has a max minseismomag of 0.2
         assertEquals(0.2, actual[0], 0.0001);
         assertEquals(0.2, actual[1], 0.0001);
-        // the parent section of 2 has a minmseismomag of 0.05, so her the system wide min value
+        // the parent section of 2 has a minmseismomag of 0.05, so here the system-wide min value
         // takes effect
         assertEquals(systemWideMinSeismoMag, actual[2], 0.0001);
+    }
+
+    @Test
+    public void testComputeMinSeismoMagForSectionsJoint() {
+        FaultSection sectionA = mock(FaultSection.class);
+        FaultSection sectionB = mock(FaultSection.class);
+        FaultSection sectionC = mock(FaultSection.class);
+        FaultSection sectionD = mock(FaultSection.class);
+        when(sectionA.getParentSectionId()).thenReturn(0);
+        when(sectionB.getParentSectionId()).thenReturn(1);
+        when(sectionC.getParentSectionId()).thenReturn(2);
+        when(sectionD.getParentSectionId()).thenReturn(2);
+        List faultSections = List.of(sectionA, sectionB, sectionC, sectionD);
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getFaultSectionDataList()).thenReturn(faultSections);
+        when(rupSet.getMinMagForSection(0)).thenReturn(0.15);
+        when(rupSet.getMinMagForSection(1)).thenReturn(0.2);
+        when(rupSet.getMinMagForSection(2)).thenReturn(0.5);
+        when(rupSet.getMinMagForSection(3)).thenReturn(0.1);
+
+        PartitionConfig config1 = new PartitionConfig(PartitionPredicate.CRUSTAL);
+        PartitionConfig config2 = new PartitionConfig(PartitionPredicate.HIKURANGI);
+        config1.partitionPredicate = (sectionId) -> sectionId == 0;
+        config1.minMag = 0.42;
+        config2.partitionPredicate = (sectionId) -> sectionId > 0;
+        config2.minMag = 0.31;
+        Config config = new Config();
+        config.ruptureSet = rupSet;
+        config.partitions.add(config1);
+        config.partitions.add(config2);
+
+        double[] actual = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(config);
+
+        // sections 1 and 2 are in separate partitions and get assigned those minMags
+        assertEquals(config1.minMag, actual[0], 0.0001);
+        assertEquals(config2.minMag, actual[1], 0.0001);
+        // sections 2 and 3 have a parent with a minMag greater than the partition minMag
+        assertEquals(0.5, actual[2], 0.0001);
+        assertEquals(0.5, actual[3], 0.0001);
     }
 }
