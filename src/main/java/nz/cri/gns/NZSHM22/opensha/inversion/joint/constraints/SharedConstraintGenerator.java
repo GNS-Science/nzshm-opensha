@@ -75,8 +75,11 @@ public class SharedConstraintGenerator {
         List<IncrementalMagFreqDist> mfdEqualityConstraints = config.mfdConstraints;
         List<IncrementalMagFreqDist> mfdInequalityConstraints = config.mfdConstraints;
 
-        PartitionFaultSystemRupSet partitionRupSet =
-                new PartitionFaultSystemRupSet(rupSet, config.partitionPredicate);
+//        PartitionFaultSystemRupSet partitionRupSet =
+//                new PartitionFaultSystemRupSet(rupSet, config.partitionPredicate);
+//
+
+        FaultSystemRupSet partitionRupSet = MFDInversionConstraintRupSet.create(rupSet, config.partition, config.parentConfig.scalingRelationship);
 
         if (config.mfdEqualityConstraintWt > 0.0 && config.mfdInequalityConstraintWt > 0.0) {
             // we have both MFD constraints, apply a transition mag from equality to
