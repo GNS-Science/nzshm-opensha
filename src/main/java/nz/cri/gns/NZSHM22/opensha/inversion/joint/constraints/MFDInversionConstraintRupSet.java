@@ -11,9 +11,12 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 
 /**
- * A Rupture set for setting up MFDInversionConstraints for a specific partition. All original
- * ruptures are preserved. Magnitudes are only calculated for the part of the rupture that is in the
- * partition.
+ * A Rupture set specifically for setting up MFDInversionConstraints for a partition. Ruptures that
+ * are at least partially in the partition are trimmed to that partition. Magnitudes are only
+ * calculated for these ruptures. Ruptures that are completely outside the partition will have
+ * magnitude 0, but all their other properties are left intact. This is because ruptures with no
+ * fault sections will cause exceptions in OpenSHA code. Ruptures with magnitude 0 are ignored by
+ * MFDInversionConstraints.encode()
  */
 public class MFDInversionConstraintRupSet extends FaultSystemRupSet {
 
@@ -24,7 +27,7 @@ public class MFDInversionConstraintRupSet extends FaultSystemRupSet {
     @Override
     public double getMinMag() {
         // We ignore 0 magnitudes in order to have more streamlined constraints
-        return Arrays.stream(getMagForAllRups()).filter(mag -> mag > 0).max().orElseThrow();
+        return Arrays.stream(getMagForAllRups()).filter(mag -> mag > 0).min().orElseThrow();
     }
 
     public static FaultSystemRupSet create(
