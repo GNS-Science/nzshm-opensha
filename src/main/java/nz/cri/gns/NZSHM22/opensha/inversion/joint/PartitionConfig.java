@@ -8,7 +8,6 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
