@@ -2,12 +2,14 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.IOException;
 import java.util.function.IntPredicate;
+import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.FaultGridAssociations;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
 
@@ -70,6 +72,12 @@ public class RuptureSetSetup {
                 SectSlipRates.precomputed(rupSet, slipRates, origSlips.getSlipRateStdDevs()));
     }
 
+    protected static void createModSectMinMags(Config config) {
+        double[] minMags = NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(config);
+        ModSectMinMags modSectMinMags = ModSectMinMags.instance(config.ruptureSet, minMags);
+        config.ruptureSet.addModule(modSectMinMags);
+    }
+
     /**
      * Sets up the various required modules of the rupture set
      *
@@ -81,6 +89,7 @@ public class RuptureSetSetup {
         FaultSystemRupSet ruptureSet = config.ruptureSet;
         ruptureSet.removeModuleInstances(FaultGridAssociations.class);
         ruptureSet.removeModuleInstances(SectSlipRates.class);
+        ruptureSet.removeModuleInstances(ModSectMinMags.class);
 
         applyScalingRelationship(config);
 
@@ -96,5 +105,7 @@ public class RuptureSetSetup {
 
         applySlipRateFactor(PartitionPredicate.TVZ, config.tvzSlipRateFactor, ruptureSet);
         applySlipRateFactor(PartitionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
+
+        createModSectMinMags(config);
     }
 }
