@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.JointConstraintWrapper;
@@ -65,18 +66,20 @@ public class JointConstraintWrapperTest {
     @Test
     public void encodeTest() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = makeRupSet();
+        Config config = new Config();
+        config.ruptureSet = rupSet;
         SlipRateInversionConstraint slipConstraint =
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.UNNORMALIZED, rupSet);
 
         // set up crustal constraint
         PartitionConfig cruConfig = new PartitionConfig(PartitionPredicate.CRUSTAL);
-        cruConfig.init(rupSet);
+        cruConfig.init(config);
         JointConstraintWrapper crustalConstraint =
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
         // set up subduction constraint
         PartitionConfig subConfig = new PartitionConfig(PartitionPredicate.HIKURANGI);
-        subConfig.init(rupSet);
+        subConfig.init(config);
         JointConstraintWrapper subductionConstraint =
                 new JointConstraintWrapper(subConfig, slipConstraint);
 
@@ -129,12 +132,14 @@ public class JointConstraintWrapperTest {
     @Test
     public void attributesTest() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = makeRupSet();
+        Config config = new Config();
+        config.ruptureSet = rupSet;
         SlipRateInversionConstraint slipConstraint =
                 new SlipRateInversionConstraint(
                         42, ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY, rupSet);
 
         PartitionConfig cruConfig = new PartitionConfig(PartitionPredicate.CRUSTAL);
-        cruConfig.init(rupSet);
+        cruConfig.init(config);
         JointConstraintWrapper crustalConstraint =
                 new JointConstraintWrapper(cruConfig, slipConstraint);
 
