@@ -43,10 +43,10 @@ public class MFDInversionConstraintRupSet extends FaultSystemRupSet {
     static FaultSystemRupSet create(
             FaultSystemRupSet original,
             PartitionPredicate partitionPredicate,
-
-            // TODO do we need to adjust rake?
             JointScalingRelationship scalingRelationship) {
+
         List<List<Integer>> sectionIndices = filterSectionIndices(original, partitionPredicate);
+
         RupSetScalingRelationship scalingRelationship1 =
                 scalingRelationship.toRupSetScalingRelationship(partitionPredicate.isCrustal());
 
