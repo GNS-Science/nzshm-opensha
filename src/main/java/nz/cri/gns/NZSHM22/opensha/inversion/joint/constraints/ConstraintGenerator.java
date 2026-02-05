@@ -131,6 +131,17 @@ public class ConstraintGenerator {
         mfdsModule.add(partition, targetMFDs);
     }
 
+    public static void createPartitionRuptureSets(Config config) {
+        for (PartitionConfig partitionConfig : config.partitions) {
+            partitionConfig.partitionRuptureSet =
+                    PartitionFaultSystemRupSet.create(
+                            config.ruptureSet,
+                            partitionConfig.partitionPredicate,
+                            config.scalingRelationship.toRupSetScalingRelationship(
+                                    partitionConfig.partition.isCrustal()));
+        }
+    }
+
     /**
      * Generate all constraints
      *
@@ -140,6 +151,9 @@ public class ConstraintGenerator {
      */
     public static List<InversionConstraint> generateConstraints(Config config)
             throws FileNotFoundException {
+
+        // FIXME set up slip rates etc
+        createPartitionRuptureSets(config);
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
@@ -175,9 +189,7 @@ public class ConstraintGenerator {
                 storeTargetMFDs(config.ruptureSet, partitionConfig.partition, targetMFDs);
             }
 
-            constraints.addAll(
-                    SharedConstraintGenerator.buildSharedConstraints(
-                            config.ruptureSet, partitionConfig));
+            constraints.addAll(SharedConstraintGenerator.buildSharedConstraints(partitionConfig));
         }
 
         constraints.addAll(generatePaleoConstraints(config));

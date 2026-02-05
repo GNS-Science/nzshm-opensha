@@ -1,6 +1,5 @@
-package nz.cri.gns.NZSHM22.inversion.joint;
+package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.ConfigModule;
 import org.junit.Test;
 
 public class ConfigModuleTest {

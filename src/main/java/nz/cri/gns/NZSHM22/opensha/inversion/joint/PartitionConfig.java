@@ -7,8 +7,8 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionFaultSystemRupSet;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
@@ -51,6 +51,8 @@ public class PartitionConfig {
     // crustal only
     public double polygonMinBufferSize;
 
+    public transient Config parentConfig;
+    public transient PartitionFaultSystemRupSet partitionRuptureSet;
     public transient List<IncrementalMagFreqDist> mfdConstraints;
     public transient List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
 
@@ -58,10 +60,11 @@ public class PartitionConfig {
         this.partition = partition;
     }
 
-    public void init(FaultSystemRupSet ruptureSet) {
-        partitionPredicate = partition.getPredicate(ruptureSet);
+    public void init(Config config) {
+        parentConfig = config;
+        partitionPredicate = partition.getPredicate(config.ruptureSet);
         sectionIds =
-                ruptureSet.getFaultSectionDataList().stream()
+                config.ruptureSet.getFaultSectionDataList().stream()
                         .mapToInt(FaultSection::getSectionId)
                         .filter(partitionPredicate)
                         .boxed()

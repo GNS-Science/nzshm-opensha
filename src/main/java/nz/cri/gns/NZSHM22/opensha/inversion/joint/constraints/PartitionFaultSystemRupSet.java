@@ -1,76 +1,91 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
-import com.google.common.base.Preconditions;
-import java.util.List;
+import java.util.*;
 import java.util.function.IntPredicate;
-import java.util.stream.IntStream;
-import org.opensha.commons.geo.Region;
+import java.util.stream.Collectors;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.FaultSection;
 
-/**
- * A rupture set specifically to be used by MFDInversionConstraint.
- *
- * <p>Uses a partition instead of a region to calculate getFractRupsInsideRegion()
- */
+/// A Rupture set specifically for setting up `MFDInversionConstraints` for a partition. Ruptures
+// that
+/// are at least partially in the partition are trimmed to that partition. Magnitudes are only
+/// calculated for these ruptures. Ruptures that are completely outside the partition will have
+/// magnitude 0, and no fault sections.
+///
+/// - Ruptures with no fault sections are ignored by SlipRateConstraint.encode()
+/// - Ruptures with magnitude 0 are ignored by MFDInversionConstraints.encode()
 public class PartitionFaultSystemRupSet extends FaultSystemRupSet {
 
-    final FaultSystemRupSet original;
-    final IntPredicate partitionPredicate;
-    double[] fractRupsInsidePartition;
-
-    public PartitionFaultSystemRupSet(FaultSystemRupSet original, IntPredicate partitionPredicate) {
-        this.original = original;
-        this.partitionPredicate = partitionPredicate;
-    }
-
-    @Override
-    public int getNumRuptures() {
-        return original.getNumRuptures();
-    }
-
-    @Override
-    public double getMaxMag() {
-        double[] inside = getFractRupsInsideRegion(null, false);
-        return IntStream.range(0, getNumRuptures())
-                .filter((index) -> inside[index] > 0)
-                .mapToDouble(original::getMagForRup)
-                .max()
-                .orElse(0);
+    protected PartitionFaultSystemRupSet(FaultSystemRupSet original) {
+        init(original);
     }
 
     @Override
     public double getMinMag() {
-        double[] inside = getFractRupsInsideRegion(null, false);
-        return IntStream.range(0, getNumRuptures())
-                .filter((index) -> inside[index] > 0)
-                .mapToDouble(original::getMagForRup)
-                .min()
-                .orElse(0);
+        // We ignore 0 magnitudes in order to have more streamlined constraints
+        return Arrays.stream(getMagForAllRups()).filter(mag -> mag > 0).min().orElseThrow();
     }
 
-    @Override
-    public double getMagForRup(int rupIndex) {
-        return original.getMagForRup(rupIndex);
-    }
+    public static PartitionFaultSystemRupSet create(
+            FaultSystemRupSet rupSet,
+            IntPredicate predicate,
+            RupSetScalingRelationship scalingRelationship) {
 
-    @Override
-    public double[] getFractRupsInsideRegion(Region region, boolean traceOnly) {
-        if (fractRupsInsidePartition == null) {
-            Preconditions.checkArgument(!traceOnly, "traceOnly not implemented");
-            double[] result = new double[original.getNumRuptures()];
-            for (int ruptureIndex = 0; ruptureIndex < original.getNumRuptures(); ruptureIndex++) {
-                List<Integer> sectionIds = original.getSectionsIndicesForRup(ruptureIndex);
-                double totalArea = original.getAreaForRup(ruptureIndex);
-                double fractionArea = 0;
-                for (Integer sectionId : sectionIds) {
-                    if (partitionPredicate.test(sectionId)) {
-                        fractionArea += original.getAreaForSection(sectionId);
-                    }
-                }
-                result[ruptureIndex] = fractionArea / totalArea;
+        Map<Integer, Integer> oldToNew = new HashMap<>();
+        int nextId = 0;
+
+        // Filter fault sections and adjust their section ids so that they are consecutive.
+        // remember mapping between old and new ids so that we can adjust the ruptures
+        List<FaultSection> faultSections = new ArrayList<>();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            if (predicate.test(section.getSectionId())) {
+                oldToNew.put(section.getSectionId(), nextId);
+                FaultSectionPrefData copiedSection = new FaultSectionPrefData();
+                copiedSection.setFaultSectionPrefData(section);
+                copiedSection.setSectionId(nextId);
+                faultSections.add(copiedSection);
+                nextId++;
             }
-            fractRupsInsidePartition = result;
         }
-        return fractRupsInsidePartition;
+
+        // Filter ruptures and use new section ids
+        List<List<Integer>> ruptures =
+                rupSet.getSectionIndicesForAllRups().stream()
+                        .map(
+                                rupture ->
+                                        rupture.stream()
+                                                .map(oldToNew::get)
+                                                .filter(Objects::nonNull)
+                                                .collect(Collectors.toList()))
+                        .collect(Collectors.toList());
+
+        // Add dummy sections to empty ruptures so that rupture set builder does not blow up.
+        // This masks which ruptures are now empty so we remember them for fixing later
+        List<Boolean> hasMag = new ArrayList<>();
+        for (List<Integer> rupture : ruptures) {
+            if (rupture.isEmpty()) {
+                rupture.add(0);
+                hasMag.add(false);
+            }
+            hasMag.add(true);
+        }
+
+        FaultSystemRupSet filteredRuptureSet =
+                FaultSystemRupSet.builder(faultSections, ruptures)
+                        .forScalingRelationship(scalingRelationship)
+                        .build();
+
+        // remove dummy sections for ruptures outside the partition
+        // set magnitude to 0 for all ruptures outside the partition
+        for (int r = 0; r < hasMag.size(); r++) {
+            if (!hasMag.get(r)) {
+                filteredRuptureSet.getSectionsIndicesForRup(r).clear();
+                filteredRuptureSet.getMagForAllRups()[r] = 0;
+            }
+        }
+
+        return new PartitionFaultSystemRupSet(filteredRuptureSet);
     }
 }

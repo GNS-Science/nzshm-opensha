@@ -132,7 +132,20 @@ b bin 2  |      0X        1X |     |X|
 `MFDInversionConstraint` has this model built-in using regions. UCERF3 had separate MFDs for northern and 
 southern California.
 
-This model is currently implemented for MFD constraints for joint inversions.
+This model is implemented for MFD constraints for joint inversions, but we are not using it in favour of the next model:
+
+### Partition-Based
+
+When considering MFD constraints, we believe that for example only the crustal part of a joint rupture should count
+towards the crustal MFDs, and only the subduction part of a joint rupture should count towards a subduction MFD.
+
+To achieve this, we simulate a rupture set for each partition where only the fault sections from that partition are 
+considered when calculating the magnitude of a rupture.
+
+MFD constraints are specified per partition. The magnitude bin which is used for encoding the constraint for a partition 
+is not based on the joint rupture magnitude, but only on the magnitude of the part of the rupture inside the partition.
+No further weighting as in the previous approach is undertaken. If a rupture has no section from the partition, the 
+rupture's column is left at the neutral value 0.
 
 ### Merging
 
@@ -140,37 +153,3 @@ Instead of having separate MFD constraints for separate partitions, we can creat
 then merge (add) them to create joint MFD constraints.
 
 This is the (unused) NZSHM22 implementation of MFD regions.
-
-## Discussion
-
-While the fault section based model is more efficient because it results in fewer rows, the rupture-based approach is 
-more universal as it would work for every constraint. It might be valuable to be consistent in how we create joint
-constraints.
-
-This is what the slip rate constraint example would look like:
-
-Example:
-- slip rate constraint with weight 2 for CRUSTAL partition
-- slip rate constraint with weight 4 for HIKURANGI partition
-- rupture 1 is 50% in each partition
-- ruptures 2 and 3 are 100% in CRUSTAL
-- rupture 4 is 100% in HIKURANGI
-
-```
-              rup1     rup2 rup3 rup4     target
-             ┌                       ┐     ┌  ┐
-sectionId 1  | 2*0.5X   2X           |     |2X|
-sectionId 2  |          2X   2X      |     |2X|
-sectionId 3  | 2*0.5X             0X |     |2X|
-sectionId 1  | 4*0.5X   0X           |     |4X|
-sectionId 2  |          0X   0X      |     |4X|
-sectionId 3  | 4*0.5X             4X |     |4X|
-             └                       ┘     └  ┘
-```
-
-Note how each of the two constraints is encoded in 3 rows with their weight, modified by the fraction of the rupture 
-inside the partition.
-
-This approach would also allow us to treat subduction parts of ruptures differently for paleo rate constraints. We could
-have different weight, or even different paleo probabilities (if it makes sense to do so).
-

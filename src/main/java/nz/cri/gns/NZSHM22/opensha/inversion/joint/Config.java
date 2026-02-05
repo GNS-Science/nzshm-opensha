@@ -103,7 +103,7 @@ public class Config {
         hydrateScalingRelationship();
 
         for (PartitionConfig config : partitions) {
-            config.init(ruptureSet);
+            config.init(this);
         }
 
         annealing.init();
