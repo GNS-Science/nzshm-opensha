@@ -1,23 +1,21 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.FaultSection;
 
-/**
- * A Rupture set specifically for setting up MFDInversionConstraints for a partition. Ruptures that
- * are at least partially in the partition are trimmed to that partition. Magnitudes are only
- * calculated for these ruptures. Ruptures that are completely outside the partition will have
- * magnitude 0, but all their other properties are left intact. This is because ruptures with no
- * fault sections will cause exceptions in OpenSHA code. Ruptures with magnitude 0 are ignored by
- * MFDInversionConstraints.encode()
- */
+/// A Rupture set specifically for setting up `MFDInversionConstraints` for a partition. Ruptures
+// that
+/// are at least partially in the partition are trimmed to that partition. Magnitudes are only
+/// calculated for these ruptures. Ruptures that are completely outside the partition will have
+/// magnitude 0, and no fault sections.
+///
+/// - Ruptures with no fault sections are ignored by SlipRateConstraint.encode()
+/// - Ruptures with magnitude 0 are ignored by MFDInversionConstraints.encode()
 public class MFDInversionConstraintRupSet extends FaultSystemRupSet {
 
     protected MFDInversionConstraintRupSet(FaultSystemRupSet original) {
@@ -30,47 +28,60 @@ public class MFDInversionConstraintRupSet extends FaultSystemRupSet {
         return Arrays.stream(getMagForAllRups()).filter(mag -> mag > 0).min().orElseThrow();
     }
 
-    public static FaultSystemRupSet create(
-            FaultSystemRupSet original,
-            PartitionPredicate partitionPredicate,
-            JointScalingRelationship scalingRelationship) {
+    public static MFDInversionConstraintRupSet create(
+            FaultSystemRupSet rupSet,
+            IntPredicate predicate,
+            RupSetScalingRelationship scalingRelationship) {
 
-        IntPredicate predicate = partitionPredicate.getPredicate(original);
-        // a mask of all ruptures that contain sections inside the partition
-        List<Boolean> mask =
-                original.getSectionIndicesForAllRups().stream()
-                        .map(sections -> sections.stream().anyMatch(predicate::test))
-                        .collect(Collectors.toList());
+        Map<Integer, Integer> oldToNew = new HashMap<>();
+        int nextId = 0;
 
-        List<List<Integer>> sectionIndices =
-                new ArrayList<>(original.getSectionIndicesForAllRups());
-
-        // Filter out sections that are outside the partition.
-        // We leave ruptures that are completely outside the partition alone, as OpenSHA will break
-        // if we have ruptures with no sections.
-
-        for (int r = 0; r < sectionIndices.size(); r++) {
-            if (mask.get(r)) {
-                sectionIndices.set(
-                        r,
-                        sectionIndices.get(r).stream()
-                                .filter(predicate::test)
-                                .collect(Collectors.toList()));
+        // Filter fault sections and adjust their section ids so that they are consecutive.
+        // remember mapping between old and new ids so that we can adjust the ruptures
+        List<FaultSection> faultSections = new ArrayList<>();
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            if (predicate.test(section.getSectionId())) {
+                oldToNew.put(section.getSectionId(), nextId);
+                FaultSectionPrefData copiedSection = new FaultSectionPrefData();
+                copiedSection.setFaultSectionPrefData(section);
+                copiedSection.setSectionId(nextId);
+                faultSections.add(copiedSection);
+                nextId++;
             }
         }
 
-        RupSetScalingRelationship scalingRelationship1 =
-                scalingRelationship.toRupSetScalingRelationship(partitionPredicate.isCrustal());
+        // Filter ruptures and use new section ids
+        List<List<Integer>> ruptures =
+                rupSet.getSectionIndicesForAllRups().stream()
+                        .map(
+                                rupture ->
+                                        rupture.stream()
+                                                .map(oldToNew::get)
+                                                .filter(Objects::nonNull)
+                                                .collect(Collectors.toList()))
+                        .collect(Collectors.toList());
 
-        // create rupture set with the modified ruptures
+        // Add dummy sections to empty ruptures so that rupture set builder does not blow up.
+        // This masks which ruptures are now empty so we remember them for fixing later
+        List<Boolean> hasMag = new ArrayList<>();
+        for (List<Integer> rupture : ruptures) {
+            if (rupture.isEmpty()) {
+                rupture.add(0);
+                hasMag.add(false);
+            }
+            hasMag.add(true);
+        }
+
         FaultSystemRupSet filteredRuptureSet =
-                FaultSystemRupSet.builder(original.getFaultSectionDataList(), sectionIndices)
-                        .forScalingRelationship(scalingRelationship1)
+                FaultSystemRupSet.builder(faultSections, ruptures)
+                        .forScalingRelationship(scalingRelationship)
                         .build();
 
+        // remove dummy sections for ruptures outside the partition
         // set magnitude to 0 for all ruptures outside the partition
-        for (int r = 0; r < mask.size(); r++) {
-            if (!mask.get(r)) {
+        for (int r = 0; r < hasMag.size(); r++) {
+            if (!hasMag.get(r)) {
+                filteredRuptureSet.getSectionsIndicesForRup(r).clear();
                 filteredRuptureSet.getMagForAllRups()[r] = 0;
             }
         }

@@ -13,8 +13,6 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.MFDInversionConstraintRupSet;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
@@ -22,6 +20,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class MFDInversionConstraintRupSetTest {
 
@@ -40,7 +39,7 @@ public class MFDInversionConstraintRupSetTest {
                         NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
                         // shimmying crustalised joint scaling relationship in here so that we have
                         // simpler assertions
-                        new EstimatedJointScalingRelationship().toRupSetScalingRelationship(true),
+                        ScalingRelationships.SHAW_2009_MOD,
                         List.of(
                                 List.of(CRU_SECTION),
                                 List.of(SUB_SECTION),
@@ -59,10 +58,11 @@ public class MFDInversionConstraintRupSetTest {
     @Test
     public void magTest() throws DocumentException, IOException {
         FaultSystemRupSet original = makeRupSet();
-        JointScalingRelationship scalingRelationship = new EstimatedJointScalingRelationship();
         FaultSystemRupSet rupSet =
                 MFDInversionConstraintRupSet.create(
-                        original, PartitionPredicate.CRUSTAL, scalingRelationship);
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
 
         // magnitudes are only calculated for crustal parts of ruptures
         assertEquals(original.getMagForRup(0), rupSet.getMagForRup(0), DELTA);
@@ -75,12 +75,13 @@ public class MFDInversionConstraintRupSetTest {
 
     // This test ensures that the rupture set is able to serve its purpose.
     @Test
-    public void encodeTest() throws DocumentException, IOException {
+    public void MFDEncodeTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
         FaultSystemRupSet rupSet =
                 MFDInversionConstraintRupSet.create(
-                        makeRupSet(),
-                        PartitionPredicate.CRUSTAL,
-                        new EstimatedJointScalingRelationship());
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
         IncrementalMagFreqDist mfd =
                 new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
         for (int bin = 0; bin < mfd.getClosestXIndex(mfd.getMaxX()); bin++) {
@@ -102,4 +103,7 @@ public class MFDInversionConstraintRupSetTest {
         assertEquals(0, matrix.get(0, 1), DELTA);
         assertEquals(matrix.get(0, 0), matrix.get(0, 2), DELTA);
     }
+
+    @Test
+    public void SlipRateEncodeTest() {}
 }

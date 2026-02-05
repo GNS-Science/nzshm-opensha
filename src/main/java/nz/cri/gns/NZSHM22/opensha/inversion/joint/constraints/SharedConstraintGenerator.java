@@ -81,7 +81,10 @@ public class SharedConstraintGenerator {
 
         FaultSystemRupSet partitionRupSet =
                 MFDInversionConstraintRupSet.create(
-                        rupSet, config.partition, config.parentConfig.scalingRelationship);
+                        rupSet,
+                        config.partition.getPredicate(rupSet),
+                        config.parentConfig.scalingRelationship.toRupSetScalingRelationship(
+                                config.partition.isCrustal()));
 
         if (config.mfdEqualityConstraintWt > 0.0 && config.mfdInequalityConstraintWt > 0.0) {
             // we have both MFD constraints, apply a transition mag from equality to
