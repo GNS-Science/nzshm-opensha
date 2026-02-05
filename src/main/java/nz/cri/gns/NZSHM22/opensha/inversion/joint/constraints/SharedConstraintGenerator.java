@@ -6,7 +6,6 @@ import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SlipRateInversionConstraintBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
@@ -19,20 +18,17 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
  */
 public class SharedConstraintGenerator {
 
-    public static List<InversionConstraint> buildSlipRateConstraints(
-            FaultSystemRupSet rupSet, PartitionConfig config) {
+    public static List<InversionConstraint> buildSlipRateConstraints(PartitionConfig config) {
         List<InversionConstraint> constraints = new ArrayList<>();
         if (config.slipRateWeightingType
                 == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
                         .NORMALIZED_BY_UNCERTAINTY) {
             constraints.add(
-                    new JointConstraintWrapper(
-                            config,
-                            NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
-                                    config.slipRateUncertaintyConstraintWt,
-                                    rupSet,
-                                    config.slipRateUncertaintyConstraintScalingFactor,
-                                    config.unmodifiedSlipRateStdvs)));
+                    NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
+                            config.slipRateUncertaintyConstraintWt,
+                            config.partitionRuptureSet,
+                            config.slipRateUncertaintyConstraintScalingFactor,
+                            config.unmodifiedSlipRateStdvs));
         } else {
             if (config.slipRateConstraintWt_normalized > 0d
                     && (config.slipRateWeightingType
@@ -42,12 +38,10 @@ public class SharedConstraintGenerator {
                                     == AbstractInversionConfiguration
                                             .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
-                        new JointConstraintWrapper(
-                                config,
-                                new SlipRateInversionConstraint(
-                                        config.slipRateConstraintWt_normalized,
-                                        ConstraintWeightingType.NORMALIZED,
-                                        rupSet)));
+                        new SlipRateInversionConstraint(
+                                config.slipRateConstraintWt_normalized,
+                                ConstraintWeightingType.NORMALIZED,
+                                config.partitionRuptureSet));
             }
 
             if (config.slipRateConstraintWt_unnormalized > 0d
@@ -58,33 +52,19 @@ public class SharedConstraintGenerator {
                                     == AbstractInversionConfiguration
                                             .NZSlipRateConstraintWeightingType.BOTH)) {
                 constraints.add(
-                        new JointConstraintWrapper(
-                                config,
-                                new SlipRateInversionConstraint(
-                                        config.slipRateConstraintWt_unnormalized,
-                                        ConstraintWeightingType.UNNORMALIZED,
-                                        rupSet)));
+                        new SlipRateInversionConstraint(
+                                config.slipRateConstraintWt_unnormalized,
+                                ConstraintWeightingType.UNNORMALIZED,
+                                config.partitionRuptureSet));
             }
         }
         return constraints;
     }
 
-    public static List<InversionConstraint> buildMfdConstraints(
-            FaultSystemRupSet rupSet, PartitionConfig config) {
+    public static List<InversionConstraint> buildMfdConstraints(PartitionConfig config) {
         List<InversionConstraint> constraints = new ArrayList<>();
         List<IncrementalMagFreqDist> mfdEqualityConstraints = config.mfdConstraints;
         List<IncrementalMagFreqDist> mfdInequalityConstraints = config.mfdConstraints;
-
-        //        PartitionFaultSystemRupSet partitionRupSet =
-        //                new PartitionFaultSystemRupSet(rupSet, config.partitionPredicate);
-        //
-
-        FaultSystemRupSet partitionRupSet =
-                MFDInversionConstraintRupSet.create(
-                        rupSet,
-                        config.partition.getPredicate(rupSet),
-                        config.parentConfig.scalingRelationship.toRupSetScalingRelationship(
-                                config.partition.isCrustal()));
 
         if (config.mfdEqualityConstraintWt > 0.0 && config.mfdInequalityConstraintWt > 0.0) {
             // we have both MFD constraints, apply a transition mag from equality to
@@ -107,7 +87,7 @@ public class SharedConstraintGenerator {
         if (config.mfdEqualityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            partitionRupSet,
+                            config.partitionRuptureSet,
                             config.mfdEqualityConstraintWt,
                             false,
                             mfdEqualityConstraints));
@@ -118,7 +98,7 @@ public class SharedConstraintGenerator {
         if (config.mfdInequalityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            partitionRupSet,
+                            config.partitionRuptureSet,
                             config.mfdInequalityConstraintWt,
                             true,
                             mfdInequalityConstraints));
@@ -128,7 +108,7 @@ public class SharedConstraintGenerator {
         if (config.mfdUncertaintyWeight > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            partitionRupSet,
+                            config.partitionRuptureSet,
                             config.mfdUncertaintyWeight,
                             false,
                             ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
@@ -137,8 +117,7 @@ public class SharedConstraintGenerator {
         return constraints;
     }
 
-    public static List<InversionConstraint> buildSharedConstraints(
-            FaultSystemRupSet rupSet, PartitionConfig config) {
+    public static List<InversionConstraint> buildSharedConstraints(PartitionConfig config) {
 
         List<InversionConstraint> constraints = new ArrayList<>();
 
@@ -146,8 +125,8 @@ public class SharedConstraintGenerator {
             return constraints;
         }
 
-        constraints.addAll(buildSlipRateConstraints(rupSet, config));
-        constraints.addAll(buildMfdConstraints(rupSet, config));
+        constraints.addAll(buildSlipRateConstraints(config));
+        constraints.addAll(buildMfdConstraints(config));
 
         return constraints;
     }
