@@ -8,7 +8,8 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
 
-/// A rupture set filtered by section id. Ruptures that are empty after filtering are removed.
+/// A rupture set that has reduced fault sections and/or ruptures.  Ruptures that are empty after
+// filtering are removed.
 /// Modules are not copied over.
 public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
 
@@ -24,9 +25,17 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
         return newToOldRuptures.get(ruptureId);
     }
 
+    /**
+     * Filters a rupture set based on fault section ids.
+     *
+     * @param rupSet the input rupture set
+     * @param sectionIdPredicate a predicate to filter fault sections
+     * @param scalingRelationship the scaling relationship to calculate magnitudes with
+     * @return a filtered rupture set
+     */
     public static FilteredFaultSystemRupSet forIntPredicate(
             FaultSystemRupSet rupSet,
-            IntPredicate predicate,
+            IntPredicate sectionIdPredicate,
             RupSetScalingRelationship scalingRelationship) {
 
         Map<Integer, Integer> oldToNewSections = new HashMap<>();
@@ -36,7 +45,7 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
         // remember mapping between old and new ids so that we can adjust the ruptures
         List<FaultSection> faultSections = new ArrayList<>();
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
-            if (predicate.test(section.getSectionId())) {
+            if (sectionIdPredicate.test(section.getSectionId())) {
                 oldToNewSections.put(section.getSectionId(), nextId);
                 FaultSectionPrefData copiedSection = new FaultSectionPrefData();
                 copiedSection.setFaultSectionPrefData(section);

@@ -29,6 +29,12 @@ public interface JointScalingRelationship {
      */
     double getMag(double crustalArea, double subductionArea, double aveRake);
 
+    /**
+     * Creates a RupSetScalingRelationship for either crustal or subduction.
+     *
+     * @param isCrustal whether to calculate the crustal or the subduction component
+     * @return a RupSetScalingRelationship
+     */
     public default RupSetScalingRelationship toRupSetScalingRelationship(boolean isCrustal) {
         return new OldSchoolScaling(this, isCrustal);
     }
@@ -73,12 +79,12 @@ public interface JointScalingRelationship {
 
         @Override
         public String getShortName() {
-            return "";
+            return "OldSchoolScaling " + (isCrustal ? "crustal" : "subduction");
         }
 
         @Override
         public String getName() {
-            return "";
+            return "OldSchoolScaling " + (isCrustal ? "crustal" : "subduction");
         }
     }
 }

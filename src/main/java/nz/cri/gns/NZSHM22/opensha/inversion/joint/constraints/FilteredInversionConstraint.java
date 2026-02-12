@@ -4,10 +4,9 @@ import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 
-/// Wraps an InversionConstraint that may rely on a rupture set with filtered out ruptures.
+/// Wraps an InversionConstraint that relies on a rupture set with filtered out ruptures.
 /// The encode() function provides an accordingly filtered A matrix to the original constraint, and
-// then
-/// translates the encoded values to the proper matrix.
+/// then translates the encoded values to the proper matrix.
 public class FilteredInversionConstraint extends InversionConstraint {
 
     final InversionConstraint inner;
@@ -37,7 +36,7 @@ public class FilteredInversionConstraint extends InversionConstraint {
         long nonZero = inner.encode(innerA, d, startRow);
         for (int row = 0; row < innerA.rows(); ++row) {
             for (int col = 0; col < innerA.columns(); ++col) {
-                double value = innerA.getQuick(row, col);
+                double value = innerA.get(row, col);
                 if (value != (double) 0.0F) {
                     A.set(row + startRow, rupSet.getOldRuptureId(col), value);
                 }
