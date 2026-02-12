@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredInversionConstraint;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -40,7 +41,9 @@ public class FilteredInversionConstraintTest {
             mfd.set(bin, bin);
         }
         List<IncrementalMagFreqDist> mfds = List.of(mfd);
-        MFDInversionConstraint constraint = new MFDInversionConstraint(rupSet, 1, false, mfds);
+        MFDInversionConstraint mfdConstraint = new MFDInversionConstraint(rupSet, 1, false, mfds);
+        FilteredInversionConstraint constraint =
+                new FilteredInversionConstraint(mfdConstraint, rupSet);
 
         // we only have a single magnitude, so we expect a single bucket
         assertEquals(1, constraint.getNumRows());
@@ -59,14 +62,16 @@ public class FilteredInversionConstraintTest {
     @Test
     public void SlipRateEncodeTest() throws DocumentException, IOException {
         FaultSystemRupSet original = FilteredFaultSystemRupSetTest.makeRupSet();
-        FaultSystemRupSet rupSet =
+        FilteredFaultSystemRupSet rupSet =
                 FilteredFaultSystemRupSet.forIntPredicate(
                         original,
                         PartitionPredicate.CRUSTAL.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
 
-        SlipRateInversionConstraint constraint =
+        SlipRateInversionConstraint slipConstraint =
                 new SlipRateInversionConstraint(1, ConstraintWeightingType.NORMALIZED, rupSet);
+        FilteredInversionConstraint constraint =
+                new FilteredInversionConstraint(slipConstraint, rupSet);
 
         assertEquals(1, constraint.getNumRows());
 
@@ -88,7 +93,9 @@ public class FilteredInversionConstraintTest {
                         PartitionPredicate.HIKURANGI.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
 
-        constraint = new SlipRateInversionConstraint(1, ConstraintWeightingType.NORMALIZED, rupSet);
+        slipConstraint =
+                new SlipRateInversionConstraint(1, ConstraintWeightingType.NORMALIZED, rupSet);
+        constraint = new FilteredInversionConstraint(slipConstraint, rupSet);
 
         assertEquals(1, constraint.getNumRows());
 

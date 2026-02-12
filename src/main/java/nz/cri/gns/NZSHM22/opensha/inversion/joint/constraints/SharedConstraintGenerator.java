@@ -32,8 +32,7 @@ public class SharedConstraintGenerator {
             constraints.add(
                     NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
                             config.slipRateUncertaintyConstraintWt,
-                            // FIXME this needs to use the original rupset
-                            config.partitionRuptureSet,
+                            config.parentConfig.ruptureSet,
                             config.slipRateUncertaintyConstraintScalingFactor,
                             config.unmodifiedSlipRateStdvs));
         } else {
@@ -44,7 +43,7 @@ public class SharedConstraintGenerator {
                         new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_normalized,
                                 ConstraintWeightingType.NORMALIZED,
-                                config.partitionRuptureSet));
+                                config.parentConfig.ruptureSet));
             }
 
             if (config.slipRateConstraintWt_unnormalized > 0d
@@ -54,7 +53,7 @@ public class SharedConstraintGenerator {
                         new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_unnormalized,
                                 ConstraintWeightingType.UNNORMALIZED,
-                                config.partitionRuptureSet));
+                                config.parentConfig.ruptureSet));
             }
         }
         return constraints;
@@ -86,7 +85,7 @@ public class SharedConstraintGenerator {
         if (config.mfdEqualityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            config.partitionRuptureSet,
+                            config.parentConfig.ruptureSet,
                             config.mfdEqualityConstraintWt,
                             false,
                             mfdEqualityConstraints));
@@ -97,7 +96,7 @@ public class SharedConstraintGenerator {
         if (config.mfdInequalityConstraintWt > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            config.partitionRuptureSet,
+                            config.parentConfig.ruptureSet,
                             config.mfdInequalityConstraintWt,
                             true,
                             mfdInequalityConstraints));
@@ -107,7 +106,7 @@ public class SharedConstraintGenerator {
         if (config.mfdUncertaintyWeight > 0.0) {
             constraints.add(
                     new MFDInversionConstraint(
-                            config.partitionRuptureSet,
+                            config.parentConfig.ruptureSet,
                             config.mfdUncertaintyWeight,
                             false,
                             ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
@@ -115,18 +114,13 @@ public class SharedConstraintGenerator {
         }
 
         if (SPLIT_RUPSET_MFDS) {
-            FilteredFaultSystemRupSet rupSet =
-                    FilteredFaultSystemRupSet.forIntPredicate(
-                            config.partitionRuptureSet,
-                            config.partitionPredicate,
-                            config.parentConfig.scalingRelationship.toRupSetScalingRelationship(
-                                    config.partition.isCrustal()));
             constraints =
                     constraints.stream()
                             .map(
                                     constraint -> {
-                                        constraint.setRuptureSet(rupSet);
-                                        return new FilteredInversionConstraint(constraint, rupSet);
+                                        constraint.setRuptureSet(config.partitionRuptureSet);
+                                        return new FilteredInversionConstraint(
+                                                constraint, config.partitionRuptureSet);
                                     })
                             .collect(Collectors.toList());
         }

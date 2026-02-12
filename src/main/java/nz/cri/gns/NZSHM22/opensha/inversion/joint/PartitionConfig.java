@@ -52,7 +52,6 @@ public class PartitionConfig {
     public double polygonMinBufferSize;
 
     public transient Config parentConfig;
-    // FIXME this should not be here. It definitely should not be used everywhere
     public transient FilteredFaultSystemRupSet partitionRuptureSet;
     public transient List<IncrementalMagFreqDist> mfdConstraints;
     public transient List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
