@@ -7,7 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionFaultSystemRupSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -52,7 +52,7 @@ public class PartitionConfig {
     public double polygonMinBufferSize;
 
     public transient Config parentConfig;
-    public transient PartitionFaultSystemRupSet partitionRuptureSet;
+    public transient FilteredFaultSystemRupSet partitionRuptureSet;
     public transient List<IncrementalMagFreqDist> mfdConstraints;
     public transient List<UncertainIncrMagFreqDist> mfdUncertaintyWeightedConstraints;
 

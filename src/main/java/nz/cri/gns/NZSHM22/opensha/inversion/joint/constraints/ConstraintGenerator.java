@@ -134,7 +134,7 @@ public class ConstraintGenerator {
     public static void createPartitionRuptureSets(Config config) {
         for (PartitionConfig partitionConfig : config.partitions) {
             partitionConfig.partitionRuptureSet =
-                    PartitionFaultSystemRupSet.create(
+                    FilteredFaultSystemRupSet.forIntPredicate(
                             config.ruptureSet,
                             partitionConfig.partitionPredicate,
                             config.scalingRelationship.toRupSetScalingRelationship(

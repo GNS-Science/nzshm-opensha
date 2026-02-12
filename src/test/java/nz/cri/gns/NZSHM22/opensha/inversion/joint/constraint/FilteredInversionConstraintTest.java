@@ -2,104 +2,35 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint;
 
 import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_MIN_MAG;
 import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_NUM_BINS;
-import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSet;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import java.io.IOException;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionFaultSystemRupSet;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
-import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
-import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
-public class PartitionFaultSystemRupSetTest {
+public class FilteredInversionConstraintTest {
 
     static final double DELTA = 0.00000001;
 
-    static final int CRU_SECTION = 0;
-    static final int SUB_SECTION = 1;
-
-    /**
-     * Create rupture set with one crustal and one subduction fault section, and three ruptures:
-     * crustal, subduction, and joint.
-     */
-    public FaultSystemRupSet makeRupSet() throws DocumentException, IOException {
-        FaultSystemRupSet rupSet =
-                createRupSet(
-                        NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
-                        // shimmying crustalised joint scaling relationship in here so that we have
-                        // simpler assertions
-                        ScalingRelationships.SHAW_2009_MOD,
-                        List.of(
-                                List.of(CRU_SECTION),
-                                List.of(SUB_SECTION),
-                                List.of(CRU_SECTION, SUB_SECTION)));
-
-        rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
-
-        FaultSectionProperties props = new FaultSectionProperties();
-        props.set(CRU_SECTION, PartitionPredicate.CRUSTAL.name(), true);
-        props.set(SUB_SECTION, PartitionPredicate.HIKURANGI.name(), true);
-        rupSet.addModule(props);
-
-        double[] aveSlipData = new double[rupSet.getNumRuptures()];
-        aveSlipData[0] = 1;
-        aveSlipData[1] = 2;
-        aveSlipData[2] = 3;
-        double[] slipRateData = new double[rupSet.getNumSections()];
-        slipRateData[0] = 1;
-        slipRateData[1] = 2;
-        double[] slipStdvData = new double[rupSet.getNumSections()];
-        slipStdvData[0] = 1;
-        slipStdvData[1] = 2;
-        AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, aveSlipData);
-        rupSet.addModule(aveSlip);
-        rupSet.addModule(SlipAlongRuptureModels.UNIFORM.getModel());
-        SectSlipRates targets = SectSlipRates.precomputed(rupSet, slipRateData, slipStdvData);
-        rupSet.addModule(targets);
-
-        return rupSet;
-    }
-
-    @Test
-    public void magTest() throws DocumentException, IOException {
-        FaultSystemRupSet original = makeRupSet();
-        FaultSystemRupSet rupSet =
-                PartitionFaultSystemRupSet.create(
-                        original,
-                        PartitionPredicate.CRUSTAL.getPredicate(original),
-                        ScalingRelationships.SHAW_2009_MOD);
-
-        // magnitudes are only calculated for crustal parts of ruptures
-        assertEquals(original.getMagForRup(0), rupSet.getMagForRup(0), DELTA);
-        assertEquals(0, rupSet.getMagForRup(1), DELTA);
-        assertEquals(original.getMagForRup(0), rupSet.getMagForRup(2), DELTA);
-
-        // minMag ignores zero magnitudes
-        assertEquals(original.getMagForRup(0), rupSet.getMinMag(), DELTA);
-    }
-
-    // This test ensures that the rupture set is able to serve its purpose.
     @Test
     public void MFDEncodeTest() throws DocumentException, IOException {
-        FaultSystemRupSet original = makeRupSet();
-        FaultSystemRupSet rupSet =
-                PartitionFaultSystemRupSet.create(
+        FaultSystemRupSet original = FilteredFaultSystemRupSetTest.makeRupSet();
+        FilteredFaultSystemRupSet rupSet =
+                FilteredFaultSystemRupSet.forIntPredicate(
                         original,
                         PartitionPredicate.CRUSTAL.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
@@ -127,9 +58,9 @@ public class PartitionFaultSystemRupSetTest {
 
     @Test
     public void SlipRateEncodeTest() throws DocumentException, IOException {
-        FaultSystemRupSet original = makeRupSet();
+        FaultSystemRupSet original = FilteredFaultSystemRupSetTest.makeRupSet();
         FaultSystemRupSet rupSet =
-                PartitionFaultSystemRupSet.create(
+                FilteredFaultSystemRupSet.forIntPredicate(
                         original,
                         PartitionPredicate.CRUSTAL.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
@@ -152,7 +83,7 @@ public class PartitionFaultSystemRupSetTest {
         // trying the same for hikurangi
 
         rupSet =
-                PartitionFaultSystemRupSet.create(
+                FilteredFaultSystemRupSet.forIntPredicate(
                         original,
                         PartitionPredicate.HIKURANGI.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);

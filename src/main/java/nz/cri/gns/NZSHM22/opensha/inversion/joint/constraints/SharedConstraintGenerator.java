@@ -1,8 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration.NZSlipRateConstraintWeightingType.*;
+
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SlipRateInversionConstraintBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
@@ -18,11 +20,15 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
  */
 public class SharedConstraintGenerator {
 
+    // Setting this flag to true means we calculate joint rupture magnitude separately for crustal
+    // and subduction components for MFD constraint encoding.
+    // Setting this flag to false means we calculate joint rupture magnitude over the whole rupture
+    // for MFD constraint encoding.
+    static final boolean SPLIT_RUPSET_MFDS = true;
+
     public static List<InversionConstraint> buildSlipRateConstraints(PartitionConfig config) {
         List<InversionConstraint> constraints = new ArrayList<>();
-        if (config.slipRateWeightingType
-                == AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
-                        .NORMALIZED_BY_UNCERTAINTY) {
+        if (config.slipRateWeightingType == NORMALIZED_BY_UNCERTAINTY) {
             constraints.add(
                     NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
                             config.slipRateUncertaintyConstraintWt,
@@ -31,12 +37,8 @@ public class SharedConstraintGenerator {
                             config.unmodifiedSlipRateStdvs));
         } else {
             if (config.slipRateConstraintWt_normalized > 0d
-                    && (config.slipRateWeightingType
-                                    == AbstractInversionConfiguration
-                                            .NZSlipRateConstraintWeightingType.NORMALIZED
-                            || config.slipRateWeightingType
-                                    == AbstractInversionConfiguration
-                                            .NZSlipRateConstraintWeightingType.BOTH)) {
+                    && (config.slipRateWeightingType == NORMALIZED
+                            || config.slipRateWeightingType == BOTH)) {
                 constraints.add(
                         new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_normalized,
@@ -45,12 +47,8 @@ public class SharedConstraintGenerator {
             }
 
             if (config.slipRateConstraintWt_unnormalized > 0d
-                    && (config.slipRateWeightingType
-                                    == AbstractInversionConfiguration
-                                            .NZSlipRateConstraintWeightingType.UNNORMALIZED
-                            || config.slipRateWeightingType
-                                    == AbstractInversionConfiguration
-                                            .NZSlipRateConstraintWeightingType.BOTH)) {
+                    && (config.slipRateWeightingType == UNNORMALIZED
+                            || config.slipRateWeightingType == BOTH)) {
                 constraints.add(
                         new SlipRateInversionConstraint(
                                 config.slipRateConstraintWt_unnormalized,
@@ -114,6 +112,24 @@ public class SharedConstraintGenerator {
                             ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
                             config.mfdUncertaintyWeightedConstraints));
         }
+
+        if (SPLIT_RUPSET_MFDS) {
+            FilteredFaultSystemRupSet rupSet =
+                    FilteredFaultSystemRupSet.forIntPredicate(
+                            config.partitionRuptureSet,
+                            config.partitionPredicate,
+                            config.parentConfig.scalingRelationship.toRupSetScalingRelationship(
+                                    config.partition.isCrustal()));
+            constraints =
+                    constraints.stream()
+                            .map(
+                                    constraint -> {
+                                        constraint.setRuptureSet(rupSet);
+                                        return new FilteredInversionConstraint(constraint, rupSet);
+                                    })
+                            .collect(Collectors.toList());
+        }
+
         return constraints;
     }
 
