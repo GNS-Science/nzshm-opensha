@@ -32,6 +32,7 @@ public class SharedConstraintGenerator {
             constraints.add(
                     NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
                             config.slipRateUncertaintyConstraintWt,
+                            // FIXME this needs to use the original rupset
                             config.partitionRuptureSet,
                             config.slipRateUncertaintyConstraintScalingFactor,
                             config.unmodifiedSlipRateStdvs));
