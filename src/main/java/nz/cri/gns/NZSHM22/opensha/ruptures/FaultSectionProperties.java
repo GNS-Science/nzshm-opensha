@@ -1,120 +1,81 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.dom4j.DocumentException;
-import org.opensha.commons.util.modules.helpers.FileBackedModule;
+import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
-/** A module to side-load additional fault section properties */
-public class FaultSectionProperties implements FileBackedModule {
+public class FaultSectionProperties {
 
-    protected List<Map<String, Object>> data = new ArrayList<>();
+    public static final String ORIGINAL_PARENT = "OriginalParent";
+    public static final String ORIGINAL_ID = "OriginalId";
+    public static final String PARTITION = "Partition";
 
-    public FaultSectionProperties() {}
-
-    /**
-     * Set a property on a fault section. It is expected but not policed that all values of a
-     * property have the same type.
-     *
-     * @param sectionId the section id
-     * @param property the property name
-     * @param value the value
-     */
-    public void set(int sectionId, String property, Object value) {
-        while (data.size() <= sectionId) {
-            data.add(null);
-        }
-        Map<String, Object> properties = data.get(sectionId);
-        if (properties == null) {
-            properties = new LinkedHashMap<>();
-            data.set(sectionId, properties);
-        }
-        properties.put(property, value);
-    }
-
-    /**
-     * Gets all properties for a specific fault section.
-     *
-     * @param sectionId the fault section id
-     * @return a Map of properties, or null if no properties are set on the section
-     */
-    public Map<String, Object> get(int sectionId) {
-        if (data.size() < sectionId + 1) {
+    public static Object get(FaultSection section, String name) {
+        if (!(section instanceof GeoJSONFaultSection)) {
             return null;
         }
-        return data.get(sectionId);
+        FeatureProperties properties = ((GeoJSONFaultSection) section).getProperties();
+        return properties.get(name);
     }
 
-    /**
-     * Gets a property for a specific fault section.
-     *
-     * @param sectionId the section id
-     * @param property the property name
-     * @return the value or null if the property has not been set on the section
-     */
-    public Object get(int sectionId, String property) {
-        Map<String, Object> properties = get(sectionId);
-        if (properties != null) {
-            return properties.get(property);
+    public static Integer getInt(FaultSection section, String name) {
+        Object value = get(section, name);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof Long) {
+            return (int) value;
         }
         return null;
     }
 
-    public Integer getInt(int sectionId, String property) {
-        Object value = get(sectionId, property);
-        if (value == null) {
-            return null;
+    public static void setOriginalParentId(GeoJSONFaultSection section, int parentId) {
+        section.getProperties().set(ORIGINAL_PARENT, parentId);
+    }
+
+    public static Integer getOriginalParentId(FaultSection section) {
+        return getInt(section, ORIGINAL_PARENT);
+    }
+
+    public static void setOriginalId(GeoJSONFaultSection section, int sectionId) {
+        section.getProperties().set(ORIGINAL_ID, sectionId);
+    }
+
+    public static Integer getOriginalId(FaultSection section) {
+        return getInt(section, ORIGINAL_ID);
+    }
+
+    public static void setPartition(GeoJSONFaultSection section, PartitionPredicate partition) {
+        section.getProperties().set(PARTITION, partition.name());
+    }
+
+    public static PartitionPredicate getPartition(FaultSection section) {
+        Object value = get(section, PARTITION);
+        if (value instanceof String) {
+            return PartitionPredicate.valueOf((String) value);
         }
-        // Should only be an Integer if the data does not come from json. For example, in tests.
-        if (value instanceof Integer) {
-            return (Integer) value;
-        }
-        double dValue = (Double) value;
-        Preconditions.checkState(Math.rint(dValue) == dValue);
-        return (int) dValue;
+        return null;
     }
 
-    @Override
-    public String getFileName() {
-        return "NZSHM_FaultSectionProperties.json";
+    public static void setTvz(GeoJSONFaultSection section) {
+        section.getProperties().set(PartitionPredicate.TVZ.name(), true);
     }
 
-    @Override
-    public void writeToStream(OutputStream out) throws IOException {
-        Gson gson = new GsonBuilder().create();
-        String json = gson.toJson(data);
-        out.write(json.getBytes());
-        out.flush();
+    public static boolean isTvz(FaultSection section) {
+        return get(section, PartitionPredicate.TVZ.name()) == Boolean.TRUE;
     }
 
-    @Override
-    public void initFromStream(BufferedInputStream in) throws IOException {
-        byte[] bytes = in.readAllBytes();
-        String json = new String(bytes, StandardCharsets.UTF_8);
-        Gson gson = new Gson();
-        data = gson.fromJson(json, List.class);
-    }
-
-    @Override
-    public String getName() {
-        return "FaultSectionProperties";
-    }
-
-    public static void backfill() throws IOException, DocumentException {
-        // Backfill module for existing rupture set
+    public static void backfillProperties() throws IOException, DocumentException {
+        // Backfill properties for existing rupture set
         // This should work for all crustal, subduction, and joint rupture sets.
         // Ensure to use the correct fault model if there are crustal sections.
         // Crustal sections must come before subduction sections so that section ids line up.
@@ -123,10 +84,10 @@ public class FaultSectionProperties implements FileBackedModule {
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
         ruptureSetName =
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-        ruptureSetName =
-                "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
+        //        ruptureSetName =
+        //
+        // "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
 
-        FaultSectionProperties properties = new FaultSectionProperties();
         FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
 
         // faultmodel is only used for crustal sections
@@ -137,52 +98,41 @@ public class FaultSectionProperties implements FileBackedModule {
         int hikurangiCount = 0;
         int puysegurCount = 0;
 
-        for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
+        for (FaultSection s : ruptureSet.getFaultSectionDataList()) {
+            GeoJSONFaultSection section = (GeoJSONFaultSection) s;
             if (section.getSectionName().contains("row:")) {
                 //  Backfill subduction props
-                properties.set(section.getSectionId(), "origParent", 10000);
+                setOriginalParentId(section, 10000);
                 if (section.getSectionName().contains("Hikurangi")) {
-                    properties.set(
-                            section.getSectionId(), PartitionPredicate.HIKURANGI.name(), true);
-                    properties.set(section.getSectionId(), "origId", hikurangiCount);
+                    setPartition(section, PartitionPredicate.HIKURANGI);
+                    setOriginalId(section, hikurangiCount);
                     hikurangiCount++;
                 }
                 if (section.getSectionName().contains("Puysegur")) {
-                    properties.set(
-                            section.getSectionId(), PartitionPredicate.PUYSEGUR.name(), true);
-                    properties.set(section.getSectionId(), "origId", puysegurCount);
+                    setPartition(section, PartitionPredicate.PUYSEGUR);
+                    setOriginalId(section, puysegurCount);
                     puysegurCount++;
                 }
             } else {
                 // backfill crustal props
                 NZFaultSection parent =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
-                // verify that we're actually using the correct fault model
-                //                System.out.println(
-                //                        " orig: "
-                //                                + section.getParentSectionName()
-                //                                + " : model : "
-                //                                + parent.getSectionName());
+
                 Preconditions.checkState(
                         section.getParentSectionName().equals(parent.getSectionName()));
 
-                properties.set(section.getSectionId(), PartitionPredicate.CRUSTAL.name(), true);
+                setPartition(section, PartitionPredicate.CRUSTAL);
                 if (faultModel.getTvzDomain() != null
                         && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
-                    properties.set(section.getSectionId(), PartitionPredicate.TVZ.name(), true);
-                } else {
-                    properties.set(
-                            section.getSectionId(), PartitionPredicate.SANS_TVZ.name(), true);
+                    setTvz(section);
                 }
             }
         }
 
-        ruptureSet.addModule(properties);
-
-        ruptureSet.write(new File(ruptureSetName + "props2.zip"));
+        ruptureSet.write(new File(ruptureSetName + "props3.zip"));
     }
 
-    public static void main(String[] args) throws IOException, DocumentException {
-        backfill();
+    public static void main(String[] args) throws DocumentException, IOException {
+        backfillProperties();
     }
 }

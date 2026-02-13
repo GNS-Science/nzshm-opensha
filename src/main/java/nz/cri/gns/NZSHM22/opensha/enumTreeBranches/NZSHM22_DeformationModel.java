@@ -572,19 +572,20 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
 
         public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
-            FaultSectionProperties props = rupSet.getModule(FaultSectionProperties.class);
             for (FaultSection section : rupSet.getFaultSectionDataList()) {
                 if (predicate != null && !predicate.test(section.getSectionId())) {
                     continue;
                 }
 
                 int sectionId = section.getSectionId();
-                if (props != null && props.get(sectionId, "origId") != null) {
-                    sectionId = props.getInt(sectionId, "origId");
+                Integer origId = FaultSectionProperties.getOriginalId(section);
+                if (origId != null) {
+                    sectionId = origId;
                 }
                 int parentId = section.getParentSectionId();
-                if (props != null && props.get(section.getSectionId(), "origParent") != null) {
-                    parentId = props.getInt(section.getSectionId(), "origParent");
+                Integer origParentId = FaultSectionProperties.getOriginalParentId(section);
+                if (origParentId != null) {
+                    parentId = origParentId;
                 }
 
                 SlipDeformation deformation = getDeformations().get(sectionId);

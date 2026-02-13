@@ -12,24 +12,29 @@ public enum PartitionPredicate {
     PUYSEGUR;
 
     public IntPredicate getPredicate(FaultSystemRupSet ruptureSet) {
-        FaultSectionProperties extraProperties =
-                ruptureSet.requireModule(FaultSectionProperties.class);
 
         switch (this) {
             case TVZ:
-                return (sectionId) -> extraProperties.get(sectionId, TVZ.name()) == Boolean.TRUE;
+                return (sectionId) ->
+                        FaultSectionProperties.isTvz(ruptureSet.getFaultSectionData(sectionId));
             case SANS_TVZ:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, SANS_TVZ.name()) == Boolean.TRUE;
+                        !FaultSectionProperties.isTvz(ruptureSet.getFaultSectionData(sectionId));
             case CRUSTAL:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, CRUSTAL.name()) == Boolean.TRUE;
+                        FaultSectionProperties.getPartition(
+                                        ruptureSet.getFaultSectionData(sectionId))
+                                == CRUSTAL;
             case HIKURANGI:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, HIKURANGI.name()) == Boolean.TRUE;
+                        FaultSectionProperties.getPartition(
+                                        ruptureSet.getFaultSectionData(sectionId))
+                                == HIKURANGI;
             case PUYSEGUR:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, PUYSEGUR.name()) == Boolean.TRUE;
+                        FaultSectionProperties.getPartition(
+                                        ruptureSet.getFaultSectionData(sectionId))
+                                == PUYSEGUR;
         }
         throw new IllegalStateException("Unknown RegionPredicate");
     }

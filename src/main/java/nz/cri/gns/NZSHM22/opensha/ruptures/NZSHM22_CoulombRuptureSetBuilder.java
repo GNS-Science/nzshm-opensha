@@ -35,6 +35,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Exhaustiv
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.PlausibleClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
@@ -704,27 +705,21 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 rupSet.addModule(namedFaults);
             }
 
-            FaultSectionProperties extraProperties = new FaultSectionProperties();
             FaultSectionList parentSections = new FaultSectionList();
             faultModel.fetchFaultSections(parentSections);
             for (FaultSection section : subSections) {
-                extraProperties.set(
-                        section.getSectionId(), PartitionPredicate.CRUSTAL.name(), true);
+                GeoJSONFaultSection geoJSONFaultSection = (GeoJSONFaultSection) section;
+                FaultSectionProperties.setPartition(
+                        geoJSONFaultSection, PartitionPredicate.CRUSTAL);
 
                 NZFaultSection nzSection =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
                 if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {
                     if (faultModel.getTvzDomain().equals(nzSection.getDomainNo())) {
-                        extraProperties.set(
-                                section.getSectionId(), PartitionPredicate.TVZ.name(), true);
-                    } else {
-                        extraProperties.set(
-                                section.getSectionId(), PartitionPredicate.SANS_TVZ.name(), true);
+                        FaultSectionProperties.setTvz(geoJSONFaultSection);
                     }
                 }
             }
-
-            rupSet.addModule(extraProperties);
         }
 
         return rupSet;
