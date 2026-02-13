@@ -1,6 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.faults;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.dom4j.DocumentException;
@@ -9,10 +12,6 @@ import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 public class NZFaultSection extends GeoJSONFaultSection {
 
@@ -86,11 +85,12 @@ public class NZFaultSection extends GeoJSONFaultSection {
         return section;
     }
 
-    public static void enhanceFaultSections(List<? extends FaultSection> sections){
-        @SuppressWarnings("unchecked") List<FaultSection> ss = (List<FaultSection>) sections;
-        for(int s = 0; s < sections.size(); s++){
+    public static void enhanceFaultSections(List<? extends FaultSection> sections) {
+        @SuppressWarnings("unchecked")
+        List<FaultSection> ss = (List<FaultSection>) sections;
+        for (int s = 0; s < sections.size(); s++) {
             FaultSection section = sections.get(s);
-            if(!(section instanceof NZFaultSection)) {
+            if (!(section instanceof NZFaultSection)) {
                 ss.set(s, new NZFaultSection(section));
             }
         }
@@ -126,15 +126,15 @@ public class NZFaultSection extends GeoJSONFaultSection {
             NZFaultSection section = (NZFaultSection) s;
             if (section.getSectionName().contains("row:")) {
                 //  Backfill subduction props
-                section.setOriginalParentId( 10000);
+                section.setOriginalParentId(10000);
                 if (section.getSectionName().contains("Hikurangi")) {
                     section.setPartition(PartitionPredicate.HIKURANGI);
-                    section.setOriginalId( hikurangiCount);
+                    section.setOriginalId(hikurangiCount);
                     hikurangiCount++;
                 }
                 if (section.getSectionName().contains("Puysegur")) {
                     section.setPartition(PartitionPredicate.PUYSEGUR);
-                    section.setOriginalId( puysegurCount);
+                    section.setOriginalId(puysegurCount);
                     puysegurCount++;
                 }
             } else {
@@ -145,7 +145,7 @@ public class NZFaultSection extends GeoJSONFaultSection {
                 Preconditions.checkState(
                         section.getParentSectionName().equals(parent.getSectionName()));
 
-               section.setPartition( PartitionPredicate.CRUSTAL);
+                section.setPartition(PartitionPredicate.CRUSTAL);
                 if (faultModel.getTvzDomain() != null
                         && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
                     section.setTvz();

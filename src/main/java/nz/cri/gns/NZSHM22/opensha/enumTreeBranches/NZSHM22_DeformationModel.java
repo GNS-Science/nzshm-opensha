@@ -578,12 +578,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                 }
 
                 int sectionId = section.getSectionId();
-                Integer origId = ((NZFaultSection)section).getOriginalId();
+                Integer origId = ((NZFaultSection) section).getOriginalId();
                 if (origId != null) {
                     sectionId = origId;
                 }
                 int parentId = section.getParentSectionId();
-                Integer origParentId = ((NZFaultSection)section).getOriginalParentId();
+                Integer origParentId = ((NZFaultSection) section).getOriginalParentId();
                 if (origParentId != null) {
                     parentId = origParentId;
                 }

@@ -25,7 +25,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterCo
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -322,7 +321,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
                         : PartitionPredicate.PUYSEGUR;
 
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
-            ((NZFaultSection)section).setPartition(partition);
+            ((NZFaultSection) section).setPartition(partition);
         }
 
         return rupSet;

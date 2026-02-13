@@ -1,10 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.faults;
 
+import com.google.common.base.Preconditions;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-
-import com.google.common.base.Preconditions;
 import org.opensha.sha.faultSurface.FaultSection;
 
 /**
