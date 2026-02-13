@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
@@ -320,8 +321,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
                         ? PartitionPredicate.HIKURANGI
                         : PartitionPredicate.PUYSEGUR;
 
-        for (FaultSection s : rupSet.getFaultSectionDataList()) {
-            FaultSectionProperties.setPartition((GeoJSONFaultSection) s, partition);
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            ((NZFaultSection)section).setPartition(partition);
         }
 
         return rupSet;

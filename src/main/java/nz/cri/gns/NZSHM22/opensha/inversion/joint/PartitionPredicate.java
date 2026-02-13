@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public enum PartitionPredicate {
@@ -16,24 +16,21 @@ public enum PartitionPredicate {
         switch (this) {
             case TVZ:
                 return (sectionId) ->
-                        FaultSectionProperties.isTvz(ruptureSet.getFaultSectionData(sectionId));
+                        ((NZFaultSection) ruptureSet.getFaultSectionData(sectionId)).isTvz();
             case SANS_TVZ:
                 return (sectionId) ->
-                        !FaultSectionProperties.isTvz(ruptureSet.getFaultSectionData(sectionId));
+                        !((NZFaultSection) ruptureSet.getFaultSectionData(sectionId)).isTvz();
             case CRUSTAL:
                 return (sectionId) ->
-                        FaultSectionProperties.getPartition(
-                                        ruptureSet.getFaultSectionData(sectionId))
+                        ((NZFaultSection) ruptureSet.getFaultSectionData(sectionId)).getPartition()
                                 == CRUSTAL;
             case HIKURANGI:
                 return (sectionId) ->
-                        FaultSectionProperties.getPartition(
-                                        ruptureSet.getFaultSectionData(sectionId))
+                        ((NZFaultSection) ruptureSet.getFaultSectionData(sectionId)).getPartition()
                                 == HIKURANGI;
             case PUYSEGUR:
                 return (sectionId) ->
-                        FaultSectionProperties.getPartition(
-                                        ruptureSet.getFaultSectionData(sectionId))
+                        ((NZFaultSection) ruptureSet.getFaultSectionData(sectionId)).getPartition()
                                 == PUYSEGUR;
         }
         throw new IllegalStateException("Unknown RegionPredicate");

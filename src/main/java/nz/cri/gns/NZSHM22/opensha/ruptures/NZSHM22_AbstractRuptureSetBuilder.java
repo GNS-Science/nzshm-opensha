@@ -301,7 +301,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                     "fault model must have domain data when using scaleDepthExcludeDomain");
             for (FaultSection section : sections) {
                 if (!((NZFaultSection) section).getDomainNo().equals(scaleDepthExcludeDomainNo)) {
-                    ((FaultSectionPrefData) section)
+                    ((NZFaultSection) section)
                             .setAveLowerDepth(
                                     section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
                 }
@@ -430,6 +430,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             }
             System.out.println(subSections.size() + " Sub Sections created.");
         }
+
+        NZFaultSection.enhanceFaultSections(subSections);
     }
 
     public NZSHM22_LogicTreeBranch getLogicTreeBranch(FaultRegime regime) {

@@ -3,6 +3,8 @@ package nz.cri.gns.NZSHM22.opensha.faults;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+
+import com.google.common.base.Preconditions;
 import org.opensha.sha.faultSurface.FaultSection;
 
 /**
@@ -212,7 +214,19 @@ public class FaultSectionList extends ArrayList<FaultSection> {
     }
 
     public FaultSection set(int index, FaultSection element) {
-        throw new RuntimeException("Not implemented");
+        FaultSection current = get(index);
+        Preconditions.checkArgument(current.getSectionId() == element.getSectionId());
+        if (0 <= element.getParentSectionId()
+                && null != parents
+                && !parents.containsId(element.getParentSectionId())) {
+            System.err.println(
+                    "Section "
+                            + element.getSectionId()
+                            + " has unknown parent "
+                            + element.getParentSectionId());
+        }
+        super.set(index, element);
+        return element;
     }
 
     public void add(int index, FaultSection element) {

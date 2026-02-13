@@ -687,6 +687,8 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         + " mins. Total rate: "
                         + rupRate(ruptures.size(), millis));
 
+        NZFaultSection.enhanceFaultSections(subSections);
+
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
                         .forScalingRelationship(getScalingRelationship())
@@ -707,16 +709,15 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
 
             FaultSectionList parentSections = new FaultSectionList();
             faultModel.fetchFaultSections(parentSections);
-            for (FaultSection section : subSections) {
-                GeoJSONFaultSection geoJSONFaultSection = (GeoJSONFaultSection) section;
-                FaultSectionProperties.setPartition(
-                        geoJSONFaultSection, PartitionPredicate.CRUSTAL);
+            for (FaultSection s : subSections) {
+                NZFaultSection section = (NZFaultSection) s;
+                section.setPartition(PartitionPredicate.CRUSTAL);
 
                 NZFaultSection nzSection =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
                 if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {
                     if (faultModel.getTvzDomain().equals(nzSection.getDomainNo())) {
-                        FaultSectionProperties.setTvz(geoJSONFaultSection);
+                       section.setTvz();
                     }
                 }
             }

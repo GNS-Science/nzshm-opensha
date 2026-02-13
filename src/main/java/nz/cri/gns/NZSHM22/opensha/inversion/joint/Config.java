@@ -10,6 +10,7 @@ import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
@@ -91,6 +92,7 @@ public class Config {
     public void init() throws IOException {
         if (ruptureSet == null && ruptureSetPath != null) {
             ruptureSet = FaultSystemRupSet.load(new File(ruptureSetPath));
+            NZFaultSection.enhanceFaultSections(ruptureSet.getFaultSectionDataList());
         }
         Preconditions.checkState(ruptureSet != null, "Rupture set not specified");
         Preconditions.checkState(!partitions.isEmpty(), "No partition configs specified");

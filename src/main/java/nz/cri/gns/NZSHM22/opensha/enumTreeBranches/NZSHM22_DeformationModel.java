@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
@@ -578,12 +578,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                 }
 
                 int sectionId = section.getSectionId();
-                Integer origId = FaultSectionProperties.getOriginalId(section);
+                Integer origId = ((NZFaultSection)section).getOriginalId();
                 if (origId != null) {
                     sectionId = origId;
                 }
                 int parentId = section.getParentSectionId();
-                Integer origParentId = FaultSectionProperties.getOriginalParentId(section);
+                Integer origParentId = ((NZFaultSection)section).getOriginalParentId();
                 if (origParentId != null) {
                     parentId = origParentId;
                 }
