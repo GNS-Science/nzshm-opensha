@@ -56,12 +56,12 @@ public class NZSHM22_DeformationModelsTest {
         assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
 
         // deformation model will be applied based on original is
-        FaultSectionProperties props = new FaultSectionProperties();
-        props.set(0, "origId", 1000);
-        props.set(0, "origParent", 1200);
-        props.set(1, "origId", 1001);
-        props.set(1, "origParent", 1001);
-        ruptSet.addModule(props);
+//        FaultSectionProperties props = new FaultSectionProperties();
+//        props.set(0, "origId", 1000);
+//        props.set(0, "origParent", 1200);
+//        props.set(1, "origId", 1001);
+//        props.set(1, "origParent", 1001);
+//        ruptSet.addModule(props);
 
         NZSHM22_DeformationModel.DeformationHelper helper =
                 new NZSHM22_DeformationModel.DeformationHelper("file not needed") {
