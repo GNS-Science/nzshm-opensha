@@ -8,13 +8,13 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionFaultSystemRupSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionRegionFaultSystemRupSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
-public class PartitionFaultSystemRupSetTest {
+public class PartitionRegionFaultSystemRupSetTest {
 
     static final double DELTA = 0.00000001;
 
@@ -44,8 +44,8 @@ public class PartitionFaultSystemRupSetTest {
     public void fractsInRegionTest() throws DocumentException, IOException {
         FaultSystemRupSet originalRupSet = makeRupSet();
         PartitionPredicate partition = PartitionPredicate.CRUSTAL;
-        PartitionFaultSystemRupSet toTest =
-                new PartitionFaultSystemRupSet(
+        PartitionRegionFaultSystemRupSet toTest =
+                new PartitionRegionFaultSystemRupSet(
                         originalRupSet, partition.getPredicate(originalRupSet));
 
         double area0 = originalRupSet.getAreaForSection(0);
@@ -71,8 +71,8 @@ public class PartitionFaultSystemRupSetTest {
         originalRupSet.getMagForAllRups()[4] = 5;
 
         PartitionPredicate partition = PartitionPredicate.CRUSTAL;
-        PartitionFaultSystemRupSet toTest =
-                new PartitionFaultSystemRupSet(
+        PartitionRegionFaultSystemRupSet toTest =
+                new PartitionRegionFaultSystemRupSet(
                         originalRupSet, partition.getPredicate(originalRupSet));
 
         assertEquals(1.0, toTest.getMinMag(), DELTA);

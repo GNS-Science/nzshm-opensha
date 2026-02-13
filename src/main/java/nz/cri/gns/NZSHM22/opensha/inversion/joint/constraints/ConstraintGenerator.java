@@ -175,9 +175,7 @@ public class ConstraintGenerator {
                 storeTargetMFDs(config.ruptureSet, partitionConfig.partition, targetMFDs);
             }
 
-            constraints.addAll(
-                    SharedConstraintGenerator.buildSharedConstraints(
-                            config.ruptureSet, partitionConfig));
+            constraints.addAll(SharedConstraintGenerator.buildSharedConstraints(partitionConfig));
         }
 
         constraints.addAll(generatePaleoConstraints(config));

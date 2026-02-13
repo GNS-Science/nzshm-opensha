@@ -12,13 +12,14 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
  *
  * <p>Uses a partition instead of a region to calculate getFractRupsInsideRegion()
  */
-public class PartitionFaultSystemRupSet extends FaultSystemRupSet {
+public class PartitionRegionFaultSystemRupSet extends FaultSystemRupSet {
 
     final FaultSystemRupSet original;
     final IntPredicate partitionPredicate;
     double[] fractRupsInsidePartition;
 
-    public PartitionFaultSystemRupSet(FaultSystemRupSet original, IntPredicate partitionPredicate) {
+    public PartitionRegionFaultSystemRupSet(
+            FaultSystemRupSet original, IntPredicate partitionPredicate) {
         this.original = original;
         this.partitionPredicate = partitionPredicate;
     }
