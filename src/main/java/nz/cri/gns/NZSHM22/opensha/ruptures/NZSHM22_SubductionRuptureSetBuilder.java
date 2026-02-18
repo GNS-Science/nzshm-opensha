@@ -24,6 +24,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterCo
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -290,9 +291,10 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         if (maxRuptures != Integer.MAX_VALUE) {
             ruptures = ruptures.stream().limit(maxRuptures).collect(Collectors.toList());
         }
-
+        List<GeoJSONFaultSection> geoJSONFaultSections =
+                subSections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
         FaultSystemRupSet rupSet =
-                FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+                FaultSystemRupSet.builderForClusterRups(geoJSONFaultSections, ruptures)
                         .rupLengths(buildLengths())
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
@@ -314,16 +316,14 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
             }
         }
 
-        String sourceName =
-                subSections.get(0).getName().contains("Hikurangi")
-                        ? PartitionPredicate.HIKURANGI.name()
-                        : PartitionPredicate.PUYSEGUR.name();
-
-        FaultSectionProperties extraProperties = new FaultSectionProperties();
-        for (int s = 0; s < rupSet.getNumSections(); s++) {
-            extraProperties.set(s, sourceName, true);
+        PartitionPredicate sourceName =
+                geoJSONFaultSections.get(0).getName().contains("Hikurangi")
+                        ? PartitionPredicate.HIKURANGI
+                        : PartitionPredicate.PUYSEGUR;
+        for (FaultSection section : geoJSONFaultSections) {
+            FaultSectionProperties2 props = new FaultSectionProperties2(section);
+            props.setPartition(sourceName);
         }
-        rupSet.addModule(extraProperties);
 
         return rupSet;
     }
