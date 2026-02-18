@@ -82,9 +82,11 @@ public class FaultSectionProperties {
         if (value == null) {
             return null;
         }
-        // Should only be an Integer if the data does not come from json. For example, in tests.
         if (value instanceof Integer) {
             return (Integer) value;
+        }
+        if (value instanceof Long) {
+            return (int) (long) value;
         }
         double dValue = (Double) value;
         Preconditions.checkState(Math.rint(dValue) == dValue);

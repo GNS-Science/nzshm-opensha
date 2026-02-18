@@ -55,10 +55,8 @@ public class NZSHM22_DeformationModelsTest {
         s = ruptSet.getFaultSectionData(1);
         assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
 
-        FaultSectionProperties props0 =
-                new FaultSectionProperties(ruptSet.getFaultSectionData(0));
-        FaultSectionProperties props1 =
-                new FaultSectionProperties(ruptSet.getFaultSectionData(1));
+        FaultSectionProperties props0 = new FaultSectionProperties(ruptSet.getFaultSectionData(0));
+        FaultSectionProperties props1 = new FaultSectionProperties(ruptSet.getFaultSectionData(1));
 
         // deformation model will be applied based on original id
         props0.setOriginalId(1000);
