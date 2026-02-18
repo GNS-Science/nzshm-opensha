@@ -8,7 +8,7 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties2;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -42,10 +42,11 @@ public class FilteredFaultSystemRupSetTest {
 
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
 
-        FaultSectionProperties props = new FaultSectionProperties();
-        props.set(CRU_SECTION, PartitionPredicate.CRUSTAL.name(), true);
-        props.set(SUB_SECTION, PartitionPredicate.HIKURANGI.name(), true);
-        rupSet.addModule(props);
+        FaultSectionProperties2 props =
+                new FaultSectionProperties2(rupSet.getFaultSectionData(CRU_SECTION));
+        props.setPartition(PartitionPredicate.CRUSTAL);
+        props = new FaultSectionProperties2(rupSet.getFaultSectionData(SUB_SECTION));
+        props.setPartition(PartitionPredicate.HIKURANGI);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;

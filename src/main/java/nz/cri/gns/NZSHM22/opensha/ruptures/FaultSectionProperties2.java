@@ -1,14 +1,30 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
+/**
+ * Access to extra fault section properties that can be stored in the fault section's GeoJson
+ * feature properties. Rupture sets in modern, modular OpenSHA archives will have read the fault
+ * sections from GeoJson and will use the GeoJSONFaultSection class for fault sections.
+ * FaultSectionProperties2 is a convenience class to get and set common joint inversion properties.
+ *
+ * <p>Properties modified using this class will be saved in the fault section GeoJson file if the
+ * rupture set is written to disk.
+ */
 public class FaultSectionProperties2 {
 
     public static final String PARTITION = "Partition";
-    public static final String DOMAIN = "Domain";
     public static final String ORIGINAL_PARENT = "OriginalParent";
     public static final String ORIGINAL_ID = "OriginalId";
     public static final String TVZ = "TVZ";
@@ -20,16 +36,8 @@ public class FaultSectionProperties2 {
         this.section = (GeoJSONFaultSection) section;
     }
 
-    public void setDomain(String domain) {
-        ((GeoJSONFaultSection) section).setProperty(DOMAIN, domain);
-    }
-
-    public String getDomain() {
-        return (String) get(DOMAIN);
-    }
-
     public void setOriginalParent(int originalParent) {
-        ((GeoJSONFaultSection) section).setProperty(ORIGINAL_PARENT, originalParent);
+        section.setProperty(ORIGINAL_PARENT, originalParent);
     }
 
     public Integer getOriginalParent() {
@@ -37,7 +45,7 @@ public class FaultSectionProperties2 {
     }
 
     public void setOriginalId(int originalId) {
-        ((GeoJSONFaultSection) section).setProperty(ORIGINAL_ID, originalId);
+        section.setProperty(ORIGINAL_ID, originalId);
     }
 
     public Integer getOriginalId() {
@@ -81,5 +89,81 @@ public class FaultSectionProperties2 {
         double dValue = (Double) value;
         Preconditions.checkState(Math.rint(dValue) == dValue);
         return (int) dValue;
+    }
+
+    public static void backfill() throws IOException, DocumentException {
+        // Backfill module for existing rupture set
+        // This should work for all crustal, subduction, and joint rupture sets.
+        // Ensure to use the correct fault model if there are crustal sections.
+        // Crustal sections must come before subduction sections so that section ids line up.
+
+        String ruptureSetName =
+                "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
+        //        ruptureSetName =
+        //
+        // "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+        //        ruptureSetName =
+        //
+        // "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
+
+        FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
+
+        // faultmodel is only used for crustal sections
+        NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
+        FaultSectionList parentSections = new FaultSectionList();
+        faultModel.fetchFaultSections(parentSections);
+
+        int hikurangiCount = 0;
+        int puysegurCount = 0;
+
+        List<FaultSection> sections = (List<FaultSection>) ruptureSet.getFaultSectionDataList();
+        for (int s = 0; s < ruptureSet.getNumSections(); s++) {
+            FaultSection original = ruptureSet.getFaultSectionData(s);
+            if (!(original instanceof GeoJSONFaultSection)) {
+                FaultSection geoSection = new GeoJSONFaultSection(original);
+                sections.set(s, geoSection);
+            }
+        }
+
+        for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
+            FaultSectionProperties2 props = new FaultSectionProperties2(section);
+            if (section.getSectionName().contains("row:")) {
+                //  Backfill subduction props
+                props.setOriginalParent(10000);
+                if (section.getSectionName().contains("Hikurangi")) {
+                    props.setPartition(PartitionPredicate.HIKURANGI);
+                    props.setOriginalId(hikurangiCount);
+                    hikurangiCount++;
+                }
+                if (section.getSectionName().contains("Puysegur")) {
+                    props.setPartition(PartitionPredicate.PUYSEGUR);
+                    props.setOriginalId(puysegurCount);
+                    puysegurCount++;
+                }
+            } else {
+                // backfill crustal props
+                NZFaultSection parent =
+                        (NZFaultSection) parentSections.get(section.getParentSectionId());
+                // verify that we're actually using the correct fault model
+                //                System.out.println(
+                //                        " orig: "
+                //                                + section.getParentSectionName()
+                //                                + " : model : "
+                //                                + parent.getSectionName());
+                Preconditions.checkState(
+                        section.getParentSectionName().equals(parent.getSectionName()));
+                props.setPartition(PartitionPredicate.CRUSTAL);
+                if (faultModel.getTvzDomain() != null
+                        && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
+                    props.setTvz();
+                }
+            }
+        }
+
+        ruptureSet.write(new File(ruptureSetName + "props3.zip"));
+    }
+
+    public static void main(String[] args) throws IOException, DocumentException {
+        backfill();
     }
 }

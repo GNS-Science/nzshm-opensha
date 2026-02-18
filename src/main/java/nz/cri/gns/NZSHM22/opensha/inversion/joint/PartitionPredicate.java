@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties2;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public enum PartitionPredicate {
@@ -11,25 +11,26 @@ public enum PartitionPredicate {
     HIKURANGI,
     PUYSEGUR;
 
+    static FaultSectionProperties2 props(FaultSystemRupSet rupSet, int sectionId) {
+        return new FaultSectionProperties2(rupSet.getFaultSectionData(sectionId));
+    }
+
     public IntPredicate getPredicate(FaultSystemRupSet ruptureSet) {
-        FaultSectionProperties extraProperties =
-                ruptureSet.requireModule(FaultSectionProperties.class);
 
         switch (this) {
             case TVZ:
-                return (sectionId) -> extraProperties.get(sectionId, TVZ.name()) == Boolean.TRUE;
+                return (sectionId) -> props(ruptureSet, sectionId).getTvz();
             case SANS_TVZ:
-                return (sectionId) ->
-                        extraProperties.get(sectionId, SANS_TVZ.name()) == Boolean.TRUE;
+                return (sectionId) -> !props(ruptureSet, sectionId).getTvz();
             case CRUSTAL:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, CRUSTAL.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.CRUSTAL;
             case HIKURANGI:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, HIKURANGI.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.HIKURANGI;
             case PUYSEGUR:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, PUYSEGUR.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.PUYSEGUR;
         }
         throw new IllegalStateException("Unknown RegionPredicate");
     }
