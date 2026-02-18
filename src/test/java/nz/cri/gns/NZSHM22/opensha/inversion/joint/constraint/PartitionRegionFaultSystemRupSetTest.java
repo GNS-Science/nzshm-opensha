@@ -32,11 +32,13 @@ public class PartitionRegionFaultSystemRupSetTest {
 
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 2);
 
-        FaultSectionProperties props = new FaultSectionProperties();
-        props.set(0, PartitionPredicate.CRUSTAL.name(), true);
-        props.set(1, PartitionPredicate.CRUSTAL.name(), true);
-        props.set(2, PartitionPredicate.HIKURANGI.name(), true);
-        rupSet.addModule(props);
+        FaultSectionProperties props = new FaultSectionProperties(rupSet.getFaultSectionData(0));
+        props.setPartition(PartitionPredicate.CRUSTAL);
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(1));
+        props.setPartition(PartitionPredicate.CRUSTAL);
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(2));
+        props.setPartition(PartitionPredicate.HIKURANGI);
+
         return rupSet;
     }
 

@@ -1,74 +1,39 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
+import static org.junit.Assert.*;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import org.dom4j.DocumentException;
 import org.junit.Test;
+import org.opensha.commons.util.io.archive.ArchiveOutput;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public class FaultSectionPropertiesTest {
 
     @Test
-    public void testWriteDifferentTypes() throws IOException {
-        FaultSectionProperties properties = new FaultSectionProperties();
-        properties.set(0, "a", 42);
-        properties.set(0, "b", true);
-        properties.set(0, "c", "x");
-        properties.set(0, "d", null);
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            properties.writeToStream(out);
-            assertEquals("[{\"a\":42,\"b\":true,\"c\":\"x\"}]", out.toString());
-        }
-    }
+    public void testReadWrite() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
 
-    @Test
-    public void testWriteWithGap() throws IOException {
-        FaultSectionProperties properties = new FaultSectionProperties();
-        properties.set(0, "a", true);
-        properties.set(10, "a", true);
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            properties.writeToStream(out);
-            assertEquals(
-                    "[{\"a\":true},null,null,null,null,null,null,null,null,null,{\"a\":true}]",
-                    out.toString());
-        }
-    }
+        FaultSectionProperties props = new FaultSectionProperties(rupSet.getFaultSectionData(0));
 
-    @Test
-    public void readDifferentTypes() throws IOException {
-        FaultSectionProperties properties = new FaultSectionProperties();
-        byte[] data = "[{\"a\":42,\"b\":true,\"c\":\"x\"}]".getBytes();
-        try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
-            properties.initFromStream(new BufferedInputStream(in));
-            assertEquals(42.0, properties.get(0, "a"));
-            assertEquals(true, properties.get(0, "b"));
-            assertEquals("x", properties.get(0, "c"));
-            assertNull(properties.get(0, "d"));
-        }
-    }
+        props.setPartition(PartitionPredicate.CRUSTAL);
+        props.setOriginalId(42);
+        props.setOriginalParent(4200);
+        props.setTvz();
 
-    @Test
-    public void readWithGaps() throws IOException {
-        FaultSectionProperties properties = new FaultSectionProperties();
-        byte[] data =
-                "[{\"a\":true},null,null,null,null,null,null,null,null,null,{\"a\":true}]"
-                        .getBytes();
-        try (ByteArrayInputStream in = new ByteArrayInputStream(data)) {
-            properties.initFromStream(new BufferedInputStream(in));
-            assertEquals(true, properties.get(0, "a"));
-            assertEquals(true, properties.get(10, "a"));
-            assertNull(properties.get(1, "a"));
-        }
-    }
+        ArchiveOutput output = new ArchiveOutput.InMemoryZipOutput(false);
+        rupSet.writeToArchive(output, FaultSystemRupSet.NESTING_PREFIX);
+        output.close();
+        rupSet = FaultSystemRupSet.load(output.getCompletedInput());
 
-    @Test
-    public void readOutOfBounds() {
-        FaultSectionProperties properties = new FaultSectionProperties();
-        properties.set(0, "a", 42);
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(0));
 
-        assertNull(properties.get(100));
+        assertEquals(PartitionPredicate.CRUSTAL, props.getPartition());
+        assertEquals(42, (int) props.getOriginalId());
+        assertEquals(4200, (int) props.getOriginalParent());
+        assertTrue(props.getTvz());
     }
 }

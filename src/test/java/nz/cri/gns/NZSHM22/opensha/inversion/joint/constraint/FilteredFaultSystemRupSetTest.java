@@ -42,10 +42,11 @@ public class FilteredFaultSystemRupSetTest {
 
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 1);
 
-        FaultSectionProperties props = new FaultSectionProperties();
-        props.set(CRU_SECTION, PartitionPredicate.CRUSTAL.name(), true);
-        props.set(SUB_SECTION, PartitionPredicate.HIKURANGI.name(), true);
-        rupSet.addModule(props);
+        FaultSectionProperties props =
+                new FaultSectionProperties(rupSet.getFaultSectionData(CRU_SECTION));
+        props.setPartition(PartitionPredicate.CRUSTAL);
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(SUB_SECTION));
+        props.setPartition(PartitionPredicate.HIKURANGI);
 
         double[] aveSlipData = new double[rupSet.getNumRuptures()];
         aveSlipData[0] = 1;

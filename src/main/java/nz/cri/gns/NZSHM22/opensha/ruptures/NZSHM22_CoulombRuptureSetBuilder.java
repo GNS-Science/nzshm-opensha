@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
@@ -35,6 +36,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.Exhaustiv
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.PlausibleClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
 import org.opensha.sha.simulators.stiffness.SubSectStiffnessCalculator;
@@ -686,8 +688,11 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         + " mins. Total rate: "
                         + rupRate(ruptures.size(), millis));
 
+        List<GeoJSONFaultSection> geoJSONFaultSections =
+                subSections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
+
         FaultSystemRupSet rupSet =
-                FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
+                FaultSystemRupSet.builderForClusterRups(geoJSONFaultSections, ruptures)
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
@@ -704,27 +709,20 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                 rupSet.addModule(namedFaults);
             }
 
-            FaultSectionProperties extraProperties = new FaultSectionProperties();
             FaultSectionList parentSections = new FaultSectionList();
             faultModel.fetchFaultSections(parentSections);
-            for (FaultSection section : subSections) {
-                extraProperties.set(
-                        section.getSectionId(), PartitionPredicate.CRUSTAL.name(), true);
+            for (FaultSection section : geoJSONFaultSections) {
+                FaultSectionProperties props = new FaultSectionProperties(section);
+                props.setPartition(PartitionPredicate.CRUSTAL);
 
                 NZFaultSection nzSection =
                         (NZFaultSection) parentSections.get(section.getParentSectionId());
                 if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {
                     if (faultModel.getTvzDomain().equals(nzSection.getDomainNo())) {
-                        extraProperties.set(
-                                section.getSectionId(), PartitionPredicate.TVZ.name(), true);
-                    } else {
-                        extraProperties.set(
-                                section.getSectionId(), PartitionPredicate.SANS_TVZ.name(), true);
+                        props.setTvz();
                     }
                 }
             }
-
-            rupSet.addModule(extraProperties);
         }
 
         return rupSet;

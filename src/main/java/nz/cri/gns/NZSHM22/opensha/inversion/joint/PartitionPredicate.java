@@ -11,25 +11,26 @@ public enum PartitionPredicate {
     HIKURANGI,
     PUYSEGUR;
 
+    static FaultSectionProperties props(FaultSystemRupSet rupSet, int sectionId) {
+        return new FaultSectionProperties(rupSet.getFaultSectionData(sectionId));
+    }
+
     public IntPredicate getPredicate(FaultSystemRupSet ruptureSet) {
-        FaultSectionProperties extraProperties =
-                ruptureSet.requireModule(FaultSectionProperties.class);
 
         switch (this) {
             case TVZ:
-                return (sectionId) -> extraProperties.get(sectionId, TVZ.name()) == Boolean.TRUE;
+                return (sectionId) -> props(ruptureSet, sectionId).getTvz();
             case SANS_TVZ:
-                return (sectionId) ->
-                        extraProperties.get(sectionId, SANS_TVZ.name()) == Boolean.TRUE;
+                return (sectionId) -> !props(ruptureSet, sectionId).getTvz();
             case CRUSTAL:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, CRUSTAL.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.CRUSTAL;
             case HIKURANGI:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, HIKURANGI.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.HIKURANGI;
             case PUYSEGUR:
                 return (sectionId) ->
-                        extraProperties.get(sectionId, PUYSEGUR.name()) == Boolean.TRUE;
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.PUYSEGUR;
         }
         throw new IllegalStateException("Unknown RegionPredicate");
     }

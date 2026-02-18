@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
@@ -15,6 +16,7 @@ import org.opensha.commons.util.modules.ModuleArchive;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class TestHelpers {
@@ -70,7 +72,10 @@ public class TestHelpers {
         branch.setValue(faultModel);
         branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
 
-        return FaultSystemRupSet.builder(sections, sectionForRups)
+        List<GeoJSONFaultSection> geoJsonSections =
+                sections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
+
+        return FaultSystemRupSet.builder(geoJsonSections, sectionForRups)
                 .forScalingRelationship(scalingRelationship)
                 .addModule(branch)
                 .build();
