@@ -14,12 +14,11 @@ import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 /**
- * Access to extra fault section properties that can be stored in the fault section's GeoJson
- * feature properties. Rupture sets in modern, modular OpenSHA archives will have read the fault
- * sections from GeoJson and will use the GeoJSONFaultSection class for fault sections.
- * FaultSectionProperties is a convenience class to get and set common joint inversion properties.
+ * convenience class to get and set common joint inversion properties. Rupture sets in modern,
+ * modular OpenSHA archives will read the fault sections from GeoJson using the GeoJSONFaultSection
+ * class. This class wraps GeoJSONFaultSection.setProperty() and GeoJSONFaultSection.getProperty().
  *
- * <p>Properties modified using this class will be saved in the fault section GeoJson file if the
+ * <p>Properties modified using this class will be saved in the fault section GeoJson file when the
  * rupture set is written to disk.
  */
 public class FaultSectionProperties {
@@ -31,26 +30,38 @@ public class FaultSectionProperties {
 
     final GeoJSONFaultSection section;
 
+    /**
+     * Creates a new FaultSectionProperties object for the section. The section must be a
+     * GeoJSONFaultSection.
+     *
+     * @param section
+     */
     public FaultSectionProperties(FaultSection section) {
         Preconditions.checkArgument(section instanceof GeoJSONFaultSection);
         this.section = (GeoJSONFaultSection) section;
     }
 
     /**
-     * Used when merging two rupture sets that requires parent ids to be re-written.
-     *
-     * @param originalParent the original parent id
+     * When two rupture sets are merged, this property can be used to preserve the original parent
+     * id of the fault section.
      */
     public void setOriginalParent(int originalParent) {
         section.setProperty(ORIGINAL_PARENT, originalParent);
     }
 
+    /**
+     * When two rupture sets are merged, this property can be used to preserve the original parent
+     * id of the fault section.
+     *
+     * @return the original parent id or null
+     */
     public Integer getOriginalParent() {
         return getInt(ORIGINAL_PARENT);
     }
 
     /**
-     * Used when merging two rupture sets that requires section ids to be re-written.
+     * When two rupture sets are merged, this property can be used to preserve the original section
+     * id.
      *
      * @param originalId the original section id
      */
@@ -58,13 +69,24 @@ public class FaultSectionProperties {
         section.setProperty(ORIGINAL_ID, originalId);
     }
 
+    /**
+     * When two rupture sets are merged, this property can be used to preserve the original section
+     * id.
+     *
+     * @return the original fault section id or null
+     */
     public Integer getOriginalId() {
         return getInt(ORIGINAL_ID);
     }
 
+    /**
+     * The partition of the fault section.
+     *
+     * @return the partition of the fault section.
+     */
     public PartitionPredicate getPartition() {
 
-        String partition = (String) get(PARTITION);
+        String partition = (String) section.getProperty(PARTITION);
         if (partition != null) {
             return PartitionPredicate.valueOf(partition);
         }
@@ -85,16 +107,25 @@ public class FaultSectionProperties {
         section.setProperty(TVZ, true);
     }
 
+    /**
+     * Indicates whether the section is part of the TVZ
+     *
+     * @return true if the partition is part of the TVZ
+     */
     public boolean getTvz() {
-        return get(TVZ) == Boolean.TRUE;
+        return section.getProperty(TVZ) == Boolean.TRUE;
     }
 
-    public Object get(String property) {
-        return section.getProperty(property);
-    }
-
+    /**
+     * Returns a property value as an int.
+     *
+     * <p>Will throw an IllegalStateException if the value cannot be represented as an int.
+     *
+     * @param property the property name
+     * @return the property value as an int, or null if it is null.
+     */
     public Integer getInt(String property) {
-        Object value = get(property);
+        Object value = section.getProperty(property);
         if (value == null) {
             return null;
         }
@@ -109,11 +140,15 @@ public class FaultSectionProperties {
         return (int) dValue;
     }
 
+    /**
+     * Backfill script for existing rupture set This should work for all crustal, subduction, and
+     * joint rupture sets. Ensure to use the correct fault model if there are crustal sections.
+     * Crustal sections must come before subduction sections so that section ids line up. * @throws
+     * IOException
+     *
+     * @throws DocumentException
+     */
     public static void backfill() throws IOException, DocumentException {
-        // Backfill module for existing rupture set
-        // This should work for all crustal, subduction, and joint rupture sets.
-        // Ensure to use the correct fault model if there are crustal sections.
-        // Crustal sections must come before subduction sections so that section ids line up.
 
         String ruptureSetName =
                 "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
