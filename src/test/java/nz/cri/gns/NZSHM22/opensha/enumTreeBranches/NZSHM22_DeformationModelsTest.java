@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 
 import java.io.*;
 import java.util.*;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties2;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -55,10 +55,10 @@ public class NZSHM22_DeformationModelsTest {
         s = ruptSet.getFaultSectionData(1);
         assertEquals(0.02, s.getOrigAveSlipRate(), DELTA);
 
-        FaultSectionProperties2 props0 =
-                new FaultSectionProperties2(ruptSet.getFaultSectionData(0));
-        FaultSectionProperties2 props1 =
-                new FaultSectionProperties2(ruptSet.getFaultSectionData(1));
+        FaultSectionProperties props0 =
+                new FaultSectionProperties(ruptSet.getFaultSectionData(0));
+        FaultSectionProperties props1 =
+                new FaultSectionProperties(ruptSet.getFaultSectionData(1));
 
         // deformation model will be applied based on original id
         props0.setOriginalId(1000);

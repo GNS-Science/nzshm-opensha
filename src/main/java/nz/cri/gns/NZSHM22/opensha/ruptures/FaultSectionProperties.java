@@ -17,12 +17,12 @@ import org.opensha.sha.faultSurface.GeoJSONFaultSection;
  * Access to extra fault section properties that can be stored in the fault section's GeoJson
  * feature properties. Rupture sets in modern, modular OpenSHA archives will have read the fault
  * sections from GeoJson and will use the GeoJSONFaultSection class for fault sections.
- * FaultSectionProperties2 is a convenience class to get and set common joint inversion properties.
+ * FaultSectionProperties is a convenience class to get and set common joint inversion properties.
  *
  * <p>Properties modified using this class will be saved in the fault section GeoJson file if the
  * rupture set is written to disk.
  */
-public class FaultSectionProperties2 {
+public class FaultSectionProperties {
 
     public static final String PARTITION = "Partition";
     public static final String ORIGINAL_PARENT = "OriginalParent";
@@ -31,7 +31,7 @@ public class FaultSectionProperties2 {
 
     final GeoJSONFaultSection section;
 
-    public FaultSectionProperties2(FaultSection section) {
+    public FaultSectionProperties(FaultSection section) {
         Preconditions.checkArgument(section instanceof GeoJSONFaultSection);
         this.section = (GeoJSONFaultSection) section;
     }
@@ -126,7 +126,7 @@ public class FaultSectionProperties2 {
         }
 
         for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
-            FaultSectionProperties2 props = new FaultSectionProperties2(section);
+            FaultSectionProperties props = new FaultSectionProperties(section);
             if (section.getSectionName().contains("row:")) {
                 //  Backfill subduction props
                 props.setOriginalParent(10000);

@@ -712,7 +712,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             FaultSectionList parentSections = new FaultSectionList();
             faultModel.fetchFaultSections(parentSections);
             for (FaultSection section : geoJSONFaultSections) {
-                FaultSectionProperties2 props = new FaultSectionProperties2(section);
+                FaultSectionProperties props = new FaultSectionProperties(section);
                 props.setPartition(PartitionPredicate.CRUSTAL);
 
                 NZFaultSection nzSection =

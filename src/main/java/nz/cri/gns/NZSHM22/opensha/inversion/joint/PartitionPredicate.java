@@ -1,7 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties2;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public enum PartitionPredicate {
@@ -11,8 +11,8 @@ public enum PartitionPredicate {
     HIKURANGI,
     PUYSEGUR;
 
-    static FaultSectionProperties2 props(FaultSystemRupSet rupSet, int sectionId) {
-        return new FaultSectionProperties2(rupSet.getFaultSectionData(sectionId));
+    static FaultSectionProperties props(FaultSystemRupSet rupSet, int sectionId) {
+        return new FaultSectionProperties(rupSet.getFaultSectionData(sectionId));
     }
 
     public IntPredicate getPredicate(FaultSystemRupSet ruptureSet) {

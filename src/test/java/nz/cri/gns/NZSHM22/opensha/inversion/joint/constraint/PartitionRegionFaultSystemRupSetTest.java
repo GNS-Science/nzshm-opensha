@@ -9,7 +9,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.PartitionRegionFaultSystemRupSet;
-import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties2;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -32,11 +32,11 @@ public class PartitionRegionFaultSystemRupSetTest {
 
         rupSet.getFaultSectionDataList().removeIf((s) -> s.getSectionId() > 2);
 
-        FaultSectionProperties2 props = new FaultSectionProperties2(rupSet.getFaultSectionData(0));
+        FaultSectionProperties props = new FaultSectionProperties(rupSet.getFaultSectionData(0));
         props.setPartition(PartitionPredicate.CRUSTAL);
-        props = new FaultSectionProperties2(rupSet.getFaultSectionData(1));
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(1));
         props.setPartition(PartitionPredicate.CRUSTAL);
-        props = new FaultSectionProperties2(rupSet.getFaultSectionData(2));
+        props = new FaultSectionProperties(rupSet.getFaultSectionData(2));
         props.setPartition(PartitionPredicate.HIKURANGI);
 
         return rupSet;
