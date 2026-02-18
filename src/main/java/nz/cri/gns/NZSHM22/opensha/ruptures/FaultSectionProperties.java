@@ -36,6 +36,11 @@ public class FaultSectionProperties {
         this.section = (GeoJSONFaultSection) section;
     }
 
+    /**
+     * Used when merging two rupture sets that requires parent ids to be re-written.
+     *
+     * @param originalParent the original parent id
+     */
     public void setOriginalParent(int originalParent) {
         section.setProperty(ORIGINAL_PARENT, originalParent);
     }
@@ -44,6 +49,11 @@ public class FaultSectionProperties {
         return getInt(ORIGINAL_PARENT);
     }
 
+    /**
+     * Used when merging two rupture sets that requires section ids to be re-written.
+     *
+     * @param originalId the original section id
+     */
     public void setOriginalId(int originalId) {
         section.setProperty(ORIGINAL_ID, originalId);
     }
@@ -61,10 +71,16 @@ public class FaultSectionProperties {
         return null;
     }
 
+    /**
+     * Set the partition of the section.
+     *
+     * @param partition the partition
+     */
     public void setPartition(PartitionPredicate partition) {
         section.setProperty(PARTITION, partition.name());
     }
 
+    /** Indicates that the section is part of the TVZ. */
     public void setTvz() {
         section.setProperty(TVZ, true);
     }
