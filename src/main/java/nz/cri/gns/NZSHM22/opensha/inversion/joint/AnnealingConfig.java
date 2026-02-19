@@ -9,7 +9,7 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfitStats;
 
 public class AnnealingConfig {
 
-    protected long inversionSecs = 60;
+    public long inversionSecs = 60;
     protected long selectionInterval = 10;
     protected long selectionIterations = 0;
 
@@ -37,7 +37,7 @@ public class AnnealingConfig {
 
     protected boolean repeatable = false;
 
-    protected transient InversionInputGenerator inversionInputGenerator;
+    public transient InversionInputGenerator inversionInputGenerator;
 
     public void init() {
         if (energyDelta != 0) {

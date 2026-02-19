@@ -48,15 +48,15 @@ public class FilteredInversionConstraintTest {
         // we only have a single magnitude, so we expect a single bucket
         assertEquals(1, constraint.getNumRows());
 
-        DoubleMatrix2D matrix = new SparseDoubleMatrix2D(1, 3);
-        double[] d = new double[1];
-        constraint.encode(matrix, d, 0);
+        DoubleMatrix2D matrix = new SparseDoubleMatrix2D(2, 3);
+        double[] d = new double[2];
+        constraint.encode(matrix, d, 1);
 
-        assertArrayEquals(new double[] {1.0}, d, DELTA);
-        assertTrue(matrix.get(0, 0) > 0);
+        assertArrayEquals(new double[] {0, 1.0}, d, DELTA);
+        assertTrue(matrix.get(1, 0) > 0);
         // rupture completely outside of partition is not encoded
-        assertEquals(0, matrix.get(0, 1), DELTA);
-        assertEquals(matrix.get(0, 0), matrix.get(0, 2), DELTA);
+        assertEquals(0, matrix.get(1, 1), DELTA);
+        assertEquals(matrix.get(1, 0), matrix.get(1, 2), DELTA);
     }
 
     @Test

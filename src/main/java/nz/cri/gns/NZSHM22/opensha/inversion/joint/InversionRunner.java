@@ -26,6 +26,10 @@ public class InversionRunner {
         this.config = config;
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     public FaultSystemSolution run() throws DocumentException, IOException {
 
         // hydrate and validate config

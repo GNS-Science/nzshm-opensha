@@ -10,7 +10,6 @@ import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.SimplifiedJointScalingRelationship;
@@ -54,7 +53,7 @@ public class Config {
         this.ruptureSetPath = ruptureSetPath;
     }
 
-    public void setRuptureSet(NZSHM22_InversionFaultSystemRuptSet ruptureSet) {
+    public void setRuptureSet(FaultSystemRupSet ruptureSet) {
         this.ruptureSet = ruptureSet;
     }
 

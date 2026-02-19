@@ -3,12 +3,15 @@ package nz.cri.gns.NZSHM22.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import org.dom4j.DocumentException;
@@ -19,6 +22,7 @@ import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class TestHelpers {
@@ -74,7 +78,23 @@ public class TestHelpers {
         branch.setValue(faultModel);
         branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
 
-        return FaultSystemRupSet.builder(sections, sectionForRups)
+        List<GeoJSONFaultSection> geoJSONFaultSections =
+                sections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
+
+        PartitionPredicate partition = PartitionPredicate.CRUSTAL;
+
+        String firstSectionName = sections.get(0).getSectionName();
+        if (firstSectionName.contains("row:") && firstSectionName.contains("Puysegur")) {
+            partition = PartitionPredicate.PUYSEGUR;
+        }
+        if (firstSectionName.contains("row:") && firstSectionName.contains("Hikurangi")) {
+            partition = PartitionPredicate.HIKURANGI;
+        }
+        PartitionPredicate finalPartition = partition;
+        geoJSONFaultSections.forEach(
+                section -> (new FaultSectionProperties(section)).setPartition(finalPartition));
+
+        return FaultSystemRupSet.builder(geoJSONFaultSections, sectionForRups)
                 .forScalingRelationship(scalingRelationship)
                 .addModule(branch)
                 .build();
