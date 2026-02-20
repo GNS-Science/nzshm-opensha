@@ -4,7 +4,8 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -13,7 +14,9 @@ import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.commons.util.ExceptionUtils;
 import org.opensha.commons.util.XMLUtils;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
@@ -151,6 +154,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     private final boolean crustal;
     private final int id;
     private final String tvzDomain;
+    private final PartitionPredicate partition;
 
     private Map<String, List<Integer>> namedFaultsMapAlt;
 
@@ -163,6 +167,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.crustal = true;
         this.id = -1;
         this.tvzDomain = null;
+        this.partition = PartitionPredicate.CRUSTAL;
     }
 
     NZSHM22_FaultModels(String modelName, String fileName, String tvzDomain) {
@@ -171,6 +176,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.crustal = true;
         this.id = -1;
         this.tvzDomain = tvzDomain;
+        this.partition = PartitionPredicate.CRUSTAL;
     }
 
     NZSHM22_FaultModels(String modelName, String fileName, int subductionId) {
@@ -179,7 +185,13 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.crustal = false;
         this.id = subductionId;
         this.tvzDomain = null;
+        this.partition =
+                modelName.contains("Hikurangi")
+                        ? PartitionPredicate.HIKURANGI
+                        : PartitionPredicate.PUYSEGUR;
     }
+
+    // TODO: create new constructors that include partition
 
     /**
      * Sets the custom model as text data (XML for crustal, CSV for subduction)
@@ -217,12 +229,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
             throws IOException, DocumentException {
         if (customModel != null) {
             try (InputStream in = new ByteArrayInputStream(customModel.getBytes())) {
-                fetchFaultSections(sections, in, crustal, id, modelName);
+                fetchFaultSections(sections, in, crustal, id, modelName, tvzDomain, partition);
             }
         }
         if (fileName != null) {
             try (InputStream in = getStream(fileName)) {
-                fetchFaultSections(sections, in, crustal, id, modelName);
+                fetchFaultSections(sections, in, crustal, id, modelName, tvzDomain, partition);
             }
         }
     }
@@ -232,22 +244,39 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
             InputStream in,
             boolean crustal,
             int subductionId,
-            String modelName)
+            String modelName,
+            String tvzDomain,
+            PartitionPredicate partition)
             throws IOException, DocumentException {
         if (crustal) {
-            loadStoredFaultSections(sections, XMLUtils.loadDocument(in));
+            loadStoredFaultSections(sections, XMLUtils.loadDocument(in), tvzDomain, partition);
         } else {
-            DownDipSubSectBuilder.loadFromStream(sections, subductionId, modelName, in);
+            DownDipSubSectBuilder.loadFromStream(sections, subductionId, modelName, in, partition);
         }
     }
 
-    public static void loadStoredFaultSections(FaultSectionList sections, Document doc) {
+    public static void loadStoredFaultSections(
+            FaultSectionList sections,
+            Document doc,
+            String tvzDomain,
+            PartitionPredicate partition) {
         Element el = doc.getRootElement().element("FaultModel");
         for (int i = 0; i < el.elements().size(); i++) {
             Element subEl = el.element("i" + i);
-            FaultSection sect;
-            sect = NZFaultSection.fromXMLMetadata(subEl);
-            sections.add(sect);
+            FaultSection section = FaultSectionPrefData.fromXMLMetadata(subEl);
+            GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(section);
+            FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
+            if (partition != null) {
+                props.setPartition(partition);
+            }
+            String domain = subEl.attributeValue("domainNo");
+            if (domain != null) {
+                props.setDomain(domain);
+                if (domain.equals(tvzDomain)) {
+                    props.setTvz();
+                }
+            }
+            sections.add(geoJSONFaultSection);
         }
     }
 

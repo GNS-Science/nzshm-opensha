@@ -2,14 +2,14 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.faultSurface.FaultSection;
 
 /** A FaultSubsectionCluster for subduction faults. Has some convenience methods. */
 public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
 
-    public final List<DownDipFaultSection> ddSections;
+    public final List<FaultSection> ddSections;
 
     public DownDipFaultSubSectionCluster(List<? extends FaultSection> subSects) {
         this(subSects, null);
@@ -18,7 +18,7 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
     public DownDipFaultSubSectionCluster(
             List<? extends FaultSection> subSects, Collection<FaultSection> endSects) {
         super(subSects, endSects);
-        ddSections = (List<DownDipFaultSection>) subSects;
+        ddSections = (List<FaultSection>) subSects;
     }
 
     /**
@@ -28,16 +28,16 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
      */
     @Override
     public DownDipFaultSubSectionCluster reversed() {
-        List<DownDipFaultSection> newSections = new ArrayList<>();
-        List<DownDipFaultSection> currentRow = new ArrayList<>();
-        int currentRowId = ddSections.get(0).getRowIndex();
+        List<FaultSection> newSections = new ArrayList<>();
+        List<FaultSection> currentRow = new ArrayList<>();
+        int currentRowId = new FaultSectionProperties(ddSections.get(0)).getRowIndex();
 
-        for (DownDipFaultSection section : ddSections) {
+        for (FaultSection section : ddSections) {
             if (section.getSectionId() != currentRowId) {
                 Collections.reverse(currentRow);
                 newSections.addAll(currentRow);
                 currentRow = new ArrayList<>();
-                currentRowId = section.getRowIndex();
+                currentRowId = new FaultSectionProperties(section).getRowIndex();
             }
             currentRow.add(section);
         }
@@ -53,11 +53,11 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
         throw new RuntimeException("Not implemented");
     }
 
-    public DownDipFaultSection first() {
+    public FaultSection first() {
         return ddSections.get(0);
     }
 
-    private DownDipFaultSection lastSection = null;
+    private FaultSection lastSection = null;
 
     /**
      * Get the last section in the topmost row.
@@ -66,7 +66,7 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
      */
     public FaultSection last() {
         if (lastSection == null) {
-            List<DownDipFaultSection> trace = getTraceSections();
+            List<FaultSection> trace = getTraceSections();
             lastSection = trace.get(trace.size() - 1);
         }
         return lastSection;
@@ -77,9 +77,13 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
      *
      * @return
      */
-    public List<DownDipFaultSection> getTraceSections() {
+    public List<FaultSection> getTraceSections() {
         return ddSections.stream()
-                .filter(s -> s.getRowIndex() == first().getRowIndex())
+                .filter(
+                        s ->
+                                Objects.equals(
+                                        new FaultSectionProperties(s).getRowIndex(),
+                                        new FaultSectionProperties(first()).getRowIndex()))
                 .collect(Collectors.toList());
     }
 }

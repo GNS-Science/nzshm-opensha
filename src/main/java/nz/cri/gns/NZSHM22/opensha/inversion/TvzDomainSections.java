@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -43,9 +43,9 @@ public class TvzDomainSections implements CSV_BackedModule {
         }
 
         return section -> {
-            NZFaultSection parent = (NZFaultSection) sectionList.get(section.getParentSectionId());
+            FaultSection parent = sectionList.get(section.getParentSectionId());
             Preconditions.checkState(parent.getSectionId() == section.getParentSectionId());
-            return parent.getDomainNo().equals(faultModel.getTvzDomain());
+            return new FaultSectionProperties(parent).getDomain().equals(faultModel.getTvzDomain());
         };
     }
 

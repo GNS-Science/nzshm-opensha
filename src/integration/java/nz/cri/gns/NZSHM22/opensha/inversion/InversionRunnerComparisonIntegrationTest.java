@@ -22,9 +22,12 @@ import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
-public class InversionRunner_Comparison_IntegrationTest {
+public class InversionRunnerComparisonIntegrationTest {
+
+    public static final double DELTA = 1e-10;
 
     public void compareConstraints(
             int numRups, InversionConstraint constraintA, InversionConstraint constraintB) {
@@ -49,7 +52,7 @@ public class InversionRunner_Comparison_IntegrationTest {
         constraintA.encode(aA, dA, 0);
         constraintB.encode(aB, dB, 0);
 
-        assertArrayEquals(dA, dB, 0.0000001);
+        assertArrayEquals(dA, dB, DELTA);
         assertEquals(aA.toString(), aB.toString());
     }
 
@@ -61,6 +64,28 @@ public class InversionRunner_Comparison_IntegrationTest {
         for (int c = 0; c < constraintsA.size(); c++) {
             compareConstraints(numRups, constraintsA.get(c), constraintsB.get(c));
         }
+    }
+
+    public static void compareRuptureSets(FaultSystemRupSet rupSetA, FaultSystemRupSet rupSetB) {
+        assertArrayEquals(rupSetA.getMagForAllRups(), rupSetB.getMagForAllRups(), DELTA);
+
+        double[] slipsA =
+                rupSetA.getFaultSectionDataList().stream()
+                        .mapToDouble(FaultSection::getOrigAveSlipRate)
+                        .toArray();
+        double[] slipsB =
+                rupSetB.getFaultSectionDataList().stream()
+                        .mapToDouble(FaultSection::getOrigAveSlipRate)
+                        .toArray();
+
+        assertArrayEquals(slipsA, slipsB, DELTA);
+
+        assertArrayEquals(
+                rupSetA.getSlipRateForAllSections(), rupSetB.getSlipRateForAllSections(), DELTA);
+        assertArrayEquals(
+                rupSetA.getSlipRateStdDevForAllSections(),
+                rupSetA.getSlipRateStdDevForAllSections(),
+                DELTA);
     }
 
     @Test
@@ -75,10 +100,7 @@ public class InversionRunner_Comparison_IntegrationTest {
         FaultSystemSolution inversionSolution = inversionRunner.run();
         FaultSystemSolution crustalSolution = crustalRunner.runInversion();
 
-        assertArrayEquals(
-                inversionSolution.getRupSet().getMagForAllRups(),
-                crustalSolution.getRupSet().getMagForAllRups(),
-                .00000001);
+        compareRuptureSets(inversionSolution.getRupSet(), crustalSolution.getRupSet());
 
         compareConstraints(
                 inversionSolution.getRateForAllRups().length,

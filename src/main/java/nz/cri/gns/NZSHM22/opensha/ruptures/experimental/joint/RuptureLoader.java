@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
@@ -37,13 +37,13 @@ public class RuptureLoader {
                                 section -> {
                                     Matcher m = pattern.matcher(section.getSectionName());
                                     if (m.find()) {
-                                        DownDipFaultSection ddSection = new DownDipFaultSection();
-                                        ddSection.setFaultSectionPrefData(section);
-                                        ddSection.setColIndex(Integer.parseInt(m.group(1)));
-                                        ddSection.setRowIndex(Integer.parseInt(m.group(2)));
-                                        subductionParents.add(ddSection.getParentSectionId());
+                                        FaultSectionProperties props =
+                                                new FaultSectionProperties(section);
+                                        props.setColIndex(Integer.parseInt(m.group(1)));
+                                        props.setRowIndex(Integer.parseInt(m.group(2)));
+                                        subductionParents.add(section.getParentSectionId());
 
-                                        return ddSection;
+                                        return section;
                                     }
                                     return section;
                                 })

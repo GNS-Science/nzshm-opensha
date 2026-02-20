@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -26,7 +26,12 @@ public class FaultSectionProperties {
     public static final String PARTITION = "Partition";
     public static final String ORIGINAL_PARENT = "OriginalParent";
     public static final String ORIGINAL_ID = "OriginalId";
+    public static final String DOMAIN = "Domain";
     public static final String TVZ = "TVZ";
+    public static final String ROW_INDEX = "RowIndex";
+    public static final String COL_Index = "ColIndex";
+
+    public static final String DOWNDIP_BUILDER = "DOwnDIpBuilder";
 
     final GeoJSONFaultSection section;
 
@@ -102,6 +107,14 @@ public class FaultSectionProperties {
         section.setProperty(PARTITION, partition.name());
     }
 
+    public void setDomain(String domain) {
+        section.setProperty(DOMAIN, domain);
+    }
+
+    public String getDomain() {
+        return (String) section.getProperty(DOMAIN);
+    }
+
     /** Indicates that the section is part of the TVZ. */
     public void setTvz() {
         section.setProperty(TVZ, true);
@@ -114,6 +127,43 @@ public class FaultSectionProperties {
      */
     public boolean getTvz() {
         return section.getProperty(TVZ) == Boolean.TRUE;
+    }
+
+    public void setRowIndex(int rowIndex) {
+        section.setProperty(ROW_INDEX, rowIndex);
+    }
+
+    public Integer getRowIndex() {
+        return getInt(ROW_INDEX);
+    }
+
+    public void setColIndex(int colIndex) {
+        section.setProperty(COL_Index, colIndex);
+    }
+
+    public Integer getColIndex() {
+        return getInt(COL_Index);
+    }
+
+    /**
+     * Remove this property before writing the rupture set to file
+     *
+     * @param builder
+     */
+    public void setDownDipBuilder(DownDipSubSectBuilder builder) {
+        section.setProperty(DOWNDIP_BUILDER, builder);
+    }
+
+    public DownDipSubSectBuilder getDownDipSSubSectBuilder() {
+        return (DownDipSubSectBuilder) section.getProperty(DOWNDIP_BUILDER);
+    }
+
+    public static boolean isCrustal(FaultSection section) {
+        return new FaultSectionProperties(section).getPartition() == PartitionPredicate.CRUSTAL;
+    }
+
+    public static boolean isSubduction(FaultSection section) {
+        return isCrustal(section);
     }
 
     /**
@@ -138,6 +188,20 @@ public class FaultSectionProperties {
         double dValue = (Double) value;
         Preconditions.checkState(Math.rint(dValue) == dValue);
         return (int) dValue;
+    }
+
+    public static void copy(FaultSection from, FaultSection to) {
+        FaultSectionProperties propsFrom = new FaultSectionProperties(from);
+        FaultSectionProperties propsTo = new FaultSectionProperties(to);
+        propsTo.setPartition(propsFrom.getPartition());
+        propsTo.setOriginalParent(propsFrom.getOriginalParent());
+        propsTo.setOriginalId(propsFrom.getOriginalId());
+        propsTo.setDomain(propsFrom.getDomain());
+        if (propsFrom.getTvz()) {
+            propsTo.setTvz();
+        }
+        propsTo.setRowIndex(propsFrom.getRowIndex());
+        propsTo.setColIndex(propsFrom.getColIndex());
     }
 
     /**
@@ -195,21 +259,26 @@ public class FaultSectionProperties {
                 }
             } else {
                 // backfill crustal props
-                NZFaultSection parent =
-                        (NZFaultSection) parentSections.get(section.getParentSectionId());
-                // verify that we're actually using the correct fault model
-                //                System.out.println(
-                //                        " orig: "
-                //                                + section.getParentSectionName()
-                //                                + " : model : "
-                //                                + parent.getSectionName());
-                Preconditions.checkState(
-                        section.getParentSectionName().equals(parent.getSectionName()));
-                props.setPartition(PartitionPredicate.CRUSTAL);
-                if (faultModel.getTvzDomain() != null
-                        && faultModel.getTvzDomain().equals(parent.getDomainNo())) {
-                    props.setTvz();
-                }
+                // TODO how does this work now?
+
+                //                NZFaultSection parent =
+                //                        (NZFaultSection)
+                // parentSections.get(section.getParentSectionId());
+                //                // verify that we're actually using the correct fault model
+                //                //                System.out.println(
+                //                //                        " orig: "
+                //                //                                + section.getParentSectionName()
+                //                //                                + " : model : "
+                //                //                                + parent.getSectionName());
+                //                Preconditions.checkState(
+                //
+                // section.getParentSectionName().equals(parent.getSectionName()));
+                //                props.setPartition(PartitionPredicate.CRUSTAL);
+                //                if (faultModel.getTvzDomain() != null
+                //                        && faultModel.getTvzDomain().equals(parent.getDomainNo()))
+                // {
+                //                    props.setTvz();
+                //                }
             }
         }
 

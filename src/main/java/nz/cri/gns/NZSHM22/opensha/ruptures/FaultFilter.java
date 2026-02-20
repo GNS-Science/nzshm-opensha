@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.LocationList;
 import org.opensha.commons.geo.Region;
@@ -99,7 +98,7 @@ public interface FaultFilter {
 
         @Override
         public boolean keep(FaultSection section) {
-            return !domains.contains(((NZFaultSection) section).getDomainNo());
+            return !domains.contains(new FaultSectionProperties(section).getDomain());
         }
 
         @Override

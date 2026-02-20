@@ -8,12 +8,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 public class MixedRuptureSetBuilderTest {
 
@@ -170,9 +171,9 @@ public class MixedRuptureSetBuilderTest {
     public static List<FaultSection> mockDownDipRow(int rowIndex, double... lengths) {
         List<FaultSection> subSects = new ArrayList<>();
         for (double length : lengths) {
-            DownDipFaultSection s = mock(DownDipFaultSection.class);
+            GeoJSONFaultSection s = mock(GeoJSONFaultSection.class);
             when(s.getSectionId()).thenReturn(sectionId++);
-            when(s.getRowIndex()).thenReturn(rowIndex);
+            when(s.getProperty(FaultSectionProperties.ROW_INDEX)).thenReturn(rowIndex);
             when(s.getTraceLength()).thenReturn(length);
             subSects.add(s);
         }

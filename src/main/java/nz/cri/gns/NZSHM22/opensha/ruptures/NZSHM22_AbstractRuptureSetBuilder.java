@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.GitVersion;
@@ -22,6 +22,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -282,31 +283,51 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return this;
     }
 
-    protected void applyDepthScalars(FaultSectionList sections) {
+    protected FaultSectionList applyDepthScalars(FaultSectionList sections) {
+        FaultSectionList result = sections;
         if (scaleDepthIncludeDomainNo != null) {
             Preconditions.checkState(
-                    ((NZFaultSection) sections.get(0)).getDomainNo() != null,
+                    new FaultSectionProperties(sections.get(0)).getDomain() != null,
                     "fault model must have domain data when using scaleDepthIncludeDomain");
+            FaultSectionList modified = new FaultSectionList();
             for (FaultSection section : sections) {
-                if (((NZFaultSection) section).getDomainNo().equals(scaleDepthIncludeDomainNo)) {
-                    ((FaultSectionPrefData) section)
-                            .setAveLowerDepth(
-                                    section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
+                if (new FaultSectionProperties(section)
+                        .getDomain()
+                        .equals(scaleDepthIncludeDomainNo)) {
+                    // bit of a kludge: we need to cast to FaultSectionPrefData in order to set ave
+                    // lower depth
+                    FaultSectionPrefData data = new FaultSectionPrefData();
+                    data.setFaultSectionPrefData(section);
+                    data.setAveLowerDepth(
+                            section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
+                    GeoJSONFaultSection geoSection = new GeoJSONFaultSection(data);
+                    modified.add(geoSection);
+                    FaultSectionProperties.copy(section, geoSection);
                 }
             }
+            result = modified;
         }
         if (scaleDepthExcludeDomainNo != null) {
             Preconditions.checkState(
-                    ((NZFaultSection) sections.get(0)).getDomainNo() != null,
+                    new FaultSectionProperties(sections.get(0)).getDomain() != null,
                     "fault model must have domain data when using scaleDepthExcludeDomain");
+            FaultSectionList modified = new FaultSectionList();
             for (FaultSection section : sections) {
-                if (!((NZFaultSection) section).getDomainNo().equals(scaleDepthExcludeDomainNo)) {
-                    ((FaultSectionPrefData) section)
-                            .setAveLowerDepth(
-                                    section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
+                if (!(new FaultSectionProperties(section)
+                        .getDomain()
+                        .equals(scaleDepthExcludeDomainNo))) {
+                    FaultSectionPrefData data = new FaultSectionPrefData();
+                    data.setFaultSectionPrefData(section);
+                    data.setAveLowerDepth(
+                            section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
+                    GeoJSONFaultSection geoSection = new GeoJSONFaultSection(data);
+                    modified.add(geoSection);
+                    FaultSectionProperties.copy(section, geoSection);
                 }
             }
+            result = modified;
         }
+        return result;
     }
 
     protected void loadFaults(NZSHM22_FaultModels faultModel)
@@ -325,7 +346,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             }
         }
 
-        applyDepthScalars(subSections);
+        subSections = applyDepthScalars(subSections);
 
         subSections.removeIf(
                 faultSection ->
@@ -335,9 +356,11 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                                                 .get(faultSection.getFaultTrace().size() - 1)
                                                 .getLongitude()
                                         > 170);
+
+        // TODO: are we removing all crustal faults that don't begin with Alpine? Why?
         subSections.removeIf(
                 faultSection ->
-                        !(faultSection instanceof DownDipFaultSection)
+                        faultModel.isCrustal()
                                 && !faultSection.getSectionName().startsWith("Alpine"));
 
         if (faultModel.isCrustal()) {
@@ -382,7 +405,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         }
         if (downDipFile != null) {
             try (FileInputStream in = new FileInputStream(downDipFile)) {
-                DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
+                DownDipSubSectBuilder.loadFromStream(
+                        subSections, 10000, downDipFaultName, in, PartitionPredicate.HIKURANGI);
             }
         }
 
@@ -402,7 +426,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             }
         }
 
-        applyDepthScalars(subSections);
+        subSections = applyDepthScalars(subSections);
 
         if (faultModel != null && faultModel.isCrustal()) {
 

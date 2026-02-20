@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
@@ -46,7 +46,8 @@ public class DownDipPermutationStrategy implements RuptureGrowingStrategy {
 
         List<FaultSubsectionCluster> permutations = new ArrayList<>();
 
-        DownDipSubSectBuilder downDipBuilder = DownDipFaultSection.getBuilder(fullCluster);
+        FaultSectionProperties props = new FaultSectionProperties(fullCluster.startSect);
+        DownDipSubSectBuilder downDipBuilder = props.getDownDipSSubSectBuilder();
         Preconditions.checkState(downDipBuilder != null);
         // this is a down-dip fault section, only build rectangular permutations
         int startCol = downDipBuilder.getColumn(firstSection);

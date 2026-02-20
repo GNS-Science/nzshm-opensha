@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.FishboneGenerator;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.JointRuptureBuilderParallel;
@@ -56,7 +56,7 @@ public class JointRupturePostProcessor {
         subductionClusters = new ArrayList<>();
 
         int parentId = subSections.get(0).getParentSectionId();
-        boolean crustal = !(subSections.get(0) instanceof DownDipFaultSection);
+        boolean crustal = FaultSectionProperties.isCrustal(subSections.get(0));
         List<FaultSection> clusterSections = new ArrayList<>();
         for (FaultSection section : subSections) {
             if (parentId != section.getParentSectionId()) {
@@ -66,7 +66,7 @@ public class JointRupturePostProcessor {
                     subductionClusters.add(new DownDipFaultSubSectionCluster(clusterSections));
                 }
                 parentId = section.getParentSectionId();
-                crustal = !(section instanceof DownDipFaultSection);
+                crustal = FaultSectionProperties.isCrustal(section);
                 clusterSections = new ArrayList<>();
             }
             clusterSections.add(section);
@@ -194,14 +194,15 @@ public class JointRupturePostProcessor {
      */
     private double calculateLength(FaultSubsectionCluster cluster) {
 
-        if (cluster.subSects.get(0) instanceof DownDipFaultSection) {
-            List<DownDipFaultSection> ddCluster =
-                    (List<DownDipFaultSection>) (List<?>) cluster.subSects;
+        if (FaultSectionProperties.isSubduction(cluster.subSects.get(0))) {
             int minRow =
-                    ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
-            return ddCluster.stream()
-                    .filter(s -> s.getRowIndex() == minRow)
-                    .mapToDouble(DownDipFaultSection::getTraceLength)
+                    cluster.subSects.stream()
+                            .mapToInt(s -> new FaultSectionProperties(s).getRowIndex())
+                            .min()
+                            .getAsInt();
+            return cluster.subSects.stream()
+                    .filter(s -> new FaultSectionProperties(s).getRowIndex() == minRow)
+                    .mapToDouble(FaultSection::getTraceLength)
                     .sum();
         }
 
@@ -300,7 +301,7 @@ public class JointRupturePostProcessor {
         }
 
         FaultSection firstSection = splayCandidate.clusters[0].subSects.get(0);
-        Preconditions.checkState(firstSection instanceof DownDipFaultSection);
+        Preconditions.checkState(FaultSectionProperties.isSubduction(firstSection));
 
         Location a = firstSection.getFaultTrace().first();
         Location b = firstSection.getFaultTrace().last();

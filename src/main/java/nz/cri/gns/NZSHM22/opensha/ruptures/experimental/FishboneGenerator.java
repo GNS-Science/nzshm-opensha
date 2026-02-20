@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import org.jfree.data.Range;
 import org.opensha.commons.data.function.DefaultXY_DataSet;
@@ -105,7 +105,7 @@ public class FishboneGenerator {
 
             for (FishboneGeometry.RotatedSection section : geometry.sections) {
                 if (section.crossesPlane) {
-                    if (section.section instanceof DownDipFaultSection) {
+                    if (FaultSectionProperties.isSubduction(section.section)) {
                         plotFishboneComponent(section, subductionChar);
                     } else {
                         plotFishboneComponent(section, outlineChar);

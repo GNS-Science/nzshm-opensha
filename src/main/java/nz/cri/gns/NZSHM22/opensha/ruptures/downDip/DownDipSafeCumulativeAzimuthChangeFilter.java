@@ -4,7 +4,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityResult;
@@ -25,7 +26,8 @@ public class DownDipSafeCumulativeAzimuthChangeFilter extends CumulativeAzimuthC
     public PlausibilityResult apply(ClusterRupture rupture, boolean verbose) {
         // we only need to check the first cluster because we have a filter that prevents
         // combinations of crustal and downDip
-        if (DownDipFaultSection.isDownDip(rupture.clusters[0])) {
+        FaultSectionProperties props = new FaultSectionProperties(rupture.clusters[0].startSect);
+        if (props.getPartition() != PartitionPredicate.CRUSTAL) {
             return PlausibilityResult.PASS;
         } else {
             return super.apply(rupture, verbose);

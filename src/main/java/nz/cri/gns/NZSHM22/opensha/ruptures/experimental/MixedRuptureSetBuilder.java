@@ -13,7 +13,7 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipConstraint;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipPermutationStrategy;
@@ -226,13 +226,15 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
      */
     private double calculateLength(FaultSubsectionCluster cluster) {
 
-        if (cluster.subSects.get(0) instanceof DownDipFaultSection) {
-            List<DownDipFaultSection> ddCluster =
-                    (List<DownDipFaultSection>) (List<?>) cluster.subSects;
+        if (FaultSectionProperties.isSubduction(cluster.subSects.get(0))) {
+
             int minRow =
-                    ddCluster.stream().mapToInt(DownDipFaultSection::getRowIndex).min().getAsInt();
-            return ddCluster.stream()
-                    .filter(s -> s.getRowIndex() == minRow)
+                    cluster.subSects.stream()
+                            .mapToInt(s -> new FaultSectionProperties(s).getRowIndex())
+                            .min()
+                            .getAsInt();
+            return cluster.subSects.stream()
+                    .filter(s -> new FaultSectionProperties(s).getRowIndex() == minRow)
                     .mapToDouble(FaultSection::getTraceLength)
                     .sum();
         }
@@ -600,7 +602,6 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
                     this.minSubSectsPerParent, true, true); // always do this one
         }
 
-        configBuilder.add(new DownDipRuptureGrowthPlausibilityFilter());
         configBuilder.add(new DownDipRuptureSizePlausibilityFilter());
 
         if (noIndirectPaths) {
@@ -837,7 +838,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
             int crustal = 0;
             int subduction = 0;
             for (FaultSubsectionCluster cluster : rupture.clusters) {
-                if (cluster.startSect instanceof DownDipFaultSection) {
+                if (FaultSectionProperties.isSubduction(cluster.startSect)) {
                     subduction++;
                 } else {
                     crustal++;
@@ -863,7 +864,7 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
         Map<Integer, Integer> jointStats = new HashMap<>();
         List<Jump> jointJumps =
                 connectionStrategy.getAllPossibleJumps().stream()
-                        .filter(j -> j.fromSection instanceof DownDipFaultSection)
+                        .filter(j -> FaultSectionProperties.isSubduction(j.fromSection))
                         .collect(Collectors.toList());
         Set<Integer> puyJumps =
                 jointJumps.stream()

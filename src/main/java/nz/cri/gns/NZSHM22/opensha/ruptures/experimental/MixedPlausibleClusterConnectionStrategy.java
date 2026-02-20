@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityFilter;
@@ -63,8 +63,8 @@ public class MixedPlausibleClusterConnectionStrategy extends PlausibleClusterCon
     protected List<Jump> buildPossibleConnections(
             FaultSubsectionCluster from, FaultSubsectionCluster to) {
         List<Jump> result;
-        if (from.startSect instanceof DownDipFaultSection
-                || to.startSect instanceof DownDipFaultSection) {
+        if (FaultSectionProperties.isSubduction(from.startSect)
+                || FaultSectionProperties.isSubduction(to.startSect)) {
             // find the shortest jump between the two clusters
             result = new ArrayList<>();
             FaultSection a = null;

@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.FaultRegime;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -35,7 +33,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.DistCutof
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ExhaustiveBilateralRuptureGrowingStrategy.SecondaryVariations;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.PlausibleClusterConnectionStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
-import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCache;
 import org.opensha.sha.simulators.stiffness.AggregatedStiffnessCalculator;
@@ -707,21 +704,6 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
             if (mapping != null) {
                 NamedFaults namedFaults = new NamedFaults(rupSet, mapping);
                 rupSet.addModule(namedFaults);
-            }
-
-            FaultSectionList parentSections = new FaultSectionList();
-            faultModel.fetchFaultSections(parentSections);
-            for (FaultSection section : geoJSONFaultSections) {
-                FaultSectionProperties props = new FaultSectionProperties(section);
-                props.setPartition(PartitionPredicate.CRUSTAL);
-
-                NZFaultSection nzSection =
-                        (NZFaultSection) parentSections.get(section.getParentSectionId());
-                if (faultModel.getTvzDomain() != null && nzSection.getDomainNo() != null) {
-                    if (faultModel.getTvzDomain().equals(nzSection.getDomainNo())) {
-                        props.setTvz();
-                    }
-                }
             }
         }
 

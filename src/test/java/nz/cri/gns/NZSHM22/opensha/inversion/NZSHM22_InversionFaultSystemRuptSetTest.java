@@ -12,7 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SlipRateFactors;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
 import org.dom4j.DocumentException;
 import org.junit.Test;
@@ -112,9 +112,9 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
         List<? extends FaultSection> sections = rupSet.getFaultSectionDataList();
 
         for (int i = 0; i < expected.length; i++) {
-            NZFaultSection parent =
-                    ((NZFaultSection) parents.get(sections.get(i).getParentSectionId()));
-            if (parent.getDomainNo().equals(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL.getTvzDomain())) {
+            FaultSection parent = parents.get(sections.get(i).getParentSectionId());
+            FaultSectionProperties props = new FaultSectionProperties(parent);
+            if (props.getDomain().equals(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL.getTvzDomain())) {
                 expected[i] *= 0.4;
             } else {
                 expected[i] *= 0.3;
