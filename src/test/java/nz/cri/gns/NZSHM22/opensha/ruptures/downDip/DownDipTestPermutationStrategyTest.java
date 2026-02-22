@@ -5,11 +5,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import org.dom4j.DocumentException;
 import org.junit.Test;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
@@ -156,18 +160,33 @@ public class DownDipTestPermutationStrategyTest {
 
     public DownDipSubSectBuilder mockDownDipBuilder(
             int parentId, int numRows, int numCols, int holeRow, int holeCol) {
+        FaultSectionList sections = new FaultSectionList();
+        try {
+            NZSHM22_FaultModels.SBD_0_4_HKR_LR_30.fetchFaultSections(sections);
+        } catch (IOException | DocumentException x) {
+            throw new IllegalStateException(x);
+        }
+        FaultSection dummySection = sections.get(0);
         DownDipSubSectBuilder builder = mock(DownDipSubSectBuilder.class);
         when(builder.getParentID()).thenReturn(parentId);
         when(builder.getNumRows()).thenReturn(numRows);
         when(builder.getNumCols()).thenReturn(numCols);
-        FaultSectionList sections = new FaultSectionList();
+        sections = new FaultSectionList();
         when(builder.getSubSectsList()).thenReturn(sections);
         for (int r = 0; r < numRows; r++) {
             for (int c = 0; c < numCols; c++) {
                 if (holeRow == r && holeCol == c) {
                     when(builder.getSubSect(r, c)).thenReturn(null);
                 } else {
-                    FaultSection section = mockSection(parentId, sections.getSafeId(), builder);
+                    FaultSectionPrefData prefData = new FaultSectionPrefData();
+                    prefData.setFaultSectionPrefData(dummySection);
+                    prefData.setParentSectionId(parentId);
+                    prefData.setSectionId(sections.getSafeId());
+                    prefData.setAveDip(10);
+
+                    FaultSection section = new GeoJSONFaultSection(prefData);
+                    FaultSectionProperties props = new FaultSectionProperties(section);
+                    props.setDownDipBuilder(builder);
                     sections.add(section);
                     when(builder.getRow(section)).thenReturn(r);
                     when(builder.getColumn(section)).thenReturn(c);
