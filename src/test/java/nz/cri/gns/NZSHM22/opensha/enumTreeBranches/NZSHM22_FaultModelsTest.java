@@ -59,28 +59,11 @@ public class NZSHM22_FaultModelsTest {
     @Test
     public void testProperties() throws DocumentException, IOException {
         FaultSectionList sections = new FaultSectionList();
-        NZSHM22_FaultModels.CFM_1_0_DOM_ALL.fetchFaultSections(sections);
-
-        FaultSectionProperties props = new FaultSectionProperties(sections.get(0));
-        assertEquals(PartitionPredicate.CRUSTAL, props.getPartition());
-        assertEquals("21", props.getDomain());
-        assertFalse(props.getTvz());
-
-        props = new FaultSectionProperties(sections.get(5));
-        assertEquals(PartitionPredicate.CRUSTAL, props.getPartition());
-        assertEquals("4", props.getDomain());
-        assertTrue(props.getTvz());
-
-        sections = new FaultSectionList();
-        NZSHM22_FaultModels.CFM_0_9_ALL_D90.fetchFaultSections(sections);
-        props = new FaultSectionProperties(sections.get(0));
-        assertEquals(PartitionPredicate.CRUSTAL, props.getPartition());
-        assertNull(props.getDomain());
-
-        sections = new FaultSectionList();
         NZSHM22_FaultModels.SBD_0_4_HKR_LR_30.fetchFaultSections(sections);
-        props = new FaultSectionProperties(sections.get(0));
+        FaultSectionProperties props = new FaultSectionProperties(sections.get(0));
         assertEquals(PartitionPredicate.HIKURANGI, props.getPartition());
+        assertEquals(0, (int) props.getColIndex());
+        assertEquals(0, (int) props.getRowIndex());
         assertNull(props.getDomain());
     }
 }

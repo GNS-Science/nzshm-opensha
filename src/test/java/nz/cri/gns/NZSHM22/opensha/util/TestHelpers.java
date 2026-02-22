@@ -3,12 +3,14 @@ package nz.cri.gns.NZSHM22.opensha.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -16,6 +18,7 @@ import org.opensha.commons.util.modules.ModuleArchive;
 import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
@@ -72,10 +75,23 @@ public class TestHelpers {
         branch.setValue(faultModel);
         branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
 
-        List<GeoJSONFaultSection> geoJsonSections =
-                sections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
+        if (faultModel.isCrustal()) {
+            FaultSectionList crustalSections = new FaultSectionList();
+            for (FaultSection section : sections) {
+                GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(section);
+                NZFaultSection nzFaultSection = (NZFaultSection) section;
+                FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
+                props.setPartition(PartitionPredicate.CRUSTAL);
+                props.setDomain(nzFaultSection.getDomainNo());
+                if (nzFaultSection.getDomainNo().equals(faultModel.getTvzDomain())) {
+                    props.setTvz();
+                }
+                crustalSections.add(geoJSONFaultSection);
+            }
+            sections = crustalSections;
+        }
 
-        return FaultSystemRupSet.builder(geoJsonSections, sectionForRups)
+        return FaultSystemRupSet.builder(sections, sectionForRups)
                 .forScalingRelationship(scalingRelationship)
                 .addModule(branch)
                 .build();

@@ -6,17 +6,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
-import org.dom4j.DocumentException;
 import org.junit.Test;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
@@ -167,9 +161,11 @@ public class MixedRuptureSetBuilderTest {
     public static FaultSubsectionCluster mockCrustalCluster(double... lengths) {
         List<FaultSection> subSects = new ArrayList<>();
         for (double length : lengths) {
-            FaultSection s = mock(FaultSection.class);
+            GeoJSONFaultSection s = mock(GeoJSONFaultSection.class);
             when(s.getSectionId()).thenReturn(sectionId++);
             when(s.getTraceLength()).thenReturn(length);
+            when(s.getProperty(FaultSectionProperties.PARTITION))
+                    .thenReturn(PartitionPredicate.CRUSTAL.name());
             subSects.add(s);
         }
         return new FaultSubsectionCluster(subSects);
@@ -180,6 +176,8 @@ public class MixedRuptureSetBuilderTest {
         for (double length : lengths) {
             GeoJSONFaultSection s = mock(GeoJSONFaultSection.class);
             when(s.getSectionId()).thenReturn(sectionId++);
+            when(s.getProperty(FaultSectionProperties.PARTITION))
+                    .thenReturn(PartitionPredicate.HIKURANGI.name());
             when(s.getProperty(FaultSectionProperties.ROW_INDEX)).thenReturn(rowIndex);
             when(s.getTraceLength()).thenReturn(length);
             subSects.add(s);

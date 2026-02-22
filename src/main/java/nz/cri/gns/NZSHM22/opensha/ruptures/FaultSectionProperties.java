@@ -163,7 +163,7 @@ public class FaultSectionProperties {
     }
 
     public static boolean isSubduction(FaultSection section) {
-        return isCrustal(section);
+        return !isCrustal(section);
     }
 
     /**

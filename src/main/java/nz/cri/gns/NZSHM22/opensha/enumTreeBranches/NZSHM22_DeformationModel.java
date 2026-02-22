@@ -669,7 +669,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         try {
             FaultSectionList sections = new FaultSectionList();
             InputStream in = new FileInputStream(subductionFaultModelFile.toFile());
-            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "", "", partition);
+            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "", partition);
 
             try (PrintWriter out =
                     new PrintWriter(
