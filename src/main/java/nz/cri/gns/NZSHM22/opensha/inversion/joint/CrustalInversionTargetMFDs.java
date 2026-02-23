@@ -179,7 +179,7 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             targetOnFaultSupraSeisMFDs =
                     MFDManipulation.swapZeros(targetOnFaultSupraSeisMFDs, 1.0e-20);
             targetOnFaultSupraSeisMFDs.setRegion(region);
-            uncertaintyMFD =
+            uncertaintyMFD = // oakley
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,
                             config.minMag,
@@ -211,8 +211,9 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             // (origOnFltDefModMoRate + offFltDefModMoRate);
 
             // set the names
-            totalTargetGR.setName("InversionTargetMFDs.totalTargetGR_");
-            targetOnFaultSupraSeisMFDs.setName("InversionTargetMFDs.targetOnFaultSupraSeisMFD_");
+            totalTargetGR.setName("InversionTargetMFDs.totalTargetGR_SansTVZ");
+            targetOnFaultSupraSeisMFDs.setName(
+                    "InversionTargetMFDs.targetOnFaultSupraSeisMFD_SansTVZ");
             trulyOffFaultMFD.setName("InversionTargetMFDs.trulyOffFaultMFD_" + ".");
             totalSubSeismoOnFaultMFD.setName("InversionTargetMFDs.totalSubSeismoOnFaultMFD_" + ".");
         }

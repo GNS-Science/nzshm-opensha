@@ -9,9 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.ConfigModule;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.InversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.*;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
@@ -22,7 +20,9 @@ import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class InversionRunnerComparisonIntegrationTest {
@@ -40,6 +40,8 @@ public class InversionRunnerComparisonIntegrationTest {
 
         assertEquals(constraintA.getName(), constraintB.getName());
 
+        assertEquals(constraintA.getRange(0), constraintB.getRange(0));
+
         int rowsA = constraintA.getNumRows();
         int rowsB = constraintB.getNumRows();
 
@@ -53,7 +55,9 @@ public class InversionRunnerComparisonIntegrationTest {
         constraintB.encode(aB, dB, 0);
 
         assertArrayEquals(dA, dB, DELTA);
-        assertEquals(aA.toString(), aB.toString());
+        // assertEquals(aA.toString(), aB.toString());
+
+        compareMatrices(aA, aB);
     }
 
     public void compareConstraints(
@@ -66,26 +70,70 @@ public class InversionRunnerComparisonIntegrationTest {
         }
     }
 
-    public static void compareRuptureSets(FaultSystemRupSet rupSetA, FaultSystemRupSet rupSetB) {
-        assertArrayEquals(rupSetA.getMagForAllRups(), rupSetB.getMagForAllRups(), DELTA);
+    public static void compareRuptureSets(
+            FaultSystemRupSet jointRupSet, FaultSystemRupSet crustalRupSet) {
+        assertArrayEquals(jointRupSet.getMagForAllRups(), crustalRupSet.getMagForAllRups(), DELTA);
 
         double[] slipsA =
-                rupSetA.getFaultSectionDataList().stream()
+                jointRupSet.getFaultSectionDataList().stream()
                         .mapToDouble(FaultSection::getOrigAveSlipRate)
                         .toArray();
         double[] slipsB =
-                rupSetB.getFaultSectionDataList().stream()
+                crustalRupSet.getFaultSectionDataList().stream()
                         .mapToDouble(FaultSection::getOrigAveSlipRate)
                         .toArray();
 
         assertArrayEquals(slipsA, slipsB, DELTA);
 
         assertArrayEquals(
-                rupSetA.getSlipRateForAllSections(), rupSetB.getSlipRateForAllSections(), DELTA);
-        assertArrayEquals(
-                rupSetA.getSlipRateStdDevForAllSections(),
-                rupSetA.getSlipRateStdDevForAllSections(),
+                jointRupSet.getSlipRateForAllSections(),
+                crustalRupSet.getSlipRateForAllSections(),
                 DELTA);
+        assertArrayEquals(
+                jointRupSet.getSlipRateStdDevForAllSections(),
+                jointRupSet.getSlipRateStdDevForAllSections(),
+                DELTA);
+
+        PartitionMfds partitionMfds = jointRupSet.getModule(PartitionMfds.class);
+        InversionTargetMFDs jointMfds = partitionMfds.get(PartitionPredicate.CRUSTAL);
+        InversionTargetMFDs crustalMfds =
+                crustalRupSet.getModule(NZSHM22_CrustalInversionTargetMFDs.class);
+
+        // compare all incrementalmagfrqdist properties
+        assertEquals(
+                jointMfds.getTotalOnFaultMFD().toString(),
+                crustalMfds.getTotalOnFaultMFD().toString());
+        assertEquals(
+                jointMfds.getTotalOnFaultSubSeisMFD().toString(),
+                crustalMfds.getTotalOnFaultSubSeisMFD().toString());
+        assertEquals(
+                jointMfds.getTotalOnFaultSupraSeisMFD().toString(),
+                crustalMfds.getTotalOnFaultSupraSeisMFD().toString());
+        assertEquals(
+                jointMfds.getTrulyOffFaultMFD().toString(),
+                crustalMfds.getTrulyOffFaultMFD().toString());
+
+        List<? extends IncrementalMagFreqDist> jointConstraints = jointMfds.getMFD_Constraints();
+        List<? extends IncrementalMagFreqDist> crustalConstraints =
+                crustalMfds.getMFD_Constraints();
+
+        assertEquals(jointConstraints.size(), crustalConstraints.size());
+
+        for (int i = 0; i < jointConstraints.size(); i++) {
+            assertEquals(jointConstraints.get(i).toString(), crustalConstraints.get(i).toString());
+        }
+    }
+
+    // function to compare two matrices
+    public void compareMatrices(SparseDoubleMatrix2D a, SparseDoubleMatrix2D b) {
+        assertEquals(a.rows(), b.rows());
+        assertEquals(a.columns(), b.columns());
+
+        for (int r = 0; r < a.rows(); r++) {
+            for (int c = 0; c < a.columns(); c++) {
+                assertEquals(a.getQuick(r, c), b.getQuick(r, c), DELTA);
+            }
+        }
     }
 
     @Test
@@ -107,20 +155,8 @@ public class InversionRunnerComparisonIntegrationTest {
                 inversionRunner.getConfig().annealing.inversionInputGenerator.getConstraints(),
                 crustalRunner.getInversionInputGenerator().getConstraints());
 
-        // compare matrices
-        assertEquals(
-                inversionRunner.getConfig().annealing.inversionInputGenerator.getA().toString(),
-                crustalRunner.getInversionInputGenerator().getA().toString());
-
         assertArrayEquals(
-                inversionRunner.getConfig().annealing.inversionInputGenerator.getD(),
-                crustalRunner.getInversionInputGenerator().getD(),
-                0.000001);
-
-        assertArrayEquals(
-                inversionSolution.getRateForAllRups(),
-                crustalSolution.getRateForAllRups(),
-                0.000000001);
+                inversionSolution.getRateForAllRups(), crustalSolution.getRateForAllRups(), DELTA);
     }
 
     private FaultSystemRupSet createTestRupSet() throws DocumentException, IOException {
