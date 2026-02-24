@@ -30,6 +30,28 @@ public class InversionRunnerComparisonIntegrationTest {
 
     public static final double DELTA = 1e-10;
 
+    @Test
+    public void testInversionRunnerGeneratesIdenticalRatesToCrustalRunner() throws Exception {
+        InversionRunner inversionRunner =
+                configureInversionRunnerForCrustal(createCrustalTestRupSet());
+        NZSHM22_AbstractInversionRunner crustalRunner =
+                configureCrustalRunner(createCrustalTestRupSet());
+
+        assertRunnersEquals(inversionRunner, crustalRunner);
+    }
+
+    @Test
+    public void testInversionRunnerGeneratesIdenticalRatesToSubductionRunner() throws Exception {
+        InversionRunner inversionRunner =
+                configureInversionRunnerForSubduction(createSubductionTestRupSet());
+        NZSHM22_AbstractInversionRunner subductionRunner =
+                configureSubductionRunner(createSubductionTestRupSet());
+
+        assertRunnersEquals(inversionRunner, subductionRunner);
+    }
+
+    // asserts that the two constraints have the same name, range, and encode the same values (both
+    // A and d)
     public void compareConstraints(
             int numRups, InversionConstraint constraintA, InversionConstraint constraintB) {
 
@@ -56,7 +78,6 @@ public class InversionRunnerComparisonIntegrationTest {
         constraintB.encode(aB, dB, 0);
 
         assertArrayEquals(dA, dB, DELTA);
-        // assertEquals(aA.toString(), aB.toString());
 
         compareMatrices(aA, aB);
     }
@@ -71,6 +92,7 @@ public class InversionRunnerComparisonIntegrationTest {
         }
     }
 
+    // Compares slip rates, magnitudes, and some modules
     public static void compareRuptureSets(
             FaultSystemRupSet jointRupSet, FaultSystemRupSet crustalRupSet) {
         assertArrayEquals(jointRupSet.getMagForAllRups(), crustalRupSet.getMagForAllRups(), DELTA);
@@ -134,51 +156,19 @@ public class InversionRunnerComparisonIntegrationTest {
         }
     }
 
-    @Test
-    public void testInversionRunnerGeneratesIdenticalRatesToCrustalRunner() throws Exception {
-        // Configure InversionRunner with JSON config
-        InversionRunner inversionRunner =
-                configureInversionRunnerForCrustal(createCrustalTestRupSet());
-
-        // Configure NZSHM22_CrustalInversionRunner with equivalent params
-        NZSHM22_AbstractInversionRunner crustalRunner =
-                configureCrustalRunner(createCrustalTestRupSet());
-
-        // Run both inversions
+    public void assertRunnersEquals(
+            InversionRunner inversionRunner,
+            NZSHM22_AbstractInversionRunner abstractInversionRunner)
+            throws DocumentException, IOException {
         FaultSystemSolution inversionSolution = inversionRunner.run();
-        FaultSystemSolution crustalSolution = crustalRunner.runInversion();
+        FaultSystemSolution crustalSolution = abstractInversionRunner.runInversion();
 
         compareRuptureSets(inversionSolution.getRupSet(), crustalSolution.getRupSet());
 
         compareConstraints(
                 inversionSolution.getRateForAllRups().length,
                 inversionRunner.getConfig().annealing.inversionInputGenerator.getConstraints(),
-                crustalRunner.getInversionInputGenerator().getConstraints());
-
-        assertArrayEquals(
-                inversionSolution.getRateForAllRups(), crustalSolution.getRateForAllRups(), DELTA);
-    }
-
-    @Test
-    public void testInversionRunnerGeneratesIdenticalRatesToSubductionRunner() throws Exception {
-        // Configure InversionRunner with JSON config
-        InversionRunner inversionRunner =
-                configureInversionRunnerForSubduction(createSubductionTestRupSet());
-
-        // Configure NZSHM22_CrustalInversionRunner with equivalent params
-        NZSHM22_AbstractInversionRunner crustalRunner =
-                configureSubductionRunner(createSubductionTestRupSet());
-
-        // Run both inversions
-        FaultSystemSolution inversionSolution = inversionRunner.run();
-        FaultSystemSolution crustalSolution = crustalRunner.runInversion();
-
-        compareRuptureSets(inversionSolution.getRupSet(), crustalSolution.getRupSet());
-
-        compareConstraints(
-                inversionSolution.getRateForAllRups().length,
-                inversionRunner.getConfig().annealing.inversionInputGenerator.getConstraints(),
-                crustalRunner.getInversionInputGenerator().getConstraints());
+                abstractInversionRunner.getInversionInputGenerator().getConstraints());
 
         assertArrayEquals(
                 inversionSolution.getRateForAllRups(), crustalSolution.getRateForAllRups(), DELTA);
@@ -200,7 +190,9 @@ public class InversionRunnerComparisonIntegrationTest {
                         ScalingRelationships.SHAW_2009_MOD,
                         List.of(
                                 List.of(0, 1),
-                                // we need a rupture with mag between 8 and 8.1, so this one is long
+                                // we need a rupture with mag between 8 and 8.1, otherwise we cause
+                                // an Exception in UCERF3InversionConfiguration,
+                                // that's why this rupture is so long
                                 List.of(
                                         5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                                         21, 22)));
