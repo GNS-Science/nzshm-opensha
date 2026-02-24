@@ -199,7 +199,6 @@ public class ParameterRunner {
             runner.setReweightTargetQuantity("MAD");
         }
 
-        // XXX oakley here
         if (arguments.get("slip_use_scaling") != null) {
             // V3x config
             double weight =

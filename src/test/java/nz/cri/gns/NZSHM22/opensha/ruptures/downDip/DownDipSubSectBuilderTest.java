@@ -29,28 +29,16 @@ public class DownDipSubSectBuilderTest {
 
         assertEquals(
                 0,
-                sections.stream()
-                        .mapToInt(s -> new FaultSectionProperties(s).getRowIndex())
-                        .min()
-                        .getAsInt());
+                sections.stream().mapToInt(FaultSectionProperties::getRowIndex).min().getAsInt());
         assertEquals(
                 25,
-                sections.stream()
-                        .mapToInt(s -> new FaultSectionProperties(s).getRowIndex())
-                        .max()
-                        .getAsInt());
+                sections.stream().mapToInt(FaultSectionProperties::getRowIndex).max().getAsInt());
         assertEquals(
                 0,
-                sections.stream()
-                        .mapToInt(s -> new FaultSectionProperties(s).getColIndex())
-                        .min()
-                        .getAsInt());
+                sections.stream().mapToInt(FaultSectionProperties::getColIndex).min().getAsInt());
         assertEquals(
                 333,
-                sections.stream()
-                        .mapToInt(s -> new FaultSectionProperties(s).getColIndex())
-                        .max()
-                        .getAsInt());
+                sections.stream().mapToInt(FaultSectionProperties::getColIndex).max().getAsInt());
 
         FaultSection section = sections.get(0);
         FaultSectionProperties props = new FaultSectionProperties(section);

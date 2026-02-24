@@ -326,7 +326,7 @@ public class JointRuptureBuilderParallel {
                                 + ":"
                                 + fromSection.getSectionId()
                                 + " r "
-                                + new FaultSectionProperties(fromSection).getRowIndex()
+                                + FaultSectionProperties.getRowIndex(fromSection)
                                 + " count "
                                 + targets.size());
             }

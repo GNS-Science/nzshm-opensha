@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
@@ -33,9 +32,8 @@ public class FaultTypeSeparationConnectionStrategy
     @Override
     protected List<Jump> buildPossibleConnections(
             FaultSubsectionCluster from, FaultSubsectionCluster to) {
-        if (new FaultSectionProperties(from.startSect).getPartition() == PartitionPredicate.CRUSTAL
-                && new FaultSectionProperties(to.startSect).getPartition()
-                        == PartitionPredicate.CRUSTAL) {
+        if (FaultSectionProperties.isCrustal(from.startSect)
+                && FaultSectionProperties.isCrustal(to.startSect)) {
             return super.buildPossibleConnections(from, to);
         }
         return null;

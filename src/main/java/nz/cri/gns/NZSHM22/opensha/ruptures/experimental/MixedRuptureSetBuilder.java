@@ -230,11 +230,11 @@ public class MixedRuptureSetBuilder extends NZSHM22_AbstractRuptureSetBuilder {
 
             int minRow =
                     cluster.subSects.stream()
-                            .mapToInt(s -> new FaultSectionProperties(s).getRowIndex())
+                            .mapToInt(FaultSectionProperties::getRowIndex)
                             .min()
                             .getAsInt();
             return cluster.subSects.stream()
-                    .filter(s -> new FaultSectionProperties(s).getRowIndex() == minRow)
+                    .filter(s -> FaultSectionProperties.getRowIndex(s) == minRow)
                     .mapToDouble(FaultSection::getTraceLength)
                     .sum();
         }

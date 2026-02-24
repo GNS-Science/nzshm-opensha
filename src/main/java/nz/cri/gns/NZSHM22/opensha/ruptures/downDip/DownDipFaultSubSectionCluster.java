@@ -30,14 +30,14 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
     public DownDipFaultSubSectionCluster reversed() {
         List<FaultSection> newSections = new ArrayList<>();
         List<FaultSection> currentRow = new ArrayList<>();
-        int currentRowId = new FaultSectionProperties(ddSections.get(0)).getRowIndex();
+        int currentRowId = FaultSectionProperties.getRowIndex(ddSections.get(0));
 
         for (FaultSection section : ddSections) {
             if (section.getSectionId() != currentRowId) {
                 Collections.reverse(currentRow);
                 newSections.addAll(currentRow);
                 currentRow = new ArrayList<>();
-                currentRowId = new FaultSectionProperties(section).getRowIndex();
+                currentRowId = FaultSectionProperties.getRowIndex(section);
             }
             currentRow.add(section);
         }
@@ -82,8 +82,8 @@ public class DownDipFaultSubSectionCluster extends FaultSubsectionCluster {
                 .filter(
                         s ->
                                 Objects.equals(
-                                        new FaultSectionProperties(s).getRowIndex(),
-                                        new FaultSectionProperties(first()).getRowIndex()))
+                                        FaultSectionProperties.getRowIndex(s),
+                                        FaultSectionProperties.getRowIndex(first())))
                 .collect(Collectors.toList());
     }
 }

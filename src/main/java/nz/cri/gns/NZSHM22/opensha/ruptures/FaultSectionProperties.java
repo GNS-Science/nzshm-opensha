@@ -30,8 +30,7 @@ public class FaultSectionProperties {
     public static final String TVZ = "TVZ";
     public static final String ROW_INDEX = "RowIndex";
     public static final String COL_Index = "ColIndex";
-
-    public static final String DOWNDIP_BUILDER = "DOwnDIpBuilder";
+    public static final String DOWNDIP_BUILDER = "DownDipBuilder";
 
     final GeoJSONFaultSection section;
 
@@ -64,6 +63,10 @@ public class FaultSectionProperties {
         return getInt(ORIGINAL_PARENT);
     }
 
+    public static Integer getOriginalParent(FaultSection section) {
+        return new FaultSectionProperties(section).getOriginalParent();
+    }
+
     /**
      * When two rupture sets are merged, this property can be used to preserve the original section
      * id.
@@ -84,6 +87,10 @@ public class FaultSectionProperties {
         return getInt(ORIGINAL_ID);
     }
 
+    public static Integer getOriginalId(FaultSection section) {
+        return new FaultSectionProperties(section).getOriginalId();
+    }
+
     /**
      * The partition of the fault section.
      *
@@ -96,6 +103,10 @@ public class FaultSectionProperties {
             return PartitionPredicate.valueOf(partition);
         }
         return null;
+    }
+
+    public static PartitionPredicate getPartition(FaultSection section) {
+        return new FaultSectionProperties(section).getPartition();
     }
 
     /**
@@ -115,6 +126,10 @@ public class FaultSectionProperties {
         return (String) section.getProperty(DOMAIN);
     }
 
+    public static String getDomain(FaultSection section) {
+        return new FaultSectionProperties(section).getDomain();
+    }
+
     /** Indicates that the section is part of the TVZ. */
     public void setTvz() {
         section.setProperty(TVZ, true);
@@ -129,6 +144,10 @@ public class FaultSectionProperties {
         return section.getProperty(TVZ) == Boolean.TRUE;
     }
 
+    public static boolean getTvz(FaultSection section) {
+        return new FaultSectionProperties(section).getTvz();
+    }
+
     public void setRowIndex(int rowIndex) {
         section.setProperty(ROW_INDEX, rowIndex);
     }
@@ -137,12 +156,20 @@ public class FaultSectionProperties {
         return getInt(ROW_INDEX);
     }
 
+    public static Integer getRowIndex(FaultSection section) {
+        return new FaultSectionProperties(section).getRowIndex();
+    }
+
     public void setColIndex(int colIndex) {
         section.setProperty(COL_Index, colIndex);
     }
 
     public Integer getColIndex() {
         return getInt(COL_Index);
+    }
+
+    public static Integer getColIndex(FaultSection section) {
+        return new FaultSectionProperties(section).getColIndex();
     }
 
     /**
@@ -156,6 +183,10 @@ public class FaultSectionProperties {
 
     public DownDipSubSectBuilder getDownDipSSubSectBuilder() {
         return (DownDipSubSectBuilder) section.getProperty(DOWNDIP_BUILDER);
+    }
+
+    public static DownDipSubSectBuilder getDownDipSSubSectBuilder(FaultSection section) {
+        return new FaultSectionProperties(section).getDownDipSSubSectBuilder();
     }
 
     public static boolean isCrustal(FaultSection section) {
@@ -207,9 +238,12 @@ public class FaultSectionProperties {
     /**
      * Backfill script for existing rupture set This should work for all crustal, subduction, and
      * joint rupture sets. Ensure to use the correct fault model if there are crustal sections.
-     * Crustal sections must come before subduction sections so that section ids line up. * @throws
-     * IOException
+     * Crustal sections must come before subduction sections so that section ids line up.
      *
+     * <p>Note that not all properties are backfilled. OriginalId, row index, and others are nto
+     * backfilled.
+     *
+     * @throws IOException
      * @throws DocumentException
      */
     public static void backfill() throws IOException, DocumentException {
@@ -259,30 +293,27 @@ public class FaultSectionProperties {
                 }
             } else {
                 // backfill crustal props
-                // TODO how does this work now?
 
-                //                NZFaultSection parent =
-                //                        (NZFaultSection)
-                // parentSections.get(section.getParentSectionId());
-                //                // verify that we're actually using the correct fault model
-                //                //                System.out.println(
-                //                //                        " orig: "
-                //                //                                + section.getParentSectionName()
-                //                //                                + " : model : "
-                //                //                                + parent.getSectionName());
-                //                Preconditions.checkState(
-                //
-                // section.getParentSectionName().equals(parent.getSectionName()));
-                //                props.setPartition(PartitionPredicate.CRUSTAL);
-                //                if (faultModel.getTvzDomain() != null
-                //                        && faultModel.getTvzDomain().equals(parent.getDomainNo()))
-                // {
-                //                    props.setTvz();
-                //                }
+                FaultSection parent = parentSections.get(section.getParentSectionId());
+                FaultSectionProperties parentProps = new FaultSectionProperties(parent);
+                // verify that we're actually using the correct fault model
+                //                System.out.println(
+                //                        " orig: "
+                //                                + section.getParentSectionName()
+                //                                + " : model : "
+                //                                + parent.getSectionName());
+                Preconditions.checkState(
+                        section.getParentSectionName().equals(parent.getSectionName()));
+
+                props.setPartition(PartitionPredicate.CRUSTAL);
+                props.setDomain(parentProps.getDomain());
+                if (parentProps.getTvz()) {
+                    props.setTvz();
+                }
             }
         }
 
-        ruptureSet.write(new File(ruptureSetName + "props3.zip"));
+        ruptureSet.write(new File(ruptureSetName + "props4.zip"));
     }
 
     public static void main(String[] args) throws IOException, DocumentException {

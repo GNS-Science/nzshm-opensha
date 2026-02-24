@@ -106,7 +106,7 @@ public class JointRuptureBuilder {
                                 + ":"
                                 + fromSection.getSectionId()
                                 + " r "
-                                + new FaultSectionProperties(fromSection).getRowIndex()
+                                + FaultSectionProperties.getRowIndex(fromSection)
                                 + " count "
                                 + targets.size());
             }

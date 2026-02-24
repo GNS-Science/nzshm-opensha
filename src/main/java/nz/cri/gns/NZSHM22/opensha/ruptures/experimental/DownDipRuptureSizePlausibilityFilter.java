@@ -1,6 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
@@ -20,8 +19,7 @@ public class DownDipRuptureSizePlausibilityFilter implements PlausibilityFilter 
         double crustalSize = 0;
         double downDipSize = 0;
         for (FaultSubsectionCluster cluster : rupture.clusters) {
-            if (new FaultSectionProperties(cluster.startSect).getPartition()
-                    == PartitionPredicate.CRUSTAL) {
+            if (FaultSectionProperties.isCrustal(cluster.startSect)) {
                 crustalSize += cluster.subSects.size();
             } else {
                 downDipSize += cluster.subSects.size();

@@ -24,7 +24,7 @@ public class SharedConstraintGenerator {
     // and subduction components for MFD constraint encoding.
     // Setting this flag to false means we calculate joint rupture magnitude over the whole rupture
     // for MFD constraint encoding.
-    static final boolean SPLIT_RUPSET_MFDS = false;
+    static final boolean SPLIT_RUPSET_MFDS = true;
 
     public static List<InversionConstraint> buildSlipRateConstraints(PartitionConfig config) {
         List<InversionConstraint> constraints = new ArrayList<>();

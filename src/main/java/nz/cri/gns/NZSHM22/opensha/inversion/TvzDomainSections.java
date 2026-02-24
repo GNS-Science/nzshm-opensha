@@ -19,7 +19,7 @@ public class TvzDomainSections implements CSV_BackedModule {
     public TvzDomainSections(FaultSystemRupSet rupSet) {
         sections =
                 rupSet.getFaultSectionDataList().stream()
-                        .filter(section -> new FaultSectionProperties(section).getTvz())
+                        .filter(FaultSectionProperties::getTvz)
                         .map(FaultSection::getSectionId)
                         .collect(Collectors.toSet());
     }

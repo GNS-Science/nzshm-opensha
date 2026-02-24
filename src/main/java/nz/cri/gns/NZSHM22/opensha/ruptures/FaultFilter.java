@@ -98,7 +98,7 @@ public interface FaultFilter {
 
         @Override
         public boolean keep(FaultSection section) {
-            return !domains.contains(new FaultSectionProperties(section).getDomain());
+            return !domains.contains(FaultSectionProperties.getDomain(section));
         }
 
         @Override

@@ -90,42 +90,58 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // these two are missing the slip_deficit (mm/yr) column
     //    SBD_0_1_HKR_30("Hikurangi 30km", "subduction_tile_parameters_30.csv", 10000),
     //    SBD_0_1_HKR_10("Hikurangi 10km", "subduction_tile_parameters.csv", 10000),
-    SBD_0_1_HKR_KRM_10("Hikurangi,Kermadec 10km", "hk_tile_parameters_10.csv", 10000),
-    SBD_0_1_HKR_KRM_30("Hikurangi,Kermadec 30km", "hk_tile_parameters_30.csv", 10000),
+    SBD_0_1_HKR_KRM_10(
+            "Hikurangi,Kermadec 10km",
+            "hk_tile_parameters_10.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    SBD_0_1_HKR_KRM_30(
+            "Hikurangi,Kermadec 30km",
+            "hk_tile_parameters_30.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
 
     SBD_0_1_HKR_LR_10(
             "Hikurangi, Kermadec to Louisville ridge, 10km",
             "hk_tile_parameters_10-short.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
     SBD_0_1_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km",
             "hk_tile_parameters_30-short.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
 
     SBD_0_1_HKR_LR_10_FEC(
             "Hikurangi, Kermadec to Louisville ridge, 10km - with slip deficit smoothed near east cape",
             "hk_tile_parameters_10-short-flat-eastcape.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
     SBD_0_1_HKR_LR_30_FEC(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "hk_tile_parameters_30-short-flat-eastcape.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
 
     SBD_0_2_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
 
     // this model is mislabled 30km, it has 15km tiles
     SBD_0_1_PUY_30(
-            "Puysegur, 30km, 50% coupling", "puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000),
+            "Puysegur, 30km, 50% coupling",
+            "puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000, PartitionPredicate.PUYSEGUR),
     // dip direction for SBD_01_PUY_30 was to the west, causing the fault tiles to be "louvered" off
     // the sudcution interface surface
     // SBD_0_2_PUY_15 corrects the dip direction (right-hand rule) and indicates the correct tile
     // size (15km)
     SBD_0_2_PUY_15(
             "Puysegur, 15km, 50% coupling, corrected dip direction",
-            "puysegur_tiles_15km_maxd60km_halfcoupled_dipcorr.csv", 10000),
+            "puysegur_tiles_15km_maxd60km_halfcoupled_dipcorr.csv",
+            10000,
+            PartitionPredicate.PUYSEGUR),
 
     // the following three FaultModels have been replaced by DeformationModels
 
@@ -133,17 +149,20 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     SBD_0_2A_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv",
-            10000),
+            10000,
+            PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_3_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
             "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv",
-            20000),
+            20000,
+            PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_4_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
             "hk_tile_parameters_highkermsliprate_v2.csv",
-            10000);
+            10000,
+            PartitionPredicate.HIKURANGI);
 
     private static final String RESOURCE_PATH = "/faultModels/";
 
@@ -177,19 +196,15 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.partition = PartitionPredicate.CRUSTAL;
     }
 
-    NZSHM22_FaultModels(String modelName, String fileName, int subductionId) {
+    NZSHM22_FaultModels(
+            String modelName, String fileName, int subductionId, PartitionPredicate partition) {
         this.modelName = modelName;
         this.fileName = fileName;
         this.crustal = false;
         this.id = subductionId;
         this.tvzDomain = null;
-        this.partition =
-                modelName.contains("Hikurangi")
-                        ? PartitionPredicate.HIKURANGI
-                        : PartitionPredicate.PUYSEGUR;
+        this.partition = partition;
     }
-
-    // TODO: create new constructors that include partition
 
     /**
      * Sets the custom model as text data (XML for crustal, CSV for subduction)

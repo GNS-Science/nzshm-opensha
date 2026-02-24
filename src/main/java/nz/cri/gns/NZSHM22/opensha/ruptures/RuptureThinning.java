@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterConnectionStrategy;
@@ -34,9 +33,7 @@ public class RuptureThinning {
      * @return
      */
     public static Predicate<ClusterRupture> downDipPredicate() {
-        return rupture ->
-                new FaultSectionProperties(rupture.clusters[0].startSect).getPartition()
-                        != PartitionPredicate.CRUSTAL;
+        return rupture -> FaultSectionProperties.isSubduction(rupture.clusters[0].startSect);
     }
 
     /**
