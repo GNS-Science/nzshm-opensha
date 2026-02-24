@@ -14,7 +14,7 @@
     "inversionAveragingEnabled": false,
     "perturbationFunction": "EXPONENTIAL_SCALE",
     "nonNegAlgorithm": "TRY_ZERO_RATES_OFTEN",
-    "excludeRupturesBelowMinMag": false,
+    "excludeRupturesBelowMinMag": true,
     "repeatable": true,
     "iterationCompletionCriteria": 100,
     "selectionIterations": 1

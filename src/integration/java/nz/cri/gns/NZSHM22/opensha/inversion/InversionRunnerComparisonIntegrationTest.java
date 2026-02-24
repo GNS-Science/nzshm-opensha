@@ -200,6 +200,7 @@ public class InversionRunnerComparisonIntegrationTest {
                         ScalingRelationships.SHAW_2009_MOD,
                         List.of(
                                 List.of(0, 1),
+                                // we need a rupture with mag between 8 and 8.1, so this one is long
                                 List.of(
                                         5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                                         21, 22)));
