@@ -112,8 +112,7 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
         List<? extends FaultSection> sections = rupSet.getFaultSectionDataList();
 
         for (int i = 0; i < expected.length; i++) {
-            FaultSectionProperties props = new FaultSectionProperties(sections.get(i));
-            if (props.getTvz()) {
+            if (FaultSectionProperties.getTvz(sections.get(i))) {
                 expected[i] *= 0.4;
             } else {
                 expected[i] *= 0.3;
