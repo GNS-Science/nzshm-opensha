@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.*;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
@@ -94,28 +95,25 @@ public class InversionRunnerComparisonIntegrationTest {
                 jointRupSet.getSlipRateStdDevForAllSections(),
                 DELTA);
 
-        PartitionMfds partitionMfds = jointRupSet.getModule(PartitionMfds.class);
-        InversionTargetMFDs jointMfds = partitionMfds.get(PartitionPredicate.CRUSTAL);
-        InversionTargetMFDs crustalMfds =
-                crustalRupSet.getModule(NZSHM22_CrustalInversionTargetMFDs.class);
+        boolean crustal = FaultSectionProperties.isCrustal(jointRupSet.getFaultSectionData(0));
 
-        // compare all incrementalmagfrqdist properties
+        PartitionMfds partitionMfds = jointRupSet.getModule(PartitionMfds.class);
+        InversionTargetMFDs jointMfds =
+                partitionMfds.get(
+                        crustal ? PartitionPredicate.CRUSTAL : PartitionPredicate.HIKURANGI);
+        InversionTargetMFDs oldMfds =
+                FaultSectionProperties.isCrustal(jointRupSet.getFaultSectionData(0))
+                        ? crustalRupSet.getModule(NZSHM22_CrustalInversionTargetMFDs.class)
+                        : crustalRupSet.getModule(NZSHM22_SubductionInversionTargetMFDs.class);
+
+        assertEquals(jointMfds.getTotalOnFaultMFD(), oldMfds.getTotalOnFaultMFD());
+        assertEquals(jointMfds.getTotalOnFaultSubSeisMFD(), oldMfds.getTotalOnFaultSubSeisMFD());
         assertEquals(
-                jointMfds.getTotalOnFaultMFD().toString(),
-                crustalMfds.getTotalOnFaultMFD().toString());
-        assertEquals(
-                jointMfds.getTotalOnFaultSubSeisMFD().toString(),
-                crustalMfds.getTotalOnFaultSubSeisMFD().toString());
-        assertEquals(
-                jointMfds.getTotalOnFaultSupraSeisMFD().toString(),
-                crustalMfds.getTotalOnFaultSupraSeisMFD().toString());
-        assertEquals(
-                jointMfds.getTrulyOffFaultMFD().toString(),
-                crustalMfds.getTrulyOffFaultMFD().toString());
+                jointMfds.getTotalOnFaultSupraSeisMFD(), oldMfds.getTotalOnFaultSupraSeisMFD());
+        assertEquals(jointMfds.getTrulyOffFaultMFD(), oldMfds.getTrulyOffFaultMFD());
 
         List<? extends IncrementalMagFreqDist> jointConstraints = jointMfds.getMFD_Constraints();
-        List<? extends IncrementalMagFreqDist> crustalConstraints =
-                crustalMfds.getMFD_Constraints();
+        List<? extends IncrementalMagFreqDist> crustalConstraints = oldMfds.getMFD_Constraints();
 
         assertEquals(jointConstraints.size(), crustalConstraints.size());
 
@@ -139,10 +137,12 @@ public class InversionRunnerComparisonIntegrationTest {
     @Test
     public void testInversionRunnerGeneratesIdenticalRatesToCrustalRunner() throws Exception {
         // Configure InversionRunner with JSON config
-        InversionRunner inversionRunner = configureInversionRunner(createTestRupSet());
+        InversionRunner inversionRunner =
+                configureInversionRunnerForCrustal(createCrustalTestRupSet());
 
         // Configure NZSHM22_CrustalInversionRunner with equivalent params
-        NZSHM22_AbstractInversionRunner crustalRunner = configureCrustalRunner(createTestRupSet());
+        NZSHM22_AbstractInversionRunner crustalRunner =
+                configureCrustalRunner(createCrustalTestRupSet());
 
         // Run both inversions
         FaultSystemSolution inversionSolution = inversionRunner.run();
@@ -159,7 +159,32 @@ public class InversionRunnerComparisonIntegrationTest {
                 inversionSolution.getRateForAllRups(), crustalSolution.getRateForAllRups(), DELTA);
     }
 
-    private FaultSystemRupSet createTestRupSet() throws DocumentException, IOException {
+    @Test
+    public void testInversionRunnerGeneratesIdenticalRatesToSubductionRunner() throws Exception {
+        // Configure InversionRunner with JSON config
+        InversionRunner inversionRunner =
+                configureInversionRunnerForSubduction(createSubductionTestRupSet());
+
+        // Configure NZSHM22_CrustalInversionRunner with equivalent params
+        NZSHM22_AbstractInversionRunner crustalRunner =
+                configureSubductionRunner(createSubductionTestRupSet());
+
+        // Run both inversions
+        FaultSystemSolution inversionSolution = inversionRunner.run();
+        FaultSystemSolution crustalSolution = crustalRunner.runInversion();
+
+        compareRuptureSets(inversionSolution.getRupSet(), crustalSolution.getRupSet());
+
+        compareConstraints(
+                inversionSolution.getRateForAllRups().length,
+                inversionRunner.getConfig().annealing.inversionInputGenerator.getConstraints(),
+                crustalRunner.getInversionInputGenerator().getConstraints());
+
+        assertArrayEquals(
+                inversionSolution.getRateForAllRups(), crustalSolution.getRateForAllRups(), DELTA);
+    }
+
+    private FaultSystemRupSet createCrustalTestRupSet() throws DocumentException, IOException {
         FaultSystemRupSet rupSet =
                 createRupSet(
                         NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
@@ -168,12 +193,36 @@ public class InversionRunnerComparisonIntegrationTest {
         return rupSet;
     }
 
-    private InversionRunner configureInversionRunner(FaultSystemRupSet testRupSet)
+    private FaultSystemRupSet createSubductionTestRupSet() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet =
+                createRupSet(
+                        NZSHM22_FaultModels.SBD_0_4_HKR_LR_30,
+                        ScalingRelationships.SHAW_2009_MOD,
+                        List.of(
+                                List.of(0, 1),
+                                List.of(
+                                        5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                                        21, 22)));
+        return rupSet;
+    }
+
+    private InversionRunner configureInversionRunnerForCrustal(FaultSystemRupSet testRupSet)
             throws IOException {
         // Load the test-specific crustal configuration
         String configContent =
                 Files.readString(
                         Path.of("src/main/resources/parameters/crustal-reproducible.jsonc"));
+        Config config = ConfigModule.fromJson(configContent);
+        config.setRuptureSet(testRupSet);
+        return new InversionRunner(config);
+    }
+
+    private InversionRunner configureInversionRunnerForSubduction(FaultSystemRupSet testRupSet)
+            throws IOException {
+        // Load the test-specific crustal configuration
+        String configContent =
+                Files.readString(
+                        Path.of("src/main/resources/parameters/Hikurangi-reproducible.jsonc"));
         Config config = ConfigModule.fromJson(configContent);
         config.setRuptureSet(testRupSet);
         return new InversionRunner(config);
@@ -187,6 +236,27 @@ public class InversionRunnerComparisonIntegrationTest {
         NZSHM22_CrustalInversionRunner runner = NZSHM22_PythonGateway.getCrustalInversionRunner();
         parameterRunner.ensurePaths();
         parameterRunner.setUpCrustalInversionRunner(runner);
+
+        runner.setRuptureSetArchiveInput(archiveInput);
+        runner.setExcludeRupturesBelowMinMag(true);
+        runner.setRepeatable(true);
+        runner.setIterationCompletionCriteria(100);
+        runner.setSelectionIterations(1);
+        runner.setInversionAveraging(false);
+
+        return runner;
+    }
+
+    private NZSHM22_AbstractInversionRunner configureSubductionRunner(FaultSystemRupSet testRupSet)
+            throws IOException {
+        ArchiveInput archiveInput = TestHelpers.archiveInput(testRupSet);
+
+        ParameterRunner parameterRunner =
+                new ParameterRunner(Parameters.NZSHM22.INVERSION_HIKURANGI);
+        NZSHM22_SubductionInversionRunner runner =
+                NZSHM22_PythonGateway.getSubductionInversionRunner();
+        parameterRunner.ensurePaths();
+        parameterRunner.setUpSubductionInversionRunner(runner);
 
         runner.setRuptureSetArchiveInput(archiveInput);
         runner.setExcludeRupturesBelowMinMag(true);

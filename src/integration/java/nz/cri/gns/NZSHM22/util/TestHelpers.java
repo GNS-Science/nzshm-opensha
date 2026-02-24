@@ -68,12 +68,14 @@ public class TestHelpers {
             throws DocumentException, IOException {
         FaultSectionList sections = new FaultSectionList();
         faultModel.fetchFaultSections(sections);
-        // simulate subsections exactly the same size as the parents
-        sections.forEach(
-                section -> {
-                    section.setParentSectionId(section.getSectionId());
-                    section.setParentSectionName(section.getSectionName());
-                });
+        if (faultModel.isCrustal()) {
+            // simulate subsections exactly the same size as the parents
+            sections.forEach(
+                    section -> {
+                        section.setParentSectionId(section.getSectionId());
+                        section.setParentSectionName(section.getSectionName());
+                    });
+        }
 
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(faultModel);

@@ -16,7 +16,8 @@ import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 /**
  * convenience class to get and set common joint inversion properties. Rupture sets in modern,
  * modular OpenSHA archives will read the fault sections from GeoJson using the GeoJSONFaultSection
- * class. This class wraps GeoJSONFaultSection.setProperty() and GeoJSONFaultSection.getProperty().
+ * class. FaultSectionProperties wraps GeoJSONFaultSection.setProperty() and
+ * GeoJSONFaultSection.getProperty().
  *
  * <p>Properties modified using this class will be saved in the fault section GeoJson file when the
  * rupture set is written to disk.
@@ -38,7 +39,7 @@ public class FaultSectionProperties {
      * Creates a new FaultSectionProperties object for the section. The section must be a
      * GeoJSONFaultSection.
      *
-     * @param section
+     * @param section the fault section to wrap (must be a {@link GeoJSONFaultSection})
      */
     public FaultSectionProperties(FaultSection section) {
         Preconditions.checkArgument(section instanceof GeoJSONFaultSection);
@@ -63,6 +64,12 @@ public class FaultSectionProperties {
         return getInt(ORIGINAL_PARENT);
     }
 
+    /**
+     * Convenience static accessor for {@link #getOriginalParent()}.
+     *
+     * @param section fault section to read from
+     * @return original parent id or null if not set
+     */
     public static Integer getOriginalParent(FaultSection section) {
         return new FaultSectionProperties(section).getOriginalParent();
     }
@@ -87,6 +94,12 @@ public class FaultSectionProperties {
         return getInt(ORIGINAL_ID);
     }
 
+    /**
+     * Convenience static accessor for {@link #getOriginalId()}.
+     *
+     * @param section fault section to read from
+     * @return original section id or null if not set
+     */
     public static Integer getOriginalId(FaultSection section) {
         return new FaultSectionProperties(section).getOriginalId();
     }
@@ -94,7 +107,7 @@ public class FaultSectionProperties {
     /**
      * The partition of the fault section.
      *
-     * @return the partition of the fault section.
+     * @return the partition of the fault section, or null if not set
      */
     public PartitionPredicate getPartition() {
 
@@ -105,6 +118,12 @@ public class FaultSectionProperties {
         return null;
     }
 
+    /**
+     * Convenience static accessor for {@link #getPartition()}.
+     *
+     * @param section fault section to read from
+     * @return the section's partition, or null if not set
+     */
     public static PartitionPredicate getPartition(FaultSection section) {
         return new FaultSectionProperties(section).getPartition();
     }
@@ -118,14 +137,30 @@ public class FaultSectionProperties {
         section.setProperty(PARTITION, partition.name());
     }
 
+    /**
+     * Set the domain for this fault section.
+     *
+     * @param domain string identifier for the domain (may be null)
+     */
     public void setDomain(String domain) {
         section.setProperty(DOMAIN, domain);
     }
 
+    /**
+     * Get the domain assigned to this section.
+     *
+     * @return domain string or null if none set
+     */
     public String getDomain() {
         return (String) section.getProperty(DOMAIN);
     }
 
+    /**
+     * Convenience static accessor for {@link #getDomain()}.
+     *
+     * @param section fault section to read from
+     * @return domain string or null
+     */
     public static String getDomain(FaultSection section) {
         return new FaultSectionProperties(section).getDomain();
     }
@@ -144,30 +179,68 @@ public class FaultSectionProperties {
         return section.getProperty(TVZ) == Boolean.TRUE;
     }
 
+    /**
+     * Convenience static accessor for {@link #getTvz()}.
+     *
+     * @param section fault section to check
+     * @return true if the section is marked as TVZ
+     */
     public static boolean getTvz(FaultSection section) {
         return new FaultSectionProperties(section).getTvz();
     }
 
+    /**
+     * Set the row index for the section (used by some grid-based models).
+     *
+     * @param rowIndex row index to set
+     */
     public void setRowIndex(int rowIndex) {
         section.setProperty(ROW_INDEX, rowIndex);
     }
 
+    /**
+     * Get the row index if set.
+     *
+     * @return row index or null if not set
+     */
     public Integer getRowIndex() {
         return getInt(ROW_INDEX);
     }
 
+    /**
+     * Convenience static accessor for {@link #getRowIndex()}.
+     *
+     * @param section fault section to read from
+     * @return row index or null
+     */
     public static Integer getRowIndex(FaultSection section) {
         return new FaultSectionProperties(section).getRowIndex();
     }
 
+    /**
+     * Set the column index for the section (used by some grid-based models).
+     *
+     * @param colIndex column index to set
+     */
     public void setColIndex(int colIndex) {
         section.setProperty(COL_Index, colIndex);
     }
 
+    /**
+     * Get the column index if set.
+     *
+     * @return column index or null if not set
+     */
     public Integer getColIndex() {
         return getInt(COL_Index);
     }
 
+    /**
+     * Convenience static accessor for {@link #getColIndex()}.
+     *
+     * @param section fault section to read from
+     * @return column index or null
+     */
     public static Integer getColIndex(FaultSection section) {
         return new FaultSectionProperties(section).getColIndex();
     }
@@ -175,24 +248,47 @@ public class FaultSectionProperties {
     /**
      * Remove this property before writing the rupture set to file
      *
-     * @param builder
+     * @param builder the builder used to create down-dip subsections
      */
     public void setDownDipBuilder(DownDipSubSectBuilder builder) {
         section.setProperty(DOWNDIP_BUILDER, builder);
     }
 
+    /**
+     * Returns the stored down-dip subsection builder for this section, if present.
+     *
+     * @return the DownDipSubSectBuilder instance or null if not set
+     */
     public DownDipSubSectBuilder getDownDipSSubSectBuilder() {
         return (DownDipSubSectBuilder) section.getProperty(DOWNDIP_BUILDER);
     }
 
+    /**
+     * Convenience static accessor for {@link #getDownDipSSubSectBuilder()}.
+     *
+     * @param section fault section to read from
+     * @return stored DownDipSubSectBuilder or null
+     */
     public static DownDipSubSectBuilder getDownDipSSubSectBuilder(FaultSection section) {
         return new FaultSectionProperties(section).getDownDipSSubSectBuilder();
     }
 
+    /**
+     * Check whether a section is classed as crustal.
+     *
+     * @param section fault section to check
+     * @return true when the section's partition is {@link PartitionPredicate#CRUSTAL}
+     */
     public static boolean isCrustal(FaultSection section) {
         return new FaultSectionProperties(section).getPartition() == PartitionPredicate.CRUSTAL;
     }
 
+    /**
+     * Check whether a section is classed as subduction (i.e. not crustal).
+     *
+     * @param section fault section to check
+     * @return true when the section is not crustal
+     */
     public static boolean isSubduction(FaultSection section) {
         return !isCrustal(section);
     }
@@ -221,6 +317,13 @@ public class FaultSectionProperties {
         return (int) dValue;
     }
 
+    /**
+     * Copy a selection of known properties from one section to another. Only a subset of properties
+     * are copied (partition, original parent/id, domain, TVZ flag, row/col indices).
+     *
+     * @param from source section to copy from
+     * @param to destination section to copy to
+     */
     public static void copy(FaultSection from, FaultSection to) {
         FaultSectionProperties propsFrom = new FaultSectionProperties(from);
         FaultSectionProperties propsTo = new FaultSectionProperties(to);
@@ -243,9 +346,10 @@ public class FaultSectionProperties {
      * <p>Note that not all properties are backfilled. OriginalId, row index, and others are nto
      * backfilled.
      *
-     * @throws IOException
-     * @throws DocumentException
+     * @throws IOException if reading or writing the rupture set file fails
+     * @throws DocumentException if parsing of any XML/GeoJSON documents fails
      */
+    @SuppressWarnings("unchecked")
     public static void backfill() throws IOException, DocumentException {
 
         String ruptureSetName =
@@ -316,6 +420,14 @@ public class FaultSectionProperties {
         ruptureSet.write(new File(ruptureSetName + "props4.zip"));
     }
 
+    /**
+     * Small runner that executes {@link #backfill()} when the class is run from the command line.
+     * Intended for one-off maintenance use.
+     *
+     * @param args ignored
+     * @throws IOException if reading/writing rupture set files fails
+     * @throws DocumentException if there is an issue parsing XML/geojson documents
+     */
     public static void main(String[] args) throws IOException, DocumentException {
         backfill();
     }
