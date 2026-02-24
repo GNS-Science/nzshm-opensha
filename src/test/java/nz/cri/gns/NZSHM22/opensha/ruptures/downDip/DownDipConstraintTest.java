@@ -2,15 +2,13 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.downDip;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
-import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
@@ -34,21 +32,15 @@ public class DownDipConstraintTest {
 
     public static DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
 
-        // We need to load fault sections to initialise GeoJSONFaultSection.
-        // None of their attributes will be used.
-        // We cannot mock GeoJSONFaultSection because it's final
-        FaultSectionList originalSections = new FaultSectionList();
-        try {
-            NZSHM22_FaultModels.CFM_1_0_DOM_ALL.fetchFaultSections(originalSections);
-        } catch (IOException | DocumentException x) {
-            throw new IllegalStateException(x);
-        }
         List<FaultSection> sections = new ArrayList<>();
         int sectionId = 0;
         for (int r = 0; r < sectionPositions.length; r++) {
             for (int c = 0; c < sectionPositions[r].length; c++) {
                 if (sectionPositions[r][c] == 1) {
-                    GeoJSONFaultSection section = new GeoJSONFaultSection(originalSections.get(0));
+                    GeoJSONFaultSection section = mock(GeoJSONFaultSection.class);
+                    when(section.getSectionId()).thenReturn(sectionId);
+                    when(section.getProperty(FaultSectionProperties.COL_Index)).thenReturn(c);
+                    when(section.getProperty(FaultSectionProperties.ROW_INDEX)).thenReturn(r);
                     FaultSectionProperties props = new FaultSectionProperties(section);
                     section.setSectionId(sectionId);
                     props.setRowIndex(r);
