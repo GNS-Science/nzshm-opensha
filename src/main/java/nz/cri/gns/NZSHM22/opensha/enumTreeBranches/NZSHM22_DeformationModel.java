@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
@@ -663,11 +664,12 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
      * @throws DocumentException
      * @throws IOException
      */
-    public static void subductionFmToDm(Path subductionFaultModelFile) {
+    public static void subductionFmToDm(
+            Path subductionFaultModelFile, PartitionPredicate partition) {
         try {
             FaultSectionList sections = new FaultSectionList();
             InputStream in = new FileInputStream(subductionFaultModelFile.toFile());
-            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "");
+            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "", partition);
 
             try (PrintWriter out =
                     new PrintWriter(
@@ -695,7 +697,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     }
 
     public static void main(String[] args) throws DocumentException, IOException {
-        Files.list(Paths.get("C:\\tmp\\temp\\"))
-                .forEach(NZSHM22_DeformationModel::subductionFmToDm);
+        PartitionPredicate partition = PartitionPredicate.HIKURANGI;
+        Files.list(Paths.get("C:\\tmp\\temp\\")).forEach(path -> subductionFmToDm(path, partition));
     }
 }

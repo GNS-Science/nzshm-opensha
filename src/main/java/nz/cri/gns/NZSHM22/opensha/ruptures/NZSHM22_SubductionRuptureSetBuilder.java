@@ -24,7 +24,6 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.ClusterCo
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -218,13 +217,15 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
             List<FaultSection> rupSects = rup.buildOrderedSectionList();
             // get min row of downdip (assumes there's just one of these)
             for (FaultSection sect : rupSects) {
-                currentMin = Math.min(currentMin, ((DownDipFaultSection) sect).getRowIndex());
+                FaultSectionProperties props = new FaultSectionProperties(sect);
+                currentMin = Math.min(currentMin, props.getRowIndex());
             }
 
             double length = 0d;
             // iterate sections adding lengths from those in the minimum row
             for (FaultSection sect : rupSects) {
-                if (((DownDipFaultSection) sect).getRowIndex() == currentMin) {
+                FaultSectionProperties props = new FaultSectionProperties(sect);
+                if (props.getRowIndex() == currentMin) {
                     length += sect.getTraceLength();
                 }
             }
@@ -291,10 +292,8 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         if (maxRuptures != Integer.MAX_VALUE) {
             ruptures = ruptures.stream().limit(maxRuptures).collect(Collectors.toList());
         }
-        List<GeoJSONFaultSection> geoJSONFaultSections =
-                subSections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
         FaultSystemRupSet rupSet =
-                FaultSystemRupSet.builderForClusterRups(geoJSONFaultSections, ruptures)
+                FaultSystemRupSet.builderForClusterRups(subSections, ruptures)
                         .rupLengths(buildLengths())
                         .forScalingRelationship(getScalingRelationship())
                         .slipAlongRupture(getSlipAlongRuptureModel())
@@ -317,11 +316,12 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         }
 
         PartitionPredicate sourceName =
-                geoJSONFaultSections.get(0).getName().contains("Hikurangi")
+                subSections.get(0).getName().contains("Hikurangi")
                         ? PartitionPredicate.HIKURANGI
                         : PartitionPredicate.PUYSEGUR;
-        for (FaultSection section : geoJSONFaultSections) {
+        for (FaultSection section : subSections) {
             FaultSectionProperties props = new FaultSectionProperties(section);
+            props.setDownDipBuilder(null);
             props.setPartition(sourceName);
         }
 

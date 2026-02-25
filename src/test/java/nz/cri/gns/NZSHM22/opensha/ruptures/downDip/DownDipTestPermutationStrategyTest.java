@@ -8,10 +8,11 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 public class DownDipTestPermutationStrategyTest {
 
@@ -155,6 +156,7 @@ public class DownDipTestPermutationStrategyTest {
 
     public DownDipSubSectBuilder mockDownDipBuilder(
             int parentId, int numRows, int numCols, int holeRow, int holeCol) {
+
         DownDipSubSectBuilder builder = mock(DownDipSubSectBuilder.class);
         when(builder.getParentID()).thenReturn(parentId);
         when(builder.getNumRows()).thenReturn(numRows);
@@ -191,11 +193,11 @@ public class DownDipTestPermutationStrategyTest {
     }
 
     public FaultSection mockSection(int parentID, int id, DownDipSubSectBuilder builder) {
-        DownDipFaultSection section = mock(DownDipFaultSection.class);
+        GeoJSONFaultSection section = mock(GeoJSONFaultSection.class);
         when(section.getParentSectionId()).thenReturn(parentID);
         when(section.getSectionId()).thenReturn(id);
         when(section.getAveDip()).thenReturn(10.0);
-        when(section.getBuilder()).thenReturn(builder);
+        when(section.getProperty(FaultSectionProperties.DOWNDIP_BUILDER)).thenReturn(builder);
         return section;
     }
 }

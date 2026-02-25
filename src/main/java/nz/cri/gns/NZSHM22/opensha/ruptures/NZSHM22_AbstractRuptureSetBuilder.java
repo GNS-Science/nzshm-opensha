@@ -11,10 +11,10 @@ import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.util.GitVersion;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
@@ -22,10 +22,13 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilder;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
 public abstract class NZSHM22_AbstractRuptureSetBuilder {
+
+    public static final int MIN_SUB_SECTIONS = 2;
 
     PlausibilityConfiguration plausibilityConfig;
 
@@ -288,10 +291,10 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                     ((NZFaultSection) sections.get(0)).getDomainNo() != null,
                     "fault model must have domain data when using scaleDepthIncludeDomain");
             for (FaultSection section : sections) {
-                if (((NZFaultSection) section).getDomainNo().equals(scaleDepthIncludeDomainNo)) {
-                    ((FaultSectionPrefData) section)
-                            .setAveLowerDepth(
-                                    section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
+                NZFaultSection nzFaultSection = (NZFaultSection) section;
+                if (nzFaultSection.getDomainNo().equals(scaleDepthIncludeDomainNo)) {
+                    nzFaultSection.setAveLowerDepth(
+                            section.getAveLowerDepth() * scaleDepthIncludeDomainScalar);
                 }
             }
         }
@@ -300,10 +303,10 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                     ((NZFaultSection) sections.get(0)).getDomainNo() != null,
                     "fault model must have domain data when using scaleDepthExcludeDomain");
             for (FaultSection section : sections) {
-                if (!((NZFaultSection) section).getDomainNo().equals(scaleDepthExcludeDomainNo)) {
-                    ((FaultSectionPrefData) section)
-                            .setAveLowerDepth(
-                                    section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
+                NZFaultSection nzFaultSection = (NZFaultSection) section;
+                if (!nzFaultSection.getDomainNo().equals(scaleDepthExcludeDomainNo)) {
+                    nzFaultSection.setAveLowerDepth(
+                            section.getAveLowerDepth() * scaleDepthExcludeDomainScalar);
                 }
             }
         }
@@ -335,10 +338,6 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                                                 .get(faultSection.getFaultTrace().size() - 1)
                                                 .getLongitude()
                                         > 170);
-        subSections.removeIf(
-                faultSection ->
-                        !(faultSection instanceof DownDipFaultSection)
-                                && !faultSection.getSectionName().startsWith("Alpine"));
 
         if (faultModel.isCrustal()) {
 
@@ -353,18 +352,25 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             for (FaultSection parentSect : fsd) {
                 double ddw = parentSect.getOrigDownDipWidth();
                 double maxSectLength = ddw * maxSubSectionLength;
-                System.out.println("Get subSections in " + parentSect.getName());
-                // the "2" here sets a minimum number of sub sections
                 List<? extends FaultSection> newSubSects =
-                        parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
+                        parentSect.getSubSectionsList(
+                                maxSectLength, subSections.getSafeId(), MIN_SUB_SECTIONS);
                 getSubSections().addAll(newSubSects);
-                System.out.println(
-                        "Produced "
-                                + newSubSects.size()
-                                + " subSections in "
-                                + parentSect.getName());
             }
-            System.out.println(subSections.size() + " Sub Sections created.");
+
+            FaultSectionList geoFaultSections = new FaultSectionList();
+            for (FaultSection section : subSections) {
+                NZFaultSection nzFaultSection = (NZFaultSection) section;
+                GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(nzFaultSection);
+                FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
+                props.setDomain(nzFaultSection.getDomainNo());
+                if (nzFaultSection.getDomainNo().equals(faultModel.getTvzDomain())) {
+                    props.setTvz();
+                }
+                props.setPartition(PartitionPredicate.CRUSTAL);
+                geoFaultSections.add(geoJSONFaultSection);
+            }
+            subSections = geoFaultSections;
         }
     }
 
@@ -382,7 +388,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         }
         if (downDipFile != null) {
             try (FileInputStream in = new FileInputStream(downDipFile)) {
-                DownDipSubSectBuilder.loadFromStream(subSections, 10000, downDipFaultName, in);
+                DownDipSubSectBuilder.loadFromStream(
+                        subSections, 10000, downDipFaultName, in, PartitionPredicate.HIKURANGI);
             }
         }
 
@@ -417,18 +424,21 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             for (FaultSection parentSect : fsd) {
                 double ddw = parentSect.getOrigDownDipWidth();
                 double maxSectLength = ddw * maxSubSectionLength;
-                System.out.println("Get subSections in " + parentSect.getName());
-                // the "2" here sets a minimum number of sub sections
                 List<? extends FaultSection> newSubSects =
-                        parentSect.getSubSectionsList(maxSectLength, subSections.getSafeId(), 2);
-                getSubSections().addAll(newSubSects);
-                System.out.println(
-                        "Produced "
-                                + newSubSects.size()
-                                + " subSections in "
-                                + parentSect.getName());
+                        parentSect.getSubSectionsList(
+                                maxSectLength, subSections.getSafeId(), MIN_SUB_SECTIONS);
+                NZFaultSection nzFaultSection = (NZFaultSection) parentSect;
+                for (FaultSection section : newSubSects) {
+                    GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(section);
+                    FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
+                    props.setPartition(PartitionPredicate.CRUSTAL);
+                    props.setDomain(nzFaultSection.getDomainNo());
+                    if (nzFaultSection.getDomainNo().equals(faultModel.getTvzDomain())) {
+                        props.setTvz();
+                    }
+                    subSections.add(geoJSONFaultSection);
+                }
             }
-            System.out.println(subSections.size() + " Sub Sections created.");
         }
     }
 

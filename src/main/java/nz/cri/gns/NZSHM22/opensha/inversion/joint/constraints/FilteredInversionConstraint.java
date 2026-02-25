@@ -34,11 +34,11 @@ public class FilteredInversionConstraint extends InversionConstraint {
         SparseDoubleMatrix2D innerA =
                 new SparseDoubleMatrix2D(getNumRows() + startRow, rupSet.getNumRuptures());
         long nonZero = inner.encode(innerA, d, startRow);
-        for (int row = 0; row < innerA.rows(); ++row) {
+        for (int row = startRow; row < innerA.rows(); ++row) {
             for (int col = 0; col < innerA.columns(); ++col) {
                 double value = innerA.get(row, col);
                 if (value != (double) 0.0F) {
-                    A.set(row + startRow, rupSet.getOldRuptureId(col), value);
+                    A.set(row, rupSet.getOldRuptureId(col), value);
                 }
             }
         }

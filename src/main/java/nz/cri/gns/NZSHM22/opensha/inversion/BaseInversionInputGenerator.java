@@ -13,7 +13,9 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.Sl
 
 public class BaseInversionInputGenerator extends InversionInputGenerator {
 
-    public static final boolean SLIP_ONLY = true;
+    // Setting this flag to true means we log the A matrix and b vector to text files for debugging
+    // purposes and exits.
+    public static final boolean LOG_MATRIX_ONLY = false;
 
     public BaseInversionInputGenerator(
             FaultSystemRupSet rupSet,

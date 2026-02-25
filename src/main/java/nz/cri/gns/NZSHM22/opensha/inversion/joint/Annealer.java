@@ -24,7 +24,8 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
 
-    static final boolean LOG_MATRIX_ONLY = true;
+    // set to true to just log the A and D matrices and exit, for debugging purposes
+    static final boolean LOG_MATRIX_ONLY = false;
 
     AnnealingConfig config;
     FaultSystemRupSet rupSet;
@@ -144,7 +145,7 @@ public class Annealer {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            //  System.exit(0);
+            System.exit(0);
         }
 
         CompletionCriteria completionCriteria = createCompletionCriteria();

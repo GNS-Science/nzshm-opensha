@@ -1,6 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.SLIP_ONLY;
+import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.LOG_MATRIX_ONLY;
 
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
@@ -778,7 +778,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
 
-        if (SLIP_ONLY) {
+        if (LOG_MATRIX_ONLY) {
             NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
             FaultRegime regime = branch.getValue(FaultRegime.class);
 
@@ -799,7 +799,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            // System.exit(0);
+            System.exit(0);
         }
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();

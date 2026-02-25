@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.Jump;
@@ -40,10 +40,10 @@ public class DownDipSkipPlausibilityFilter implements PlausibilityFilter {
     @Override
     public PlausibilityResult apply(ClusterRupture rupture, boolean verbose) {
         if (Arrays.stream(rupture.clusters)
-                .anyMatch(c -> c.startSect instanceof DownDipFaultSection)) {
+                .anyMatch(c -> FaultSectionProperties.isSubduction(c.startSect))) {
             List<FaultSubsectionCluster> crustalRupture = new ArrayList<>();
             for (FaultSubsectionCluster cluster : rupture.clusters) {
-                if (cluster.startSect instanceof DownDipFaultSection) {
+                if (FaultSectionProperties.isSubduction(cluster.startSect)) {
                     PlausibilityResult result = apply(rupture, crustalRupture, verbose);
                     if (!result.canContinue()) {
                         return result;

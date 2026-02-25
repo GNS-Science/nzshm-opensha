@@ -2,7 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipFaultSubSectionCluster;
 import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.joint.ManipulatedClusterRupture;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
@@ -280,13 +280,13 @@ public class JointRuptureBuilderParallel {
         // fill jumps with all jumps from subduction
         this.jumps = new OneToManyMap<>();
         possibleJumps.stream()
-                .filter(j -> j.fromSection instanceof DownDipFaultSection)
+                .filter(j -> FaultSectionProperties.isSubduction(j.fromSection))
                 .forEach(
                         j ->
                                 jumps.append(
                                         j.fromSection.getSectionId(), j.toSection.getSectionId()));
         possibleJumps.stream()
-                .filter(j -> j.toSection instanceof DownDipFaultSection)
+                .filter(j -> FaultSectionProperties.isSubduction(j.toSection))
                 .forEach(
                         j ->
                                 jumps.append(
@@ -313,8 +313,8 @@ public class JointRuptureBuilderParallel {
 
     public void stats(List<FaultSection> subSections) {
         for (Integer from : jumps.keySet()) {
-            if (subSections.get(from) instanceof DownDipFaultSection) {
-                DownDipFaultSection fromSection = (DownDipFaultSection) subSections.get(from);
+            if (FaultSectionProperties.isSubduction(subSections.get(from))) {
+                FaultSection fromSection = subSections.get(from);
 
                 List<ClusterRupture> targets = new ArrayList<>();
                 for (Integer to : jumps.get(from)) {
@@ -326,7 +326,7 @@ public class JointRuptureBuilderParallel {
                                 + ":"
                                 + fromSection.getSectionId()
                                 + " r "
-                                + fromSection.getRowIndex()
+                                + FaultSectionProperties.getRowIndex(fromSection)
                                 + " count "
                                 + targets.size());
             }

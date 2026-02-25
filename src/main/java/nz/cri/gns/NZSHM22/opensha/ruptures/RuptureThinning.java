@@ -33,7 +33,7 @@ public class RuptureThinning {
      * @return
      */
     public static Predicate<ClusterRupture> downDipPredicate() {
-        return rupture -> DownDipFaultSection.isDownDip(rupture.clusters[0]);
+        return rupture -> FaultSectionProperties.isSubduction(rupture.clusters[0].startSect);
     }
 
     /**

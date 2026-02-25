@@ -54,6 +54,10 @@ public class PartitionMfds implements ArchivableModule {
         return "PartitionMfds";
     }
 
+    public InversionTargetMFDs get(PartitionPredicate partition) {
+        return mfds.get(partition);
+    }
+
     public static SummedMagFreqDist safeAdd(SummedMagFreqDist base, IncrementalMagFreqDist added) {
         if (added == null) {
             return base;

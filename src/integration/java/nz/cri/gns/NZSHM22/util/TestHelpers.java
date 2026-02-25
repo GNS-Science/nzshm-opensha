@@ -3,12 +3,15 @@ package nz.cri.gns.NZSHM22.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import org.dom4j.DocumentException;
@@ -19,6 +22,8 @@ import org.opensha.commons.util.modules.helpers.FileBackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class TestHelpers {
@@ -63,18 +68,36 @@ public class TestHelpers {
             throws DocumentException, IOException {
         FaultSectionList sections = new FaultSectionList();
         faultModel.fetchFaultSections(sections);
-        // simulate subsections exactly the same size as the parents
-        sections.forEach(
-                section -> {
-                    section.setParentSectionId(section.getSectionId());
-                    section.setParentSectionName(section.getSectionName());
-                });
+        if (faultModel.isCrustal()) {
+            // simulate subsections exactly the same size as the parents
+            sections.forEach(
+                    section -> {
+                        section.setParentSectionId(section.getSectionId());
+                        section.setParentSectionName(section.getSectionName());
+                    });
+        }
 
         NZSHM22_LogicTreeBranch branch = new NZSHM22_LogicTreeBranch();
         branch.setValue(faultModel);
         branch.setValue(new NZSHM22_ScalingRelationshipNode(scalingRelationship));
 
-        return FaultSystemRupSet.builder(sections, sectionForRups)
+        List<FaultSection> faultSections = sections;
+
+        if (faultModel.isCrustal()) {
+            faultSections =
+                    sections.stream()
+                            .map(
+                                    section -> {
+                                        GeoJSONFaultSection geoJSONFaultSection =
+                                                new GeoJSONFaultSection(section);
+                                        new FaultSectionProperties(geoJSONFaultSection)
+                                                .setPartition(PartitionPredicate.CRUSTAL);
+                                        return geoJSONFaultSection;
+                                    })
+                            .collect(Collectors.toList());
+        }
+
+        return FaultSystemRupSet.builder(faultSections, sectionForRups)
                 .forScalingRelationship(scalingRelationship)
                 .addModule(branch)
                 .build();

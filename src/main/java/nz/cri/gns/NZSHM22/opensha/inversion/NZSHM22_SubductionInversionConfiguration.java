@@ -5,7 +5,6 @@ import java.util.List;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.InversionModels;
-import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 /**
  * This represents all of the inversion configuration parameters specific to an individual model on
@@ -67,13 +66,13 @@ public class NZSHM22_SubductionInversionConfiguration extends AbstractInversionC
             mfdConstraints.addAll(inversionMFDs.getMfdUncertaintyConstraints());
             IncrementalMagFreqDist targetOnFaultMFD = inversionMFDs.getTotalOnFaultSupraSeisMFD();
 
-            minimumRuptureRateBasis =
-                    adjustStartingModel(
-                            UCERF3InversionConfiguration.getSmoothStartingSolution(
-                                    rupSet, targetOnFaultMFD),
-                            mfdConstraints,
-                            rupSet,
-                            true);
+            //            minimumRuptureRateBasis =
+            //                    adjustStartingModel(
+            //                            UCERF3InversionConfiguration.getSmoothStartingSolution(
+            //                                    rupSet, targetOnFaultMFD),
+            //                            mfdConstraints,
+            //                            rupSet,
+            //                            true);
         }
 
         return (NZSHM22_SubductionInversionConfiguration)

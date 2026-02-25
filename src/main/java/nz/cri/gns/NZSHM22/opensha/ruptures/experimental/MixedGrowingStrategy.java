@@ -2,7 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import com.google.common.base.Preconditions;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.FaultSubsectionCluster;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.strategies.RuptureGrowingStrategy;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -42,17 +42,15 @@ public class MixedGrowingStrategy implements RuptureGrowingStrategy {
         int myInd = fullCluster.subSects.indexOf(firstSection);
         Preconditions.checkState(myInd >= 0, "first section not found in cluster");
 
-        if (firstSection instanceof DownDipFaultSection) {
+        if (FaultSectionProperties.isSubduction(firstSection)) {
             Preconditions.checkState(
-                    fullCluster.subSects.stream()
-                            .allMatch(section -> section instanceof DownDipFaultSection),
+                    fullCluster.subSects.stream().allMatch(FaultSectionProperties::isSubduction),
                     "all sections are downdip sections");
             return downdipStrategy.getVariations(fullCluster, firstSection);
         }
 
         Preconditions.checkState(
-                fullCluster.subSects.stream()
-                        .noneMatch(section -> section instanceof DownDipFaultSection),
+                fullCluster.subSects.stream().noneMatch(FaultSectionProperties::isSubduction),
                 "no sections are downdip sections");
         return crustalStrategy.getVariations(fullCluster, firstSection);
     }

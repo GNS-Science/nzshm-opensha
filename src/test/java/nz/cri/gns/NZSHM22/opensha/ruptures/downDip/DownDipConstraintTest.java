@@ -8,8 +8,10 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.ruptures.DownDipFaultSection;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.junit.Test;
+import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 public class DownDipConstraintTest {
 
@@ -29,15 +31,20 @@ public class DownDipConstraintTest {
     }
 
     public static DownDipSubSectBuilder mockDownDipBuilder(int parentId, int[][] sectionPositions) {
-        List<DownDipFaultSection> sections = new ArrayList<>();
+
+        List<FaultSection> sections = new ArrayList<>();
         int sectionId = 0;
         for (int r = 0; r < sectionPositions.length; r++) {
             for (int c = 0; c < sectionPositions[r].length; c++) {
                 if (sectionPositions[r][c] == 1) {
-                    DownDipFaultSection section = mock(DownDipFaultSection.class);
+                    GeoJSONFaultSection section = mock(GeoJSONFaultSection.class);
                     when(section.getSectionId()).thenReturn(sectionId);
-                    when(section.getColIndex()).thenReturn(c);
-                    when(section.getRowIndex()).thenReturn(r);
+                    when(section.getProperty(FaultSectionProperties.COL_Index)).thenReturn(c);
+                    when(section.getProperty(FaultSectionProperties.ROW_INDEX)).thenReturn(r);
+                    FaultSectionProperties props = new FaultSectionProperties(section);
+                    section.setSectionId(sectionId);
+                    props.setRowIndex(r);
+                    props.setColIndex(c);
                     sections.add(section);
                 }
                 sectionId++;
