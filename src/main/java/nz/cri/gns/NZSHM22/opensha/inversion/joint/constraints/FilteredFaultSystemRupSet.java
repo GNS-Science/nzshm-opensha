@@ -5,6 +5,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.faultSurface.FaultSection;
 
@@ -14,15 +15,23 @@ import org.opensha.sha.faultSurface.FaultSection;
 public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
 
     final Map<Integer, Integer> newToOldRuptures;
+    final Map<Integer, Integer> oldToNewRuptures;
 
     protected FilteredFaultSystemRupSet(
-            FaultSystemRupSet original, Map<Integer, Integer> newToOldRuptures) {
+            FaultSystemRupSet original,
+            Map<Integer, Integer> newToOldRuptures,
+            Map<Integer, Integer> oldToNewRuptures) {
         init(original);
         this.newToOldRuptures = newToOldRuptures;
+        this.oldToNewRuptures = oldToNewRuptures;
     }
 
     public int getOldRuptureId(int ruptureId) {
         return newToOldRuptures.get(ruptureId);
+    }
+
+    public Integer getNewRuptureId(int oldRuptureId) {
+        return oldToNewRuptures.get(oldRuptureId);
     }
 
     /**
@@ -58,6 +67,7 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
         // Filter ruptures and use new section ids
         List<List<Integer>> ruptures = new ArrayList<>();
         Map<Integer, Integer> newToOldRuptures = new HashMap<>();
+        Map<Integer, Integer> oldToNewRuptures = new HashMap<>();
         int oldRuptureId = 0;
         for (List<Integer> rupture : rupSet.getSectionIndicesForAllRups()) {
             List<Integer> filteredRupture =
@@ -67,6 +77,7 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
                             .collect(Collectors.toList());
             if (!filteredRupture.isEmpty()) {
                 newToOldRuptures.put(ruptures.size(), oldRuptureId);
+                oldToNewRuptures.put(oldRuptureId, ruptures.size());
                 ruptures.add(filteredRupture);
             }
             oldRuptureId++;
@@ -77,6 +88,40 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
                         .forScalingRelationship(scalingRelationship)
                         .build();
 
-        return new FilteredFaultSystemRupSet(filteredRuptureSet, newToOldRuptures);
+        return new FilteredFaultSystemRupSet(
+                filteredRuptureSet, newToOldRuptures, oldToNewRuptures);
+    }
+
+    /**
+     * Returns a filtered solution based on the provided predicate and scaling relationship. The
+     * rupture set of the solution is filtered using the provided predicate and scaling
+     * relationship, and the rates are adjusted accordingly. Ruptures that are empty after filtering
+     * are removed.
+     *
+     * @param solution the original solution to be filtered
+     * @param predicate the predicate to filter the ruptures
+     * @param scalingRelationship the scaling relationship to calculate magnitudes with
+     * @return a new FaultSystemSolution that is filtered based on the provided predicate and
+     *     scaling relationship
+     */
+    public static FaultSystemSolution forIntPredicate(
+            FaultSystemSolution solution,
+            IntPredicate predicate,
+            RupSetScalingRelationship scalingRelationship) {
+        FilteredFaultSystemRupSet filteredRupSet =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        solution.getRupSet(), predicate, scalingRelationship);
+
+        double[] rates = solution.getRateForAllRups();
+        double[] filteredRates = new double[filteredRupSet.getNumRuptures()];
+
+        for (int r = 0; r < rates.length; r++) {
+            Integer newIndex = filteredRupSet.getNewRuptureId(r);
+            if (newIndex != null) {
+                filteredRates[newIndex] = rates[r];
+            }
+        }
+
+        return new FaultSystemSolution(filteredRupSet, filteredRates);
     }
 }

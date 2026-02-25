@@ -12,6 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
@@ -105,5 +106,21 @@ public class FilteredFaultSystemRupSetTest {
 
         assertEquals(0, rupSet.getOldRuptureId(0));
         assertEquals(2, rupSet.getOldRuptureId(1));
+    }
+
+    @Test
+    public void solutionFilterTest() throws DocumentException, IOException {
+        FaultSystemRupSet originalRupSet = makeRupSet();
+        double[] rates = {1, 2, 3};
+        FaultSystemSolution original = new FaultSystemSolution(originalRupSet, rates);
+        FaultSystemSolution toTest =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(originalRupSet),
+                        ScalingRelationships.SHAW_2009_MOD);
+
+        assertEquals(2, toTest.getRupSet().getNumRuptures());
+        assertEquals(rates[0], toTest.getRateForRup(0), DELTA);
+        assertEquals(rates[2], toTest.getRateForRup(1), DELTA);
     }
 }

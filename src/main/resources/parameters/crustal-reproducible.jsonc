@@ -5,7 +5,7 @@
   // runner.setSelectionIterations(1);
   // runner.setInversionAveraging(false);
 
-  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
+  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops3.zip",
   "annealing": {
     "inversionSecs": 60,
     "selectionInterval": 10,

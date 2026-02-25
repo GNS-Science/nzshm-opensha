@@ -240,7 +240,7 @@ public class NZSHM22_ReportPageGen {
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
 
-        solution = setUpJointMFDs(solution);
+        //   solution = setUpJointMFDs(solution);
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);

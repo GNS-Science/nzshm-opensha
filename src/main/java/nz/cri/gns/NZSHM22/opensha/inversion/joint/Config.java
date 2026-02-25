@@ -61,7 +61,7 @@ public class Config {
         return annealing;
     }
 
-    protected void hydrateScalingRelationship() {
+    public void hydrateScalingRelationship() {
         // not supporting arbitrary scaling relationships in order
         // to make joint scaling relationships simpler
         //        if (scalingRelationshipName == null) {

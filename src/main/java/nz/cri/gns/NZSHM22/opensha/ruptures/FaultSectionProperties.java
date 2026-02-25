@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
 import org.dom4j.DocumentException;
@@ -364,9 +365,9 @@ public class FaultSectionProperties {
         FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
 
         // faultmodel is only used for crustal sections
-        NZSHM22_FaultModels faultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
+        NZSHM22_FaultModels crustalFaultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
         FaultSectionList parentSections = new FaultSectionList();
-        faultModel.fetchFaultSections(parentSections);
+        crustalFaultModel.fetchFaultSections(parentSections);
 
         int hikurangiCount = 0;
         int puysegurCount = 0;
@@ -398,8 +399,8 @@ public class FaultSectionProperties {
             } else {
                 // backfill crustal props
 
-                FaultSection parent = parentSections.get(section.getParentSectionId());
-                FaultSectionProperties parentProps = new FaultSectionProperties(parent);
+                NZFaultSection parent =
+                        (NZFaultSection) parentSections.get(section.getParentSectionId());
                 // verify that we're actually using the correct fault model
                 //                System.out.println(
                 //                        " orig: "
@@ -410,8 +411,8 @@ public class FaultSectionProperties {
                         section.getParentSectionName().equals(parent.getSectionName()));
 
                 props.setPartition(PartitionPredicate.CRUSTAL);
-                props.setDomain(parentProps.getDomain());
-                if (parentProps.getTvz()) {
+                props.setDomain(parent.getDomainNo());
+                if (parent.getDomainNo().equals(crustalFaultModel.getTvzDomain())) {
                     props.setTvz();
                 }
             }
