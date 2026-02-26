@@ -26,7 +26,7 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
  * reuse existing plotting code to create partition-specific plots without having to add
  * partitioning logic to the plots themselves.
  *
- * Acts as a simple pass-through if the rupture set doesn't have a PartitionMfds module.
+ * <p>Acts as a simple pass-through if the rupture set doesn't have a PartitionMfds module.
  */
 public class PartitionPlotWrapper extends AbstractRupSetPlot {
 
