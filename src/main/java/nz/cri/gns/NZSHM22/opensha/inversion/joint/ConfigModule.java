@@ -17,6 +17,10 @@ public class ConfigModule implements FileBackedModule {
         this.config = config;
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     public String toJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(config);

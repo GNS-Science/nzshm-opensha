@@ -7,16 +7,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
+import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SolMFDPlot;
 
 public class NZSHM22_ReportPageGen {
 
@@ -84,12 +87,22 @@ public class NZSHM22_ReportPageGen {
         List<AbstractRupSetPlot> choices =
                 ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
         for (AbstractRupSetPlot plot : choices) {
-            possiblePlots.put(plot.getClass().getSimpleName(), plot);
+            String simpleName = plot.getClass().getSimpleName();
+            if (simpleName.equals("SolMFDPlot")) {
+                possiblePlots.put(simpleName, new PartitionPlotWrapper(plot));
+            } else {
+                possiblePlots.put(simpleName, plot);
+            }
         }
         possibleRupSetPlots = new HashMap<>();
         choices = ReportPageGen.getDefaultRupSetPlots(ReportPageGen.PlotLevel.FULL);
         for (AbstractRupSetPlot plot : choices) {
-            possibleRupSetPlots.put(plot.getClass().getSimpleName(), plot);
+            String simpleName = plot.getClass().getSimpleName();
+            if (simpleName.equals("SolMFDPlot")) {
+                possibleRupSetPlots.put(simpleName, new PartitionPlotWrapper(plot));
+            } else {
+                possibleRupSetPlots.put(simpleName, plot);
+            }
         }
     }
 
@@ -225,6 +238,12 @@ public class NZSHM22_ReportPageGen {
         return solution;
     }
 
+    protected List<AbstractRupSetPlot> wrapPlots(List<AbstractRupSetPlot> plots) {
+        return plots.stream()
+                .map(p -> p instanceof SolMFDPlot ? new PartitionPlotWrapper(p) : p)
+                .collect(Collectors.toList());
+    }
+
     public void generatePage() throws IOException {
 
         int available = Runtime.getRuntime().availableProcessors();
@@ -240,7 +259,7 @@ public class NZSHM22_ReportPageGen {
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
 
-        solution = setUpJointMFDs(solution);
+        //   solution = setUpJointMFDs(solution);
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
@@ -258,7 +277,7 @@ public class NZSHM22_ReportPageGen {
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
         if (plotLevel != null) {
-            reportPlots.addAll(ReportPageGen.getDefaultSolutionPlots(plotLevel));
+            reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultSolutionPlots(plotLevel)));
         }
         if (plots != null) {
             reportPlots.addAll(plots);
@@ -299,7 +318,7 @@ public class NZSHM22_ReportPageGen {
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
         if (plotLevel != null) {
-            reportPlots.addAll(ReportPageGen.getDefaultRupSetPlots(plotLevel));
+            reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultRupSetPlots(plotLevel)));
         }
         if (plots != null) {
             reportPlots.addAll(plots);
