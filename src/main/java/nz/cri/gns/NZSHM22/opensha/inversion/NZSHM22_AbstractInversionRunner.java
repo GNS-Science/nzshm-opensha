@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.reports.ExtraData;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
@@ -963,4 +964,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
         }
         return solution;
     }
+
+    public  ArrayList<ArrayList<String>> getTabularSolutionMfds(){
+        return ExtraData.getTabularSolutionMfds(solution);
+    }
+    public ArrayList<ArrayList<String>> getTabularSolutionMfdsV2() {
+        return ExtraData.getTabularSolutionMfdsV2(solution);
+    }
+
 }
