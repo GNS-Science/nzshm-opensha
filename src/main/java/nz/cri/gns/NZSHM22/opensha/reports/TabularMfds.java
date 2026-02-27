@@ -1,10 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.reports;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import org.apache.commons.math3.util.Precision;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -17,47 +14,13 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlo
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.RupHistogramPlots.HistScalar;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
-public class ExtraData {
+public class TabularMfds {
 
-    public static Map<String, String> getSolutionMetrics(FaultSystemSolution solution) {
-        Map<String, String> metrics = new HashMap<String, String>();
-
-        // Completion
-        //		long numPerturbs = pComp.getPerturbs().get(pComp.getPerturbs().size() - 1);
-        int numRups = initialState.length;
-
-        //		metrics.put("total_perturbations", Long.toString(numPerturbs));
-        metrics.put("total_ruptures", Integer.toString(numRups));
-
-        int rupsPerturbed = 0;
-        double[] solution_no_min_rates = tsa.getBestSolution();
-        int numAboveWaterlevel = 0;
-        for (int i = 0; i < numRups; i++) {
-            if ((float) solution_no_min_rates[i] != (float) initialState[i]) rupsPerturbed++;
-            if (solution_no_min_rates[i] > 0) numAboveWaterlevel++;
-        }
-
-        metrics.put("perturbed_ruptures", Integer.toString(rupsPerturbed));
-        //		metrics.put("avg_perturbs_per_pertubed_rupture",
-        //				new Double((double) numPerturbs / (double) rupsPerturbed).toString());
-        //		metrics.put("ruptures_above_water_level_ratio",
-        //				new Double((double) numAboveWaterlevel / (double) numRups).toString());
-
-        for (String range : finalEnergies.keySet()) {
-            String metric_name = "final_energy_" + range.replaceAll("\\s+", "_").toLowerCase();
-            System.out.println(metric_name + " : " + finalEnergies.get(range).toString());
-            metrics.put(metric_name, finalEnergies.get(range).toString());
-        }
-
-        return metrics;
-    }
-
-    public static List<IncrementalMagFreqDist> getSolutionMfds(FaultSystemSolution solution) {
-        NZSHM22_LogicTreeBranch branch =
-                solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
+    public static List<IncrementalMagFreqDist> getSolutionMfds(
+            FaultSystemSolution solution, boolean crustal) {
         InversionTargetMFDs targetMFDs = solution.getRupSet().getModule(InversionTargetMFDs.class);
         List<IncrementalMagFreqDist> solutionMfds = new ArrayList<>();
-        if (branch.getValue(FaultRegime.class) == FaultRegime.CRUSTAL) {
+        if (crustal) {
             solutionMfds.add(targetMFDs.getTrulyOffFaultMFD());
             solutionMfds.add(targetMFDs.getTotalOnFaultSupraSeisMFD());
             solutionMfds.add(targetMFDs.getTotalOnFaultSubSeisMFD());
@@ -73,11 +36,11 @@ public class ExtraData {
         List<IncrementalMagFreqDist> solutionMfds = new ArrayList<>();
 
         solutionMfds.add(targetMFDs.getTotalRegionalMFD());
-                    solutionMfds.add(targetMFDs.getTrulyOffFaultMFD());
-            solutionMfds.add(targetMFDs.getTotalOnFaultSupraSeisMFD());
-            solutionMfds.add(targetMFDs.getTotalOnFaultSubSeisMFD());
+        solutionMfds.add(targetMFDs.getTrulyOffFaultMFD());
+        solutionMfds.add(targetMFDs.getTotalOnFaultSupraSeisMFD());
+        solutionMfds.add(targetMFDs.getTotalOnFaultSubSeisMFD());
 
-            return solutionMfds;
+        return solutionMfds;
     }
 
     /**
@@ -87,7 +50,8 @@ public class ExtraData {
      *     rate.
      * @return
      */
-    public static HistogramFunction solutionMagFreqHistogram(FaultSystemSolution solution, boolean rateWeighted) {
+    public static HistogramFunction solutionMagFreqHistogram(
+            FaultSystemSolution solution, boolean rateWeighted) {
 
         ClusterRuptures cRups = solution.getRupSet().getModule(ClusterRuptures.class);
 
@@ -121,10 +85,10 @@ public class ExtraData {
     }
 
     private static void appendMfdRows(
-            EvenlyDiscretizedFunc mfd, ArrayList<ArrayList<String>> rows, int series) {
-        ArrayList<String> row;
+            EvenlyDiscretizedFunc mfd, List<List<String>> rows, int series) {
+        List<String> row;
         for (int i = 0; i < mfd.size(); i++) {
-            row = new ArrayList<String>();
+            row = new ArrayList<>();
             if (mfd.getY(i) > 0) {
                 row.add(Integer.toString(series));
                 row.add(mfd.getName());
@@ -135,29 +99,30 @@ public class ExtraData {
         }
     }
 
-    public static ArrayList<ArrayList<String>> getTabularSolutionMfds(FaultSystemSolution solution) {
-        ArrayList<ArrayList<String>> rows = new ArrayList<>();
+    public static List<List<String>> getTabularSolutionMfds(
+            FaultSystemSolution solution, boolean crustal) {
+        List<List<String>> rows = new ArrayList<>();
 
         int series = 0;
-        for (IncrementalMagFreqDist mfd : getSolutionMfds(solution)) {
+        for (IncrementalMagFreqDist mfd : getSolutionMfds(solution, crustal)) {
             appendMfdRows(mfd, rows, series);
             series++;
         }
 
-        HistogramFunction magHist = solutionMagFreqHistogram(solution,true);
+        HistogramFunction magHist = solutionMagFreqHistogram(solution, true);
         magHist.setName("solutionMFD_rateWeighted");
         appendMfdRows(magHist, rows, series);
         series++;
 
-        magHist = solutionMagFreqHistogram(solution,false);
+        magHist = solutionMagFreqHistogram(solution, false);
         magHist.setName("solutionMFD_unweighted");
         appendMfdRows(magHist, rows, series);
 
         return rows;
     }
 
-    public static ArrayList<ArrayList<String>> getTabularSolutionMfdsV2(FaultSystemSolution solution) {
-        ArrayList<ArrayList<String>> rows = new ArrayList<>();
+    public static List<List<String>> getTabularSolutionMfdsV2(FaultSystemSolution solution) {
+        List<List<String>> rows = new ArrayList<>();
 
         int series = 0;
         for (IncrementalMagFreqDist mfd : getSolutionMfdsV2(solution)) {
