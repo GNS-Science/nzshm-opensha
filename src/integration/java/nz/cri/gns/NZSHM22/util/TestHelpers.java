@@ -89,7 +89,7 @@ public class TestHelpers {
                             .map(
                                     section -> {
                                         GeoJSONFaultSection geoJSONFaultSection =
-                                                new GeoJSONFaultSection(section);
+                                                GeoJSONFaultSection.fromFaultSection(section);
                                         new FaultSectionProperties(geoJSONFaultSection)
                                                 .setPartition(PartitionPredicate.CRUSTAL);
                                         return geoJSONFaultSection;

@@ -686,7 +686,9 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         + rupRate(ruptures.size(), millis));
 
         List<GeoJSONFaultSection> geoJSONFaultSections =
-                subSections.stream().map(GeoJSONFaultSection::new).collect(Collectors.toList());
+                subSections.stream()
+                        .map(GeoJSONFaultSection::fromFaultSection)
+                        .collect(Collectors.toList());
 
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builderForClusterRups(geoJSONFaultSections, ruptures)

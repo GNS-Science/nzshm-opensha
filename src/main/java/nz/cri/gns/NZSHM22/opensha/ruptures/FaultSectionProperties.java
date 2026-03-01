@@ -367,7 +367,7 @@ public class FaultSectionProperties {
         for (int s = 0; s < ruptureSet.getNumSections(); s++) {
             FaultSection original = ruptureSet.getFaultSectionData(s);
             if (!(original instanceof GeoJSONFaultSection)) {
-                FaultSection geoSection = new GeoJSONFaultSection(original);
+                FaultSection geoSection = GeoJSONFaultSection.fromFaultSection(original);
                 sections.set(s, geoSection);
             }
         }

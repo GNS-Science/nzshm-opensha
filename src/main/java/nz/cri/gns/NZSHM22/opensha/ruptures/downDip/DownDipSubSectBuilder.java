@@ -113,7 +113,7 @@ public class DownDipSubSectBuilder {
         fsd.setAveRake(90);
         fsd.setDipDirection((float) trace.getDipDirection());
 
-        return new GeoJSONFaultSection(fsd);
+        return GeoJSONFaultSection.fromFaultSection(fsd);
     }
 
     private static double fixLongitudeOffset(String longitude) {

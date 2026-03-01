@@ -361,7 +361,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
             FaultSectionList geoFaultSections = new FaultSectionList();
             for (FaultSection section : subSections) {
                 NZFaultSection nzFaultSection = (NZFaultSection) section;
-                GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(nzFaultSection);
+                GeoJSONFaultSection geoJSONFaultSection =
+                        GeoJSONFaultSection.fromFaultSection(nzFaultSection);
                 FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
                 props.setDomain(nzFaultSection.getDomainNo());
                 if (nzFaultSection.getDomainNo().equals(faultModel.getTvzDomain())) {
@@ -429,7 +430,8 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                                 maxSectLength, subSections.getSafeId(), MIN_SUB_SECTIONS);
                 NZFaultSection nzFaultSection = (NZFaultSection) parentSect;
                 for (FaultSection section : newSubSects) {
-                    GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(section);
+                    GeoJSONFaultSection geoJSONFaultSection =
+                            GeoJSONFaultSection.fromFaultSection(section);
                     FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
                     props.setPartition(PartitionPredicate.CRUSTAL);
                     props.setDomain(nzFaultSection.getDomainNo());

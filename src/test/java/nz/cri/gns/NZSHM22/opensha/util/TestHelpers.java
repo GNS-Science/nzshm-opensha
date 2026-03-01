@@ -78,7 +78,8 @@ public class TestHelpers {
         if (faultModel.isCrustal()) {
             FaultSectionList crustalSections = new FaultSectionList();
             for (FaultSection section : sections) {
-                GeoJSONFaultSection geoJSONFaultSection = new GeoJSONFaultSection(section);
+                GeoJSONFaultSection geoJSONFaultSection =
+                        GeoJSONFaultSection.fromFaultSection(section);
                 NZFaultSection nzFaultSection = (NZFaultSection) section;
                 FaultSectionProperties props = new FaultSectionProperties(geoJSONFaultSection);
                 props.setPartition(PartitionPredicate.CRUSTAL);
