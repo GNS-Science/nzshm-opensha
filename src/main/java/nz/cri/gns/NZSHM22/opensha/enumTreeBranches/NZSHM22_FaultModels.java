@@ -155,7 +155,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     SBD_0_3_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
             "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv",
-            20000,
+            10000,
             PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_4_HKR_LR_30(

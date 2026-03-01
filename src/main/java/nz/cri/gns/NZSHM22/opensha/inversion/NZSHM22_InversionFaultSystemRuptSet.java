@@ -12,6 +12,7 @@ import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.*;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 import scratch.UCERF3.inversion.InversionFaultSystemRupSet;
 
 /**
@@ -45,7 +46,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
             File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(ruptureSetFile);
+        FaultSystemRupSet rupSet = safeLoad(ruptureSetFile);
         return fromExistingSubductionRuptureSet(rupSet, branch);
     }
 
@@ -60,7 +61,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
             ArchiveInput ruptureSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
-        FaultSystemRupSet rupSet = FaultSystemRupSet.load(ruptureSetInput);
+        FaultSystemRupSet rupSet = safeLoad(ruptureSetInput);
         return fromExistingSubductionRuptureSet(rupSet, branch);
     }
 
@@ -95,7 +96,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
             File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return fromExistingCrustalSet(FaultSystemRupSet.load(ruptureSetFile), branch);
+        return fromExistingCrustalSet(safeLoad(ruptureSetFile), branch);
     }
 
     /**
@@ -109,7 +110,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
             ArchiveInput rupSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return fromExistingCrustalSet(FaultSystemRupSet.load(rupSetInput), branch);
+        return fromExistingCrustalSet(safeLoad(rupSetInput), branch);
     }
 
     public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(
@@ -315,5 +316,21 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             throw new RuntimeException(
                     "This solution was created with a faulty nzshm-opensha version. See issue #377.");
         }
+    }
+
+    protected static FaultSystemRupSet safeLoad(ArchiveInput archive) throws IOException {
+        FaultSystemRupSet rupSet = FaultSystemRupSet.load(archive);
+        if (!(rupSet.getFaultSectionData(0) instanceof GeoJSONFaultSection)) {
+            System.err.println(
+                    "The rupture set does not yet use the modular format which is required for this inversion.");
+            System.err.println(
+                    "Please run FaultSectionProperties.main() with the appropriate parameters to convert the rupture set to the modular format and try again.");
+            throw new IOException("Rupture set not in modular format");
+        }
+        return rupSet;
+    }
+
+    protected static FaultSystemRupSet safeLoad(File file) throws IOException {
+        return safeLoad(ArchiveInput.getDefaultInput(file));
     }
 }

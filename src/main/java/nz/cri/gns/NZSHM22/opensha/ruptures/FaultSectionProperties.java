@@ -351,18 +351,9 @@ public class FaultSectionProperties {
      * @throws DocumentException if parsing of any XML/GeoJSON documents fails
      */
     @SuppressWarnings("unchecked")
-    public static void backfill() throws IOException, DocumentException {
+    public static void backfill(String archiveFileName) throws IOException, DocumentException {
 
-        String ruptureSetName =
-                "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
-        //        ruptureSetName =
-        //
-        // "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-        //        ruptureSetName =
-        //
-        // "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
-
-        FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(ruptureSetName));
+        FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(archiveFileName));
 
         // faultmodel is only used for crustal sections
         NZSHM22_FaultModels crustalFaultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
@@ -418,7 +409,7 @@ public class FaultSectionProperties {
             }
         }
 
-        ruptureSet.write(new File(ruptureSetName + "props4.zip"));
+        ruptureSet.write(new File(archiveFileName + "props4.zip"));
     }
 
     /**
@@ -430,6 +421,16 @@ public class FaultSectionProperties {
      * @throws DocumentException if there is an issue parsing XML/geojson documents
      */
     public static void main(String[] args) throws IOException, DocumentException {
-        backfill();
+        String ruptureSetName =
+                //
+                // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
+                //        ruptureSetName =
+                //
+                // "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
+                //        ruptureSetName =
+                //
+                "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
+
+        backfill(ruptureSetName);
     }
 }

@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
+import nz.cri.gns.NZSHM22.opensha.reports.TabularMfds;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
@@ -938,15 +939,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
         double[] solution_adjusted =
                 inversionInputGenerator.adjustSolutionForWaterLevel(solution_raw);
 
-        //		Map<ConstraintRange, Double> energies = tsa.getEnergies();
-        //		if (energies != null) {
-        //			System.out.println("Final energies:");
-        //			for (ConstraintRange range : energies.keySet()) {
-        //				finalEnergies.put(range.name, (double) energies.get(range).floatValue());
-        //				System.out.println("\t" + range.name + ": " + energies.get(range).floatValue());
-        //			}
-        //		}
-
         Set<Integer> zeroRates = new HashSet<>();
         for (int r = 0; r < solution_adjusted.length; r++) {
             if (solution_adjusted[r] == 0) {
@@ -962,5 +954,14 @@ public abstract class NZSHM22_AbstractInversionRunner {
             solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
         }
         return solution;
+    }
+
+    public List<List<String>> getTabularSolutionMfds() {
+        return TabularMfds.getTabularSolutionMfds(
+                solution, scalingRelationship.getRegime() == FaultRegime.CRUSTAL);
+    }
+
+    public List<List<String>> getTabularSolutionMfdsV2() {
+        return TabularMfds.getTabularSolutionMfdsV2(solution);
     }
 }
