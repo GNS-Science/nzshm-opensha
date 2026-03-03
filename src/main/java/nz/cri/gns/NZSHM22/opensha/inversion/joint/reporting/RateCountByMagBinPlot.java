@@ -84,7 +84,11 @@ public class RateCountByMagBinPlot extends AbstractRupSetPlot {
 
         PlotSpec countSpec =
                 new PlotSpec(
-                        funcs, chars, "Rate Count by Magnitude Bin", "Magnitude", "Number of Ruptures");
+                        funcs,
+                        chars,
+                        "Rate Count by Magnitude Bin",
+                        "Magnitude",
+                        "Number of Ruptures");
         countSpec.setLegendInset(true);
 
         double maxCount = 0;
