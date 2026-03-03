@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/compile-on-edit.sh",
+            "timeout": 120,
+            "statusMessage": "Compiling..."
+          }
+        ]
+      }
+    ]
+  }
+}
