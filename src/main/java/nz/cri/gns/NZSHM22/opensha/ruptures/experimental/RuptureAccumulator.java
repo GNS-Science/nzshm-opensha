@@ -107,6 +107,7 @@ public class RuptureAccumulator {
         lengths.add(rupSet.getLengthForRup(r));
         mags.add(rupSet.getMagForRup(r));
         areas.add(rupSet.getAreaForRup(r));
+        // NZSHM22 Hikurangi is so old, it has no modules
         if (rupSet.hasModule(AveSlipModule.class)) {
             slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
         } else {
