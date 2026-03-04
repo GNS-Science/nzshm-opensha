@@ -3,7 +3,8 @@
     "allow": [
       "Bash(./gradlew test:*)",
       "Bash(./gradlew build:*)",
-      "Bash(./gradlew compileJava:*)"
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew spotlessApply:*)"
     ]
   }
 }

@@ -1,16 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
-import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.downDip.DownDipSubSectBuilder;
-import org.dom4j.DocumentException;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
@@ -316,121 +308,5 @@ public class FaultSectionProperties {
         double dValue = (Double) value;
         Preconditions.checkState(Math.rint(dValue) == dValue);
         return (int) dValue;
-    }
-
-    /**
-     * Copy a selection of known properties from one section to another. Only a subset of properties
-     * are copied (partition, original parent/id, domain, TVZ flag, row/col indices).
-     *
-     * @param from source section to copy from
-     * @param to destination section to copy to
-     */
-    public static void copy(FaultSection from, FaultSection to) {
-        FaultSectionProperties propsFrom = new FaultSectionProperties(from);
-        FaultSectionProperties propsTo = new FaultSectionProperties(to);
-        propsTo.setPartition(propsFrom.getPartition());
-        propsTo.setOriginalParent(propsFrom.getOriginalParent());
-        propsTo.setOriginalId(propsFrom.getOriginalId());
-        propsTo.setDomain(propsFrom.getDomain());
-        if (propsFrom.getTvz()) {
-            propsTo.setTvz();
-        }
-        propsTo.setRowIndex(propsFrom.getRowIndex());
-        propsTo.setColIndex(propsFrom.getColIndex());
-    }
-
-    /**
-     * Backfill script for existing rupture set This should work for all crustal, subduction, and
-     * joint rupture sets. Ensure to use the correct fault model if there are crustal sections.
-     * Crustal sections must come before subduction sections so that section ids line up.
-     *
-     * <p>Note that not all properties are backfilled. OriginalId, row index, and others are nto
-     * backfilled.
-     *
-     * @throws IOException if reading or writing the rupture set file fails
-     * @throws DocumentException if parsing of any XML/GeoJSON documents fails
-     */
-    @SuppressWarnings("unchecked")
-    public static void backfill(String archiveFileName) throws IOException, DocumentException {
-
-        FaultSystemRupSet ruptureSet = FaultSystemRupSet.load(new File(archiveFileName));
-
-        // faultmodel is only used for crustal sections
-        NZSHM22_FaultModels crustalFaultModel = NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ;
-        FaultSectionList parentSections = new FaultSectionList();
-        crustalFaultModel.fetchFaultSections(parentSections);
-
-        int hikurangiCount = 0;
-        int puysegurCount = 0;
-
-        List<FaultSection> sections = (List<FaultSection>) ruptureSet.getFaultSectionDataList();
-        for (int s = 0; s < ruptureSet.getNumSections(); s++) {
-            FaultSection original = ruptureSet.getFaultSectionData(s);
-            if (!(original instanceof GeoJSONFaultSection)) {
-                FaultSection geoSection = GeoJSONFaultSection.fromFaultSection(original);
-                sections.set(s, geoSection);
-            }
-        }
-
-        for (FaultSection section : ruptureSet.getFaultSectionDataList()) {
-            FaultSectionProperties props = new FaultSectionProperties(section);
-            if (section.getSectionName().contains("row:")) {
-                //  Backfill subduction props
-                props.setOriginalParent(10000);
-                if (section.getSectionName().contains("Hikurangi")) {
-                    props.setPartition(PartitionPredicate.HIKURANGI);
-                    props.setOriginalId(hikurangiCount);
-                    hikurangiCount++;
-                }
-                if (section.getSectionName().contains("Puysegur")) {
-                    props.setPartition(PartitionPredicate.PUYSEGUR);
-                    props.setOriginalId(puysegurCount);
-                    puysegurCount++;
-                }
-            } else {
-                // backfill crustal props
-
-                NZFaultSection parent =
-                        (NZFaultSection) parentSections.get(section.getParentSectionId());
-                // verify that we're actually using the correct fault model
-                //                System.out.println(
-                //                        " orig: "
-                //                                + section.getParentSectionName()
-                //                                + " : model : "
-                //                                + parent.getSectionName());
-                Preconditions.checkState(
-                        section.getParentSectionName().equals(parent.getSectionName()));
-
-                props.setPartition(PartitionPredicate.CRUSTAL);
-                props.setDomain(parent.getDomainNo());
-                if (parent.getDomainNo().equals(crustalFaultModel.getTvzDomain())) {
-                    props.setTvz();
-                }
-            }
-        }
-
-        ruptureSet.write(new File(archiveFileName + "props4.zip"));
-    }
-
-    /**
-     * Small runner that executes {@link #backfill()} when the class is run from the command line.
-     * Intended for one-off maintenance use.
-     *
-     * @param args ignored
-     * @throws IOException if reading/writing rupture set files fails
-     * @throws DocumentException if there is an issue parsing XML/geojson documents
-     */
-    public static void main(String[] args) throws IOException, DocumentException {
-        String ruptureSetName =
-                //
-                // "C:\\Users\\volkertj\\Code\\ruptureSets\\mergedRupset_5km_cffPatch2km_cff0SelfStiffness.zip";
-                //        ruptureSetName =
-                //
-                // "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zip";
-                //        ruptureSetName =
-                //
-                "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zip";
-
-        backfill(ruptureSetName);
     }
 }

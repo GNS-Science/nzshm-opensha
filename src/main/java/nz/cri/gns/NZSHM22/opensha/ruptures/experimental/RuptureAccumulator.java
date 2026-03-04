@@ -107,7 +107,11 @@ public class RuptureAccumulator {
         lengths.add(rupSet.getLengthForRup(r));
         mags.add(rupSet.getMagForRup(r));
         areas.add(rupSet.getAreaForRup(r));
-        slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
+        if (rupSet.hasModule(AveSlipModule.class)) {
+            slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
+        } else {
+            slips.add(null);
+        }
         return this;
     }
 
@@ -155,8 +159,10 @@ public class RuptureAccumulator {
                         .rupMags(toDoubleArray(mags))
                         .rupRakes(toDoubleArray(rakes))
                         .build();
-        AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
-        rupSet.addModule(aveSlip);
+        if (slips.stream().noneMatch(Objects::isNull)) {
+            AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
+            rupSet.addModule(aveSlip);
+        }
         return rupSet;
     }
 
