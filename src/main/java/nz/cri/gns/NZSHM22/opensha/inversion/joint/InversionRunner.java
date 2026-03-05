@@ -52,12 +52,12 @@ public class InversionRunner {
     public static void main(String[] args) throws IOException, DocumentException {
         InversionRunner runner =
                 //  new InversionRunner("src/main/resources/parameters/crustal-reproducible.jsonc");
-                new InversionRunner("src/main/resources/parameters/NZSHM_config.jsonc");
+                new InversionRunner("src/main/resources/parameters/NZSHM_config-parallel.jsonc");
         //   InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
 
         // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
         FaultSystemSolution solution = runner.run();
-        solution.write(new File("/tmp/spikeInversionSolution.zip"));
+        solution.write(new File("/tmp/spikeInversionSolution2.zip"));
 
         System.out.println(TraceTool.getTraces());
     }

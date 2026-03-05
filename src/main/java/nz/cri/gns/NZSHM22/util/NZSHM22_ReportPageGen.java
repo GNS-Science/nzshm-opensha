@@ -17,6 +17,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SolMFDPlot;
@@ -259,7 +260,13 @@ public class NZSHM22_ReportPageGen {
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
 
-        //   solution = setUpJointMFDs(solution);
+        // For large rupture sets, building cluster ruptures may trip up ClusterRuptures, so we add
+        // a single-stranded module if we don't already have one.
+        // Note that this will be a problem with splays
+        if (!solution.getRupSet().hasModule(ClusterRuptures.class)) {
+            solution.getRupSet()
+                    .addModule(new ClusterRuptures.SingleStranded(solution.getRupSet(), null));
+        }
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
