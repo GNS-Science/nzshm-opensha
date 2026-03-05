@@ -88,3 +88,11 @@ Already identical
 ## MFDInversionConstraint
 
 Kevin suggested we could hack this into regional MFDs by overwriting `getFractSectsInsideRegion` or `getFractRupsInsideRegion`
+
+
+# Tooling
+
+- Rupture sets now need a set of fault properties as defined in `FaultSectionProperties`. Use the `RupSetPropertyBackfill` 
+  to bring older rupture sets up to scratch. Rupture sets built from now on will already have these properties.
+- Once backfilled, rupture sets can be combined using `RuptureAccumulator`. This will create a rupture set that can be used
+  to create joint rupture sets.

@@ -4,12 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 /**
  * A rupture set builder that takes a selection of ruptures from one or more rupture sets to create
@@ -71,8 +72,10 @@ public class RuptureAccumulator {
             newSectionId = nextSectionId;
             nextSectionId++;
             sectionIdMapping.put(section.getSectionId(), newSectionId);
-            FaultSectionPrefData newSection = new FaultSectionPrefData();
-            newSection.setFaultSectionPrefData(section);
+            FaultSection newSection = GeoJSONFaultSection.fromFaultSection(section);
+            FaultSectionProperties props = new FaultSectionProperties(newSection);
+            props.setOriginalId(newSection.getSectionId());
+            props.setOriginalParent(newSection.getParentSectionId());
             newSection.setSectionId(newSectionId);
             newSection.setParentSectionId(
                     parentIdMapping.computeIfAbsent(
@@ -104,7 +107,12 @@ public class RuptureAccumulator {
         lengths.add(rupSet.getLengthForRup(r));
         mags.add(rupSet.getMagForRup(r));
         areas.add(rupSet.getAreaForRup(r));
-        slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
+        // NZSHM22 Hikurangi is so old, it has no modules
+        if (rupSet.hasModule(AveSlipModule.class)) {
+            slips.add(rupSet.requireModule(AveSlipModule.class).getAveSlip(r));
+        } else {
+            slips.add(null);
+        }
         return this;
     }
 
@@ -152,8 +160,10 @@ public class RuptureAccumulator {
                         .rupMags(toDoubleArray(mags))
                         .rupRakes(toDoubleArray(rakes))
                         .build();
-        AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
-        rupSet.addModule(aveSlip);
+        if (slips.stream().noneMatch(Objects::isNull)) {
+            AveSlipModule aveSlip = AveSlipModule.precomputed(rupSet, toDoubleArray(slips));
+            rupSet.addModule(aveSlip);
+        }
         return rupSet;
     }
 
