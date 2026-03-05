@@ -4,7 +4,9 @@
       "Bash(./gradlew test:*)",
       "Bash(./gradlew build:*)",
       "Bash(./gradlew compileJava:*)",
-      "Bash(./gradlew spotlessApply:*)"
+      "Bash(./gradlew spotlessApply:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)"
     ]
   }
 }
