@@ -106,7 +106,7 @@ public class TimeDependentRatesGenerator {
         Path originalFile = Paths.get(solutionFileName);
         Path modifiedFile = Paths.get(outputFileName);
         Files.copy(originalFile, modifiedFile);
-        try (FileSystem fs = FileSystems.newFileSystem(modifiedFile, null)) {
+        try (FileSystem fs = FileSystems.newFileSystem(modifiedFile)) {
 
             Path rates = fs.getPath("/solution/rates.csv");
             Path oldRates = fs.getPath("/solution/old-rates.csv");

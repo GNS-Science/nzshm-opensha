@@ -17,7 +17,7 @@ public class ZipTools {
     public static void copyFromZipFile(
             Path zipFilePath, String sourcePath, Path targetPath, StandardCopyOption copyOptions)
             throws IOException {
-        try (FileSystem fileSystem = FileSystems.newFileSystem(zipFilePath, null)) {
+        try (FileSystem fileSystem = FileSystems.newFileSystem(zipFilePath)) {
             Path fileToExtract = fileSystem.getPath(sourcePath);
             Files.copy(fileToExtract, targetPath, copyOptions);
         }
