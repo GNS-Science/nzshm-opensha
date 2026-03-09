@@ -6,8 +6,8 @@ plugins {
 
 apply plugin: 'java-library'
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 compileJava.options.encoding = "UTF-8"
 
 apply from: '../opensha/build-git.gradle'
@@ -134,7 +134,7 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
         delete new File(projectDir, "nzshm-build.date")
     }
 
-    baseName = project.name + '-all'
+    archiveBaseName = project.name + '-all'
     from {
         configurations.apiResolvable.collect { it.isDirectory() ? it : zipTree(it).matching {
                 exclude { it.path.contains('META-INF') }
