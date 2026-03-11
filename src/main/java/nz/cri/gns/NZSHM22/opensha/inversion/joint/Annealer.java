@@ -156,6 +156,10 @@ public class Annealer {
 
         CompletionCriteria subCompletionCriteria = createSubCompletionCriteria();
 
+        if (config.inversionThreadsPerSelector == 0) {
+            config.inversionThreadsPerSelector = Runtime.getRuntime().availableProcessors();
+        }
+
         if (config.repeatable) {
             config.inversionThreadsPerSelector = 1;
             config.inversionNumSolutionAverages = 1;

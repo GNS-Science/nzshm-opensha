@@ -11,7 +11,11 @@
       "Bash(../nzshm-opensha/gradlew test:*)",
       "Bash(../nzshm-opensha/gradlew cleanTest:*)",
       "Bash(cat:*)",
-      "Bash(./gradlew cleanTest:*)"
+      "Bash(find:*)",
+      "Bash(./gradlew cleanTest:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(which python:*)"
     ]
   }
 }

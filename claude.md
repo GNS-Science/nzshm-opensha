@@ -63,7 +63,11 @@ This project extends OpenSHA heavily:
 
 New plots go in `inversion/joint/reporting/`, extend `AbstractRupSetPlot`, output PNG via `PlotUtils.writePlots(...)`, and return markdown image links. `PartitionPlotWrapper` wraps existing plots to run separately per partition (crustal / subduction).
 
-### Code style
+### Code Conventions
+
+Methods and constructors for use only by the class should be marked `protected`. Methods and constructors for use by other classes should be marked `public`. Avoid `private` unless there is a very good reason.
+
+All classes need to have a docstring. public methods and constructors need a docstring. Complex protected and private methods should have a docstring. Docstrings should be concise but informative, and follow the standard JavaDoc format.
 
 Google Java Format, AOSP style. Run `./gradlew spotlessApply` before committing; CI runs `spotlessCheck` and fails on violations.
 

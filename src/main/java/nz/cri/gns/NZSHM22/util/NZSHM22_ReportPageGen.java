@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -28,6 +29,7 @@ public class NZSHM22_ReportPageGen {
     String solutionPath;
     String outputPath = "./TEST/reportPage";
     ReportPageGen.PlotLevel plotLevel = ReportPageGen.PlotLevel.FULL;
+    List<AbstractRupSetPlot> firstPlots = new ArrayList<>();
     List<AbstractRupSetPlot> plots = null;
     boolean fillSurfaces = false;
     FaultSystemRupSet rupSet = null;
@@ -105,6 +107,7 @@ public class NZSHM22_ReportPageGen {
                 possibleRupSetPlots.put(simpleName, plot);
             }
         }
+        possibleRupSetPlots.put("PartitionSummaryTable", new PartitionSummaryTable());
     }
 
     /**
@@ -156,6 +159,11 @@ public class NZSHM22_ReportPageGen {
             plots = new ArrayList<>();
         }
         plots.add(plot);
+        return this;
+    }
+
+    public NZSHM22_ReportPageGen addFirstPlot(AbstractRupSetPlot plot) {
+        firstPlots.add(plot);
         return this;
     }
 
@@ -283,6 +291,7 @@ public class NZSHM22_ReportPageGen {
         ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        reportPlots.addAll(firstPlots);
         if (plotLevel != null) {
             reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultSolutionPlots(plotLevel)));
         }
