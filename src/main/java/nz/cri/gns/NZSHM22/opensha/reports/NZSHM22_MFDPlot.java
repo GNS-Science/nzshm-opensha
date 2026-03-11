@@ -250,7 +250,7 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
 
             String prefix = "mfd_plot_" + getFileSafe(plot.name);
 
-            HeadlessGraphPanel gp = PlotUtils.initHeadless();
+            HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
             gp.setTickLabelFontSize(20);
 
             double tick;

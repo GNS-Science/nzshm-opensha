@@ -167,7 +167,7 @@ public class FishboneGenerator {
             Range xRange = new Range(minLon, maxLon);
             Range yRange = new Range(minLat, maxLat);
 
-            HeadlessGraphPanel gp = PlotUtils.initHeadless();
+            HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
 
             gp.drawGraphPanel(spec, false, false, xRange, yRange);
             PlotUtils.setAxisVisible(gp, true, true);
