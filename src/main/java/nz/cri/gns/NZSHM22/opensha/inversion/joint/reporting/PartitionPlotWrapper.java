@@ -19,6 +19,7 @@ import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.reports.AbstractRupSetPlot;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
+import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
 
 /**
  * A plot wrapper that executes a plot for each partition in a rupture set, by creating a filtered
@@ -34,6 +35,29 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
 
     public PartitionPlotWrapper(AbstractRupSetPlot inner) {
         this.inner = inner;
+    }
+
+    // create a solution for this partition by filtering the rupture set and solution, and
+    // adding the appropriate target MFDs module
+    public FaultSystemSolution partitionSolution(
+            FaultSystemSolution sol,
+            PartitionPredicate partitionPredicate,
+            PartitionMfds partitionMfds) {
+
+        ConfigModule config = sol.getModule(ConfigModule.class);
+        config.getConfig().hydrateScalingRelationship();
+        JointScalingRelationship scalingRelationship = config.getConfig().scalingRelationship;
+
+        InversionTargetMFDs targetMFDs = partitionMfds.get(partitionPredicate);
+        IntPredicate intPredicate = partitionPredicate.getPredicate(sol.getRupSet());
+        RupSetScalingRelationship rupSetScalingRelationship =
+                scalingRelationship.toRupSetScalingRelationship(partitionPredicate.isCrustal());
+        FaultSystemSolution result =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        sol, intPredicate, rupSetScalingRelationship);
+        result.getRupSet().addModule(targetMFDs);
+
+        return result;
     }
 
     @Override
@@ -52,25 +76,30 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
             return inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
         }
 
-        ConfigModule config = sol.getModule(ConfigModule.class);
-        config.getConfig().hydrateScalingRelationship();
-        JointScalingRelationship scalingRelationship = config.getConfig().scalingRelationship;
-
         List<String> result = new ArrayList<>();
 
         for (PartitionPredicate partitionPredicate :
                 partitionMfds.mfds.keySet().stream().sorted().collect(Collectors.toList())) {
 
-            // create a solution for this partition by filtering the rupture set and solution, and
-            // adding the appropriate target MFDs module
-            InversionTargetMFDs targetMFDs = partitionMfds.get(partitionPredicate);
-            IntPredicate intPredicate = partitionPredicate.getPredicate(rupSet);
-            RupSetScalingRelationship rupSetScalingRelationship =
-                    scalingRelationship.toRupSetScalingRelationship(partitionPredicate.isCrustal());
             FaultSystemSolution filteredInversionSolution =
-                    FilteredFaultSystemRupSet.forIntPredicate(
-                            sol, intPredicate, rupSetScalingRelationship);
-            filteredInversionSolution.getRupSet().addModule(targetMFDs);
+                    partitionSolution(sol, partitionPredicate, partitionMfds);
+
+            RupSetMetadata solMeta =
+                    new RupSetMetadata(meta.primary.name, filteredInversionSolution);
+            ReportMetadata filteredMeta = null;
+
+            if (meta.hasComparison()) {
+                PartitionMfds compPartitionMfds =
+                        meta.comparison.rupSet.getModule(PartitionMfds.class);
+                FaultSystemSolution filteredComparisonSolution =
+                        partitionSolution(
+                                meta.comparison.sol, partitionPredicate, compPartitionMfds);
+                RupSetMetadata compMeta =
+                        new RupSetMetadata(meta.comparison.name, filteredComparisonSolution);
+                filteredMeta = new ReportMetadata(solMeta, compMeta);
+            } else {
+                filteredMeta = new ReportMetadata(solMeta);
+            }
 
             //  create a new resources folder so that MFDs don't overwrite each other
             String partitionRelPathToResources =
@@ -85,7 +114,7 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
                     inner.plot(
                             filteredInversionSolution.getRupSet(),
                             filteredInversionSolution,
-                            meta,
+                            filteredMeta,
                             partitionResourcesDir,
                             partitionRelPathToResources,
                             topLink));

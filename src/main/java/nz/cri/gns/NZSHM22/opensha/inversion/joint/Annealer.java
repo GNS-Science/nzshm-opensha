@@ -15,6 +15,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
@@ -155,6 +156,10 @@ public class Annealer {
 
         CompletionCriteria subCompletionCriteria = createSubCompletionCriteria();
 
+        if (config.inversionThreadsPerSelector == 0) {
+            config.inversionThreadsPerSelector = Runtime.getRuntime().availableProcessors();
+        }
+
         if (config.repeatable) {
             config.inversionThreadsPerSelector = 1;
             config.inversionNumSolutionAverages = 1;
@@ -195,6 +200,20 @@ public class Annealer {
                             subCompletionCriteria);
         }
         progress.setConstraintRanges(inversionInputGenerator.getConstraintRowRanges());
+
+        System.out.println("-------------------------------------------------------");
+        System.out.println("Constraint ranges and their weights");
+        for (ConstraintRange constraintRange : inversionInputGenerator.getConstraintRowRanges()) {
+            System.out.println(
+                    constraintRange.name
+                            + ": "
+                            + (constraintRange.endRow - constraintRange.startRow)
+                            + " rows. Weight: "
+                            + constraintRange.weight
+                            + " "
+                            + constraintRange.weightingType);
+        }
+        System.out.println("-------------------------------------------------------");
 
         if (completionCriteria instanceof LoggingCompletionCriteria) {
             ((LoggingCompletionCriteria) completionCriteria)

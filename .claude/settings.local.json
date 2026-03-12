@@ -3,7 +3,19 @@
     "allow": [
       "Bash(./gradlew test:*)",
       "Bash(./gradlew build:*)",
-      "Bash(./gradlew compileJava:*)"
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew spotlessApply:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)",
+      "Bash(./gradlew :opensha:test:*)",
+      "Bash(../nzshm-opensha/gradlew test:*)",
+      "Bash(../nzshm-opensha/gradlew cleanTest:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(./gradlew cleanTest:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(which python:*)"
     ]
   }
 }

@@ -16,7 +16,7 @@ public class AnnealingConfig {
     protected String logStates = null;
 
     protected Integer inversionNumSolutionAverages = 1; // 1 means no averaging
-    protected Integer inversionThreadsPerSelector = 1;
+    protected Integer inversionThreadsPerSelector = 0; // 0 means use all available cores
     protected Integer inversionAveragingIntervalSecs = null;
     protected Integer inversionAveragingIterations = null;
     protected boolean inversionAveragingEnabled = false;
