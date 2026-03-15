@@ -12,24 +12,49 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.AbstractRupSetPlot;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.faultSurface.FaultSection;
 
+/** Renders a markdown table summarizing section and rupture counts per partition. */
 public class PartitionSummaryTable extends AbstractRupSetPlot {
 
-    @Override
-    public String getName() {
-        return "Partition Summary";
+    /** Per-partition statistics computed from a rupture set. */
+    protected static class PartitionStats {
+        /** Section counts keyed by partition. */
+        public final Map<PartitionPredicate, Integer> sectionCounts;
+
+        /** Ruptures belonging to exactly one partition. */
+        public final Map<PartitionPredicate, Integer> exclusiveCounts;
+
+        /** Ruptures shared across multiple partitions, counted per partition. */
+        public final Map<PartitionPredicate, Integer> sharedCounts;
+
+        /** Total number of ruptures spanning more than one partition. */
+        public final int multiPartitionTotal;
+
+        /** All partitions that appear in any of the count maps. */
+        public final Set<PartitionPredicate> allPartitions;
+
+        protected PartitionStats(
+                Map<PartitionPredicate, Integer> sectionCounts,
+                Map<PartitionPredicate, Integer> exclusiveCounts,
+                Map<PartitionPredicate, Integer> sharedCounts,
+                int multiPartitionTotal) {
+            this.sectionCounts = sectionCounts;
+            this.exclusiveCounts = exclusiveCounts;
+            this.sharedCounts = sharedCounts;
+            this.multiPartitionTotal = multiPartitionTotal;
+            this.allPartitions = EnumSet.noneOf(PartitionPredicate.class);
+            this.allPartitions.addAll(sectionCounts.keySet());
+            this.allPartitions.addAll(exclusiveCounts.keySet());
+            this.allPartitions.addAll(sharedCounts.keySet());
+        }
     }
 
-    @Override
-    public List<String> plot(
-            FaultSystemRupSet rupSet,
-            FaultSystemSolution sol,
-            ReportMetadata meta,
-            File resourcesDir,
-            String relPathToResources,
-            String topLink)
-            throws IOException {
-
-        // Count sections per partition
+    /**
+     * Computes per-partition statistics from the given rupture set.
+     *
+     * @param rupSet the rupture set to analyse
+     * @return partition statistics
+     */
+    protected static PartitionStats computeStats(FaultSystemRupSet rupSet) {
         Map<PartitionPredicate, Integer> sectionCounts = new EnumMap<>(PartitionPredicate.class);
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
             PartitionPredicate partition = FaultSectionProperties.getPartition(section);
@@ -38,7 +63,6 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
             }
         }
 
-        // Classify ruptures
         Map<PartitionPredicate, Integer> exclusiveCounts = new EnumMap<>(PartitionPredicate.class);
         Map<PartitionPredicate, Integer> sharedCounts = new EnumMap<>(PartitionPredicate.class);
         int multiPartitionTotal = 0;
@@ -64,27 +88,86 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
             }
         }
 
-        // Collect all partitions that appear, in enum order
+        return new PartitionStats(
+                sectionCounts, exclusiveCounts, sharedCounts, multiPartitionTotal);
+    }
+
+    @Override
+    public String getName() {
+        return "Ruptures Summary";
+    }
+
+    @Override
+    public List<String> plot(
+            FaultSystemRupSet rupSet,
+            FaultSystemSolution sol,
+            ReportMetadata meta,
+            File resourcesDir,
+            String relPathToResources,
+            String topLink)
+            throws IOException {
+
+        PartitionStats primary = computeStats(rupSet);
+        boolean hasComparison = meta != null && meta.hasComparison();
+        PartitionStats comp = hasComparison ? computeStats(meta.comparison.rupSet) : null;
+
         Set<PartitionPredicate> allPartitions = EnumSet.noneOf(PartitionPredicate.class);
-        allPartitions.addAll(sectionCounts.keySet());
-        allPartitions.addAll(exclusiveCounts.keySet());
-        allPartitions.addAll(sharedCounts.keySet());
+        allPartitions.addAll(primary.allPartitions);
+        if (comp != null) {
+            allPartitions.addAll(comp.allPartitions);
+        }
 
         List<String> lines = new ArrayList<>();
-        lines.add("| Partition | Sections | Exclusive Ruptures | Shared Ruptures |");
-        lines.add("|-----------|----------|-------------------|-----------------|");
-        for (PartitionPredicate p : allPartitions) {
+
+        if (comp != null) {
+            String pName = meta.primary.name;
+            String cName = meta.comparison.name;
             lines.add(
                     String.format(
-                            "| %s | %,d | %,d | %,d |",
-                            p.name(),
-                            sectionCounts.getOrDefault(p, 0),
-                            exclusiveCounts.getOrDefault(p, 0),
-                            sharedCounts.getOrDefault(p, 0)));
+                            "| Partition "
+                                    + " | Exclusive (%s) | Exclusive (%s)"
+                                    + " | Joint (%s) | Joint (%s) |",
+                            pName, cName, pName, cName));
+            lines.add("|---|---|---|---|---|---|---|");
+            for (PartitionPredicate p : allPartitions) {
+                lines.add(
+                        String.format(
+                                "| %s | %,d | %,d | %,d | %,d |",
+                                p.name(),
+                                primary.exclusiveCounts.getOrDefault(p, 0),
+                                comp.exclusiveCounts.getOrDefault(p, 0),
+                                primary.sharedCounts.getOrDefault(p, 0),
+                                comp.sharedCounts.getOrDefault(p, 0)));
+            }
+            int pExclTotal = 0, cExclTotal = 0, pJointTotal = 0, cJointTotal = 0;
+            for (PartitionPredicate p : allPartitions) {
+                pExclTotal += primary.exclusiveCounts.getOrDefault(p, 0);
+                cExclTotal += comp.exclusiveCounts.getOrDefault(p, 0);
+                pJointTotal += primary.sharedCounts.getOrDefault(p, 0);
+                cJointTotal += comp.sharedCounts.getOrDefault(p, 0);
+            }
+            lines.add(
+                    String.format(
+                            "| **Total** | **%,d** | **%,d** | **%,d** | **%,d** |",
+                            pExclTotal, cExclTotal, pJointTotal, cJointTotal));
+        } else {
+            lines.add("| Partition | Exclusive Ruptures | Joint Ruptures |");
+            lines.add("|-----------|--------------------|----------------|");
+            for (PartitionPredicate p : allPartitions) {
+                lines.add(
+                        String.format(
+                                "| %s | %,d | %,d |",
+                                p.name(),
+                                primary.exclusiveCounts.getOrDefault(p, 0),
+                                primary.sharedCounts.getOrDefault(p, 0)));
+            }
+            int exclTotal = 0, jointTotal = 0;
+            for (PartitionPredicate p : allPartitions) {
+                exclTotal += primary.exclusiveCounts.getOrDefault(p, 0);
+                jointTotal += primary.sharedCounts.getOrDefault(p, 0);
+            }
+            lines.add(String.format("| **Total** | **%,d** | **%,d** |", exclTotal, jointTotal));
         }
-        lines.add(
-                String.format(
-                        "| **Multi-partition ruptures** | | | **%,d** |", multiPartitionTotal));
 
         return lines;
     }

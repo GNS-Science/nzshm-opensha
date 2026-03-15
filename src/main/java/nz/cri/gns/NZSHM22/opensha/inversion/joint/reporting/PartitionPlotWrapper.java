@@ -70,12 +70,14 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
             throws IOException {
 
         PartitionMfds partitionMfds = rupSet.getModule(PartitionMfds.class);
-        // if we don't have our special MFDs, just do the normal plot
-        if (partitionMfds == null) {
-            return inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
-        }
 
         List<String> result = new ArrayList<>();
+
+        if (partitionMfds != null) {
+            result.add(getSubHeading() + " " + "Combined MFD");
+        }
+
+        result.addAll(inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink));
 
         for (PartitionPredicate partitionPredicate :
                 partitionMfds.mfds.keySet().stream().sorted().toList()) {
