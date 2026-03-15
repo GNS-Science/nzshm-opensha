@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11-jdk-jammy
+FROM eclipse-temurin:17-jdk-jammy
 
 # Common CLI tools that Claude Code uses
 RUN apt-get update && apt-get install -y --no-install-recommends \
