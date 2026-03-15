@@ -137,7 +137,7 @@ public class ThinningSubduction {
     public static void main(String[] args) throws IOException {
         FaultSystemRupSet combined =
                 FaultSystemRupSet.load(
-                        new File("C:\\Users\\user\\GNS\\rupture sets\\nzshm_complete_merged.zip"));
+                        new File("C:\\Users\\volkertj\\Code\\ruptureSets\\nzshm22_merged.zip"));
 
         List<Integer> crustalIds = ThinningCrustal.filterCrustal(combined);
 
@@ -155,8 +155,7 @@ public class ThinningSubduction {
 
         System.out.println("puysegur after thinning " + puysegurThinning.getRuptures().size());
 
-        BufferedWriter writer =
-                new BufferedWriter(new FileWriter("/tmp/filteredSubductionRuptures.txt"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/filteredRuptures.txt"));
         for (Integer r : crustalIds) {
             writer.write("" + r);
             writer.newLine();

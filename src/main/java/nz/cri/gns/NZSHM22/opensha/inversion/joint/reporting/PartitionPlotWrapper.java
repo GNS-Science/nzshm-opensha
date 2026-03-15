@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.IntPredicate;
-import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ConfigModule;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
@@ -79,7 +78,7 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
         List<String> result = new ArrayList<>();
 
         for (PartitionPredicate partitionPredicate :
-                partitionMfds.mfds.keySet().stream().sorted().collect(Collectors.toList())) {
+                partitionMfds.mfds.keySet().stream().sorted().toList()) {
 
             FaultSystemSolution filteredInversionSolution =
                     partitionSolution(sol, partitionPredicate, partitionMfds);
