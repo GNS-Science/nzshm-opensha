@@ -54,7 +54,8 @@ public class NZSHM22_ReportPageGen {
         return this;
     }
 
-    public NZSHM22_ReportPageGen setComparisonSolution(String comparisonName, FaultSystemSolution compSolution) {
+    public NZSHM22_ReportPageGen setComparisonSolution(
+            String comparisonName, FaultSystemSolution compSolution) {
         this.comparisonName = comparisonName;
         this.compSolution = compSolution;
         return this;
@@ -301,8 +302,7 @@ public class NZSHM22_ReportPageGen {
         ReportMetadata meta = null;
         if (compSolution != null) {
             RupSetMetadata compMeta =
-                    new RupSetMetadata(
-                            comparisonName, compSolution.getRupSet(), compSolution);
+                    new RupSetMetadata(comparisonName, compSolution.getRupSet(), compSolution);
             meta = new ReportMetadata(solMeta, compMeta);
         } else {
             meta = new ReportMetadata(new RupSetMetadata(name, rupSet));
