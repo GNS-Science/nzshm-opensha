@@ -305,7 +305,7 @@ public class NZSHM22_ReportPageGen {
                     new RupSetMetadata(comparisonName, compSolution.getRupSet(), compSolution);
             meta = new ReportMetadata(solMeta, compMeta);
         } else {
-            meta = new ReportMetadata(new RupSetMetadata(name, rupSet));
+            meta = new ReportMetadata(solMeta);
         }
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();

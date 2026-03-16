@@ -74,7 +74,7 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
         List<String> result = new ArrayList<>();
 
         if (partitionMfds != null) {
-            result.add(getSubHeading() + " " + "Combined MFD");
+            result.add(getSubHeading() + " " + "All Partitions Combined");
         }
 
         result.addAll(inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink));
