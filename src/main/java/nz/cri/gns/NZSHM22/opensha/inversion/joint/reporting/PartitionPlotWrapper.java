@@ -77,9 +77,10 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
             result.add(getSubHeading() + " " + "All Partitions Combined");
         }
 
-        Collection<String> innerResult = inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
+        Collection<String> innerResult =
+                inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
 
-        if(innerResult == null){
+        if (innerResult == null) {
             return result;
         }
 

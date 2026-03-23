@@ -52,7 +52,8 @@ public class InversionRunner {
     public static void main(String[] args) throws IOException, DocumentException {
         InversionRunner runner =
                 //  new InversionRunner("src/main/resources/parameters/crustal-reproducible.jsonc");
-                new InversionRunner("src/main/resources/parameters/NZSHM_config-parallel-old-weights.jsonc");
+                new InversionRunner(
+                        "src/main/resources/parameters/NZSHM_config-parallel-old-weights.jsonc");
         //   InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
 
         // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
