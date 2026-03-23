@@ -46,3 +46,4 @@ nzshm-build.gitremoteurl
 jupyterLog/logs/
 src/main/java/nz/cri/gns/NZSHM22/util/OakleyRunner.java
 .vscode/settings.json
+.claude/settings.local.json
