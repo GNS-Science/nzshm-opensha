@@ -27,7 +27,7 @@ public class ThinningSubduction {
         ClusterRuptures cRups = rupSet.getModule(ClusterRuptures.class);
         if (cRups == null) {
             // assume single stranded for our purposes here
-            cRups = ClusterRuptures.singleStranged(rupSet);
+            cRups = ClusterRuptures.singleStranded(rupSet);
         }
         List<ClusterRupture> ruptures = new ArrayList<>(cRups.getAll());
         ruptureIndices = new HashMap<>();

@@ -19,7 +19,7 @@ public class ThinningCrustal {
         ClusterRuptures cRups = crustalRupSet.getModule(ClusterRuptures.class);
         if (cRups == null) {
             // assume single stranded for our purposes here
-            cRups = ClusterRuptures.singleStranged(crustalRupSet);
+            cRups = ClusterRuptures.singleStranded(crustalRupSet);
         }
         List<ClusterRupture> crustalRuptures = new ArrayList<>(cRups.getAll());
         Map<ClusterRupture, Integer> indices = new HashMap<>();

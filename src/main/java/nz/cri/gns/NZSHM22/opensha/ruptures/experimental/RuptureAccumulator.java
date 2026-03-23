@@ -131,7 +131,7 @@ public class RuptureAccumulator {
         ClusterRuptures cRups = rupSet.getModule(ClusterRuptures.class);
         if (cRups == null) {
             // assume single stranded for our purposes here
-            cRups = ClusterRuptures.singleStranged(rupSet);
+            cRups = ClusterRuptures.singleStranded(rupSet);
         }
         setRupSet(rupSet, cRups.getAll());
         rupSet.getFaultSectionDataList().forEach(this::add);

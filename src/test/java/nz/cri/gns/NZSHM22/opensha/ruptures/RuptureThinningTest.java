@@ -105,6 +105,7 @@ public class RuptureThinningTest {
 
     public FaultSection mockSection(int parentID, int id) {
         FaultSection section = mock(FaultSection.class);
+        when(section.getSubSectionIndexDownDip()).thenReturn(-1);
         when(section.getParentSectionId()).thenReturn(parentID);
         when(section.getSectionId()).thenReturn(id);
         return section;

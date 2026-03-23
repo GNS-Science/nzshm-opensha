@@ -117,7 +117,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
         ClusterRuptures ruptures = rupSet.getModule(ClusterRuptures.class);
         if (ruptures == null) {
-            ruptures = ClusterRuptures.singleStranged(rupSet);
+            ruptures = ClusterRuptures.singleStranded(rupSet);
             rupSet.addModule(ruptures);
         }
         rupSet = recalcMags(rupSet, branch);

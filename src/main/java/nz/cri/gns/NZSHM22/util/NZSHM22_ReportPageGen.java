@@ -350,6 +350,7 @@ public class NZSHM22_ReportPageGen {
         addNamedFaults(rupSet);
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        reportPlots.addAll(firstPlots);
         if (plotLevel != null) {
             reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultRupSetPlots(plotLevel)));
         }
