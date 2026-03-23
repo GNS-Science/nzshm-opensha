@@ -195,6 +195,7 @@ public class DownDipTestPermutationStrategyTest {
     public FaultSection mockSection(int parentID, int id, DownDipSubSectBuilder builder) {
         GeoJSONFaultSection section = mock(GeoJSONFaultSection.class);
         when(section.getParentSectionId()).thenReturn(parentID);
+        when(section.getSubSectionIndexDownDip()).thenReturn(-1);
         when(section.getSectionId()).thenReturn(id);
         when(section.getAveDip()).thenReturn(10.0);
         when(section.getProperty(FaultSectionProperties.DOWNDIP_BUILDER)).thenReturn(builder);
