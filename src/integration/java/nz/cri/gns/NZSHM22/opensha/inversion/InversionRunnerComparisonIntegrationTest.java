@@ -21,6 +21,7 @@ import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
+import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -61,9 +62,17 @@ public class InversionRunnerComparisonIntegrationTest {
                         + " and "
                         + constraintB.getShortName());
 
-        assertEquals(constraintA.getName(), constraintB.getName());
+        // new constraints might have the partition name in their name, so we can't check for
+        // equality
+        assertTrue(constraintA.getName().startsWith(constraintB.getName()));
 
-        assertEquals(constraintA.getRange(0), constraintB.getRange(0));
+        ConstraintRange rangeA = constraintA.getRange(0);
+        ConstraintRange rangeB = constraintB.getRange(0);
+        assertEquals(rangeA.startRow, rangeB.startRow);
+        assertEquals(rangeA.endRow, rangeB.endRow);
+        assertEquals(rangeA.inequality, rangeB.inequality);
+        assertEquals(rangeA.weight, rangeB.weight, DELTA);
+        assertEquals(rangeA.weightingType, rangeB.weightingType);
 
         int rowsA = constraintA.getNumRows();
         int rowsB = constraintB.getNumRows();
