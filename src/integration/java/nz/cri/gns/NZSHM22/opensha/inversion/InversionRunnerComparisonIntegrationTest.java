@@ -92,6 +92,23 @@ public class InversionRunnerComparisonIntegrationTest {
         }
     }
 
+    /** Compares two IncrementalMagFreqDist objects for equality within a tolerance. */
+    public static void compareMFDs(
+            IncrementalMagFreqDist a, IncrementalMagFreqDist b, double tolerance) {
+        if (a == null && b == null) {
+            return;
+        }
+        assertNotNull("Expected non-null MFD but first argument was null", a);
+        assertNotNull("Expected non-null MFD but second argument was null", b);
+        assertEquals(a.size(), b.size());
+        assertEquals(a.getMinX(), b.getMinX(), tolerance);
+        assertEquals(a.getDelta(), b.getDelta(), tolerance);
+        for (int i = 0; i < a.size(); i++) {
+            assertEquals("X mismatch at index " + i, a.getX(i), b.getX(i), tolerance);
+            assertEquals("Y mismatch at index " + i, a.getY(i), b.getY(i), tolerance);
+        }
+    }
+
     // Compares slip rates, magnitudes, and some modules
     public static void compareRuptureSets(
             FaultSystemRupSet jointRupSet, FaultSystemRupSet crustalRupSet) {
@@ -128,11 +145,14 @@ public class InversionRunnerComparisonIntegrationTest {
                         ? crustalRupSet.getModule(NZSHM22_CrustalInversionTargetMFDs.class)
                         : crustalRupSet.getModule(NZSHM22_SubductionInversionTargetMFDs.class);
 
-        assertEquals(jointMfds.getTotalOnFaultMFD(), oldMfds.getTotalOnFaultMFD());
-        assertEquals(jointMfds.getTotalOnFaultSubSeisMFD(), oldMfds.getTotalOnFaultSubSeisMFD());
-        assertEquals(
-                jointMfds.getTotalOnFaultSupraSeisMFD(), oldMfds.getTotalOnFaultSupraSeisMFD());
-        assertEquals(jointMfds.getTrulyOffFaultMFD(), oldMfds.getTrulyOffFaultMFD());
+        compareMFDs(jointMfds.getTotalOnFaultMFD(), oldMfds.getTotalOnFaultMFD(), DELTA);
+        compareMFDs(
+                jointMfds.getTotalOnFaultSubSeisMFD(), oldMfds.getTotalOnFaultSubSeisMFD(), DELTA);
+        compareMFDs(
+                jointMfds.getTotalOnFaultSupraSeisMFD(),
+                oldMfds.getTotalOnFaultSupraSeisMFD(),
+                DELTA);
+        compareMFDs(jointMfds.getTrulyOffFaultMFD(), oldMfds.getTrulyOffFaultMFD(), DELTA);
 
         List<? extends IncrementalMagFreqDist> jointConstraints = jointMfds.getMFD_Constraints();
         List<? extends IncrementalMagFreqDist> crustalConstraints = oldMfds.getMFD_Constraints();
@@ -140,7 +160,7 @@ public class InversionRunnerComparisonIntegrationTest {
         assertEquals(jointConstraints.size(), crustalConstraints.size());
 
         for (int i = 0; i < jointConstraints.size(); i++) {
-            assertEquals(jointConstraints.get(i).toString(), crustalConstraints.get(i).toString());
+            compareMFDs(jointConstraints.get(i), crustalConstraints.get(i), DELTA);
         }
     }
 
