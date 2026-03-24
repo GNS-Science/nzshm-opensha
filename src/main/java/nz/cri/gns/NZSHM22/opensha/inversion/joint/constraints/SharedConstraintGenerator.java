@@ -30,30 +30,36 @@ public class SharedConstraintGenerator {
         List<InversionConstraint> constraints = new ArrayList<>();
         if (config.slipRateWeightingType == NORMALIZED_BY_UNCERTAINTY) {
             constraints.add(
-                    NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
-                            config.slipRateUncertaintyConstraintWt,
-                            config.parentConfig.ruptureSet,
-                            config.slipRateUncertaintyConstraintScalingFactor,
-                            config.unmodifiedSlipRateStdvs));
+                    new NamedInversionConstraint(
+                            NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
+                                    config.slipRateUncertaintyConstraintWt,
+                                    config.parentConfig.ruptureSet,
+                                    config.slipRateUncertaintyConstraintScalingFactor,
+                                    config.unmodifiedSlipRateStdvs),
+                            config.partition));
         } else {
             if (config.slipRateConstraintWt_normalized > 0d
                     && (config.slipRateWeightingType == NORMALIZED
                             || config.slipRateWeightingType == BOTH)) {
                 constraints.add(
-                        new SlipRateInversionConstraint(
-                                config.slipRateConstraintWt_normalized,
-                                ConstraintWeightingType.NORMALIZED,
-                                config.parentConfig.ruptureSet));
+                        new NamedInversionConstraint(
+                                new SlipRateInversionConstraint(
+                                        config.slipRateConstraintWt_normalized,
+                                        ConstraintWeightingType.NORMALIZED,
+                                        config.parentConfig.ruptureSet),
+                                config.partition));
             }
 
             if (config.slipRateConstraintWt_unnormalized > 0d
                     && (config.slipRateWeightingType == UNNORMALIZED
                             || config.slipRateWeightingType == BOTH)) {
                 constraints.add(
-                        new SlipRateInversionConstraint(
-                                config.slipRateConstraintWt_unnormalized,
-                                ConstraintWeightingType.UNNORMALIZED,
-                                config.parentConfig.ruptureSet));
+                        new NamedInversionConstraint(
+                                new SlipRateInversionConstraint(
+                                        config.slipRateConstraintWt_unnormalized,
+                                        ConstraintWeightingType.UNNORMALIZED,
+                                        config.parentConfig.ruptureSet),
+                                config.partition));
             }
         }
         return constraints;
@@ -84,33 +90,39 @@ public class SharedConstraintGenerator {
         // encoded into the A_ineq matrix instead since they are nonlinear
         if (config.mfdEqualityConstraintWt > 0.0) {
             constraints.add(
-                    new MFDInversionConstraint(
-                            config.parentConfig.ruptureSet,
-                            config.mfdEqualityConstraintWt,
-                            false,
-                            mfdEqualityConstraints));
+                    new NamedInversionConstraint(
+                            new MFDInversionConstraint(
+                                    config.parentConfig.ruptureSet,
+                                    config.mfdEqualityConstraintWt,
+                                    false,
+                                    mfdEqualityConstraints),
+                            config.partition));
         }
 
         // Prepare MFD Inequality Constraint (not added to A matrix directly since it's
         // nonlinear)
         if (config.mfdInequalityConstraintWt > 0.0) {
             constraints.add(
-                    new MFDInversionConstraint(
-                            config.parentConfig.ruptureSet,
-                            config.mfdInequalityConstraintWt,
-                            true,
-                            mfdInequalityConstraints));
+                    new NamedInversionConstraint(
+                            new MFDInversionConstraint(
+                                    config.parentConfig.ruptureSet,
+                                    config.mfdInequalityConstraintWt,
+                                    true,
+                                    mfdInequalityConstraints),
+                            config.partition));
         }
 
         // Prepare MFD Uncertainty Weighted Constraint
         if (config.mfdUncertaintyWeight > 0.0) {
             constraints.add(
-                    new MFDInversionConstraint(
-                            config.parentConfig.ruptureSet,
-                            config.mfdUncertaintyWeight,
-                            false,
-                            ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
-                            config.mfdUncertaintyWeightedConstraints));
+                    new NamedInversionConstraint(
+                            new MFDInversionConstraint(
+                                    config.parentConfig.ruptureSet,
+                                    config.mfdUncertaintyWeight,
+                                    false,
+                                    ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
+                                    config.mfdUncertaintyWeightedConstraints),
+                            config.partition));
         }
 
         if (SPLIT_RUPSET_MFDS) {

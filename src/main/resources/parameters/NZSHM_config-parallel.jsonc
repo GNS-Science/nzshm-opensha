@@ -5,11 +5,12 @@
  //  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
   //"ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zipprops2.zip",
   "annealing": {
-    "inversionSecs": 3600,
+    "inversionSecs": 60,
     "selectionInterval": 10,
-    //"inversionNumSolutionAverages": 1,
+    "inversionAveragingIntervalSecs": 10,
+    "inversionNumSolutionAverages": 4,
     "inversionThreadsPerSelector": 0,
-    "inversionAveragingEnabled": false,
+    "inversionAveragingEnabled": true,
     "perturbationFunction": "UNIFORM_0p001",
     "nonNegAlgorithm": "LIMIT_ZERO_RATES",
     "excludeRupturesBelowMinMag": false
