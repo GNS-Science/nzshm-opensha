@@ -66,7 +66,7 @@ public class InversionFilter {
                                         .getValue(NZSHM22_ScalingRelationshipNode.class))
                         .build();
 
-        rupSet.addModule(ClusterRuptures.singleStranged(rupSet));
+        rupSet.addModule(ClusterRuptures.singleStranded(rupSet));
 
         copyModules(
                 original,

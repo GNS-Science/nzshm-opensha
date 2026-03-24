@@ -9,11 +9,7 @@ import java.util.List;
 import org.jfree.data.Range;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
-import org.opensha.commons.gui.plot.HeadlessGraphPanel;
-import org.opensha.commons.gui.plot.PlotCurveCharacterstics;
-import org.opensha.commons.gui.plot.PlotLineType;
-import org.opensha.commons.gui.plot.PlotSpec;
-import org.opensha.commons.gui.plot.PlotUtils;
+import org.opensha.commons.gui.plot.*;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -95,7 +91,7 @@ public class RateCountByMagBinPlot extends AbstractRupSetPlot {
         for (int c : totalCounts) maxCount = Math.max(maxCount, c);
         Range countYRange = new Range(0.9, maxCount * 1.05);
 
-        HeadlessGraphPanel gp = PlotUtils.initHeadless();
+        HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
         gp.setTickLabelFontSize(20);
         gp.drawGraphPanel(countSpec, false, true, xRange, countYRange);
 

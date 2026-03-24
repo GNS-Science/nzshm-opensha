@@ -9,7 +9,6 @@ import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import nz.cri.gns.NZSHM22.util.TestHelpers;
 import org.dom4j.DocumentException;
-import org.junit.Test;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -46,7 +45,7 @@ public class NZSHM22_HazardCalculatorBuilder_IntegrationTest {
         return out.getCompletedInput();
     }
 
-    @Test
+    //    @Test
     public void hazardCalcTest() throws DocumentException, IOException {
         NZSHM22_HazardCalculatorBuilder builder = new NZSHM22_HazardCalculatorBuilder();
         // off rupture

@@ -5,7 +5,7 @@
  //  "ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.zipprops2.zip",
   //"ruptureSetPath": "C:\\Users\\volkertj\\Code\\ruptureSets\\RupSet_Sub_FM(SBD_0_3_HKR_LR_30)_mnSbS(2)_mnSSPP(2)_mxSSL(0.5)_ddAsRa(2.0,5.0,5)_ddMnFl(0.1)_ddPsCo(0.0)_ddSzCo(0.0)_thFc(0.0).zipprops2.zip",
   "annealing": {
-    "inversionSecs": 3600,
+    "inversionSecs": 200,
     "selectionInterval": 10,
     //"inversionNumSolutionAverages": 1,
     "inversionThreadsPerSelector": 0,
@@ -19,7 +19,7 @@
       "partition": "CRUSTAL",
 
       "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
-      "slipRateUncertaintyConstraintWt": 1000.0,
+      "slipRateUncertaintyConstraintWt": 1.0,
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": true,
 
@@ -30,7 +30,7 @@
       "maxMag": 10.0,
       "maxMagType": "MANIPULATE_MFD",
       "mfdTransitionMag": 7.85,
-      "mfdUncertaintyWeight": 10000,
+      "mfdUncertaintyWeight": 1,
       "mfdUncertaintyPower": 0.25,
       "mfdUncertaintyScalar": 0.1,
       "spatialSeisPDF": "FLOOR_ADDOPTIEEPASCOMB_CRU",
@@ -82,8 +82,8 @@
   "sansSlipRateFactor" : 0.9,
   "tvzSlipRateFactor" : 0.7,
 
-  "paleoRateConstraintWt": 1000,
-  "paleoParentRateSmoothnessConstraintWeight": 100000000.0,
+  "paleoRateConstraintWt": 1,
+  "paleoParentRateSmoothnessConstraintWeight": 100000.0,
   "paleoRates":	"PALEO_RI_GEOLOGIC_MAY24",
   "paleoProbabilityModel": "NZSHM22_C_42",
   "extraPaleoRatesFile": null

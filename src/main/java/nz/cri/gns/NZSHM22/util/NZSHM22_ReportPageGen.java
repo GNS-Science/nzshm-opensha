@@ -14,9 +14,11 @@ import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SolMFDPlot;
@@ -27,10 +29,13 @@ public class NZSHM22_ReportPageGen {
     String solutionPath;
     String outputPath = "./TEST/reportPage";
     ReportPageGen.PlotLevel plotLevel = ReportPageGen.PlotLevel.FULL;
+    List<AbstractRupSetPlot> firstPlots = new ArrayList<>();
     List<AbstractRupSetPlot> plots = null;
     boolean fillSurfaces = false;
     FaultSystemRupSet rupSet = null;
     FaultSystemSolution solution = null;
+    FaultSystemSolution compSolution = null;
+    String comparisonName;
 
     public NZSHM22_ReportPageGen() {}
 
@@ -46,6 +51,13 @@ public class NZSHM22_ReportPageGen {
 
     public NZSHM22_ReportPageGen setSolution(String path) {
         this.solutionPath = path;
+        return this;
+    }
+
+    public NZSHM22_ReportPageGen setComparisonSolution(
+            String comparisonName, FaultSystemSolution compSolution) {
+        this.comparisonName = comparisonName;
+        this.compSolution = compSolution;
         return this;
     }
 
@@ -104,6 +116,7 @@ public class NZSHM22_ReportPageGen {
                 possibleRupSetPlots.put(simpleName, plot);
             }
         }
+        possibleRupSetPlots.put("PartitionSummaryTable", new PartitionSummaryTable());
     }
 
     /**
@@ -155,6 +168,11 @@ public class NZSHM22_ReportPageGen {
             plots = new ArrayList<>();
         }
         plots.add(plot);
+        return this;
+    }
+
+    public NZSHM22_ReportPageGen addFirstPlot(AbstractRupSetPlot plot) {
+        firstPlots.add(plot);
         return this;
     }
 
@@ -259,7 +277,13 @@ public class NZSHM22_ReportPageGen {
                         ? this.solution
                         : FaultSystemSolution.load(new File(solutionPath));
 
-        //   solution = setUpJointMFDs(solution);
+        // For large rupture sets, building cluster ruptures may trip up ClusterRuptures, so we add
+        // a single-stranded module if we don't already have one.
+        // Note that this will be a problem with splays
+        if (!solution.getRupSet().hasModule(ClusterRuptures.class)) {
+            solution.getRupSet()
+                    .addModule(new ClusterRuptures.SingleStranded(solution.getRupSet(), null));
+        }
 
         NZSHM22_LogicTreeBranch branch =
                 solution.getRupSet().getModule(NZSHM22_LogicTreeBranch.class);
@@ -273,9 +297,19 @@ public class NZSHM22_ReportPageGen {
             }
         }
         addNamedFaults(solution.getRupSet());
-        ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, solution));
+        RupSetMetadata solMeta = new RupSetMetadata(name, solution);
+
+        ReportMetadata meta = null;
+        if (compSolution != null) {
+            RupSetMetadata compMeta =
+                    new RupSetMetadata(comparisonName, compSolution.getRupSet(), compSolution);
+            meta = new ReportMetadata(solMeta, compMeta);
+        } else {
+            meta = new ReportMetadata(solMeta);
+        }
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        reportPlots.addAll(firstPlots);
         if (plotLevel != null) {
             reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultSolutionPlots(plotLevel)));
         }
@@ -289,7 +323,7 @@ public class NZSHM22_ReportPageGen {
                 }
             }
         }
-        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath), reportPlots);
+        ReportPageGen solReport = new ReportPageGen(meta, new File(outputPath), reportPlots);
         solReport.generatePage();
     }
 
@@ -314,9 +348,9 @@ public class NZSHM22_ReportPageGen {
             }
         }
         addNamedFaults(rupSet);
-        ReportMetadata solMeta = new ReportMetadata(new RupSetMetadata(name, rupSet));
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
+        reportPlots.addAll(firstPlots);
         if (plotLevel != null) {
             reportPlots.addAll(wrapPlots(ReportPageGen.getDefaultRupSetPlots(plotLevel)));
         }
@@ -330,7 +364,18 @@ public class NZSHM22_ReportPageGen {
                 }
             }
         }
-        ReportPageGen solReport = new ReportPageGen(solMeta, new File(outputPath), reportPlots);
+
+        RupSetMetadata rupSetMetadata = new RupSetMetadata(name, rupSet);
+        ReportMetadata meta = null;
+        if (compSolution != null) {
+            RupSetMetadata compMeta =
+                    new RupSetMetadata(
+                            "ComparisonSolution", compSolution.getRupSet(), compSolution);
+            meta = new ReportMetadata(rupSetMetadata, compMeta);
+        } else {
+            meta = new ReportMetadata(new RupSetMetadata(name, rupSet));
+        }
+        ReportPageGen solReport = new ReportPageGen(meta, new File(outputPath), reportPlots);
         solReport.generatePage();
     }
 

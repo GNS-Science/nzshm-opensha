@@ -166,6 +166,7 @@ public class MixedRuptureSetBuilderTest {
             when(s.getTraceLength()).thenReturn(length);
             when(s.getProperty(FaultSectionProperties.PARTITION))
                     .thenReturn(PartitionPredicate.CRUSTAL.name());
+            when(s.getSubSectionIndexDownDip()).thenReturn(-1);
             subSects.add(s);
         }
         return new FaultSubsectionCluster(subSects);
@@ -179,6 +180,7 @@ public class MixedRuptureSetBuilderTest {
             when(s.getProperty(FaultSectionProperties.PARTITION))
                     .thenReturn(PartitionPredicate.HIKURANGI.name());
             when(s.getProperty(FaultSectionProperties.ROW_INDEX)).thenReturn(rowIndex);
+            when(s.getSubSectionIndexDownDip()).thenReturn(-1);
             when(s.getTraceLength()).thenReturn(length);
             subSects.add(s);
         }

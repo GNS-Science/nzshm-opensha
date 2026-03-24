@@ -293,7 +293,7 @@ public class ThinningStats {
 
             PlotSpec spec = new PlotSpec(funcs, chars, title, xAxisLabel, yAxisLabel);
 
-            HeadlessGraphPanel gp = PlotUtils.initHeadless();
+            HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
 
             gp.drawGraphPanel(spec, properties.contains(Properties.X_LOG), false, xRange, yRange);
 
