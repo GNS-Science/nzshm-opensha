@@ -106,7 +106,9 @@ public class Annealer {
             criteriaList.add(
                     TimeCompletionCriteria.getInSeconds(config.inversionAveragingIntervalSecs));
         }
-        Preconditions.checkState(!criteriaList.isEmpty(), "inversionAveragingIterations or inversionAveragingIntervalSecs must be set.");
+        Preconditions.checkState(
+                !criteriaList.isEmpty(),
+                "inversionAveragingIterations or inversionAveragingIntervalSecs must be set.");
         return new CompoundCompletionCriteria(criteriaList);
     }
 
