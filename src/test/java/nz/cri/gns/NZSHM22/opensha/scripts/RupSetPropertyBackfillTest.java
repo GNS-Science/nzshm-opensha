@@ -65,6 +65,7 @@ public class RupSetPropertyBackfillTest {
         boolean foundRowCol = false;
         for (FaultSection section : result.getFaultSectionDataList()) {
             FaultSectionProperties props = new FaultSectionProperties(section);
+            assertEquals("Subduction section rake should be 90", 90.0, section.getAveRake(), 0.0);
             if (section.getSectionName().contains("Hikurangi")) {
                 assertEquals(PartitionPredicate.HIKURANGI, props.getPartition());
             }
@@ -75,5 +76,15 @@ public class RupSetPropertyBackfillTest {
             }
         }
         assertTrue("Should have found sections with row/col indices", foundRowCol);
+
+        // All ruptures consist only of subduction sections, so rupture rakes should be 90
+        for (int r = 0; r < result.getNumRuptures(); r++) {
+            assertEquals("Rupture rake should be 90", 90.0, result.getAveRakeForRup(r), 0.01);
+        }
+
+        // Magnitudes should be preserved after rebuild
+        for (int r = 0; r < result.getNumRuptures(); r++) {
+            assertEquals(rupSet.getMagForRup(r), result.getMagForRup(r), 0.0);
+        }
     }
 }
