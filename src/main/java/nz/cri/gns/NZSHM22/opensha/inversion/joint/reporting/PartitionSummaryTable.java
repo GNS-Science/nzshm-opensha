@@ -139,17 +139,18 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
                                 primary.sharedCounts.getOrDefault(p, 0),
                                 comp.sharedCounts.getOrDefault(p, 0)));
             }
-            int pExclTotal = 0, cExclTotal = 0, pJointTotal = 0, cJointTotal = 0;
+            int pExclTotal = 0, cExclTotal = 0;
             for (PartitionPredicate p : allPartitions) {
                 pExclTotal += primary.exclusiveCounts.getOrDefault(p, 0);
                 cExclTotal += comp.exclusiveCounts.getOrDefault(p, 0);
-                pJointTotal += primary.sharedCounts.getOrDefault(p, 0);
-                cJointTotal += comp.sharedCounts.getOrDefault(p, 0);
             }
             lines.add(
                     String.format(
                             "| **Total** | **%,d** | **%,d** | **%,d** | **%,d** |",
-                            pExclTotal, cExclTotal, pJointTotal, cJointTotal));
+                            pExclTotal,
+                            cExclTotal,
+                            primary.multiPartitionTotal,
+                            comp.multiPartitionTotal));
         } else {
             lines.add("| Partition | Exclusive Ruptures | Joint Ruptures |");
             lines.add("|-----------|--------------------|----------------|");
@@ -161,12 +162,14 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
                                 primary.exclusiveCounts.getOrDefault(p, 0),
                                 primary.sharedCounts.getOrDefault(p, 0)));
             }
-            int exclTotal = 0, jointTotal = 0;
+            int exclTotal = 0;
             for (PartitionPredicate p : allPartitions) {
                 exclTotal += primary.exclusiveCounts.getOrDefault(p, 0);
-                jointTotal += primary.sharedCounts.getOrDefault(p, 0);
             }
-            lines.add(String.format("| **Total** | **%,d** | **%,d** |", exclTotal, jointTotal));
+            lines.add(
+                    String.format(
+                            "| **Total** | **%,d** | **%,d** |",
+                            exclTotal, primary.multiPartitionTotal));
         }
 
         return lines;

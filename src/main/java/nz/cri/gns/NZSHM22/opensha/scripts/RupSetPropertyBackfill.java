@@ -12,6 +12,7 @@ import nz.cri.gns.NZSHM22.opensha.faults.NZFaultSection;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
@@ -61,6 +62,7 @@ public class RupSetPropertyBackfill {
                 // Subduction section
                 props.setColIndex(Integer.parseInt(m.group(1)));
                 props.setRowIndex(Integer.parseInt(m.group(2)));
+                section.setAveRake(90);
                 if (section.getSectionName().contains("Hikurangi")) {
                     props.setPartition(PartitionPredicate.HIKURANGI);
                 } else if (section.getSectionName().contains("Puysegur")) {
@@ -78,6 +80,19 @@ public class RupSetPropertyBackfill {
                     }
                 }
             }
+        }
+
+        // Rebuild the rupture set so that rupture rakes are recalculated as area-weighted
+        // averages of the (now corrected) section rakes.
+        FaultSystemRupSet original = rupSet;
+        rupSet =
+                FaultSystemRupSet.builder(sections, original.getSectionIndicesForAllRups())
+                        .rupMags(original.getMagForAllRups())
+                        .rupAreas(original.getAreaForAllRups())
+                        .rupLengths(original.getLengthForAllRups())
+                        .build();
+        for (OpenSHA_Module module : original.getModules(true)) {
+            rupSet.addModule(module);
         }
 
         return rupSet;

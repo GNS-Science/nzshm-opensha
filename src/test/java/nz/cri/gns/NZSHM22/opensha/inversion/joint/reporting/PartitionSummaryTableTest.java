@@ -138,10 +138,11 @@ public class PartitionSummaryTableTest {
         String hikurangiRow = lines.get(3);
         assertTrue("Expected HIKURANGI in: " + hikurangiRow, hikurangiRow.contains("HIKURANGI"));
 
-        // Total row: 2 exclusive (1 CRUSTAL + 1 HIKURANGI), 2 joint (1+1 shared counts)
+        // Total row: 2 exclusive (1 CRUSTAL + 1 HIKURANGI), 1 joint (deduplicated)
         String totalRow = lines.get(4);
         assertTrue("Expected Total in: " + totalRow, totalRow.contains("**Total**"));
         assertTrue("Expected 2 exclusive total in: " + totalRow, totalRow.contains("**2**"));
+        assertTrue("Expected 1 joint total in: " + totalRow, totalRow.contains("**1**"));
     }
 
     @SuppressWarnings("unchecked")
