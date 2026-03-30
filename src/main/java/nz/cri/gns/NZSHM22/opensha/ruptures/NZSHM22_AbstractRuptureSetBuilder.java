@@ -23,6 +23,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRuptureBuilde
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.plausibility.PlausibilityConfiguration;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
+import org.opensha.sha.util.TectonicRegionType;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -369,6 +370,7 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
                     props.setTvz();
                 }
                 props.setPartition(PartitionPredicate.CRUSTAL);
+                geoJSONFaultSection.setTectonicRegionType(TectonicRegionType.ACTIVE_SHALLOW);
                 geoFaultSections.add(geoJSONFaultSection);
             }
             subSections = geoFaultSections;

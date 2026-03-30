@@ -16,6 +16,7 @@ import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.FaultTrace;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
+import org.opensha.sha.util.TectonicRegionType;
 
 public class DownDipSubSectBuilder {
 
@@ -206,6 +207,7 @@ public class DownDipSubSectBuilder {
             fs.setParentSectionName(parentSection.getSectionName());
             fs.setSectionName(
                     parentSection.getSectionName() + "; col: " + colIndex + ", row: " + rowIndex);
+            fs.setTectonicRegionType(TectonicRegionType.SUBDUCTION_INTERFACE);
             FaultSectionProperties props = new FaultSectionProperties(fs);
             props.setPartition(partition);
             props.setRowIndex(rowIndex);

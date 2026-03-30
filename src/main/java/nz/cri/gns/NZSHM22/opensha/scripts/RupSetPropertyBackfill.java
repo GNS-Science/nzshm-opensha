@@ -16,6 +16,7 @@ import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.faultSurface.GeoJSONFaultSection;
+import org.opensha.sha.util.TectonicRegionType;
 
 /**
  * CLI tool to backfill {@link FaultSectionProperties} on rupture sets that were saved before
@@ -63,6 +64,7 @@ public class RupSetPropertyBackfill {
                 props.setColIndex(Integer.parseInt(m.group(1)));
                 props.setRowIndex(Integer.parseInt(m.group(2)));
                 section.setAveRake(90);
+                section.setTectonicRegionType(TectonicRegionType.SUBDUCTION_INTERFACE);
                 if (section.getSectionName().contains("Hikurangi")) {
                     props.setPartition(PartitionPredicate.HIKURANGI);
                 } else if (section.getSectionName().contains("Puysegur")) {
@@ -71,6 +73,7 @@ public class RupSetPropertyBackfill {
             } else {
                 // Crustal section
                 props.setPartition(PartitionPredicate.CRUSTAL);
+                section.setTectonicRegionType(TectonicRegionType.ACTIVE_SHALLOW);
                 if (parentSections != null) {
                     NZFaultSection parent =
                             (NZFaultSection) parentSections.get(section.getParentSectionId());
