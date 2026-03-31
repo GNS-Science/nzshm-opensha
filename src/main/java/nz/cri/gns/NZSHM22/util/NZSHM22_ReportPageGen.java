@@ -13,6 +13,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
@@ -117,6 +118,8 @@ public class NZSHM22_ReportPageGen {
             }
         }
         possibleRupSetPlots.put("PartitionSummaryTable", new PartitionSummaryTable());
+        possiblePlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
+        possibleRupSetPlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
     }
 
     /**
