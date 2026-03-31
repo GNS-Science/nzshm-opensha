@@ -139,6 +139,11 @@ public class RuptureAccumulator {
         return this;
     }
 
+    public RuptureAccumulator addRupSets(Collection<FaultSystemRupSet> rupSets){
+        rupSets.forEach(this::add);
+        return this;
+    }
+
     static double[] toDoubleArray(List<Double> values) {
         double[] result = new double[values.size()];
         for (int i = 0; i < result.length; i++) {

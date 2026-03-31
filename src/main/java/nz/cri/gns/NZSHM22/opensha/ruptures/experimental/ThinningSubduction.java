@@ -134,40 +134,4 @@ public class ThinningSubduction {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        FaultSystemRupSet combined =
-                FaultSystemRupSet.load(
-                        new File("C:\\Users\\volkertj\\Code\\ruptureSets\\nzshm22_merged.zip"));
-
-        List<Integer> crustalIds = ThinningCrustal.filterCrustal(combined);
-
-        ThinningSubduction hikurangiThinning =
-                new ThinningSubduction(combined, s -> s.startsWith("Hikurangi"));
-        hikurangiThinning.filterByPosition();
-        hikurangiThinning.filterBySize(0.1);
-
-        System.out.println("hikurangi after thinning " + hikurangiThinning.getRuptures().size());
-
-        ThinningSubduction puysegurThinning =
-                new ThinningSubduction(combined, s -> s.startsWith("Puysegur"));
-        puysegurThinning.filterByPosition();
-        puysegurThinning.filterBySize(0.1);
-
-        System.out.println("puysegur after thinning " + puysegurThinning.getRuptures().size());
-
-        BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/filteredRuptures.txt"));
-        for (Integer r : crustalIds) {
-            writer.write("" + r);
-            writer.newLine();
-        }
-        for (Integer r : hikurangiThinning.getIds()) {
-            writer.write("" + r);
-            writer.newLine();
-        }
-        for (Integer r : puysegurThinning.getIds()) {
-            writer.write("" + r);
-            writer.newLine();
-        }
-        writer.close();
-    }
 }
