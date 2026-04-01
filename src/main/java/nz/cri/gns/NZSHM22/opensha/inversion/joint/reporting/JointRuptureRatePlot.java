@@ -141,9 +141,32 @@ public class JointRuptureRatePlot extends AbstractRupSetPlot {
             for (int b = 0; b < numBins; b++) {
                 func.set(b, bins[b]);
             }
-            func.setName(cat);
+            String legend = cat.contains("+") ? cat : cat + " only";
+            func.setName(legend);
             funcs.add(func);
             chars.add(new PlotCurveCharacterstics(PlotLineType.SOLID, 2f, COLORS.get(i)));
+        }
+
+        // Find smallest nonzero y value across all curves
+        double minNonZeroY = Double.MAX_VALUE;
+        for (DiscretizedFunc func : funcs) {
+            for (int b = 0; b < func.size(); b++) {
+                double y = func.getY(b);
+                if (y > 0 && y < minNonZeroY) {
+                    minNonZeroY = y;
+                }
+            }
+        }
+        Range yRange = null;
+        if (minNonZeroY < Double.MAX_VALUE) {
+            // Find max y for upper bound
+            double maxY = 0;
+            for (DiscretizedFunc func : funcs) {
+                for (int b = 0; b < func.size(); b++) {
+                    maxY = Math.max(maxY, func.getY(b));
+                }
+            }
+            yRange = new Range(minNonZeroY / 10.0, maxY * 2.0);
         }
 
         PlotSpec spec =
@@ -162,7 +185,7 @@ public class JointRuptureRatePlot extends AbstractRupSetPlot {
 
         HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
         gp.setTickLabelFontSize(20);
-        gp.drawGraphPanel(spec, false, true, xRange, null);
+        gp.drawGraphPanel(spec, false, true, xRange, yRange);
 
         String prefix = "joint_rupture_mfds";
         PlotUtils.writePlots(resourcesDir, prefix, gp, 1000, 850, true, true, false);
