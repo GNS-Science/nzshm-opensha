@@ -10,6 +10,8 @@ import org.jfree.data.Range;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.gui.plot.*;
+import org.opensha.commons.util.MarkdownUtils;
+import org.opensha.commons.util.MarkdownUtils.TableBuilder;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -80,6 +82,61 @@ public class JointRuptureRatePlot extends AbstractRupSetPlot {
         public double rateSum;
     }
 
+    /**
+     * Computes a log-scale y-range from the given functions. Returns null if all values are zero.
+     *
+     * @param funcs the functions to scan
+     * @return y-range with padding, or null if no positive values
+     */
+    protected static Range computeLogYRange(List<DiscretizedFunc> funcs) {
+        double minNonZeroY = Double.MAX_VALUE;
+        double maxY = 0;
+        for (DiscretizedFunc func : funcs) {
+            for (int b = 0; b < func.size(); b++) {
+                double y = func.getY(b);
+                if (y > 0) {
+                    if (y < minNonZeroY) minNonZeroY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+        if (minNonZeroY == Double.MAX_VALUE) return null;
+        return new Range(minNonZeroY / 10.0, maxY * 2.0);
+    }
+
+    /**
+     * Writes an MFD plot (incremental or cumulative) to disk.
+     *
+     * @param funcs the data series
+     * @param chars the line characteristics for each series
+     * @param title plot title
+     * @param yLabel y-axis label
+     * @param xRange x-axis range
+     * @param resourcesDir output directory
+     * @param prefix file name prefix
+     * @throws IOException if writing fails
+     */
+    protected static void writeMFDPlot(
+            List<DiscretizedFunc> funcs,
+            List<PlotCurveCharacterstics> chars,
+            String title,
+            String yLabel,
+            Range xRange,
+            File resourcesDir,
+            String prefix)
+            throws IOException {
+        PlotSpec spec = new PlotSpec(funcs, chars, title, "Magnitude", yLabel);
+        spec.setLegendInset(true);
+
+        Range yRange = computeLogYRange(funcs);
+
+        HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
+        gp.setTickLabelFontSize(20);
+        gp.drawGraphPanel(spec, false, true, xRange, yRange);
+
+        PlotUtils.writePlots(resourcesDir, prefix, gp, 1000, 850, true, true, false);
+    }
+
     @Override
     public String getName() {
         return "Joint Rupture Rates";
@@ -129,70 +186,73 @@ public class JointRuptureRatePlot extends AbstractRupSetPlot {
             }
         }
 
-        // Build MFD functions
-        List<DiscretizedFunc> funcs = new ArrayList<>();
-        List<PlotCurveCharacterstics> chars = new ArrayList<>();
+        // Build incremental MFD functions
+        List<IncrementalMagFreqDist> incrMFDs = new ArrayList<>();
+        List<DiscretizedFunc> incrFuncs = new ArrayList<>();
+        List<PlotCurveCharacterstics> incrChars = new ArrayList<>();
         for (int i = 0; i < CATEGORIES.size(); i++) {
             String cat = CATEGORIES.get(i);
             double[] bins = rateBins.get(cat);
-            EvenlyDiscretizedFunc func =
-                    new EvenlyDiscretizedFunc(
+            IncrementalMagFreqDist func =
+                    new IncrementalMagFreqDist(
                             templateMFD.getMinX(), numBins, templateMFD.getDelta());
             for (int b = 0; b < numBins; b++) {
                 func.set(b, bins[b]);
             }
             String legend = cat.contains("+") ? cat : cat + " only";
             func.setName(legend);
-            funcs.add(func);
-            chars.add(new PlotCurveCharacterstics(PlotLineType.SOLID, 2f, COLORS.get(i)));
+            incrMFDs.add(func);
+            incrFuncs.add(func);
+            incrChars.add(new PlotCurveCharacterstics(PlotLineType.SOLID, 2f, COLORS.get(i)));
         }
-
-        // Find smallest nonzero y value across all curves
-        double minNonZeroY = Double.MAX_VALUE;
-        for (DiscretizedFunc func : funcs) {
-            for (int b = 0; b < func.size(); b++) {
-                double y = func.getY(b);
-                if (y > 0 && y < minNonZeroY) {
-                    minNonZeroY = y;
-                }
-            }
-        }
-        Range yRange = null;
-        if (minNonZeroY < Double.MAX_VALUE) {
-            // Find max y for upper bound
-            double maxY = 0;
-            for (DiscretizedFunc func : funcs) {
-                for (int b = 0; b < func.size(); b++) {
-                    maxY = Math.max(maxY, func.getY(b));
-                }
-            }
-            yRange = new Range(minNonZeroY / 10.0, maxY * 2.0);
-        }
-
-        PlotSpec spec =
-                new PlotSpec(
-                        funcs,
-                        chars,
-                        "Joint Rupture MFDs",
-                        "Magnitude",
-                        "Incremental Rate (per yr)");
-        spec.setLegendInset(true);
 
         Range xRange =
                 new Range(
                         templateMFD.getMinX() - 0.5 * templateMFD.getDelta(),
                         templateMFD.getMaxX() + 0.5 * templateMFD.getDelta());
 
-        HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
-        gp.setTickLabelFontSize(20);
-        gp.drawGraphPanel(spec, false, true, xRange, yRange);
+        // Write incremental plot
+        String incrPrefix = "joint_rupture_mfds";
+        writeMFDPlot(
+                incrFuncs,
+                incrChars,
+                "Joint Rupture MFDs",
+                "Incremental Rate (per yr)",
+                xRange,
+                resourcesDir,
+                incrPrefix);
 
-        String prefix = "joint_rupture_mfds";
-        PlotUtils.writePlots(resourcesDir, prefix, gp, 1000, 850, true, true, false);
+        // Build cumulative MFD functions
+        List<DiscretizedFunc> cmlFuncs = new ArrayList<>();
+        List<PlotCurveCharacterstics> cmlChars = new ArrayList<>();
+        for (int i = 0; i < incrMFDs.size(); i++) {
+            EvenlyDiscretizedFunc cmlFunc = incrMFDs.get(i).getCumRateDistWithOffset();
+            cmlFunc.setName(incrMFDs.get(i).getName());
+            cmlFuncs.add(cmlFunc);
+            cmlChars.add(new PlotCurveCharacterstics(PlotLineType.SOLID, 2f, COLORS.get(i)));
+        }
 
-        // Build output
+        // Write cumulative plot
+        String cmlPrefix = "joint_rupture_mfds_cumulative";
+        writeMFDPlot(
+                cmlFuncs,
+                cmlChars,
+                "Joint Rupture Cumulative MFDs",
+                "Cumulative Rate (per yr)",
+                xRange,
+                resourcesDir,
+                cmlPrefix);
+
+        // Build output with side-by-side table
+        TableBuilder table = MarkdownUtils.tableBuilder();
+        table.addLine("Incremental MFDs", "Cumulative MFDs");
+        table.initNewLine();
+        table.addColumn("![Incremental Plot](" + relPathToResources + "/" + incrPrefix + ".png)");
+        table.addColumn("![Cumulative Plot](" + relPathToResources + "/" + cmlPrefix + ".png)");
+        table.finalizeLine();
+
         List<String> lines = new ArrayList<>();
-        lines.add("![Joint Rupture MFDs](" + relPathToResources + "/" + prefix + ".png)");
+        lines.addAll(table.build());
         lines.add("");
         lines.add("| Category | Total | With Rate > 0 | % With Rate | Rate Sum |");
         lines.add("|----------|------:|--------------:|------------:|---------:|");

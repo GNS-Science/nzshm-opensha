@@ -137,11 +137,12 @@ public class JointRuptureRatePlotTest {
         assertNotNull(lines);
         assertFalse(lines.isEmpty());
 
-        // Should contain image reference
-        assertTrue(lines.stream().anyMatch(l -> l.contains("joint_rupture_mfds.png")));
-
-        // Should contain table with all 5 categories
+        // Should contain side-by-side table with incremental and cumulative image references
         String allText = String.join("\n", lines);
+        assertTrue(allText.contains("joint_rupture_mfds.png"));
+        assertTrue(allText.contains("joint_rupture_mfds_cumulative.png"));
+        assertTrue(allText.contains("Incremental MFDs"));
+        assertTrue(allText.contains("Cumulative MFDs"));
         assertTrue(allText.contains("CRUSTAL+HIKURANGI"));
         assertTrue(allText.contains("CRUSTAL+PUYSEGUR"));
 
@@ -163,7 +164,8 @@ public class JointRuptureRatePlotTest {
                         .orElseThrow();
         assertTrue(jointRow.contains("| 1 | 1 |"));
 
-        // PNG file should have been written
+        // PNG files should have been written
         assertTrue(new File(resourcesDir, "joint_rupture_mfds.png").exists());
+        assertTrue(new File(resourcesDir, "joint_rupture_mfds_cumulative.png").exists());
     }
 }
