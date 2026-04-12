@@ -1,25 +1,28 @@
 # Ubiquitous Language
 
+The "aliases to avoid" column can also be used to look up definitions if these aliases as still accidentally used.
+
 ## Seismic model structure
 
-| Term | Definition | Aliases to avoid |
-| ---- | ---------- | ---------------- |
-| **Rupture Set** | A collection of all possible earthquake ruptures on a set of faults | Rup set |
-| **Rupture** | A single hypothetical earthquake event defined by which fault sections break together | Event, earthquake |
-| **Fault Section** | A discrete segment of a fault surface used as a building block for ruptures | Section, subsection, fault segment |
-| **Fault** | A geological fracture along which displacement occurs | |
-| **Solution** | The result of an inversion: a rupture set with assigned annual rates for each rupture | Inversion result |
-| **Inversion** | The process of solving for rupture rates that satisfy slip-rate and MFD constraints via simulated annealing | |
+| Term              | Definition                                                                                                  | Aliases to avoid       |
+|-------------------|-------------------------------------------------------------------------------------------------------------|------------------------|
+| **Rupture Set**   | A collection of all possible earthquake ruptures on a set of faults                                         |                        |
+| **Rupture**       | A single hypothetical earthquake event defined by which fault sections break together                       | Event, earthquake      |
+| **Fault Section** | A discrete segment of a fault surface used as a building block for ruptures                                 | Section, fault segment |
+| **Sub Section**   | A subdivision of a fault section                                                                           |                        |
+| **Fault**         | A geological fracture along which displacement occurs                                                       |                        |
+| **Solution**      | The result of an inversion: a rupture set with assigned annual rates for each rupture                       | Inversion result       |
+| **Inversion**     | The process of solving for rupture rates that satisfy slip-rate and MFD constraints via simulated annealing |                        |
 
 ## Partitions and tectonic domains
 
-| Term | Definition | Aliases to avoid |
-| ---- | ---------- | ---------------- |
-| **Partition** | A tectonic grouping of fault sections (CRUSTAL, HIKURANGI, PUYSEGUR, TVZ, SANS_TVZ) | Region, domain, zone |
-| **Crustal** | The shallow tectonic domain encompassing all non-subduction faults (TVZ + SANS_TVZ) | |
-| **Subduction** | A tectonic domain where one plate descends beneath another (HIKURANGI or PUYSEGUR) | Interface |
-| **Joint Rupture** | A rupture whose fault sections span more than one partition (e.g. crustal + subduction) | Shared rupture, multi-partition rupture |
-| **Exclusive Rupture** | A rupture whose fault sections all belong to a single partition | Single-partition rupture |
+| Term | Definition                                                                                                                        | Aliases to avoid |
+| ---- |-----------------------------------------------------------------------------------------------------------------------------------| ---------------- |
+| **Partition** | A tectonic grouping of fault sections (CRUSTAL, HIKURANGI, PUYSEGUR, TVZ, SANS_TVZ)                                               | Region, domain, zone |
+| **Crustal** | The shallow tectonic domain encompassing all non-subduction faults (TVZ + SANS_TVZ)                                               | |
+| **Subduction** | Fault network created by the the interface between two plates where one is subducting beneith the other (HIKURANGI or PUYSEGUR) | Interface |
+| **Joint Rupture** | A rupture whose fault sections span more than one partition (e.g. crustal + subduction)                                           | Shared rupture, multi-partition rupture |
+| **Exclusive Rupture** | A rupture whose fault sections all belong to a single partition                                                                   | Single-partition rupture |
 
 ## Rates and distributions
 
@@ -35,7 +38,7 @@
 
 | Term | Definition | Aliases to avoid |
 | ---- | ---------- | ---------------- |
-| **Magnitude** | A measure of earthquake energy release (moment magnitude scale) | Mag |
+| **Magnitude** | Moment magnitude; a logarithmic measure of earthquake size, related to total energy of the earthquake. | Mag |
 | **Scaling Relation** | A formula relating rupture area (or length) to magnitude | Mag-area relation |
 | **Crustal Area Fraction** | The proportion of a joint rupture's total area contributed by crustal fault sections | Area ratio |
 
@@ -55,8 +58,7 @@
 - A **Joint Rupture** spans exactly two **Partitions** (one crustal, one subduction)
 - An **Exclusive Rupture** belongs to exactly one **Partition**
 - A **Solution** assigns a **Rate** to every **Rupture** in a **Rupture Set**
-- An **MFD** is derived from a **Solution** by binning **Rates** by **Magnitude**
-- A **Cumulative MFD** is derived from an **Incremental MFD**
+- An **MFD** can be used to create inversion constraints. It can also be derived from a **Solution** by binning **Rates** by **Magnitude** A **Cumulative MFD** is derived from an **Incremental MFD**
 
 ## Example dialogue
 

@@ -83,25 +83,28 @@ public class JointRuptureRatePlot extends AbstractRupSetPlot {
     }
 
     /**
-     * Computes a log-scale y-range from the given functions. Returns null if all values are zero.
+     * Computes a log-scale y-range from the given functions, snapping to decade boundaries as in
+     * {@link SolMFDPlot}. Returns null if all values are zero.
      *
      * @param funcs the functions to scan
-     * @return y-range with padding, or null if no positive values
+     * @return y-range on decade boundaries, or null if no positive values
      */
     protected static Range computeLogYRange(List<DiscretizedFunc> funcs) {
-        double minNonZeroY = Double.MAX_VALUE;
-        double maxY = 0;
+        double minY = 1e-6;
+        double maxY = 1e1;
+        boolean hasData = false;
         for (DiscretizedFunc func : funcs) {
             for (int b = 0; b < func.size(); b++) {
                 double y = func.getY(b);
-                if (y > 0) {
-                    if (y < minNonZeroY) minNonZeroY = y;
-                    if (y > maxY) maxY = y;
+                if (y > 1e-10) {
+                    minY = Math.min(minY, Math.pow(10, Math.floor(Math.log10(y) + 0.1)));
+                    maxY = Math.max(maxY, Math.pow(10, Math.ceil(Math.log10(y) - 0.1)));
+                    hasData = true;
                 }
             }
         }
-        if (minNonZeroY == Double.MAX_VALUE) return null;
-        return new Range(minNonZeroY / 10.0, maxY * 2.0);
+        if (!hasData) return null;
+        return new Range(minY, maxY);
     }
 
     /**
