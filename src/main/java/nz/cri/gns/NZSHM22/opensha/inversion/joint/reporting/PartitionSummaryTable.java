@@ -1,10 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import org.jfree.data.Range;
+import org.opensha.commons.data.function.DiscretizedFunc;
+import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
+import org.opensha.commons.gui.plot.*;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -92,9 +97,132 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
                 sectionCounts, exclusiveCounts, sharedCounts, multiPartitionTotal);
     }
 
+    /** Number of bins for the crustal area fraction histogram. */
+    protected static final int NUM_BINS = 20;
+
+    /** Bin width for the crustal area fraction histogram. */
+    protected static final double BIN_WIDTH = 1.0 / NUM_BINS;
+
+    /**
+     * Computes the crustal area fraction for each joint (multi-partition) rupture.
+     *
+     * @param rupSet the rupture set to analyse
+     * @return list of crustal area fractions (each in [0, 1]) for joint ruptures only
+     */
+    protected static List<Double> computeCrustalFractions(FaultSystemRupSet rupSet) {
+        List<Double> fractions = new ArrayList<>();
+        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+            List<Integer> secIndices = rupSet.getSectionsIndicesForRup(r);
+            Set<PartitionPredicate> partitions = EnumSet.noneOf(PartitionPredicate.class);
+            for (int secIdx : secIndices) {
+                PartitionPredicate p =
+                        FaultSectionProperties.getPartition(rupSet.getFaultSectionData(secIdx));
+                if (p != null) {
+                    partitions.add(p);
+                }
+            }
+            if (partitions.size() <= 1) {
+                continue;
+            }
+            double crustalArea = 0;
+            double totalArea = 0;
+            for (int secIdx : secIndices) {
+                double area = rupSet.getAreaForSection(secIdx);
+                totalArea += area;
+                FaultSection section = rupSet.getFaultSectionData(secIdx);
+                if (FaultSectionProperties.isCrustal(section)) {
+                    crustalArea += area;
+                }
+            }
+            if (totalArea > 0) {
+                fractions.add(crustalArea / totalArea);
+            }
+        }
+        return fractions;
+    }
+
+    /**
+     * Bins crustal area fractions into a histogram function.
+     *
+     * @param fractions list of crustal area fractions
+     * @return histogram function with {@link #NUM_BINS} bins spanning [0, 1]
+     */
+    protected static EvenlyDiscretizedFunc binFractions(List<Double> fractions) {
+        EvenlyDiscretizedFunc func =
+                new EvenlyDiscretizedFunc(BIN_WIDTH / 2.0, NUM_BINS, BIN_WIDTH);
+        for (double f : fractions) {
+            int bin = func.getClosestXIndex(f);
+            func.set(bin, func.getY(bin) + 1);
+        }
+        return func;
+    }
+
+    /**
+     * Creates the histogram plot and writes it to disk.
+     *
+     * @param primaryFunc histogram function for the primary rupture set
+     * @param compFunc histogram function for the comparison rupture set, or null
+     * @param primaryName display name for the primary series
+     * @param compName display name for the comparison series, or null
+     * @param resourcesDir directory to write plot files
+     * @return the file prefix used for the plot
+     * @throws IOException if writing fails
+     */
+    protected static String writeHistogram(
+            EvenlyDiscretizedFunc primaryFunc,
+            EvenlyDiscretizedFunc compFunc,
+            String primaryName,
+            String compName,
+            File resourcesDir)
+            throws IOException {
+        List<DiscretizedFunc> funcs = new ArrayList<>();
+        List<PlotCurveCharacterstics> chars = new ArrayList<>();
+
+        if (compFunc != null) {
+            primaryFunc.setName(primaryName);
+            compFunc.setName(compName);
+            funcs.add(primaryFunc);
+            chars.add(new PlotCurveCharacterstics(PlotLineType.HISTOGRAM, 1f, Color.BLUE));
+            funcs.add(compFunc);
+            chars.add(new PlotCurveCharacterstics(PlotLineType.HISTOGRAM, 1f, Color.RED.darker()));
+        } else {
+            funcs.add(primaryFunc);
+            chars.add(new PlotCurveCharacterstics(PlotLineType.HISTOGRAM, 1f, Color.BLUE));
+        }
+
+        PlotSpec spec =
+                new PlotSpec(
+                        funcs,
+                        chars,
+                        "Joint Rupture Crustal Area Fraction",
+                        "Crustal Area Fraction",
+                        "Count");
+        if (compFunc != null) {
+            spec.setLegendInset(true);
+        }
+
+        double maxY = 0;
+        for (DiscretizedFunc f : funcs) {
+            for (int i = 0; i < f.size(); i++) {
+                maxY = Math.max(maxY, f.getY(i));
+            }
+        }
+
+        Range xRange = new Range(0, 1);
+        Range yRange = new Range(0, maxY * 1.05);
+
+        HeadlessGraphPanel gp = PlotUtils.initHeadless(PlotPreferences.getDefaultAppPrefs());
+        gp.setTickLabelFontSize(20);
+        gp.drawGraphPanel(spec, false, false, xRange, yRange);
+
+        String prefix = "joint_area_ratio";
+        PlotUtils.writePlots(resourcesDir, prefix, gp, 1000, 850, true, true, false);
+        return prefix;
+    }
+
     @Override
     public String getName() {
-        return "Ruptures Summary";
+        return "Joint Rupture Summary";
     }
 
     @Override
@@ -170,6 +298,34 @@ public class PartitionSummaryTable extends AbstractRupSetPlot {
                     String.format(
                             "| **Total** | **%,d** | **%,d** |",
                             exclTotal, primary.multiPartitionTotal));
+        }
+
+        // Histogram of crustal area fraction for joint ruptures
+        List<Double> primaryFractions = computeCrustalFractions(rupSet);
+        if (!primaryFractions.isEmpty()) {
+            EvenlyDiscretizedFunc primaryFunc = binFractions(primaryFractions);
+            EvenlyDiscretizedFunc compFunc = null;
+            String primaryName = null;
+            String compName = null;
+            if (hasComparison) {
+                List<Double> compFractions = computeCrustalFractions(meta.comparison.rupSet);
+                if (!compFractions.isEmpty()) {
+                    compFunc = binFractions(compFractions);
+                    primaryName = meta.primary.name;
+                    compName = meta.comparison.name;
+                }
+            }
+            String prefix =
+                    writeHistogram(primaryFunc, compFunc, primaryName, compName, resourcesDir);
+            lines.add(
+                    "!["
+                            + "Joint Rupture Crustal Area Fraction"
+                            + "]("
+                            + relPathToResources
+                            + "/"
+                            + prefix
+                            + ".png)");
+            lines.add("");
         }
 
         return lines;

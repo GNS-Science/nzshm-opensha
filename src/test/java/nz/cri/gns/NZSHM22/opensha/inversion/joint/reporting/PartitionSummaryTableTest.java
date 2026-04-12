@@ -10,6 +10,7 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.junit.Test;
+import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.geo.Location;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -268,6 +269,99 @@ public class PartitionSummaryTableTest {
         assertTrue(
                 "Primary 0 excl, comp 1: " + hikurangiRow,
                 hikurangiRow.contains("| 0 | 1 | 0 | 0 |"));
+    }
+
+    /** Tests that computeCrustalFractions returns correct fractions for joint ruptures only. */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testComputeCrustalFractions() {
+        GeoJSONFaultSection s0 = makeSection(0, PartitionPredicate.CRUSTAL);
+        GeoJSONFaultSection s1 = makeSection(1, PartitionPredicate.HIKURANGI);
+        GeoJSONFaultSection s2 = makeSection(2, PartitionPredicate.CRUSTAL);
+
+        List sections = Arrays.asList(s0, s1, s2);
+
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getFaultSectionDataList()).thenReturn(sections);
+        when(rupSet.getNumRuptures()).thenReturn(2);
+
+        // Rup 0: exclusive CRUSTAL — should be skipped
+        when(rupSet.getSectionsIndicesForRup(0)).thenReturn(Arrays.asList(0, 2));
+        when(rupSet.getFaultSectionData(0)).thenReturn(s0);
+        when(rupSet.getFaultSectionData(2)).thenReturn(s2);
+
+        // Rup 1: joint CRUSTAL+HIKURANGI (sections 0, 1)
+        when(rupSet.getSectionsIndicesForRup(1)).thenReturn(Arrays.asList(0, 1));
+        when(rupSet.getFaultSectionData(1)).thenReturn(s1);
+
+        // Section 0 (crustal): area 300, Section 1 (hikurangi): area 700
+        when(rupSet.getAreaForSection(0)).thenReturn(300.0);
+        when(rupSet.getAreaForSection(1)).thenReturn(700.0);
+        when(rupSet.getAreaForSection(2)).thenReturn(500.0);
+
+        List<Double> fractions = PartitionSummaryTable.computeCrustalFractions(rupSet);
+
+        assertEquals("Only joint ruptures should be included", 1, fractions.size());
+        assertEquals(0.3, fractions.get(0), 1e-9);
+    }
+
+    /** Tests that binFractions correctly bins fractions into the histogram. */
+    @Test
+    public void testBinFractions() {
+        List<Double> fractions = Arrays.asList(0.1, 0.12, 0.9, 0.5);
+        EvenlyDiscretizedFunc func = PartitionSummaryTable.binFractions(fractions);
+
+        assertEquals(PartitionSummaryTable.NUM_BINS, func.size());
+
+        // 0.1 and 0.12 should both land in bin centered at 0.125 (bin index 2)
+        assertEquals(2.0, func.getY(2), 1e-9);
+
+        // 0.5 should land in bin centered at 0.525 (bin index 10)
+        assertEquals(1.0, func.getY(10), 1e-9);
+
+        // 0.9 should land in bin centered at 0.925 (bin index 18)
+        assertEquals(1.0, func.getY(18), 1e-9);
+    }
+
+    /** Tests that plot includes histogram image when joint ruptures have nonzero area. */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testPlotIncludesHistogram() throws Exception {
+        GeoJSONFaultSection s0 = makeSection(0, PartitionPredicate.CRUSTAL);
+        GeoJSONFaultSection s1 = makeSection(1, PartitionPredicate.HIKURANGI);
+
+        List sections = Arrays.asList(s0, s1);
+
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getFaultSectionDataList()).thenReturn(sections);
+        when(rupSet.getNumRuptures()).thenReturn(1);
+
+        // One joint rupture
+        when(rupSet.getSectionsIndicesForRup(0)).thenReturn(Arrays.asList(0, 1));
+        when(rupSet.getFaultSectionData(0)).thenReturn(s0);
+        when(rupSet.getFaultSectionData(1)).thenReturn(s1);
+        when(rupSet.getAreaForSection(0)).thenReturn(400.0);
+        when(rupSet.getAreaForSection(1)).thenReturn(600.0);
+
+        File tempDir =
+                new File(System.getProperty("java.io.tmpdir"), "pst_test_" + System.nanoTime());
+        tempDir.mkdirs();
+
+        try {
+            PartitionSummaryTable table = new PartitionSummaryTable();
+            List<String> lines =
+                    table.plot(rupSet, null, (ReportMetadata) null, tempDir, "resources", null);
+
+            String allText = String.join("\n", lines);
+            assertTrue("Should contain table", allText.contains("Partition"));
+            assertTrue("Should contain histogram image", allText.contains("joint_area_ratio.png"));
+        } finally {
+            // Clean up temp files
+            for (File f : tempDir.listFiles()) {
+                f.delete();
+            }
+            tempDir.delete();
+        }
     }
 
     /**
