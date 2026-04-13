@@ -1,10 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
 import com.google.common.base.Preconditions;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -133,5 +129,4 @@ public class ThinningSubduction {
             return ruptureIndices.get(rupture);
         }
     }
-
 }

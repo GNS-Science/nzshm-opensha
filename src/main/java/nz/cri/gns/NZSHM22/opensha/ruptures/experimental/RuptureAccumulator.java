@@ -139,7 +139,7 @@ public class RuptureAccumulator {
         return this;
     }
 
-    public RuptureAccumulator addRupSets(Collection<FaultSystemRupSet> rupSets){
+    public RuptureAccumulator addRupSets(Collection<FaultSystemRupSet> rupSets) {
         rupSets.forEach(this::add);
         return this;
     }

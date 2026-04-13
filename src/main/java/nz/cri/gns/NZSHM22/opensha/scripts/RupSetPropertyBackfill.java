@@ -39,7 +39,8 @@ public class RupSetPropertyBackfill {
         return backfill(rupSet);
     }
 
-    public static FaultSystemRupSet backfill(FaultSystemRupSet rupSet) throws IOException, DocumentException{
+    public static FaultSystemRupSet backfill(FaultSystemRupSet rupSet)
+            throws IOException, DocumentException {
 
         // Try to get fault model from logic tree branch for crustal lookups
         NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);

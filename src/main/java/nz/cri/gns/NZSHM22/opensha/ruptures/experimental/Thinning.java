@@ -1,16 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
 public class Thinning {
 
-    public static class Config{
+    public static class Config {
         public String ruptureSetFileName;
         public String outputFileName;
         public boolean hikurangiPosition = true;
@@ -28,10 +27,10 @@ public class Thinning {
 
         ThinningSubduction hikurangiThinning =
                 new ThinningSubduction(rupSet, s -> s.startsWith("Hikurangi"));
-        if(config.hikurangiPosition) {
+        if (config.hikurangiPosition) {
             hikurangiThinning.filterByPosition();
         }
-        if(config.hikurangiSize != null) {
+        if (config.hikurangiSize != null) {
             hikurangiThinning.filterBySize(config.hikurangiSize);
         }
 
@@ -39,10 +38,10 @@ public class Thinning {
 
         ThinningSubduction puysegurThinning =
                 new ThinningSubduction(rupSet, s -> s.startsWith("Puysegur"));
-        if(config.puysegurPosition) {
+        if (config.puysegurPosition) {
             puysegurThinning.filterByPosition();
         }
-        if(config.puysegurSize!=null) {
+        if (config.puysegurSize != null) {
             puysegurThinning.filterBySize(config.puysegurSize);
         }
 

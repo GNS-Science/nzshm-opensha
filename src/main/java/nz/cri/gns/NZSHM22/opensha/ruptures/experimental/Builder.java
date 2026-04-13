@@ -1,15 +1,14 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures.experimental;
 
-import nz.cri.gns.NZSHM22.opensha.scripts.RupSetPropertyBackfill;
-import org.dom4j.DocumentException;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.RuptureMerger;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.scripts.RupSetPropertyBackfill;
+import org.dom4j.DocumentException;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.RuptureMerger;
 
 public class Builder {
 
@@ -19,12 +18,13 @@ public class Builder {
         return tempFile;
     }
 
-    public static void buildJointRuptures(List<String> ruptureSets, boolean backfill) throws IOException, DocumentException {
+    public static void buildJointRuptures(List<String> ruptureSets, boolean backfill)
+            throws IOException, DocumentException {
         List<FaultSystemRupSet> rupSets = new ArrayList<>();
-        for(String fileName: ruptureSets){
-            if(backfill){
+        for (String fileName : ruptureSets) {
+            if (backfill) {
                 rupSets.add(RupSetPropertyBackfill.backfill(fileName));
-            } else{
+            } else {
                 rupSets.add(FaultSystemRupSet.load(new File(fileName)));
             }
         }
@@ -43,6 +43,5 @@ public class Builder {
         ruptureMergerConfig.ruptureSet = new File(thinningConfig.ruptureSetFileName);
         ruptureMergerConfig.filterFile = new File(thinningConfig.outputFileName);
         RuptureMerger.merge(ruptureMergerConfig);
-
     }
 }
