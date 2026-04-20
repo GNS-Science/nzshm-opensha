@@ -57,7 +57,7 @@ public class InversionRunner {
 
         // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
         FaultSystemSolution solution = runner.run();
-        solution.write(new File("/work/inversionSolution.zip"));
+        solution.write(new File("/tmp/inversionSolution.zip"));
 
         System.out.println(TraceTool.getTraces());
     }
