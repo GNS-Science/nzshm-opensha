@@ -10,6 +10,7 @@ import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.multiRupture.RuptureMerger;
 
+/** Joint Rupture Builder */
 public class Builder {
 
     public static File makeTempFile(FaultSystemRupSet rupSet) throws IOException {
@@ -18,6 +19,17 @@ public class Builder {
         return tempFile;
     }
 
+    /**
+     * Takes a list of NZSHM22-style rupture sets and creates a joint rupture set. - backfills
+     * properties if input sets are old - accumulates the sets into a single rupture set - applies
+     * thinning (i.e. creates a thinning file for RuptureMerger) - calls RuptureMerger to create a
+     * joint rupture set
+     *
+     * @param ruptureSets a list of rupture sets
+     * @param backfill whether to backfill properties on the input rupture sets
+     * @throws IOException
+     * @throws DocumentException
+     */
     public static void buildJointRuptures(List<String> ruptureSets, boolean backfill)
             throws IOException, DocumentException {
         List<FaultSystemRupSet> rupSets = new ArrayList<>();

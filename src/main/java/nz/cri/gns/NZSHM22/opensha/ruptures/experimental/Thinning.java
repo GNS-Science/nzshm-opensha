@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
+/** Orchestrates thinning of crustal and subduction rupture sets as inputs for RuptureMerger */
 public class Thinning {
 
     public static class Config {
