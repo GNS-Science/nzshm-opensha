@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
+import nz.cri.gns.NZSHM22.opensha.ruptures.experimental.rsqsims.CoulombTester;
 import nz.cri.gns.NZSHM22.opensha.timeDependent.TimeDependentRatesGenerator;
 import nz.cri.gns.NZSHM22.util.GitVersion;
 import nz.cri.gns.NZSHM22.util.NZSHM22_ReportPageGen;
@@ -22,6 +23,7 @@ import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import py4j.GatewayServer;
 
 /** A py4j gateway for building ruptures and running inversions. */
@@ -273,5 +275,18 @@ public class NZSHM22_PythonGateway {
      */
     public static void initJupyterLogger(String basePath) {
         JupyterLogger.initialise(basePath);
+    }
+
+    public static FaultSystemRupSet loadRupSet(String fileName) throws IOException {
+        return FaultSystemRupSet.load(new File(fileName));
+    }
+
+    public static ClusterRuptures getRuptures(FaultSystemRupSet rupSet) {
+        return rupSet.getModule(ClusterRuptures.class);
+    }
+
+    public static CoulombTester getCoulombTester(FaultSystemRupSet rupSet, String cacheFile)
+            throws IOException {
+        return new CoulombTester(rupSet, cacheFile);
     }
 }
