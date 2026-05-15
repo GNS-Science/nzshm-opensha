@@ -33,6 +33,7 @@ public class FaultIdFilter implements PlausibilityFilter {
     private final PlausibilityPredicate predicate;
     private final FilterType
             filterType; // this is only stored here so that it gets documented in the rupture set
+
     // zip
     // file
 

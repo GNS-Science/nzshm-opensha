@@ -1,13 +1,15 @@
 plugins {
     id 'pmd'
-    id 'com.diffplug.spotless' version '6.13.0'
+    id 'com.diffplug.spotless' version '6.25.0'
     id 'jacoco'
 }
 
 apply plugin: 'java-library'
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 compileJava.options.encoding = "UTF-8"
 
 apply from: '../opensha/build-git.gradle'
@@ -67,14 +69,14 @@ dependencies {
 repositories {
     mavenCentral()
     maven {
-        url "https://code.usgs.gov/api/v4/groups/1352/-/packages/maven"
-        name "NSHMP GitLab Group"
+        url = "https://code.usgs.gov/api/v4/groups/1352/-/packages/maven"
+        name = "NSHMP GitLab Group"
     }
 }
 
 configurations {
     apiResolvable {
-        description 'resolvable extension of the api classpath'
+        description = 'resolvable extension of the api classpath'
         canBeResolved = true
         extendsFrom api
     }
@@ -200,7 +202,7 @@ task pmd(type: GradleBuild) {
 
 test {
     // exclude expensive opensha tests unless flag is set on command line
-    if (!providers.gradleProperty("openshaTest").forUseAtConfigurationTime().isPresent()) {
+    if (!providers.gradleProperty("openshaTest").isPresent()) {
         project.gradle.startParameter.excludedTaskNames.add("opensha:test")
     }
     filter {
@@ -229,7 +231,7 @@ spotless {
     java {
         removeUnusedImports()
         // apply AOSP code style https://source.android.com/docs/setup/contribute/code-style
-        googleJavaFormat().aosp()
+        googleJavaFormat("1.18.1").aosp()
     }
 }
 
