@@ -13,6 +13,7 @@ import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
 public class SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
 
     public static final String NAME = "SimplifiedScalingNZNSHM_2021";
+
     /** Regime is either CRUSTAL or INTERFACE */
     protected FaultRegime faultRegime = FaultRegime.CRUSTAL;
 

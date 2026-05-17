@@ -1,8 +1,5 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-in your chat answers, be extremely concise, sacrificing correct grammar.
+Be  brief.
+Use LSP.
 
 ## Project Overview
 

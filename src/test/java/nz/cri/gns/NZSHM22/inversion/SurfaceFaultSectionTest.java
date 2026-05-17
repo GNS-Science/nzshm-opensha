@@ -23,6 +23,7 @@ public class SurfaceFaultSectionTest {
     private static FaultSection fs0;
 
     private static final double grid_disc = 5d;
+
     // TODO move to a utils class
     private static FaultSectionPrefData buildFSD(
             FaultTrace trace, double upper, double lower, double dip) {

@@ -229,6 +229,7 @@ public class NZSHM22_PythonGateway {
             solution.write(solutionFile);
         }
     }
+
     /** Python helper that wraps NZSHM22_InversionRunner */
     public static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
         FaultSystemSolution solution = null;
