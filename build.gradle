@@ -91,8 +91,6 @@ jar {
 sourceSets {
 
     intTest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
         java {
             srcDirs = ['src/integration/java']
         }
@@ -103,8 +101,6 @@ sourceSets {
     }
 
     smokeTest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
         java {
             srcDirs = ['src/smokeTest/java']
         }
@@ -119,8 +115,10 @@ configurations {
 }
 
 dependencies {
+    intTestImplementation sourceSets.main.output
     intTestImplementation 'junit:junit:4.12'
     intTestImplementation 'com.google.jimfs:jimfs:1.1'
+    smokeTestImplementation sourceSets.main.output
     smokeTestImplementation 'junit:junit:4.12'
 }
 
