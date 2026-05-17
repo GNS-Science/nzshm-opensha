@@ -18,6 +18,7 @@ import org.opensha.commons.calc.magScalingRelations.MagAreaRelationship;
 public class Stirling_2021_SimplifiedNZ_MagAreaRel extends MagAreaRelationship {
 
     public static final String NAME = "SimplifiedScalingNZNSHM_2021";
+
     /** Regime is either CRUSTAL or INTERFACE */
     protected Stirling_2021_SimplifiedNZ_FaultRegime faultRegime = CRUSTAL;
 
