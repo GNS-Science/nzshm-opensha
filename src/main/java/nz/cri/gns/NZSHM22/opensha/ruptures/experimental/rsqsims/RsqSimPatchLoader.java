@@ -384,7 +384,9 @@ public class RsqSimPatchLoader {
 
         String fileName = basePath + "zfault_Deepen.in";
         String namesFileName = basePath + "znames_Deepen.in";
-        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
+        // String rupSetFileName = "C:\\Users\\user\\GNS\\rupture
+        // sets\\nzshm22_complete_merged.zip";
+        String rupSetFileName = "/home/volkertj/Data/ruptureSets/nzshm22_complete_merged.zip";
 
         PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.UTM(59, false));
         RsqSimPatchLoader patchLoader =

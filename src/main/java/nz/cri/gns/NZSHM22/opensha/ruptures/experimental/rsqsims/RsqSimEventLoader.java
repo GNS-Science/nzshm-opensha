@@ -110,7 +110,6 @@ public class RsqSimEventLoader {
 
     public List<Event> getJointRuptures() {
         return jointEvents.stream()
-                .filter(Event::isJointRupture)
                 .peek(event -> event.sections = toFaultSections(event))
                 .filter(Event::isOpenShaJointRupture)
                 .collect(Collectors.toList());

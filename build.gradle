@@ -99,7 +99,7 @@ sourceSets {
         }
 
         resources {
-            srcDirs = ['src/integration/resources', 'src/main/java']
+            srcDirs = ['src/integration/resources']
         }
     }
 

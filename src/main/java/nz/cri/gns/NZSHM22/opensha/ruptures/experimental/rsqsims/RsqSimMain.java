@@ -229,7 +229,11 @@ public class RsqSimMain implements Closeable {
 
     public static void processBruce5942() throws IOException, FactoryException {
         RsqSimMain main =
-                new RsqSimMain("C:\\rsqsimsCatalogue\\", "rundir5942", SourceType.BRUCE, "/tmp/");
+                new RsqSimMain(
+                        "/home/volkertj/Data/rsqsimCatalogues/",
+                        "rundir5942",
+                        SourceType.BRUCE,
+                        "/tmp/");
         main.process();
         main.close();
     }
@@ -243,7 +247,7 @@ public class RsqSimMain implements Closeable {
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
-        //     processBruce5942();
-        processCanterbury();
+        processBruce5942();
+        // processCanterbury();
     }
 }

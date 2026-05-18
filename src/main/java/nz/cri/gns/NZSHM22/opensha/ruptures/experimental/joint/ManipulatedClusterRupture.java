@@ -57,12 +57,10 @@ public class ManipulatedClusterRupture extends ClusterRupture {
         return cluster.subSects.get(cluster.subSects.size() - 1);
     }
 
-    // FIXME use properties
     static boolean isCrustal(FaultSection section) {
         return !section.getSectionName().contains("row:");
     }
 
-    // FIXME use properties
     static boolean isSubduction(FaultSection section) {
         return section.getSectionName().contains("row:");
     }
