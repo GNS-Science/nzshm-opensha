@@ -15,6 +15,9 @@ compileJava.options.encoding = "UTF-8"
 apply from: '../opensha/build-git.gradle'
 
 dependencies {
+    implementation 'org.apache.sis.core:sis-referencing:1.4'
+    implementation 'org.apache.sis.non-free:sis-embedded-data:1.4'
+    implementation 'org.apache.sis.non-free:sis-epsg:1.4'
     /* no remote repo */
     implementation files('python/share/py4j/py4j0.10.9.1.jar', //Py4j jar installed locally  via `pip install py4j`
             'lib/openmap.jar')
@@ -96,7 +99,7 @@ sourceSets {
         }
 
         resources {
-            srcDirs = ['src/integration/resources', 'src/main/java']
+            srcDirs = ['src/integration/resources']
         }
     }
 

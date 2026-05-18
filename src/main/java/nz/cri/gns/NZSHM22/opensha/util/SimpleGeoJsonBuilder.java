@@ -21,6 +21,11 @@ public class SimpleGeoJsonBuilder {
 
     List<Feature> features = new ArrayList<>();
 
+    public FeatureProperties addFeature(Feature feature) {
+        features.add(feature);
+        return feature.properties;
+    }
+
     public FeatureProperties addLocation(Location location) {
         FeatureProperties properties = new FeatureProperties();
         features.add(new Feature(new Geometry.Point(location), properties));
@@ -59,6 +64,21 @@ public class SimpleGeoJsonBuilder {
         return feature.properties;
     }
 
+    public FeatureProperties addFaultSectionPerimeter(FaultSection section) {
+        LocationList locations = section.getFaultSurface(1, false, false).getPerimeter();
+        FeatureProperties props = new FeatureProperties();
+        features.add(new Feature(new Geometry.LineString(locations), props));
+        return props;
+    }
+
+    public FeatureProperties addFaultSectionPolygon(FaultSection section) {
+        LocationList locations = section.getFaultSurface(1, false, false).getPerimeter();
+        FeatureProperties props =
+                new FeatureProperties(GeoJSONFaultSection.toFeature(section).properties);
+        features.add(new Feature(new Geometry.Polygon(locations), props));
+        return props;
+    }
+
     public FeatureProperties addLine(Location... locations) {
         LocationList locs = new LocationList();
         locs.addAll(Arrays.asList(locations));
@@ -91,6 +111,11 @@ public class SimpleGeoJsonBuilder {
             FeatureProperties props, String cssColour, double opacity) {
         props.set(FeatureProperties.STROKE_COLOR_PROP, cssColour);
         props.set(FeatureProperties.STROKE_OPACITY_PROP, opacity);
+        return props;
+    }
+
+    public FeatureProperties setPolygonColour(FeatureProperties props, String cssColour) {
+        props.set(FeatureProperties.FILL_COLOR_PROP, cssColour);
         return props;
     }
 
