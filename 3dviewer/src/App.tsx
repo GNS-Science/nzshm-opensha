@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState, useCallback} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import {buildTileTexture} from './geo/tiles';
 
 interface Bounds {
   minX: number; maxX: number;
@@ -28,12 +29,15 @@ export default function App() {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
+  const tileMeshRef = useRef<THREE.Mesh | null>(null);
+  const showTilesRef = useRef(true);
   const animRef = useRef<number>(0);
   const customDragRef = useRef(false); // true while our pick-orbit is active
 
   const [status, setStatus] = useState<Status>({text: 'Drop a .geojson file or use File → Open', loading: false});
   const [zScale, setZScale] = useState(1);
   const [wireframe, setWireframe] = useState(false);
+  const [showTiles, setShowTiles] = useState(true);
   const [fileName, setFileName] = useState('');
 
   // Initialize Three.js scene
@@ -98,6 +102,12 @@ export default function App() {
   useEffect(() => {
     if (groupRef.current) groupRef.current.scale.z = zScale;
   }, [zScale]);
+
+  // Tile visibility toggle
+  useEffect(() => {
+    showTilesRef.current = showTiles;
+    if (tileMeshRef.current) tileMeshRef.current.visible = showTiles;
+  }, [showTiles]);
 
   // Pick-to-orbit: orbit around the picked surface point with no translation.
   // Strategy: on each pointermove we recompute the full rotation R from the
@@ -228,7 +238,7 @@ export default function App() {
         return;
       }
 
-      const {positions, colors, vertexCount, bounds} = e.data;
+      const {positions, colors, vertexCount, bounds, origin} = e.data;
 
       const posArr = new Float32Array(positions);
       const colArr = new Float32Array(colors);
@@ -273,6 +283,45 @@ export default function App() {
       const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
       const triCount = (vertexCount / 3).toLocaleString();
       setStatus({text: `${triCount} triangles — loaded in ${elapsed}s`, loading: false});
+
+      // Remove previous tile mesh
+      const scene = sceneRef.current!;
+      if (tileMeshRef.current) {
+        (tileMeshRef.current.material as THREE.Material).dispose();
+        tileMeshRef.current.geometry.dispose();
+        scene.remove(tileMeshRef.current);
+        tileMeshRef.current = null;
+      }
+
+      // Fetch and place tile layer asynchronously
+      buildTileTexture(origin, bounds).then(({canvas, geoWest, geoEast, geoNorth, geoSouth}) => {
+        const cosLat = Math.cos(origin.lat0 * Math.PI / 180);
+        const enuMinX = (geoWest  - origin.lon0) * 111320 * cosLat;
+        const enuMaxX = (geoEast  - origin.lon0) * 111320 * cosLat;
+        const enuMinY = (geoSouth - origin.lat0) * 110540;
+        const enuMaxY = (geoNorth - origin.lat0) * 110540;
+
+        const width  = enuMaxX - enuMinX;
+        const height = enuMaxY - enuMinY;
+        const cx = (enuMinX + enuMaxX) / 2;
+        const cy = (enuMinY + enuMaxY) / 2;
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+        const geo = new THREE.PlaneGeometry(width, height);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(cx, cy, 1); // 1 m above surface to avoid z-fighting
+        mesh.visible = showTilesRef.current;
+        scene.add(mesh);
+        tileMeshRef.current = mesh;
+      }).catch(() => { /* tile fetch failed silently */ });
+
     };
 
     worker.onerror = (err) => {
@@ -318,6 +367,10 @@ export default function App() {
         <label style={{display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer'}}>
           <input type="checkbox" checked={wireframe} onChange={e => setWireframe(e.target.checked)} />
           Wireframe
+        </label>
+        <label style={{display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer'}}>
+          <input type="checkbox" checked={showTiles} onChange={e => setShowTiles(e.target.checked)} />
+          Tiles
         </label>
         <span style={{marginLeft: 'auto', opacity: status.loading ? 1 : 0.7}}>
           {status.loading && <span style={{marginRight: 6}}>⏳</span>}
