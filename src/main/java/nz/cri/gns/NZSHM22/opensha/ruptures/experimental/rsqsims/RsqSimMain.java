@@ -159,6 +159,8 @@ public class RsqSimMain implements Closeable {
         log("- joint events " + eventLoader.jointEvents.size());
         log("- reconstructed joint ruptures " + events.size());
 
+        eventLoader.debugBadJointRuptures();
+
         List<RsqSimEventLoader.Event> allSingleCrustalJointRuptures =
                 eventLoader.makeSingleJointRuptures(events);
 

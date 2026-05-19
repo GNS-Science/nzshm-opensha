@@ -56,6 +56,10 @@ public class Patch {
         return new Patch(id, locs, rake, slip, area, row);
     }
 
+    public boolean isSubduction() {
+        return sections.get(0).getSectionName().contains("row:");
+    }
+
     public Feature toFeature() {
         LocationList list = new LocationList();
         list.addAll(locations);
