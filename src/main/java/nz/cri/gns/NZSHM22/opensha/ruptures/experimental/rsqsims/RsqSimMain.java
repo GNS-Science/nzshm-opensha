@@ -243,13 +243,16 @@ public class RsqSimMain implements Closeable {
     public static void processCanterbury() throws IOException, FactoryException {
         RsqSimMain main =
                 new RsqSimMain(
-                        "C:\\rsqsimsCatalogue\\", "fromAndyH", SourceType.CANTERBURY, "/tmp/");
+                        "/home/volkertj/Data/rsqsimCatalogues/",
+                        "fromAndyH",
+                        SourceType.CANTERBURY,
+                        "/tmp/");
         main.process();
         main.close();
     }
 
     public static void main(String[] args) throws FactoryException, IOException {
-        processBruce5942();
-        // processCanterbury();
+        // processBruce5942();
+        processCanterbury();
     }
 }

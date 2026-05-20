@@ -15,6 +15,7 @@ public class Patch {
     public final double slip;
     public final double area;
     public int sectionIdFromZname = -1;
+    public boolean subduction;
 
     public String zname;
 
@@ -57,7 +58,7 @@ public class Patch {
     }
 
     public boolean isSubduction() {
-        return sections.get(0).getSectionName().contains("row:");
+        return subduction;
     }
 
     public Feature toFeature() {

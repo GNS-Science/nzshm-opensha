@@ -91,10 +91,13 @@ public class RsqSimPatchLoader {
         String line = null;
         while ((line = reader.readLine()) != null) {
             line = line.substring(4, line.length() - 3);
-            patches.get(index).zname = line;
+            Patch patch = patches.get(index);
+            patch.zname = line;
             String[] lineParts = line.split(" ");
             if (lineParts.length > 1) {
-                patches.get(index).sectionIdFromZname = Integer.parseInt(lineParts[0]);
+                patch.sectionIdFromZname = Integer.parseInt(lineParts[0]);
+            } else {
+                patch.subduction = line.equals(RSQSIMS_HIKURANGI) || line.equals(RSQSIMS_PUYSEGUR);
             }
             index++;
         }
@@ -187,7 +190,8 @@ public class RsqSimPatchLoader {
                 .forEach(this::findSubductionSections);
     }
 
-    void loadRupSetCanterbury(String mappingsFile, int sectionOffset) throws FileNotFoundException {
+    void loadRupSetCanterbury(String mappingsFile, int sectionOffset, boolean subduction)
+            throws FileNotFoundException {
         Map<Integer, List<Integer>> patchIds = UCMappingsFile.read(mappingsFile, sectionOffset);
 
         patchIds.keySet()
@@ -198,6 +202,7 @@ public class RsqSimPatchLoader {
                                             patchId -> {
                                                 Patch patch = patches.get(patchId - 1);
                                                 Preconditions.checkState(patch.id == patchId);
+                                                patch.subduction = subduction;
                                                 addSectionToPatch(
                                                         patch,
                                                         loadedRupSet.getFaultSectionData(
@@ -208,9 +213,9 @@ public class RsqSimPatchLoader {
 
     public void loadRupSetCanterbury(String basePath) throws IOException {
         loadedRupSet = FaultSystemRupSet.load(this.rupSet);
-        loadRupSetCanterbury(basePath + "rsqsim_crustal_discretized_trimmed_dict.json", 0);
-        loadRupSetCanterbury(basePath + "hikkerm_discretized_trimmed_dict.json", 2596);
-        loadRupSetCanterbury(basePath + "puysegur_discretized_trimmed_dict.json", 2325);
+        loadRupSetCanterbury(basePath + "rsqsim_crustal_discretized_trimmed_dict.json", 0, false);
+        loadRupSetCanterbury(basePath + "hikkerm_discretized_trimmed_dict.json", 2596, true);
+        loadRupSetCanterbury(basePath + "puysegur_discretized_trimmed_dict.json", 2325, true);
     }
 
     /**
@@ -407,8 +412,9 @@ public class RsqSimPatchLoader {
         String fileName = basePath + "whole_nz_faults_2500_tapered_slip.flt";
         String namesFileName = basePath + "znames_Deepen.in";
 
-        String rupSetFileName = "C:\\Users\\user\\GNS\\rupture sets\\nzshm22_complete_merged.zip";
-
+        // String rupSetFileName = "C:\\Users\\user\\GNS\\rupture
+        // sets\\nzshm22_complete_merged.zip";
+        String rupSetFileName = "/home/volkertj/Data/ruptureSets/nzshm22_complete_merged.zip";
         PatchesFile patchesFile = new PatchesFile(fileName, new CoordinateConverter.NZTM());
         RsqSimPatchLoader patchLoader =
                 new RsqSimPatchLoader(

@@ -136,21 +136,21 @@ public class RsqSimEventLoader {
                 .collect(Collectors.toList());
     }
 
-
-    public static class EvenComponentsComparator implements Comparator<Event>{
+    public static class EvenComponentsComparator implements Comparator<Event> {
 
         @Override
         public int compare(Event arg0, Event arg1) {
-            double area0Cru = arg0.getCrustalArea()  ;
-            double area0Sub = arg0.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area0Cru;
+            double area0Cru = arg0.getCrustalArea();
+            double area0Sub =
+                    arg0.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area0Cru;
             Double area0 = Math.min(area0Cru, area0Sub) / Math.max(area0Cru, area0Sub);
-            double area1Cru = arg1.getCrustalArea()  ;
-            double area1Sub = arg1.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area1Cru;
+            double area1Cru = arg1.getCrustalArea();
+            double area1Sub =
+                    arg1.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area1Cru;
             Double area1 = Math.min(area1Cru, area1Sub) / Math.max(area1Cru, area1Sub);
 
-            return area1.compareTo(area0);
+            return area0.compareTo(area1);
         }
-        
     }
 
     public void debugBadJointRuptures() {
@@ -163,12 +163,14 @@ public class RsqSimEventLoader {
         for (Patch patch : largestCrustal.patches) {
 
             FeatureProperties properties = builder.addFeature(patch.toFeature());
-            if (!patch.sections.isEmpty() && patch.isSubduction()) {
-                builder.setLineColour(properties, "red");
-            } else if (!patch.sections.isEmpty()) {
-                builder.setLineColour(properties, "green");
-            } else {
+            if (patch.sections.isEmpty() && patch.subduction) {
                 builder.setLineColour(properties, "yellow");
+            } else if (patch.sections.isEmpty() && !patch.subduction) {
+                builder.setLineColour(properties, "lightblue");
+            } else if (patch.isSubduction()) {
+                builder.setLineColour(properties, "red");
+            } else {
+                builder.setLineColour(properties, "green");
             }
         }
         builder.toJSON("./largestCrustal.geojson");
