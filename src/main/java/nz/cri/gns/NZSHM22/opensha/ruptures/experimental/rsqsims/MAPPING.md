@@ -6,6 +6,12 @@ Maps RSQSim events (collections of triangular *patches*) to OpenSHA ruptures
 1. Patch → FaultSection mapping (`RsqSimPatchLoader`).
 2. Event → Rupture: an event's sections are the union of sections of its patches, filtered by area fill ratio (`RsqSimEventLoader.toFaultSections`, `>0.5` fill).
 
+Patches are triangular and smaller than fault sections. They usually lie directly on the fault section surface but do not necessarily conform to the borders of the fault section. This means a patch may map to more than one fault section, and a fault section usually maps to several patches.
+
+Some patches do not map to fault sections. For example, in RSQSim subduction interfaces are modelled as one smooth, continuous surface while in OpenSHA, we model these quite roughly with large rectangular fault sections, leaving gaps and overlaps. Patches in overlaps belong to more than one fault section, and patches in gaps do not belong to any.
+
+The fill ratio for a fault section and its patches is the sum of the area the patches divided by the area of the fault section. When the fill ratio is large enough, we want to include the fault section in the rupture because it is an accurate enough model of the RSQSim geometry. For example, if the fill ratio is only 0.1, then we should not use the fault section for the reconstructed rupture because it would add too much area. We chose a 0.5 fill ratio as a fair enough cutoff.
+
 There are two supported source flavours, with different input files and different mapping mechanisms: **Bruce** (`rundir5883`/`rundir5942`) and **Canterbury**.
 
 ---
