@@ -49,8 +49,10 @@ public class RsqSimEventLoader {
             boolean hasSubduction = false;
             boolean hasCrustal = false;
             for (Patch patch : patches) {
-                if (!patch.sections.isEmpty()
-                        && patch.sections.get(0).getSectionName().contains("row:")) {
+                if (patch.sections.isEmpty()) {
+                    continue;
+                }
+                if (patch.isSubduction()) {
                     hasSubduction = true;
                 } else {
                     hasCrustal = true;
@@ -94,6 +96,13 @@ public class RsqSimEventLoader {
             }
             return result;
         }
+
+        public double getCrustalArea() {
+            return patches.stream()
+                    .filter(patch -> !patch.sections.isEmpty() && !patch.isSubduction())
+                    .mapToDouble(patch -> patch.area)
+                    .sum();
+        }
     }
 
     public List<FaultSection> toFaultSections(Event event) {
@@ -113,6 +122,58 @@ public class RsqSimEventLoader {
                 .peek(event -> event.sections = toFaultSections(event))
                 .filter(Event::isOpenShaJointRupture)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns all RSQSim joint ruptures that are not joint ruptures in OpenSHA
+     *
+     * @return
+     */
+    public List<Event> getBadJointRuptures() {
+        return jointEvents.stream()
+                .peek(event -> event.sections = toFaultSections(event))
+                .filter(event -> !event.isOpenShaJointRupture())
+                .collect(Collectors.toList());
+    }
+
+    public static class EvenComponentsComparator implements Comparator<Event> {
+
+        @Override
+        public int compare(Event arg0, Event arg1) {
+            double area0Cru = arg0.getCrustalArea();
+            double area0Sub =
+                    arg0.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area0Cru;
+            Double area0 = Math.min(area0Cru, area0Sub) / Math.max(area0Cru, area0Sub);
+            double area1Cru = arg1.getCrustalArea();
+            double area1Sub =
+                    arg1.getPatches().stream().mapToDouble(patch -> patch.area).sum() - area1Cru;
+            Double area1 = Math.min(area1Cru, area1Sub) / Math.max(area1Cru, area1Sub);
+
+            return area0.compareTo(area1);
+        }
+    }
+
+    public void debugBadJointRuptures() {
+        List<Event> badOnes = getBadJointRuptures();
+        Comparator<Event> comp = Comparator.comparingDouble(event -> event.getCrustalArea());
+        badOnes.sort(comp);
+        badOnes.sort(new EvenComponentsComparator());
+        SimpleGeoJsonBuilder builder = new SimpleGeoJsonBuilder();
+        Event largestCrustal = badOnes.get(0);
+        for (Patch patch : largestCrustal.patches) {
+
+            FeatureProperties properties = builder.addFeature(patch.toFeature());
+            if (patch.sections.isEmpty() && patch.subduction) {
+                builder.setLineColour(properties, "yellow");
+            } else if (patch.sections.isEmpty() && !patch.subduction) {
+                builder.setLineColour(properties, "lightblue");
+            } else if (patch.isSubduction()) {
+                builder.setLineColour(properties, "red");
+            } else {
+                builder.setLineColour(properties, "green");
+            }
+        }
+        builder.toJSON("./largestCrustal.geojson");
     }
 
     public static MultiRuptureJump makeJump(List<ClusterRupture> ruptures) {

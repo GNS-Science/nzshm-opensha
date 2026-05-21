@@ -15,6 +15,7 @@ public class Patch {
     public final double slip;
     public final double area;
     public int sectionIdFromZname = -1;
+    public boolean subduction;
 
     public String zname;
 
@@ -54,6 +55,10 @@ public class Patch {
         locs.add(b);
         locs.add(c);
         return new Patch(id, locs, rake, slip, area, row);
+    }
+
+    public boolean isSubduction() {
+        return subduction;
     }
 
     public Feature toFeature() {
