@@ -158,9 +158,23 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
         return description;
     }
 
+    /**
+     * Collects build provenance for the opensha and nzshm-opensha projects.
+     *
+     * <p>Both GitVersion instances read their values from jar resources (build.* and nzshm-build.*,
+     * written at build time by build-git.gradle) and only shell out to git if those are missing.
+     * The git fallback needs source trees, so it works at most on a developer machine: the default
+     * "../opensha" assumes opensha and nzshm-opensha are siblings and that the JVM was started from
+     * the nzshm-opensha checkout, neither of which holds when a launcher runs the jar from
+     * elsewhere or in a container that carries no checkout at all. NZSHM22_OPENSHA_SRC lets a
+     * developer point at a real checkout; when it resolves to nothing, provenance comes from the
+     * jar resources alone.
+     */
     public static BuildInfoModule createBuildInfo() throws IOException {
+        File openshaSrc =
+                new File(System.getenv().getOrDefault("NZSHM22_OPENSHA_SRC", "../opensha"));
         BuildInfoModule buildInfo =
-                BuildInfoModule.fromGitVersion(new GitVersion(new File("../opensha"), "/build"));
+                BuildInfoModule.fromGitVersion(new GitVersion(openshaSrc, "/build"));
         buildInfo.addExtra(new GitVersion(new File(""), "/nzshm-build"));
         return buildInfo;
     }
