@@ -20,7 +20,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: GNS-Science/opensha
-          ref: fix/rup-normalization-2024
+          # TEMPORARY: see the matching note in gradle.yml. Revert to
+          # fix/rup-normalization-2024 once GNS-Science/opensha PR
+          # fix/git-provenance-gradle9 is merged.
+          ref: fix/git-provenance-gradle9
           path: opensha
 
       - name: Clone opensha

@@ -25,7 +25,12 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: GNS-Science/opensha
-        ref: fix/rup-normalization-2024
+        # TEMPORARY: pinned to an unmerged branch carrying the Gradle 9 fix for
+        # build-git.gradle (without it the fatjar ships no git provenance) plus the
+        # GitVersion runtime fallback fixes. Revert to fix/rup-normalization-2024 once
+        # GNS-Science/opensha PR fix/git-provenance-gradle9 is merged, and keep that
+        # branch rebased on fix/rup-normalization-2024 until then.
+        ref: fix/git-provenance-gradle9
         path: opensha
 
     # scheduled build: each week, we want to build against the latest upstream to catch drifts early
@@ -84,6 +89,37 @@ jobs:
         chmod +x gradlew
         ./gradlew fatjar
         mv build/libs/nzshm-opensha-all.jar build/libs/${{env.JAR_NAME}}
+
+    # The jar's build.* / nzshm-build.* resources are the only provenance mechanism that
+    # works in a deployed container, which carries the jar but no git checkout. When they
+    # are absent, GitVersion silently falls back to shelling out to git against a source
+    # tree that isn't there. That failed unnoticed for two months after the Gradle 9
+    # upgrade, so fail the release rather than publish a jar with no provenance.
+    - name: Verify fatjar carries git provenance
+      if: startsWith(github.ref, 'refs/tags/release')
+      run: |
+        cd main
+        JAR="build/libs/${{env.JAR_NAME}}"
+        status=0
+        for f in build.githash build.gitremoteurl build.date \
+                 nzshm-build.githash nzshm-build.gitremoteurl nzshm-build.date; do
+          if unzip -p "$JAR" "$f" 2>/dev/null | grep -q .; then
+            echo "ok: $f = $(unzip -p "$JAR" "$f" | head -1)"
+          else
+            echo "::error::$f missing or empty in $JAR"
+            status=1
+          fi
+        done
+        # Branch is best-effort: actions/checkout leaves a detached HEAD, so it may resolve
+        # to a tag or remote-ref label. The commit hash is the authoritative field.
+        for f in build.gitbranch nzshm-build.gitbranch; do
+          if unzip -p "$JAR" "$f" 2>/dev/null | grep -q .; then
+            echo "ok: $f = $(unzip -p "$JAR" "$f" | head -1)"
+          else
+            echo "::warning::$f missing or empty in $JAR"
+          fi
+        done
+        exit $status
 
     - uses: GNS-Science/s3-sync-action@master
       with:
