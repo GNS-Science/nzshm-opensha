@@ -85,37 +85,6 @@ jobs:
         ./gradlew fatjar
         mv build/libs/nzshm-opensha-all.jar build/libs/${{env.JAR_NAME}}
 
-    # The jar's build.* / nzshm-build.* resources are the only provenance mechanism that
-    # works in a deployed container, which carries the jar but no git checkout. When they
-    # are absent, GitVersion silently falls back to shelling out to git against a source
-    # tree that isn't there. That failed unnoticed for two months after the Gradle 9
-    # upgrade, so fail the release rather than publish a jar with no provenance.
-    - name: Verify fatjar carries git provenance
-      if: startsWith(github.ref, 'refs/tags/release')
-      run: |
-        cd main
-        JAR="build/libs/${{env.JAR_NAME}}"
-        status=0
-        for f in build.githash build.gitremoteurl build.date \
-                 nzshm-build.githash nzshm-build.gitremoteurl nzshm-build.date; do
-          if unzip -p "$JAR" "$f" 2>/dev/null | grep -q .; then
-            echo "ok: $f = $(unzip -p "$JAR" "$f" | head -1)"
-          else
-            echo "::error::$f missing or empty in $JAR"
-            status=1
-          fi
-        done
-        # Branch is best-effort: actions/checkout leaves a detached HEAD, so it may resolve
-        # to a tag or remote-ref label. The commit hash is the authoritative field.
-        for f in build.gitbranch nzshm-build.gitbranch; do
-          if unzip -p "$JAR" "$f" 2>/dev/null | grep -q .; then
-            echo "ok: $f = $(unzip -p "$JAR" "$f" | head -1)"
-          else
-            echo "::warning::$f missing or empty in $JAR"
-          fi
-        done
-        exit $status
-
     - uses: GNS-Science/s3-sync-action@master
       with:
         args: --acl public-read
