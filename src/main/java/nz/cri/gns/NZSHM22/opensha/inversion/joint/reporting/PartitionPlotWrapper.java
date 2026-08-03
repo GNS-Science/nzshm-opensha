@@ -69,21 +69,18 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot {
             String topLink)
             throws IOException {
 
+        List<String> innerResult =
+                inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
+
         PartitionMfds partitionMfds = rupSet.getModule(PartitionMfds.class);
+
+        if (partitionMfds == null || innerResult == null) {
+            return innerResult;
+        }
 
         List<String> result = new ArrayList<>();
 
-        if (partitionMfds != null) {
-            result.add(getSubHeading() + " " + "All Partitions Combined");
-        }
-
-        Collection<String> innerResult =
-                inner.plot(rupSet, sol, meta, resourcesDir, relPathToResources, topLink);
-
-        if (innerResult == null) {
-            return result;
-        }
-
+        result.add(getSubHeading() + " " + "All Partitions Combined");
         result.addAll(innerResult);
 
         for (PartitionPredicate partitionPredicate :
