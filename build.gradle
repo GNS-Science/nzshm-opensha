@@ -14,6 +14,61 @@ compileJava.options.encoding = "UTF-8"
 
 apply from: '../opensha/build-git.gradle'
 
+// Build-time git provenance rides in the fatjar as build.* (opensha's, via opensha-all.jar)
+// and nzshm-build.* (this project's) root resources, read back at runtime by
+// org.opensha.commons.util.GitVersion. They are the only provenance mechanism that works in
+// a deployed container, which carries the jar but no git checkout; when they are absent
+// GitVersion silently falls back to shelling out to git against a source tree that isn't
+// there. writeBuildFiles (../opensha/build-git.gradle) only warns when git fails, and that
+// warning went unread for two months after the Gradle 9 upgrade. So fail the build instead
+// of producing a jar with no provenance.
+//
+// gitbranch is deliberately best-effort: actions/checkout leaves a detached HEAD, so it may
+// resolve to a tag or remote-ref label. The commit hash is the authoritative field.
+ext.requiredProvenance = ['githash', 'gitremoteurl', 'date']
+ext.optionalProvenance = ['gitbranch']
+
+/** Trimmed contents of a zip entry, or "" if the entry is absent or blank. */
+ext.zipEntryText = { java.util.zip.ZipFile zip, String name ->
+    def entry = zip.getEntry(name)
+    entry == null ? "" : zip.getInputStream(entry).getText('UTF-8').trim()
+}
+
+/** Fails unless jarFile carries a non-empty <prefix>.<field> entry for every prefix given. */
+ext.checkJarProvenance = { File jarFile, List<String> prefixes ->
+    def missing = []
+    new java.util.zip.ZipFile(jarFile).withCloseable { zip ->
+        prefixes.each { prefix ->
+            requiredProvenance.each { field ->
+                def value = zipEntryText(zip, "${prefix}.${field}")
+                if (value.isEmpty()) {
+                    missing << "${prefix}.${field}"
+                } else {
+                    logger.lifecycle("provenance ok: ${prefix}.${field} = ${value.readLines().first()}")
+                }
+            }
+            optionalProvenance.each { field ->
+                def value = zipEntryText(zip, "${prefix}.${field}")
+                if (value.isEmpty()) {
+                    logger.warn("provenance: ${prefix}.${field} missing or empty in ${jarFile.name}")
+                } else {
+                    logger.lifecycle("provenance ok: ${prefix}.${field} = ${value.readLines().first()}")
+                }
+            }
+        }
+    }
+    if (!missing.isEmpty()) {
+        throw new GradleException("${jarFile.name} is missing git provenance: ${missing.join(', ')}")
+    }
+}
+
+/** Removes the loose <prefix>.* files writeBuildFiles produced; they belong only in the jar. */
+ext.deleteProvenanceFiles = { File dir, String prefix ->
+    (requiredProvenance + optionalProvenance).each { field ->
+        delete new File(dir, "${prefix}.${field}")
+    }
+}
+
 dependencies {
     implementation 'org.apache.sis.core:sis-referencing:1.4'
     implementation 'org.apache.sis.non-free:sis-embedded-data:1.4'
@@ -131,10 +186,12 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
         writeBuildFiles("/nzshm-build")
     }
     doLast {
-        delete new File(projectDir, "nzshm-build.githash")
-        delete new File(projectDir, "nzshm-build.gitbranch")
-        delete new File(projectDir, "nzshm-build.gitremoteurl")
-        delete new File(projectDir, "nzshm-build.date")
+        // Cleanup first, so it still runs when the check below fails.
+        deleteProvenanceFiles(projectDir, "nzshm-build")
+        // Checking the finished archive covers both halves at once: nzshm-build.* is written
+        // by the doFirst above, build.* rides in on opensha-all.jar, and neither reaches the
+        // fatjar if it was missing upstream.
+        checkJarProvenance(archiveFile.get().asFile, ['build', 'nzshm-build'])
     }
 
     archiveBaseName = project.name + '-all'
