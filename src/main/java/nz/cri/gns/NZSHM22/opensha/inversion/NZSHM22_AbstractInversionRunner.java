@@ -1,7 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import static nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator.LOG_MATRIX_ONLY;
-
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.File;
@@ -109,6 +107,24 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     protected double bufferSize = 12;
     protected double minBufferSize = 0;
+
+    protected Path matrixDumpPath;
+
+    /**
+     * Sets the base path for dumping the A matrix and d vector to file. A and d will be written
+     * into this directory once they are constructed, and the process will exit. The user still
+     * needs to call runInversion() to trigger the dump.
+     *
+     * @param path a folder in which to dump A and d
+     * @return this runner
+     */
+    public NZSHM22_AbstractInversionRunner seMatrixDumpPath(String path) {
+        File file = new File(path);
+        Preconditions.checkArgument(file.exists(), "Matrix dump path must exist.");
+        Preconditions.checkArgument(file.isDirectory(), "Matrix dump path must be directory.");
+        matrixDumpPath = file.toPath();
+        return this;
+    }
 
     public double getPolyBufferSize() {
         return bufferSize;
@@ -779,24 +795,26 @@ public abstract class NZSHM22_AbstractInversionRunner {
         // column compress it for fast annealing
         inversionInputGenerator.columnCompress();
 
-        if (LOG_MATRIX_ONLY) {
+        if (matrixDumpPath != null) {
             NZSHM22_LogicTreeBranch branch = rupSet.getModule(NZSHM22_LogicTreeBranch.class);
             FaultRegime regime = branch.getValue(FaultRegime.class);
 
             String prefix = regime == FaultRegime.CRUSTAL ? "cru" : "sbd";
 
             Files.writeString(
-                    Path.of(prefix + "_A.txt"), inversionInputGenerator.getA().toString());
+                    matrixDumpPath.resolve(Path.of(prefix + "_A.txt")),
+                    inversionInputGenerator.getA().toString());
             Files.writeString(
-                    Path.of(prefix + "_D.txt"), Arrays.toString(inversionInputGenerator.getD()));
+                    matrixDumpPath.resolve(Path.of(prefix + "_D.txt")),
+                    Arrays.toString(inversionInputGenerator.getD()));
             if (inversionInputGenerator.getA_ineq() != null) {
                 Files.writeString(
-                        Path.of(prefix + "_A_ineq.txt"),
+                        matrixDumpPath.resolve(Path.of(prefix + "_A_ineq.txt")),
                         inversionInputGenerator.getA_ineq().toString());
             }
             if (inversionInputGenerator.getD_ineq() != null) {
                 Files.writeString(
-                        Path.of(prefix + "_D_ineq.txt"),
+                        matrixDumpPath.resolve(Path.of(prefix + "_D_ineq.txt")),
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
