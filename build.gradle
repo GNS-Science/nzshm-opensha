@@ -69,23 +69,6 @@ ext.deleteProvenanceFiles = { File dir, String prefix ->
     }
 }
 
-/** Same contract, against the loose files writeBuildFiles has just produced in dir. */
-ext.checkLooseProvenance = { File dir, String prefix ->
-    def blank = { field ->
-        def f = new File(dir, "${prefix}.${field}")
-        !f.isFile() || f.text.trim().isEmpty()
-    }
-    optionalProvenance.findAll(blank).each { field ->
-        logger.warn("provenance: ${prefix}.${field} not written in ${dir}")
-    }
-    def missing = requiredProvenance.findAll(blank)
-    if (!missing.isEmpty()) {
-        throw new GradleException("git provenance unavailable in ${dir}: "
-                + missing.collect { "${prefix}.${it}" }.join(', ')
-                + " not written - see the git warnings above")
-    }
-}
-
 dependencies {
     implementation 'org.apache.sis.core:sis-referencing:1.4'
     implementation 'org.apache.sis.non-free:sis-embedded-data:1.4'
@@ -200,25 +183,14 @@ dependencies {
 task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
 
     doFirst { ->
-        // Fail before the archive is built if either half of the provenance is missing.
-        // nzshm-build.* is written right here; build.* rides in on opensha-all.jar, which is
-        // the only place to look for it since :opensha:fatJar deletes its loose copies.
         writeBuildFiles("/nzshm-build")
-        try {
-            checkLooseProvenance(projectDir, "nzshm-build")
-            checkJarProvenance(file('../opensha/build/libs/opensha-all.jar'), ['build'])
-        } catch (Exception e) {
-            // Failing here means the doLast cleanup never runs, so tidy up before rethrowing
-            // rather than leaving a partial set of nzshm-build.* files in the project root.
-            deleteProvenanceFiles(projectDir, "nzshm-build")
-            throw e
-        }
     }
     doLast {
+        // Cleanup first, so it still runs when the check below fails.
         deleteProvenanceFiles(projectDir, "nzshm-build")
-    }
-    doLast {
-        // Belt and braces: the loose files existing does not prove they were packaged.
+        // Checking the finished archive covers both halves at once: nzshm-build.* is written
+        // by the doFirst above, build.* rides in on opensha-all.jar, and neither reaches the
+        // fatjar if it was missing upstream.
         checkJarProvenance(archiveFile.get().asFile, ['build', 'nzshm-build'])
     }
 
