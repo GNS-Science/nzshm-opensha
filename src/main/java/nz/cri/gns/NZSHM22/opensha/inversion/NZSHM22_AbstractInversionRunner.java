@@ -112,13 +112,13 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     /**
      * Sets the base path for dumping the A matrix and d vector to file. A and d will be written
-     * into this directory once they are constructed, and the process will exit. The user still
-     * needs to call runInversion() to trigger the dump.
+     * into this directory once they are constructed, and the inversion will not run. The user still
+     * needs to call runInversion() to trigger the dump. runInversion() will return null.
      *
      * @param path a folder in which to dump A and d
      * @return this runner
      */
-    public NZSHM22_AbstractInversionRunner seMatrixDumpPath(String path) {
+    public NZSHM22_AbstractInversionRunner setMatrixDumpPath(String path) {
         File file = new File(path);
         Preconditions.checkArgument(file.exists(), "Matrix dump path must exist.");
         Preconditions.checkArgument(file.isDirectory(), "Matrix dump path must be directory.");
@@ -818,7 +818,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            System.exit(0);
+            return null;
         }
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();
