@@ -112,8 +112,8 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     /**
      * Sets the base path for dumping the A matrix and d vector to file. A and d will be written
-     * into this directory once they are constructed, and the process will exit. The user still
-     * needs to call runInversion() to trigger the dump.
+     * into this directory once they are constructed, and the inversion will not run. The user still
+     * needs to call runInversion() to trigger the dump. runInversion() will return null.
      *
      * @param path a folder in which to dump A and d
      * @return this runner
