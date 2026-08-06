@@ -118,7 +118,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
      * @param path a folder in which to dump A and d
      * @return this runner
      */
-    public NZSHM22_AbstractInversionRunner seMatrixDumpPath(String path) {
+    public NZSHM22_AbstractInversionRunner setMatrixDumpPath(String path) {
         File file = new File(path);
         Preconditions.checkArgument(file.exists(), "Matrix dump path must exist.");
         Preconditions.checkArgument(file.isDirectory(), "Matrix dump path must be directory.");
@@ -818,7 +818,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
                         Arrays.toString(inversionInputGenerator.getD_ineq()));
             }
 
-            System.exit(0);
+            return null;
         }
 
         List<CompletionCriteria> completionCriterias = new ArrayList<>();

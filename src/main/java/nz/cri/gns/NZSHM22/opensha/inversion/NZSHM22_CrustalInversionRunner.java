@@ -365,7 +365,9 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     @Override
     public FaultSystemSolution runInversion() throws IOException, DocumentException {
         FaultSystemSolution solution = super.runInversion();
-        solution.addModule(rupSet.getInversionTargetMFDs().getOnFaultSubSeisMFDs());
+        if (solution != null) {
+            solution.addModule(rupSet.getInversionTargetMFDs().getOnFaultSubSeisMFDs());
+        }
         return solution;
     }
 
