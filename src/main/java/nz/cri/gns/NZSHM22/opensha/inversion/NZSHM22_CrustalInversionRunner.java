@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
@@ -44,11 +47,18 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private boolean enableTvzMFDs = false;
     private boolean enableMinMaxSampler = false;
 
-    private NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
+    private transient NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
 
     /** Creates a new NZSHM22_InversionRunner with defaults. */
     public NZSHM22_CrustalInversionRunner() {
         super();
+    }
+
+    public static NZSHM22_CrustalInversionRunner fromJson(String json) {
+        // Set to lenient to allow comments.
+        // It's a bit too lenient for us, but at least comments are parsed correctly out of the box.
+        Gson gson = new GsonBuilder().setLenient().create();
+        return gson.fromJson(json, NZSHM22_CrustalInversionRunner.class);
     }
 
     /**

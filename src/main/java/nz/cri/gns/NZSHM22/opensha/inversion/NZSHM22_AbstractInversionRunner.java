@@ -1,12 +1,14 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.reports.TabularMfds;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -61,19 +63,19 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     private NZSHM22_SpatialSeisPDF spatialSeisPDF = null;
 
-    protected File rupSetFile;
-    protected ArchiveInput rupSetInput;
-    protected NZSHM22_InversionFaultSystemRuptSet rupSet = null;
+    protected String rupSetFile;
+    protected transient ArchiveInput rupSetInput;
+    protected transient NZSHM22_InversionFaultSystemRuptSet rupSet = null;
     protected NZSHM22_DeformationModel deformationModel = null;
-    protected List<InversionConstraint> constraints = new ArrayList<>();
-    private EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
-    private IterationCompletionCriteria iterationCompletionCriteria = null;
+    protected transient List<InversionConstraint> constraints = new ArrayList<>();
+    private transient EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
+    private transient IterationCompletionCriteria iterationCompletionCriteria = null;
 
-    private ThreadedSimulatedAnnealing tsa;
+    private transient ThreadedSimulatedAnnealing tsa;
     private double[] initialState;
-    private FaultSystemSolution solution;
+    private transient FaultSystemSolution solution;
 
-    private InversionInputGenerator inversionInputGenerator;
+    private transient InversionInputGenerator inversionInputGenerator;
 
     protected AbstractInversionConfiguration.NZSlipRateConstraintWeightingType
             slipRateWeightingType;
@@ -108,7 +110,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected double bufferSize = 12;
     protected double minBufferSize = 0;
 
-    protected Path matrixDumpPath;
+    protected transient Path matrixDumpPath;
 
     /**
      * Sets the base path for dumping the A matrix and d vector to file. A and d will be written
@@ -438,7 +440,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     }
 
     public NZSHM22_AbstractInversionRunner setRuptureSetFile(String ruptureSetFileName) {
-        this.rupSetFile = new File(ruptureSetFileName);
+        this.rupSetFile = ruptureSetFileName;
         return this;
     }
 
@@ -449,7 +451,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
      * @return this builder
      */
     public NZSHM22_AbstractInversionRunner setRuptureSetFile(File ruptureSetFile) {
-        this.rupSetFile = ruptureSetFile;
+        this.rupSetFile = ruptureSetFile.getAbsolutePath();
         return this;
     }
 
@@ -463,7 +465,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
             return rupSetInput;
         }
         if (rupSetFile != null) {
-            return new ArchiveInput.ZipFileInput(rupSetFile);
+            return new ArchiveInput.ZipFileInput(new File(rupSetFile));
         }
         throw new IllegalStateException("no rupture set specified");
     }
@@ -981,5 +983,26 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     public List<List<String>> getTabularSolutionMfdsV2() {
         return TabularMfds.getTabularSolutionMfdsV2(solution);
+    }
+
+
+    public String toJson() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
+
+    // this needs to go into the subclasses
+    public static NZSHM22_AbstractInversionRunner fromJson(String json) {
+        // Set to lenient to allow comments.
+        // It's a bit too lenient for us, but at least comments are parsed correctly out of the box.
+        Gson gson = new GsonBuilder().setLenient().create();
+        return gson.fromJson(json, NZSHM22_AbstractInversionRunner.class);
+    }
+
+
+    public void writeToStream(OutputStream out) throws IOException {
+        Writer writer = new OutputStreamWriter(out);
+        writer.write(toJson());
+        writer.flush();
     }
 }
