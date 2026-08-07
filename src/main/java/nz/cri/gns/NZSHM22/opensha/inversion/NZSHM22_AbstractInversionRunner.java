@@ -1,14 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.reports.TabularMfds;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
@@ -970,6 +968,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
         solution = new FaultSystemSolution(rupSet, solution_adjusted);
         solution.addModule(progress.getProgress());
         solution.addModule(NZSHM22_AbstractRuptureSetBuilder.createBuildInfo());
+        solution.addModule(new NZSHM22_InversionRunnerModule(this));
         if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
             solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
         }
@@ -985,7 +984,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
         return TabularMfds.getTabularSolutionMfdsV2(solution);
     }
 
-
     public String toJson() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(this);
@@ -998,7 +996,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
         Gson gson = new GsonBuilder().setLenient().create();
         return gson.fromJson(json, NZSHM22_AbstractInversionRunner.class);
     }
-
 
     public void writeToStream(OutputStream out) throws IOException {
         Writer writer = new OutputStreamWriter(out);

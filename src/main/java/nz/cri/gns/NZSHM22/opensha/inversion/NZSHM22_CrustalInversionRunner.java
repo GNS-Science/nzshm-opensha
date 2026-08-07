@@ -1,14 +1,13 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;

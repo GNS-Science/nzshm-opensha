@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
@@ -16,6 +18,13 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
     /** Creates a new NZSHM22_InversionRunner with defaults. */
     public NZSHM22_SubductionInversionRunner() {
         super();
+    }
+
+    public static NZSHM22_SubductionInversionRunner fromJson(String json) {
+        // Set to lenient to allow comments.
+        // It's a bit too lenient for us, but at least comments are parsed correctly out of the box.
+        Gson gson = new GsonBuilder().setLenient().create();
+        return gson.fromJson(json, NZSHM22_SubductionInversionRunner.class);
     }
 
     /**
