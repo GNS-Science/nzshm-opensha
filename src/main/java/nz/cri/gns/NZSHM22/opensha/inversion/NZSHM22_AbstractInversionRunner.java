@@ -988,18 +988,4 @@ public abstract class NZSHM22_AbstractInversionRunner {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(this);
     }
-
-    // this needs to go into the subclasses
-    public static NZSHM22_AbstractInversionRunner fromJson(String json) {
-        // Set to lenient to allow comments.
-        // It's a bit too lenient for us, but at least comments are parsed correctly out of the box.
-        Gson gson = new GsonBuilder().setLenient().create();
-        return gson.fromJson(json, NZSHM22_AbstractInversionRunner.class);
-    }
-
-    public void writeToStream(OutputStream out) throws IOException {
-        Writer writer = new OutputStreamWriter(out);
-        writer.write(toJson());
-        writer.flush();
-    }
 }
