@@ -1,6 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,11 +35,13 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
 
     public static final int MIN_SUB_SECTIONS = 2;
 
-    PlausibilityConfiguration plausibilityConfig;
+    // Ephemeral state produced while building a rupture set. It is not part of the builder
+    // configuration and is therefore excluded from the JSON representation.
+    transient PlausibilityConfiguration plausibilityConfig;
 
-    protected FaultSectionList subSections;
-    protected List<ClusterRupture> ruptures;
-    ClusterRuptureBuilder builder;
+    protected transient FaultSectionList subSections;
+    protected transient List<ClusterRupture> ruptures;
+    transient ClusterRuptureBuilder builder;
 
     File fsdFile = null;
     File namedFaultsFile = null;
@@ -47,7 +53,9 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     int minSubSections = 2; // New NZSHM22
 
     double maxSubSectionLength = 0.5; // maximum sub section length (in units of DDW)
-    protected int numThreads =
+
+    // transient: this is a property of the machine we happen to run on, not of the rupture set
+    protected transient int numThreads =
             Runtime.getRuntime().availableProcessors(); // use all available processors
 
     protected RupSetScalingRelationship scalingRelationship = ScalingRelationships.SHAW_2009_MOD;
@@ -60,6 +68,60 @@ public abstract class NZSHM22_AbstractRuptureSetBuilder {
     double scaleDepthExcludeDomainScalar;
 
     List<FaultFilter> faultFilters = new ArrayList<>();
+
+    /**
+     * Gson setup shared by {@link #toJson()} and the fromJson() methods of the concrete builders.
+     * Both directions have to use the same adapters, so they must go through here.
+     */
+    protected static GsonBuilder gsonBuilder() {
+        return new GsonBuilder()
+                .registerTypeAdapter(File.class, new FileAdapter().nullSafe())
+                .registerTypeHierarchyAdapter(
+                        RupSetScalingRelationship.class,
+                        new ScalingRelationshipAdapter().nullSafe())
+                .registerTypeHierarchyAdapter(
+                        FaultFilter.class, new FaultFilter.Adapter().nullSafe());
+    }
+
+    public String toJson() {
+        return gsonBuilder().setPrettyPrinting().create().toJson(this);
+    }
+
+    /** Gson would write a File as {"path": ...} and cannot construct one when reading. */
+    protected static class FileAdapter extends TypeAdapter<File> {
+        @Override
+        public void write(JsonWriter out, File value) throws IOException {
+            out.value(value.getPath());
+        }
+
+        @Override
+        public File read(JsonReader in) throws IOException {
+            return new File(in.nextString());
+        }
+    }
+
+    /**
+     * The scaling relationship is declared as an interface, so Gson cannot reconstruct it on its
+     * own. Delegate to the adapter of {@link NZSHM22_ScalingRelationshipNode}, which already knows
+     * how to write both the UCERF3 enums and the NZ scaling relationships, and which gives us the
+     * same representation the inversion runner config uses.
+     */
+    protected static class ScalingRelationshipAdapter
+            extends TypeAdapter<RupSetScalingRelationship> {
+
+        final NZSHM22_ScalingRelationshipNode.Adapter delegate =
+                new NZSHM22_ScalingRelationshipNode.Adapter();
+
+        @Override
+        public void write(JsonWriter out, RupSetScalingRelationship value) throws IOException {
+            delegate.write(out, new NZSHM22_ScalingRelationshipNode(value));
+        }
+
+        @Override
+        public RupSetScalingRelationship read(JsonReader in) throws IOException {
+            return delegate.read(in).getScalingRelationship();
+        }
+    }
 
     /**
      * For debugging only. adds 180 degrees to each rake in the fault model

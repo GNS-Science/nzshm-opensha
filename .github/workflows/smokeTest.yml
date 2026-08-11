@@ -4,6 +4,10 @@
 name: Java SmokeTest with Gradle
 
 on:
+  # runs when something lands on main, including PR merges. Deliberately not a
+  # pull_request trigger: smoke tests are too slow to run on every PR update.
+  push:
+    branches: [ main ]
   workflow_dispatch:
 #  schedule:
 #      - cron: '20 15 * * 0'
@@ -48,11 +52,11 @@ jobs:
           ./gradlew smokeTest
 
       #----------------------------------------------
-      #       Post error msg to Slack for failed scheduled builds
+      #       Post error msg to Slack for failed unattended builds
       #----------------------------------------------
       - name: Post a Slack message if build failed
         uses: slackapi/slack-github-action@v2.0.0
-        if: failure() && github.event_name == 'schedule'
+        if: failure() && github.event_name != 'workflow_dispatch'
         with:
           webhook: ${{ secrets.SCHEDULED_GITHUB_SLACK_WEBHOOK }}
           webhook-type: incoming-webhook

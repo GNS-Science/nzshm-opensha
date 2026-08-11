@@ -54,6 +54,14 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
         subSections = new FaultSectionList();
     }
 
+    public static NZSHM22_SubductionRuptureSetBuilder fromJson(String json) {
+        // Set to lenient to allow comments.
+        return gsonBuilder()
+                .setLenient()
+                .create()
+                .fromJson(json, NZSHM22_SubductionRuptureSetBuilder.class);
+    }
+
     @Override
     public String getDescriptiveName() {
         String description = "RupSet_Sub";
@@ -301,6 +309,7 @@ public class NZSHM22_SubductionRuptureSetBuilder extends NZSHM22_AbstractRupture
                         .addModule(getPlausibilityConfig())
                         .addModule(getLogicTreeBranch(FaultRegime.SUBDUCTION))
                         .addModule(createBuildInfo())
+                        .addModule(new NZSHM22_RuptureSetBuilderModule(this))
                         .build();
 
         if (faultModel != null && faultModel.getCustomModel() != null) {
