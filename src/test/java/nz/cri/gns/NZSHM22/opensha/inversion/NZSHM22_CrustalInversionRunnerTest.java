@@ -79,6 +79,20 @@ public class NZSHM22_CrustalInversionRunnerTest {
         }
     }
 
+    @Test
+    public void testRunnerModuleAttachedToSolution() throws DocumentException, IOException {
+        NZSHM22_CrustalInversionRunner runner = makeRunner();
+
+        FaultSystemSolution solution = runner.runInversion();
+        String expectedJson = runner.toJson();
+
+        NZSHM22_InversionRunnerModule module =
+                solution.getModule(NZSHM22_InversionRunnerModule.class);
+        assertNotNull(module);
+        assertTrue(module.getRunner() instanceof NZSHM22_CrustalInversionRunner);
+        assertEquals(expectedJson, module.getRunner().toJson());
+    }
+
     @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
     @Test
