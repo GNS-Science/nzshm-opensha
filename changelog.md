@@ -2,7 +2,8 @@
 
 This changelog began in 2024.
 
-Changes that might affect reproducibility are tagged with `behaviour change`.
+Changes that might affect reproducibility are tagged with `behaviour change`, and make the next release a major
+one. Add your entries to `## TBD`; see [Releases](README.md#releases) for the rest.
 
 ## TBD
 
