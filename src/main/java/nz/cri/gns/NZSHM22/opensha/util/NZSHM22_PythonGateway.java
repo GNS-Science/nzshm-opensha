@@ -135,7 +135,7 @@ public class NZSHM22_PythonGateway {
     /** Provide a little help for python clients */
     public static class NZSHM22_CachedCoulombRuptureSetBuilder
             extends NZSHM22_CoulombRuptureSetBuilder {
-        FaultSystemRupSet ruptureSet;
+        transient FaultSystemRupSet ruptureSet;
 
         /**
          * Chooses a known fault model.
@@ -181,7 +181,7 @@ public class NZSHM22_PythonGateway {
     /** Provide a little help for python clients using NZSHM22_SubductionRuptureSetBuilder */
     public static class NZSHM22_CachedSubductionRuptureSetBuilder
             extends NZSHM22_SubductionRuptureSetBuilder {
-        FaultSystemRupSet ruptureSet;
+        transient FaultSystemRupSet ruptureSet;
 
         /** Caches the results of the build */
         @Override
@@ -204,7 +204,7 @@ public class NZSHM22_PythonGateway {
 
     /** Python helper that wraps NZSHM22_InversionRunner */
     public static class CachedCrustalInversionRunner extends NZSHM22_CrustalInversionRunner {
-        private FaultSystemSolution solution;
+        private transient FaultSystemSolution solution;
 
         /**
          * like run(File ruptureSetFile), but caches the result
@@ -232,7 +232,7 @@ public class NZSHM22_PythonGateway {
 
     /** Python helper that wraps NZSHM22_InversionRunner */
     public static class CachedSubductionInversionRunner extends NZSHM22_SubductionInversionRunner {
-        FaultSystemSolution solution = null;
+        transient FaultSystemSolution solution = null;
 
         /**
          * like run(File ruptureSetFile), but caches the result

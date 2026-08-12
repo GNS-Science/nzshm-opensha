@@ -1,6 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.ruptures;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -190,6 +193,123 @@ public interface FaultFilter {
         @Override
         public String toString() {
             return "polygon filter " + fileName;
+        }
+    }
+
+    /**
+     * Stands in for a filter that could not be serialised, such as the lambda created by {@link
+     * NZSHM22_AbstractRuptureSetBuilder#setFaultFilter(Set)}. It only carries the original filter's
+     * description so that the builder config stays readable. Using it to actually filter faults
+     * would silently produce a different rupture set, so it refuses to do so.
+     */
+    public class UnsupportedFilter implements FaultFilter {
+
+        final String description;
+
+        public UnsupportedFilter(String description) {
+            this.description = description;
+        }
+
+        @Override
+        public boolean keep(FaultSection section) {
+            throw new UnsupportedOperationException(
+                    "This fault filter was not preserved when the builder config was serialised: "
+                            + description);
+        }
+
+        @Override
+        public String toString() {
+            return description;
+        }
+    }
+
+    /**
+     * Serialises FaultFilters as their constructor arguments, tagged with the filter type. Derived
+     * state such as {@link DomainFilter#domains} or {@link PolygonFilter#polygon} is rebuilt by the
+     * constructor rather than stored. Filters that are not one of the known implementations are
+     * written as an {@link UnsupportedFilter}.
+     */
+    public class Adapter extends TypeAdapter<FaultFilter> {
+
+        @Override
+        public void write(JsonWriter out, FaultFilter value) throws IOException {
+            out.beginObject();
+            if (value instanceof IdRangeFilter) {
+                IdRangeFilter filter = (IdRangeFilter) value;
+                out.name("type").value("idRange");
+                out.name("skipFaultSections").value(filter.skipFaultSections);
+                out.name("maxFaultSections").value(filter.maxFaultSections);
+            } else if (value instanceof DomainFilter) {
+                out.name("type").value("domain");
+                out.name("domains").value(((DomainFilter) value).filterDescription);
+            } else if (value instanceof MinSlipFilter) {
+                out.name("type").value("minSlip");
+                out.name("minSlip").value(((MinSlipFilter) value).minSlip);
+            } else if (value instanceof PolygonFilter) {
+                out.name("type").value("polygon");
+                out.name("fileName").value(((PolygonFilter) value).fileName);
+            } else {
+                out.name("type").value("unsupported");
+                out.name("description").value(value.toString());
+            }
+            out.endObject();
+        }
+
+        @Override
+        public FaultFilter read(JsonReader in) throws IOException {
+            String type = null;
+            Integer skipFaultSections = null;
+            Integer maxFaultSections = null;
+            String domains = null;
+            Double minSlip = null;
+            String fileName = null;
+            String description = null;
+
+            in.beginObject();
+            while (in.hasNext()) {
+                switch (in.nextName()) {
+                    case "type":
+                        type = in.nextString();
+                        break;
+                    case "skipFaultSections":
+                        skipFaultSections = in.nextInt();
+                        break;
+                    case "maxFaultSections":
+                        maxFaultSections = in.nextInt();
+                        break;
+                    case "domains":
+                        domains = in.nextString();
+                        break;
+                    case "minSlip":
+                        minSlip = in.nextDouble();
+                        break;
+                    case "fileName":
+                        fileName = in.nextString();
+                        break;
+                    case "description":
+                        description = in.nextString();
+                        break;
+                    default:
+                        in.skipValue();
+                }
+            }
+            in.endObject();
+
+            Preconditions.checkNotNull(type, "fault filter is missing its type");
+            switch (type) {
+                case "idRange":
+                    return new IdRangeFilter(skipFaultSections, maxFaultSections);
+                case "domain":
+                    return new DomainFilter(domains);
+                case "minSlip":
+                    return new MinSlipFilter(minSlip);
+                case "polygon":
+                    return new PolygonFilter(fileName);
+                case "unsupported":
+                    return new UnsupportedFilter(description);
+                default:
+                    throw new IllegalArgumentException("Unknown fault filter type " + type);
+            }
         }
     }
 }

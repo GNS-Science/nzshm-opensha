@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -13,6 +14,9 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNo
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_SubductionRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.MFDPlotBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.NZSHM22_PythonGateway;
 import org.dom4j.DocumentException;
@@ -62,7 +66,16 @@ public class SmokeTest {
         // testHazard(solutionFile, "EXCLUDE");
     }
 
+    /** The builder config must survive being written to and read back from the archive. */
+    public void sanityCheckBuilderModule(FaultSystemRupSet rupSet, Class<?> builderClass) {
+        NZSHM22_RuptureSetBuilderModule module =
+                rupSet.getModule(NZSHM22_RuptureSetBuilderModule.class);
+        assertNotNull(module);
+        assertTrue(builderClass.isInstance(module.getBuilder()));
+    }
+
     public void sanityCheckCoulombRuptureSet(FaultSystemRupSet rupSet) {
+        sanityCheckBuilderModule(rupSet, NZSHM22_CoulombRuptureSetBuilder.class);
         assertEquals(2335, rupSet.getNumRuptures());
         assertEquals(133, rupSet.getSlipRateForAllSections().length);
         assertEquals(133, rupSet.getSlipRateStdDevForAllSections().length);
@@ -107,6 +120,7 @@ public class SmokeTest {
     }
 
     public void sanityCheckSubductionRuptureSet(FaultSystemRupSet rupSet) {
+        sanityCheckBuilderModule(rupSet, NZSHM22_SubductionRuptureSetBuilder.class);
         assertEquals(100, rupSet.getNumRuptures());
         assertEquals(452, rupSet.getSlipRateForAllSections().length);
         assertEquals(452, rupSet.getSlipRateStdDevForAllSections().length);

@@ -98,6 +98,14 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
         subSections = new FaultSectionList();
     }
 
+    public static NZSHM22_CoulombRuptureSetBuilder fromJson(String json) {
+        // Set to lenient to allow comments.
+        return gsonBuilder()
+                .setLenient()
+                .create()
+                .fromJson(json, NZSHM22_CoulombRuptureSetBuilder.class);
+    }
+
     public NZSHM22_CoulombRuptureSetBuilder setStiffGridSpacing(double stiffGridSpacing) {
         this.stiffGridSpacing = stiffGridSpacing;
         return this;
@@ -696,6 +704,7 @@ public class NZSHM22_CoulombRuptureSetBuilder extends NZSHM22_AbstractRuptureSet
                         .slipAlongRupture(getSlipAlongRuptureModel())
                         .addModule(getLogicTreeBranch(FaultRegime.CRUSTAL))
                         .addModule(createBuildInfo())
+                        .addModule(new NZSHM22_RuptureSetBuilderModule(this))
                         .build();
 
         if (faultModel != null && faultModel.getCustomModel() != null) {
