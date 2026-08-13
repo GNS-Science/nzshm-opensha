@@ -2,6 +2,63 @@ plugins {
     id 'pmd'
     id 'com.diffplug.spotless' version '6.25.0'
     id 'jacoco'
+    id 'pl.allegro.tech.build.axion-release' version '1.18.18'
+}
+
+// Versioning lives in git tags; see "Releases" in README.md. The prefix keeps semver releases
+// (release/v1.2.3) apart from the free-text release/<name> tags this project used before 2026,
+// which axion must not try to parse as versions.
+scmVersion {
+    tag {
+        prefix = 'release/v'
+        versionSeparator = ''
+    }
+    versionIncrementer 'incrementPatch'
+    hooks {
+        pre { context ->
+            promoteChangelog(context.currentVersion, context.previousVersion)
+            context.addCommitPattern('changelog.md')
+        }
+        pre 'commit'
+    }
+}
+
+version = scmVersion.version
+
+/**
+ * Closes off the "## TBD" section of changelog.md as the released version and opens a fresh empty
+ * one. Run from the axion pre-release hook, so the rewrite is committed before the tag is created
+ * and the tag therefore points at a changelog that names it.
+ *
+ * Also enforces the versioning policy: a section carrying a `behaviour change` marker is a major
+ * release, because the same inputs stop producing the same outputs.
+ */
+def promoteChangelog(String releaseVersion, String previousVersion) {
+    def changelog = file('changelog.md')
+    def heading = ~/(?m)^## TBD$/
+    def text = changelog.text
+    if (!(text =~ heading)) {
+        throw new GradleException("changelog.md has no '## TBD' section to release as ${releaseVersion}")
+    }
+
+    // Everything from the TBD heading up to the next '## ' heading, or to the end of the file.
+    def pending = (text =~ /(?ms)^## TBD$(.*?)(?=^## |\z)/)[0][1]
+    if (pending.trim().isEmpty()) {
+        throw new GradleException("changelog.md's '## TBD' section is empty; nothing to release as ${releaseVersion}")
+    }
+
+    def majorOf = { String v -> v.tokenize('.')[0] as int }
+    if (pending.contains('behaviour change')
+            && majorOf(previousVersion) >= 1
+            && majorOf(releaseVersion) == majorOf(previousVersion)) {
+        throw new GradleException("changelog.md lists a behaviour change, which is a major release, but "
+                + "${releaseVersion} only bumps minor/patch over ${previousVersion}. Re-run with "
+                + "-Prelease.forceVersion=${majorOf(previousVersion) + 1}.0.0")
+    }
+
+    def released = "## TBD\n\n## [${releaseVersion}] - ${java.time.LocalDate.now()}"
+    changelog.text = text.replaceFirst(heading, released)
+    logger.lifecycle("changelog.md: released '## TBD' as ${releaseVersion}")
 }
 
 apply plugin: 'java-library'
@@ -195,6 +252,9 @@ task fatJar(type: Jar, dependsOn: ':opensha:fatJar') {
     }
 
     archiveBaseName = project.name + '-all'
+    // The release workflow renames the jar after the tag it was built from; leaving the version
+    // out here keeps that name stable, and CI checkouts have no tags to derive a version from.
+    archiveVersion = ''
     from {
         configurations.apiResolvable.collect { it.isDirectory() ? it : zipTree(it).matching {
                 exclude { it.path.contains('META-INF') }

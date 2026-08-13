@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: write
     steps:
 
     - name: Clone opensha fork
@@ -66,13 +67,34 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
 
+    # Semver releases are tagged release/v1.2.3 by `./gradlew release`; the leading "v" is dropped
+    # from the version so the jar is named after the version alone. Free-text release/<name> tags
+    # predating the semver policy still work, they just skip the changelog check below.
     - name: Set version env var
       if: startsWith(github.ref, 'refs/tags/release')
-      run: echo "TAG_VERSION=$(echo ${{github.ref}} | cut -d'/' -f 4)" >> $GITHUB_ENV
+      run: |
+        TAG_VERSION=${GITHUB_REF#refs/tags/release/}
+        echo "TAG_VERSION=${TAG_VERSION#v}" >> $GITHUB_ENV
 
     - name: Set fatjar name
       if: startsWith(github.ref, 'refs/tags/release')
       run: echo "JAR_NAME=nzshm-opensha-all-${{env.TAG_VERSION}}.jar" >> $GITHUB_ENV
+
+    # The tag is what users cite, so it must name a changelog section that says what changed in it.
+    - name: Extract changelog section
+      if: startsWith(github.ref, 'refs/tags/release/v')
+      run: |
+        cd main
+        awk -v version="## [${{env.TAG_VERSION}}]" '
+          index($0, version) == 1 { found = 1; next }
+          found && /^## / { exit }
+          found { print }
+        ' changelog.md > "$RUNNER_TEMP/release-notes.md"
+        if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
+          echo "changelog.md has no '## [${{env.TAG_VERSION}}]' section" >&2
+          exit 1
+        fi
+        cat "$RUNNER_TEMP/release-notes.md"
 
     - name: Build FatJar with Gradle
       if: startsWith(github.ref, 'refs/tags/release')
@@ -98,6 +120,17 @@ jobs:
         AWS_REGION: 'ap-southeast-2'
         SOURCE_DIR: main/build/libs/
         destination_dir: ''
+
+    # Notes only: the jar itself lives in S3, this just gives the tag a readable summary.
+    - name: Create GitHub release
+      if: startsWith(github.ref, 'refs/tags/release/v')
+      run: |
+        cd main
+        gh release create "${GITHUB_REF#refs/tags/}" \
+          --title "${{env.TAG_VERSION}}" \
+          --notes-file "$RUNNER_TEMP/release-notes.md"
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     #----------------------------------------------
     #       Post error msg to Slack for failed scheduled builds
