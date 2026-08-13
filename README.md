@@ -77,7 +77,9 @@ Versioning is handled by the [axion-release](https://axion-release-plugin.readth
 
 Because this project produces scientific models, the version tracks **reproducibility**, not API compatibility:
 
-- **major**: a behaviour change. The same inputs no longer produce the same outputs.
+- **major**: a behaviour change. 
+    - The same inputs no longer produce the same rupture set or solution. 
+    - This also includes API changes that affect runzi.
 - **minor**: new models, features or CLI options. Existing configurations produce unchanged outputs.
 - **patch**: bug fixes, performance and documentation. No output changes.
 
