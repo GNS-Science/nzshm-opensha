@@ -7,6 +7,8 @@ one. Add your entries to `## TBD`; see [Releases](README.md#releases) for the re
 
 ## TBD
 
+## [2.0.0] - 2026-08-14
+
 ### Changed
 
 - ⚠️`[behaviour change crustal inversion]` Subsection selection for slip rate scaling and target MFDs is now done [based on domain](https://github.com/GNS-Science/nzshm-opensha/pull/345) instead of polygon region. Fewer sections are now determined to be in the TVZ.
