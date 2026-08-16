@@ -1,0 +1,356 @@
+package nz.cri.gns.NZSHM22.opensha.hazard.joint;
+
+import com.google.common.base.Preconditions;
+import java.util.List;
+import java.util.Map;
+import nz.cri.gns.NZSHM22.opensha.data.location.NzshmCommonLocations;
+import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
+import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import org.opensha.commons.geo.BorderType;
+import org.opensha.commons.geo.GriddedRegion;
+import org.opensha.commons.geo.Location;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.faultSurface.CompoundSurface;
+import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.RuptureSurface;
+import org.opensha.sha.imr.attenRelImpl.JointRuptureExperimentalIMR;
+import org.opensha.sha.util.TectonicRegionType;
+
+/**
+ * The inputs of a joint (crustal + subduction) hazard calculation: the solution, the region, the
+ * periods and the thread count, plus the validation that checks the solution against the
+ * assumptions of {@link JointRuptureExperimentalIMR}.
+ *
+ * <p>The experimental GMM splits every rupture surface into its crustal and its interface parts,
+ * evaluates a crustal and an interface GMM separately for the two sub-ruptures, and combines the
+ * two ground motions (SRSS of the medians, energy-weighted sigma). For that to be meaningful the
+ * solution has to satisfy two assumptions, both checked by {@link #validate()}:
+ *
+ * <ol>
+ *   <li>every fault section carries a tectonic region type of either {@link
+ *       TectonicRegionType#ACTIVE_SHALLOW} or {@link TectonicRegionType#SUBDUCTION_INTERFACE}, and
+ *   <li>rupture magnitudes follow the same area scaling the GMM assumes, i.e. {@code
+ *       log10(crustalArea*10^4.2 + interfaceArea*10^4.0)}. That is the scaling of {@code
+ *       EstimatedJointScalingRelationship} (config {@code scalingRelationshipName:
+ *       "JOIN_ESTIMATE"}). The GMM itself bails out with an exception mid-calculation when a joint
+ *       rupture magnitude disagrees by more than 5%, so it is worth checking up front.
+ * </ol>
+ *
+ * <p>Once a {@link JointHazardCalcSetup} has been built on top of these inputs they are locked and
+ * the setters throw.
+ */
+public class JointHazardInput {
+
+    /** Classification of a rupture by the tectonic region types of its sections. */
+    public enum RuptureType {
+        CRUSTAL,
+        INTERFACE,
+        JOINT
+    }
+
+    /** Default map resolution in degrees, i.e. roughly 10km. */
+    public static final double DEFAULT_SPACING = NZSHM22_GriddedData.GRID_SPACING;
+
+    /** Default calculation periods: PGA and 3s SA. */
+    public static final double[] DEFAULT_PERIODS = {0d, 3d};
+
+    /**
+     * Sites that hazard curves are calculated for: the nzshm-common "NZ" locations. See {@link
+     * NzshmCommonLocations}.
+     */
+    public static Map<String, Location> defaultSites() {
+        return NzshmCommonLocations.nzLocations();
+    }
+
+    /**
+     * Largest fractional magnitude difference between the solution and the GMM's joint scaling that
+     * we accept. Matches the tolerance hard-coded in {@link JointRuptureExperimentalIMR}.
+     */
+    public static final double MAX_FRACTIONAL_MAG_DIFF = 0.05;
+
+    private final FaultSystemSolution solution;
+
+    private GriddedRegion region;
+    private double spacing = DEFAULT_SPACING;
+    private double[] periods = DEFAULT_PERIODS;
+    private int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+
+    private boolean locked = false;
+
+    public JointHazardInput(FaultSystemSolution solution) {
+        this.solution = solution;
+    }
+
+    public FaultSystemSolution getSolution() {
+        return solution;
+    }
+
+    /** Sets the gridded region that the map is calculated over. Overrides {@link #setSpacing}. */
+    public JointHazardInput setRegion(GriddedRegion region) {
+        checkNotLocked();
+        this.region = region;
+        return this;
+    }
+
+    /** Sets the map resolution in degrees. Ignored if a region has been set explicitly. */
+    public JointHazardInput setSpacing(double spacing) {
+        checkNotLocked();
+        Preconditions.checkArgument(spacing > 0, "spacing must be positive");
+        this.spacing = spacing;
+        return this;
+    }
+
+    /** Sets the calculation periods. 0 is PGA, -1 is PGV, positive values are SA periods. */
+    public JointHazardInput setPeriods(double... periods) {
+        checkNotLocked();
+        Preconditions.checkArgument(periods.length > 0, "need at least one period");
+        this.periods = periods;
+        return this;
+    }
+
+    public JointHazardInput setNumThreads(int numThreads) {
+        checkNotLocked();
+        Preconditions.checkArgument(numThreads > 0, "numThreads must be positive");
+        this.numThreads = numThreads;
+        return this;
+    }
+
+    public double[] getPeriods() {
+        return periods;
+    }
+
+    public int getNumThreads() {
+        return numThreads;
+    }
+
+    /**
+     * The gridded region the map is calculated over. Defaults to {@link NewZealandRegions.NZ_TEST},
+     * the NZSHM22 region covering all of New Zealand, at {@link #setSpacing} resolution. Pass
+     * {@link NewZealandRegions.NZ_RECTANGLE} to {@link #setRegion} instead for the full NZ
+     * graticule, which also covers the open ocean around the country and is six times as many sites
+     * at 0.1 degrees.
+     */
+    public GriddedRegion getRegion() {
+        if (region == null) {
+            region =
+                    new GriddedRegion(
+                            new NewZealandRegions.NZ_TEST().getBorder(),
+                            BorderType.MERCATOR_LINEAR,
+                            spacing,
+                            GriddedRegion.ANCHOR_0_0);
+        }
+        return region;
+    }
+
+    /** Freezes the inputs. Called when a calculation is set up on top of them. */
+    void lock() {
+        locked = true;
+    }
+
+    private void checkNotLocked() {
+        Preconditions.checkState(!locked, "calculation has already been set up");
+    }
+
+    /** Classifies a rupture by the tectonic region types of the sections it uses. */
+    public static RuptureType typeOf(FaultSystemRupSet rupSet, int rupIndex) {
+        boolean crustal = false;
+        boolean interfce = false;
+        for (int sectIndex : rupSet.getSectionsIndicesForRup(rupIndex)) {
+            if (tectonicRegionType(rupSet.getFaultSectionData(sectIndex))
+                    == TectonicRegionType.ACTIVE_SHALLOW) {
+                crustal = true;
+            } else {
+                interfce = true;
+            }
+        }
+        if (crustal && interfce) {
+            return RuptureType.JOINT;
+        }
+        return crustal ? RuptureType.CRUSTAL : RuptureType.INTERFACE;
+    }
+
+    private static TectonicRegionType tectonicRegionType(FaultSection section) {
+        TectonicRegionType trt = section.getTectonicRegionType();
+        Preconditions.checkState(
+                trt == TectonicRegionType.ACTIVE_SHALLOW
+                        || trt == TectonicRegionType.SUBDUCTION_INTERFACE,
+                "Section %s (%s) has tectonic region type %s; the joint GMM only supports"
+                        + " ACTIVE_SHALLOW and SUBDUCTION_INTERFACE. Rupture sets built before"
+                        + " tectonic region types were written out can be fixed with"
+                        + " RupSetPropertyBackfill.",
+                section.getSectionId(),
+                section.getSectionName(),
+                trt);
+        return trt;
+    }
+
+    /** Summary of {@link #validate()}. */
+    public static class ValidationResult {
+        public final int numCrustal;
+        public final int numInterface;
+        public final int numJoint;
+        public final int numJointWithRate;
+
+        /** Largest |calculated - solution| joint magnitude difference found. */
+        public final double maxJointMagDiff;
+
+        /** Index of the rupture with the largest magnitude difference, or -1. */
+        public final int worstJointRupture;
+
+        /**
+         * Number of single-section ruptures with a non-zero rate. Those reach the GMM as a plain
+         * surface rather than a compound one, and the GMM then has to guess whether they are
+         * crustal or interface from their magnitude alone. See {@link
+         * #getNumSingleSectionWithRate()}.
+         */
+        private final int numSingleSectionWithRate;
+
+        ValidationResult(
+                int numCrustal,
+                int numInterface,
+                int numJoint,
+                int numJointWithRate,
+                double maxJointMagDiff,
+                int worstJointRupture,
+                int numSingleSectionWithRate) {
+            this.numCrustal = numCrustal;
+            this.numInterface = numInterface;
+            this.numJoint = numJoint;
+            this.numJointWithRate = numJointWithRate;
+            this.maxJointMagDiff = maxJointMagDiff;
+            this.worstJointRupture = worstJointRupture;
+            this.numSingleSectionWithRate = numSingleSectionWithRate;
+        }
+
+        public boolean isJoint() {
+            return numJoint > 0;
+        }
+
+        /**
+         * Number of single-section ruptures that carry a rate and therefore end up in the ERF. The
+         * GMM classifies such ruptures by comparing their magnitude against crustal and interface
+         * area scaling, and as of writing that comparison in JointRuptureExperimentalIMR uses the
+         * crustal scaling for both sides, so every single-section rupture is treated as interface.
+         * A non-zero count here means part of the hazard is calculated with the wrong component
+         * GMM.
+         */
+        public int getNumSingleSectionWithRate() {
+            return numSingleSectionWithRate;
+        }
+
+        @Override
+        public String toString() {
+            return "crustal ruptures: "
+                    + numCrustal
+                    + ", interface ruptures: "
+                    + numInterface
+                    + ", joint ruptures: "
+                    + numJoint
+                    + " ("
+                    + numJointWithRate
+                    + " with a non-zero rate), max joint magnitude difference: "
+                    + (float) maxJointMagDiff
+                    + (worstJointRupture < 0 ? "" : " at rupture " + worstJointRupture)
+                    + ", single-section ruptures with a rate: "
+                    + numSingleSectionWithRate;
+        }
+    }
+
+    /**
+     * Checks that the solution matches the assumptions of {@link JointRuptureExperimentalIMR} and
+     * returns a summary of its rupture composition.
+     *
+     * @throws IllegalStateException if a section has an unsupported tectonic region type, or if a
+     *     joint rupture magnitude disagrees with the GMM's joint area scaling.
+     */
+    public ValidationResult validate() {
+        FaultSystemRupSet rupSet = solution.getRupSet();
+
+        // touches every section, so this also validates the tectonic region types
+        for (int s = 0; s < rupSet.getNumSections(); s++) {
+            tectonicRegionType(rupSet.getFaultSectionData(s));
+        }
+
+        int numCrustal = 0;
+        int numInterface = 0;
+        int numJoint = 0;
+        int numJointWithRate = 0;
+        double maxMagDiff = 0;
+        int worst = -1;
+        int numSingleSectionWithRate = 0;
+
+        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
+            if (rupSet.getSectionsIndicesForRup(r).size() == 1 && solution.getRateForRup(r) > 0) {
+                numSingleSectionWithRate++;
+            }
+            RuptureType type = typeOf(rupSet, r);
+            if (type == RuptureType.CRUSTAL) {
+                numCrustal++;
+                continue;
+            }
+            if (type == RuptureType.INTERFACE) {
+                numInterface++;
+                continue;
+            }
+            numJoint++;
+            if (solution.getRateForRup(r) > 0) {
+                numJointWithRate++;
+            }
+
+            double solutionMag = rupSet.getMagForRup(r);
+            double jointMag = jointMagForRupture(rupSet, r);
+            double magDiff = Math.abs(jointMag - solutionMag);
+            if (magDiff > maxMagDiff) {
+                maxMagDiff = magDiff;
+                worst = r;
+            }
+            Preconditions.checkState(
+                    magDiff / solutionMag < MAX_FRACTIONAL_MAG_DIFF,
+                    "Rupture %s has magnitude %s, but the joint area scaling assumed by the GMM"
+                            + " gives %s. The GMM would refuse to calculate this rupture. Was the"
+                            + " solution built with a different scaling relationship than"
+                            + " JOIN_ESTIMATE?",
+                    r,
+                    solutionMag,
+                    jointMag);
+        }
+
+        return new ValidationResult(
+                numCrustal,
+                numInterface,
+                numJoint,
+                numJointWithRate,
+                maxMagDiff,
+                worst,
+                numSingleSectionWithRate);
+    }
+
+    /**
+     * The magnitude the joint GMM's area scaling gives for a rupture, calculated the same way the
+     * GMM does it: from the areas of the crustal and the interface parts of the rupture surface.
+     */
+    public static double jointMagForRupture(FaultSystemRupSet rupSet, int rupIndex) {
+        RuptureSurface surface = rupSet.getSurfaceForRupture(rupIndex, 1d);
+        Preconditions.checkState(
+                surface instanceof CompoundSurface,
+                "Rupture %s is not made up of multiple sections, so it cannot be joint",
+                rupIndex);
+        CompoundSurface compound = (CompoundSurface) surface;
+        List<? extends RuptureSurface> surfaces = compound.getSurfaceList();
+        List<? extends FaultSection> sections = compound.getSectionsList();
+        Preconditions.checkNotNull(
+                sections, "Rupture %s has a compound surface without section data", rupIndex);
+
+        double crustalArea = 0;
+        double interfaceArea = 0;
+        for (int i = 0; i < surfaces.size(); i++) {
+            if (tectonicRegionType(sections.get(i)) == TectonicRegionType.ACTIVE_SHALLOW) {
+                crustalArea += surfaces.get(i).getArea();
+            } else {
+                interfaceArea += surfaces.get(i).getArea();
+            }
+        }
+        return JointRuptureExperimentalIMR.getJointMag(crustalArea, interfaceArea);
+    }
+}

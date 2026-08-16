@@ -1,0 +1,136 @@
+package nz.cri.gns.NZSHM22.opensha.hazard.joint;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
+import org.opensha.commons.geo.Location;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.FaultTrace;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
+import org.opensha.sha.imr.attenRelImpl.JointRuptureExperimentalIMR;
+import org.opensha.sha.util.TectonicRegionType;
+
+/**
+ * A miniature joint solution shared by the joint hazard tests: two crustal sections and two
+ * subduction interface sections near Wellington, with a crustal-only, an interface-only and a joint
+ * rupture. Magnitudes are derived from the rupture surface areas with the same scaling that {@link
+ * JointRuptureExperimentalIMR} assumes, which is what a real joint solution built with the
+ * JOIN_ESTIMATE scaling relationship does.
+ */
+class JointTestSolutions {
+
+    static final List<List<Integer>> SECTIONS_FOR_RUPS =
+            List.of(
+                    List.of(0, 1), // crustal
+                    List.of(2, 3), // interface
+                    List.of(0, 1, 2, 3)); // joint
+
+    static final int CRUSTAL_RUP = 0;
+    static final int INTERFACE_RUP = 1;
+    static final int JOINT_RUP = 2;
+
+    /** A site sitting between the crustal and the interface sections. */
+    static final Location SITE = new Location(-41.4, 174.85);
+
+    private JointTestSolutions() {}
+
+    private static GeoJSONFaultSection makeSection(
+            int id, TectonicRegionType trt, double lat1, double lon1, double lat2, double lon2) {
+        FaultTrace trace = new FaultTrace("trace " + id);
+        trace.add(new Location(lat1, lon1));
+        trace.add(new Location(lat2, lon2));
+        FaultSectionPrefData pref = new FaultSectionPrefData();
+        pref.setSectionId(id);
+        pref.setSectionName("Section " + id);
+        pref.setFaultTrace(trace);
+        pref.setAveSlipRate(10);
+        pref.setAveRake(trt == TectonicRegionType.ACTIVE_SHALLOW ? 180 : 90);
+        pref.setAveDip(trt == TectonicRegionType.ACTIVE_SHALLOW ? 90 : 20);
+        pref.setAveUpperDepth(0);
+        pref.setAveLowerDepth(trt == TectonicRegionType.ACTIVE_SHALLOW ? 15 : 20);
+        pref.setDipDirection((float) trace.getDipDirection());
+        GeoJSONFaultSection section = GeoJSONFaultSection.fromFaultSection(pref);
+        section.setTectonicRegionType(trt);
+        new FaultSectionProperties(section)
+                .setPartition(
+                        trt == TectonicRegionType.ACTIVE_SHALLOW
+                                ? PartitionPredicate.CRUSTAL
+                                : PartitionPredicate.HIKURANGI);
+        return section;
+    }
+
+    static List<FaultSection> makeSections() {
+        List<FaultSection> sections = new ArrayList<>();
+        // two crustal sections, striking NE, west of the site
+        sections.add(makeSection(0, TectonicRegionType.ACTIVE_SHALLOW, -41.5, 174.6, -41.4, 174.7));
+        sections.add(makeSection(1, TectonicRegionType.ACTIVE_SHALLOW, -41.4, 174.7, -41.3, 174.8));
+        // two interface sections, east of the site
+        sections.add(
+                makeSection(
+                        2, TectonicRegionType.SUBDUCTION_INTERFACE, -41.4, 174.9, -41.3, 175.0));
+        sections.add(
+                makeSection(
+                        3, TectonicRegionType.SUBDUCTION_INTERFACE, -41.3, 175.0, -41.2, 175.1));
+        return sections;
+    }
+
+    /**
+     * Builds the rupture set twice: the first pass gives us rupture surfaces to measure areas on,
+     * the second sets the magnitudes that those areas imply under the joint scaling.
+     */
+    static FaultSystemRupSet makeRupSet(double jointMagOffset) {
+        List<FaultSection> sections = makeSections();
+        double[] placeholderMags = new double[SECTIONS_FOR_RUPS.size()];
+        Arrays.fill(placeholderMags, 7d);
+        FaultSystemRupSet firstPass =
+                FaultSystemRupSet.builder(sections, SECTIONS_FOR_RUPS)
+                        .rupMags(placeholderMags)
+                        .build();
+
+        double[] mags = new double[SECTIONS_FOR_RUPS.size()];
+        for (int r = 0; r < mags.length; r++) {
+            double crustalArea = 0;
+            double interfaceArea = 0;
+            for (int s : SECTIONS_FOR_RUPS.get(r)) {
+                double area =
+                        firstPass
+                                .getFaultSectionData(s)
+                                .getFaultSurface(1d, false, false)
+                                .getArea();
+                if (firstPass.getFaultSectionData(s).getTectonicRegionType()
+                        == TectonicRegionType.ACTIVE_SHALLOW) {
+                    crustalArea += area;
+                } else {
+                    interfaceArea += area;
+                }
+            }
+            if (crustalArea > 0 && interfaceArea > 0) {
+                mags[r] =
+                        JointRuptureExperimentalIMR.getJointMag(crustalArea, interfaceArea)
+                                + jointMagOffset;
+            } else if (crustalArea > 0) {
+                mags[r] = JointRuptureExperimentalIMR.getCrustalMag(crustalArea);
+            } else {
+                mags[r] = JointRuptureExperimentalIMR.getInterfaceMag(interfaceArea);
+            }
+        }
+
+        return FaultSystemRupSet.builder(makeSections(), SECTIONS_FOR_RUPS).rupMags(mags).build();
+    }
+
+    static FaultSystemSolution makeSolution() {
+        return makeSolution(0d);
+    }
+
+    static FaultSystemSolution makeSolution(double jointMagOffset) {
+        FaultSystemRupSet rupSet = makeRupSet(jointMagOffset);
+        double[] rates = new double[rupSet.getNumRuptures()];
+        Arrays.fill(rates, 1e-3);
+        return new FaultSystemSolution(rupSet, rates);
+    }
+}
