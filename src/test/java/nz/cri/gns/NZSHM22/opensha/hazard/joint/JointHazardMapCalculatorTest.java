@@ -20,6 +20,7 @@ import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.param.Parameter;
+import org.opensha.nshmp.shaded.gmm.NshmpGroundMotion;
 import org.opensha.sha.earthquake.EqkRupture;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -236,8 +237,8 @@ public class JointHazardMapCalculatorTest {
     /** The joint ground motion combination is an SRSS of the component medians. */
     @Test
     public void testJointGroundMotionIsSRSS() {
-        var crustal = gov.usgs.earthquake.nshmp.gmm.GroundMotion.create(Math.log(0.3), 0.6);
-        var interfce = gov.usgs.earthquake.nshmp.gmm.GroundMotion.create(Math.log(0.4), 0.5);
+        var crustal = NshmpGroundMotion.create(Math.log(0.3), 0.6);
+        var interfce = NshmpGroundMotion.create(Math.log(0.4), 0.5);
         var joint = JointRuptureExperimentalIMR.calcJointGroundMotion(crustal, interfce);
 
         assertEquals(Math.log(Math.sqrt(0.3 * 0.3 + 0.4 * 0.4)), joint.mean(), 1e-9);

@@ -1,11 +1,11 @@
 package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 
-import gov.usgs.earthquake.nshmp.gmm.Gmm;
 import java.awt.geom.Point2D;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
+import org.opensha.nshmp.shaded.gmm.NshmpGmm;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.gui.infoTools.IMT_Info;
@@ -68,7 +68,7 @@ public class JointHazardCalcSetup {
         return buildComponentGmm(JointRuptureExperimentalIMR.DEFAULT_INTERFACE_GMM);
     }
 
-    private static ScalarIMR buildComponentGmm(Gmm gmm) {
+    private static ScalarIMR buildComponentGmm(NshmpGmm gmm) {
         ScalarIMR imr = new NSHMP_AttenRelSupplier(gmm).get();
         imr.setParamDefaults();
         return imr;
