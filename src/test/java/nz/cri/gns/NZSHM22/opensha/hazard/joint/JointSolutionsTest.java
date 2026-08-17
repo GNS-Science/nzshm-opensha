@@ -40,6 +40,45 @@ public class JointSolutionsTest {
         assertEquals(List.of(2, 3), rupSet.getSectionsIndicesForRup(1));
     }
 
+    /** Any number of solutions can be merged, not just a crustal and a subduction one. */
+    @Test
+    public void testMergeThreeSolutions() {
+        FaultSystemSolution merged =
+                JointSolutions.merge(
+                        makeCrustalSolution(), makeSubductionSolution(), makeCrustalSolution());
+        FaultSystemRupSet rupSet = merged.getRupSet();
+
+        assertEquals(6, rupSet.getNumSections());
+        assertEquals(3, rupSet.getNumRuptures());
+        assertEquals(List.of(4, 5), rupSet.getSectionsIndicesForRup(2));
+
+        RupSetTectonicRegimes regimes = rupSet.getModule(RupSetTectonicRegimes.class);
+        assertEquals(TectonicRegionType.ACTIVE_SHALLOW, regimes.get(0));
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(1));
+        assertEquals(TectonicRegionType.ACTIVE_SHALLOW, regimes.get(2));
+    }
+
+    /** A single solution has nothing to be merged with, so it is passed through as it is. */
+    @Test
+    public void testMergeSingleSolution() {
+        FaultSystemSolution crustal = makeCrustalSolution();
+        FaultSystemSolution merged = JointSolutions.merge(crustal);
+
+        assertSame(crustal, merged);
+        assertNotNull(merged.getRupSet().getModule(RupSetTectonicRegimes.class));
+    }
+
+    /** Merging nothing has no sensible result. */
+    @Test
+    public void testMergeRejectsNoSolutions() {
+        try {
+            JointSolutions.merge();
+            fail("expected merging nothing to be rejected");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("at least one solution"));
+        }
+    }
+
     /**
      * The merged rupture set carries the tectonic regimes module. Without it the ERF reports every
      * source as ACTIVE_SHALLOW and the subduction sources would be calculated with the crustal GMM.

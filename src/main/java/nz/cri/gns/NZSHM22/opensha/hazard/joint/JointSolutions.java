@@ -9,8 +9,8 @@ import org.opensha.sha.earthquake.faultSysSolution.util.MergedSolutionCreator;
 import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Solution plumbing for a crustal + subduction hazard calculation: merging two solutions into one,
- * and giving a rupture set the per-rupture tectonic region types that the ERF needs.
+ * Solution plumbing for a crustal + subduction hazard calculation: merging solutions into one, and
+ * giving a rupture set the per-rupture tectonic region types that the ERF needs.
  *
  * <p>The tectonic region types matter because OpenSHA's hazard calculator picks a GMM per source
  * from {@code source.getTectonicRegionType()}, and {@code BaseFaultSystemSolutionERF} takes that
@@ -23,8 +23,9 @@ public class JointSolutions {
     private JointSolutions() {}
 
     /**
-     * Merges a crustal and a subduction solution into a single solution whose ruptures carry
-     * tectonic region types, ready to be calculated as one ERF.
+     * Merges any number of solutions, typically a crustal and one or more subduction solutions,
+     * into a single solution whose ruptures carry tectonic region types, ready to be calculated as
+     * one ERF.
      *
      * <p>Uses {@link MergedSolutionCreator}, which renumbers sections and concatenates ruptures and
      * rates. Note what that does not do:
@@ -40,10 +41,16 @@ public class JointSolutions {
      *       Rupture surfaces are built from the section data, so hazard is unaffected, but do not
      *       trust the area or length of a merged rupture.
      * </ul>
+     *
+     * <p>A single solution is returned as it is, with the tectonic region types applied to it in
+     * place. There is nothing to merge it with, and copying it would only lose modules.
+     *
+     * @throws IllegalArgumentException if no solution is given
      */
-    public static FaultSystemSolution merge(
-            FaultSystemSolution crustal, FaultSystemSolution subduction) {
-        FaultSystemSolution merged = MergedSolutionCreator.merge(crustal, subduction);
+    public static FaultSystemSolution merge(FaultSystemSolution... solutions) {
+        Preconditions.checkArgument(solutions.length > 0, "need at least one solution to merge");
+        FaultSystemSolution merged =
+                solutions.length == 1 ? solutions[0] : MergedSolutionCreator.merge(solutions);
         applyTectonicRegimes(merged.getRupSet());
         return merged;
     }

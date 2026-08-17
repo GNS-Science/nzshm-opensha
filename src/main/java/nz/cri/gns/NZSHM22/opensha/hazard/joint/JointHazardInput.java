@@ -38,10 +38,10 @@ import org.opensha.sha.util.TectonicRegionType;
  * </ol>
  *
  * <p>Those two assumptions only apply to {@link GmmMode#JOINT_RUPTURE}. In {@link
- * GmmMode#PER_TECTONIC_REGION} — a crustal and a subduction solution calculated together, see
- * {@link #combined}, or a single solution holding both kinds of rupture, see {@link
- * #perTectonicRegion} — each source is calculated with the GMM for its own tectonic region type, so
- * no joint area scaling is involved and joint ruptures are rejected instead.
+ * GmmMode#PER_TECTONIC_REGION} — crustal and subduction solutions calculated together, see {@link
+ * #combined}, or a single solution holding both kinds of rupture, see {@link #perTectonicRegion} —
+ * each source is calculated with the GMM for its own tectonic region type, so no joint area scaling
+ * is involved and joint ruptures are rejected instead.
  *
  * <p>Once a {@link JointHazardCalcSetup} has been built on top of these inputs they are locked and
  * the setters throw.
@@ -107,14 +107,19 @@ public class JointHazardInput {
     }
 
     /**
-     * Inputs for calculating a crustal and a subduction solution together. The two are merged into
-     * a single solution, and so into a single ERF, where the crustal sources are calculated with a
-     * crustal GMM and the interface sources with an interface GMM. See {@link JointSolutions#merge}
-     * for what the merge does and does not preserve.
+     * Inputs for calculating any number of solutions together, typically a crustal and one or more
+     * subduction solutions. They are merged into a single solution, and so into a single ERF, where
+     * the crustal sources are calculated with a crustal GMM and the interface sources with an
+     * interface GMM. See {@link JointSolutions#merge} for what the merge does and does not
+     * preserve.
+     *
+     * <p>A single solution is passed through unmerged, which makes this equivalent to {@link
+     * #perTectonicRegion}.
+     *
+     * @throws IllegalArgumentException if no solution is given
      */
-    public static JointHazardInput combined(
-            FaultSystemSolution crustal, FaultSystemSolution subduction) {
-        return new JointHazardInput(JointSolutions.merge(crustal, subduction))
+    public static JointHazardInput combined(FaultSystemSolution... solutions) {
+        return new JointHazardInput(JointSolutions.merge(solutions))
                 .setGmmMode(GmmMode.PER_TECTONIC_REGION);
     }
 

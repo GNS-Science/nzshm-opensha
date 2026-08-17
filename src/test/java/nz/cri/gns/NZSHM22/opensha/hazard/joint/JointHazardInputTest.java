@@ -135,6 +135,31 @@ public class JointHazardInputTest {
         assertEquals(0, result.numJoint);
     }
 
+    /** More than two solutions can be calculated together as well. */
+    @Test
+    public void testCombinedValidateThreeSolutions() {
+        ValidationResult result =
+                JointHazardInput.combined(
+                                makeCrustalSolution(),
+                                makeSubductionSolution(),
+                                makeSubductionSolution())
+                        .validate();
+        assertEquals(1, result.numCrustal);
+        assertEquals(2, result.numInterface);
+        assertEquals(0, result.numJoint);
+    }
+
+    /** A single solution is passed through unmerged, so combined is then per-TRT mode. */
+    @Test
+    public void testCombinedSingleSolution() {
+        JointHazardInput input = JointHazardInput.combined(makeMixedSolution());
+        assertEquals(GmmMode.PER_TECTONIC_REGION, input.getGmmMode());
+
+        ValidationResult result = input.validate();
+        assertEquals(1, result.numCrustal);
+        assertEquals(1, result.numInterface);
+    }
+
     /**
      * Per-TRT mode cannot calculate a joint rupture: it spans both region types, so neither the
      * crustal nor the interface GMM is right for it.
