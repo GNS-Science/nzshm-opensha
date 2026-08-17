@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.data.location.NzshmCommonLocations;
+import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.GmmMode;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.RuptureType;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.ValidationResult;
 import org.junit.Test;
@@ -108,6 +109,40 @@ public class JointHazardInputTest {
                 rupSet.getMagForRup(JOINT_RUP),
                 JointHazardInput.jointMagForRupture(rupSet, JOINT_RUP),
                 1e-6);
+    }
+
+    /** A solution with crustal and interface ruptures but no joint ruptures validates per TRT. */
+    @Test
+    public void testPerTectonicRegionValidate() {
+        ValidationResult result =
+                JointHazardInput.perTectonicRegion(makeMixedSolution()).validate();
+        assertEquals(1, result.numCrustal);
+        assertEquals(1, result.numInterface);
+        assertEquals(0, result.numJoint);
+        assertFalse(result.isJoint());
+    }
+
+    /** Two solutions calculated together validate as one merged solution. */
+    @Test
+    public void testCombinedValidate() {
+        JointHazardInput input =
+                JointHazardInput.combined(makeCrustalSolution(), makeSubductionSolution());
+        assertEquals(GmmMode.PER_TECTONIC_REGION, input.getGmmMode());
+
+        ValidationResult result = input.validate();
+        assertEquals(1, result.numCrustal);
+        assertEquals(1, result.numInterface);
+        assertEquals(0, result.numJoint);
+    }
+
+    /**
+     * Per-TRT mode cannot calculate a joint rupture: it spans both region types, so neither the
+     * crustal nor the interface GMM is right for it.
+     */
+    @Test
+    public void testPerTectonicRegionRejectsJointRuptures() {
+        String message = validationFailure(JointHazardInput.perTectonicRegion(makeSolution()));
+        assertTrue(message, message.contains("JOINT_RUPTURE"));
     }
 
     /** Inputs are frozen once a calculation has been set up on top of them. */

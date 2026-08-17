@@ -6,9 +6,11 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.jfree.data.Range;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.Site;
@@ -33,12 +35,14 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.attenRelImpl.JointRuptureExperimentalIMR;
+import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Calculates hazard maps and hazard curves for a joint (crustal + subduction) inversion solution,
- * using {@link JointRuptureExperimentalIMR}.
+ * Calculates hazard maps and hazard curves for a crustal + subduction inversion solution, either
+ * with {@link JointRuptureExperimentalIMR} for solutions containing joint ruptures, or with a
+ * crustal and an interface GMM dispatched per source. See {@link JointHazardInput.GmmMode}.
  *
- * <p>The inputs and their validation live in {@link JointHazardInput}, the GMM and the underlying
+ * <p>The inputs and their validation live in {@link JointHazardInput}, the GMMs and the underlying
  * OpenSHA calculator in {@link JointHazardCalcSetup}. This class turns those into maps, curves,
  * plots and CSVs.
  */
@@ -131,11 +135,17 @@ public class JointHazardMapCalculator {
      * returned curve has linear x values (IML) and annual probabilities of exceedance as y values.
      */
     public DiscretizedFunc calcSiteCurve(Location location, double period) {
-        ScalarIMR gmm = JointHazardCalcSetup.buildGmm();
-        FaultSysHazardCalcSettings.setIMforPeriod(gmm, period);
+        Map<TectonicRegionType, Supplier<ScalarIMR>> suppliers = setup.gmmSuppliers();
+        EnumMap<TectonicRegionType, ScalarIMR> gmms = new EnumMap<>(TectonicRegionType.class);
+        for (Map.Entry<TectonicRegionType, Supplier<ScalarIMR>> entry : suppliers.entrySet()) {
+            gmms.put(entry.getKey(), entry.getValue().get());
+        }
+        FaultSysHazardCalcSettings.setIMforPeriod(gmms, period);
 
+        // site params are the union over every GMM in the map
         Site site = new Site(location);
-        for (Parameter<?> siteParam : gmm.getSiteParams()) {
+        for (Parameter<?> siteParam :
+                FaultSysHazardCalcSettings.getDefaultRefSiteParams(suppliers)) {
             site.addParameter((Parameter<?>) siteParam.clone());
         }
 
@@ -147,7 +157,7 @@ public class JointHazardMapCalculator {
 
         HazardCurveCalculator curveCalc =
                 new HazardCurveCalculator(FaultSysHazardCalcSettings.getDefaultSourceFilters());
-        curveCalc.getHazardCurve(logCurve, site, gmm, getCalc().getERF());
+        curveCalc.getHazardCurve(logCurve, site, gmms, getCalc().getERF());
 
         DiscretizedFunc curve = new ArbitrarilyDiscretizedFunc();
         for (int i = 0; i < xVals.size(); i++) {

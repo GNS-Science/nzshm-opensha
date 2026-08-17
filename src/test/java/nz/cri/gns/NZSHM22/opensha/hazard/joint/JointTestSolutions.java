@@ -34,6 +34,12 @@ class JointTestSolutions {
     static final int INTERFACE_RUP = 1;
     static final int JOINT_RUP = 2;
 
+    /**
+     * Rate of the ruptures in the single-rupture solutions. High enough that the hazard at the site
+     * exceeds the map return periods, so a map built from them has non-zero values.
+     */
+    static final double SINGLE_RUPTURE_RATE = 1e-2;
+
     /** A site sitting between the crustal and the interface sections. */
     static final Location SITE = new Location(-41.4, 174.85);
 
@@ -125,6 +131,65 @@ class JointTestSolutions {
 
     static FaultSystemSolution makeSolution() {
         return makeSolution(0d);
+    }
+
+    /**
+     * A solution holding only the crustal rupture, on the two crustal sections. Sections are
+     * rebuilt so that this solution shares nothing with its subduction counterpart.
+     */
+    static FaultSystemSolution makeCrustalSolution() {
+        return makeSingleRuptureSolution(List.of(0, 1), true);
+    }
+
+    /** A solution holding only the interface rupture, on the two subduction sections. */
+    static FaultSystemSolution makeSubductionSolution() {
+        return makeSingleRuptureSolution(List.of(2, 3), false);
+    }
+
+    private static FaultSystemSolution makeSingleRuptureSolution(
+            List<Integer> sectionIndices, boolean crustal) {
+        List<FaultSection> all = makeSections();
+        List<FaultSection> sections = new ArrayList<>();
+        for (int i = 0; i < sectionIndices.size(); i++) {
+            FaultSection section = all.get(sectionIndices.get(i));
+            // sections must be indexed from 0 within their own rupture set
+            section.setSectionId(i);
+            sections.add(section);
+        }
+        List<List<Integer>> sectionsForRups = List.of(List.of(0, 1));
+
+        double area = 0;
+        FaultSystemRupSet firstPass =
+                FaultSystemRupSet.builder(sections, sectionsForRups)
+                        .rupMags(new double[] {7d})
+                        .build();
+        for (int s = 0; s < sections.size(); s++) {
+            area += firstPass.getFaultSectionData(s).getFaultSurface(1d, false, false).getArea();
+        }
+        double mag =
+                crustal
+                        ? JointRuptureExperimentalIMR.getCrustalMag(area)
+                        : JointRuptureExperimentalIMR.getInterfaceMag(area);
+
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.builder(sections, sectionsForRups)
+                        .rupMags(new double[] {mag})
+                        .build();
+        return new FaultSystemSolution(rupSet, new double[] {SINGLE_RUPTURE_RATE});
+    }
+
+    /**
+     * A single solution holding a crustal and an interface rupture but no joint rupture: the case
+     * that {@link JointHazardInput.GmmMode#PER_TECTONIC_REGION} exists for.
+     */
+    static FaultSystemSolution makeMixedSolution() {
+        List<List<Integer>> sectionsForRups = List.of(List.of(0, 1), List.of(2, 3));
+        FaultSystemRupSet full = makeRupSet(0d);
+        double[] mags = {full.getMagForRup(CRUSTAL_RUP), full.getMagForRup(INTERFACE_RUP)};
+        FaultSystemRupSet rupSet =
+                FaultSystemRupSet.builder(makeSections(), sectionsForRups).rupMags(mags).build();
+        return new FaultSystemSolution(
+                rupSet, new double[] {SINGLE_RUPTURE_RATE, SINGLE_RUPTURE_RATE});
     }
 
     static FaultSystemSolution makeSolution(double jointMagOffset) {

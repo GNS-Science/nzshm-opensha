@@ -37,6 +37,12 @@ import org.opensha.sha.util.TectonicRegionType;
  *       rupture magnitude disagrees by more than 5%, so it is worth checking up front.
  * </ol>
  *
+ * <p>Those two assumptions only apply to {@link GmmMode#JOINT_RUPTURE}. In {@link
+ * GmmMode#PER_TECTONIC_REGION} — a crustal and a subduction solution calculated together, see
+ * {@link #combined}, or a single solution holding both kinds of rupture, see {@link
+ * #perTectonicRegion} — each source is calculated with the GMM for its own tectonic region type, so
+ * no joint area scaling is involved and joint ruptures are rejected instead.
+ *
  * <p>Once a {@link JointHazardCalcSetup} has been built on top of these inputs they are locked and
  * the setters throw.
  */
@@ -47,6 +53,23 @@ public class JointHazardInput {
         CRUSTAL,
         INTERFACE,
         JOINT
+    }
+
+    /** How ground motions are calculated. */
+    public enum GmmMode {
+        /**
+         * A single {@link JointRuptureExperimentalIMR} for every source, which splits joint
+         * ruptures into their crustal and interface parts internally. The only mode that can handle
+         * ruptures spanning both tectonic region types.
+         */
+        JOINT_RUPTURE,
+        /**
+         * A crustal GMM for crustal sources and an interface GMM for interface sources, dispatched
+         * by the source's tectonic region type. Use this for a crustal and a subduction solution
+         * calculated together, or for a single solution holding both kinds of rupture. Cannot
+         * handle joint ruptures.
+         */
+        PER_TECTONIC_REGION
     }
 
     /** Default map resolution in degrees, i.e. roughly 10km. */
@@ -71,6 +94,7 @@ public class JointHazardInput {
 
     private final FaultSystemSolution solution;
 
+    private GmmMode gmmMode = GmmMode.JOINT_RUPTURE;
     private GriddedRegion region;
     private double spacing = DEFAULT_SPACING;
     private double[] periods = DEFAULT_PERIODS;
@@ -82,8 +106,39 @@ public class JointHazardInput {
         this.solution = solution;
     }
 
+    /**
+     * Inputs for calculating a crustal and a subduction solution together. The two are merged into
+     * a single solution, and so into a single ERF, where the crustal sources are calculated with a
+     * crustal GMM and the interface sources with an interface GMM. See {@link JointSolutions#merge}
+     * for what the merge does and does not preserve.
+     */
+    public static JointHazardInput combined(
+            FaultSystemSolution crustal, FaultSystemSolution subduction) {
+        return new JointHazardInput(JointSolutions.merge(crustal, subduction))
+                .setGmmMode(GmmMode.PER_TECTONIC_REGION);
+    }
+
+    /**
+     * Inputs for a single solution that holds both crustal and subduction ruptures but no joint
+     * ruptures. Each rupture is calculated with the GMM for its own tectonic region type.
+     */
+    public static JointHazardInput perTectonicRegion(FaultSystemSolution solution) {
+        return new JointHazardInput(solution).setGmmMode(GmmMode.PER_TECTONIC_REGION);
+    }
+
     public FaultSystemSolution getSolution() {
         return solution;
+    }
+
+    /** Sets how ground motions are calculated. Defaults to {@link GmmMode#JOINT_RUPTURE}. */
+    public JointHazardInput setGmmMode(GmmMode gmmMode) {
+        checkNotLocked();
+        this.gmmMode = gmmMode;
+        return this;
+    }
+
+    public GmmMode getGmmMode() {
+        return gmmMode;
     }
 
     /** Sets the gridded region that the map is calculated over. Overrides {@link #setSpacing}. */
@@ -199,10 +254,10 @@ public class JointHazardInput {
         public final int worstJointRupture;
 
         /**
-         * Number of single-section ruptures with a non-zero rate. Those reach the GMM as a plain
-         * surface rather than a compound one, and the GMM then has to guess whether they are
-         * crustal or interface from their magnitude alone. See {@link
-         * #getNumSingleSectionWithRate()}.
+         * Number of single-section ruptures with a non-zero rate. Those reach the joint GMM as a
+         * plain surface rather than a compound one, and it then has to guess whether they are
+         * crustal or interface from their magnitude alone. Only a concern in {@link
+         * GmmMode#JOINT_RUPTURE}. See {@link #getNumSingleSectionWithRate()}.
          */
         private final int numSingleSectionWithRate;
 
@@ -229,11 +284,13 @@ public class JointHazardInput {
 
         /**
          * Number of single-section ruptures that carry a rate and therefore end up in the ERF. The
-         * GMM classifies such ruptures by comparing their magnitude against crustal and interface
-         * area scaling, and as of writing that comparison in JointRuptureExperimentalIMR uses the
-         * crustal scaling for both sides, so every single-section rupture is treated as interface.
-         * A non-zero count here means part of the hazard is calculated with the wrong component
-         * GMM.
+         * joint GMM classifies such ruptures by comparing their magnitude against crustal and
+         * interface area scaling, and as of writing that comparison in JointRuptureExperimentalIMR
+         * uses the crustal scaling for both sides, so every single-section rupture is treated as
+         * interface. In {@link GmmMode#JOINT_RUPTURE} a non-zero count here means part of the
+         * hazard is calculated with the wrong component GMM. In {@link GmmMode#PER_TECTONIC_REGION}
+         * it does not matter: the GMM is picked from the rupture's tectonic region type, not from
+         * its surface.
          */
         public int getNumSingleSectionWithRate() {
             return numSingleSectionWithRate;
@@ -258,11 +315,18 @@ public class JointHazardInput {
     }
 
     /**
-     * Checks that the solution matches the assumptions of {@link JointRuptureExperimentalIMR} and
-     * returns a summary of its rupture composition.
+     * Checks that the solution matches the assumptions of the calculation and returns a summary of
+     * its rupture composition.
      *
-     * @throws IllegalStateException if a section has an unsupported tectonic region type, or if a
-     *     joint rupture magnitude disagrees with the GMM's joint area scaling.
+     * <p>Both modes require every section to carry a supported tectonic region type. {@link
+     * GmmMode#JOINT_RUPTURE} additionally checks joint rupture magnitudes against the area scaling
+     * the joint GMM assumes; {@link GmmMode#PER_TECTONIC_REGION} instead rejects joint ruptures
+     * outright, because a rupture spanning both region types has no single GMM to be calculated
+     * with.
+     *
+     * @throws IllegalStateException if a section has an unsupported tectonic region type, if a
+     *     joint rupture magnitude disagrees with the GMM's joint area scaling, or if a joint
+     *     rupture is found in {@link GmmMode#PER_TECTONIC_REGION}.
      */
     public ValidationResult validate() {
         FaultSystemRupSet rupSet = solution.getRupSet();
@@ -297,6 +361,14 @@ public class JointHazardInput {
             if (solution.getRateForRup(r) > 0) {
                 numJointWithRate++;
             }
+
+            Preconditions.checkState(
+                    gmmMode == GmmMode.JOINT_RUPTURE,
+                    "Rupture %s spans crustal and interface sections, which"
+                            + " GmmMode.PER_TECTONIC_REGION cannot calculate: the rupture has no"
+                            + " single tectonic region type and so no single GMM. Use"
+                            + " GmmMode.JOINT_RUPTURE for solutions with joint ruptures.",
+                    r);
 
             double solutionMag = rupSet.getMagForRup(r);
             double jointMag = jointMagForRupture(rupSet, r);

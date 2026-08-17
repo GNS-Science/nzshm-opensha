@@ -4,9 +4,12 @@ import static nz.cri.gns.NZSHM22.opensha.hazard.joint.JointTestSolutions.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -19,6 +22,8 @@ import org.opensha.commons.geo.Region;
 import org.opensha.commons.param.Parameter;
 import org.opensha.sha.earthquake.EqkRupture;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.erf.BaseFaultSystemSolutionERF;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 import org.opensha.sha.imr.ScalarIMR;
@@ -46,6 +51,148 @@ public class JointHazardMapCalculatorTest {
         assertEquals(1, map.size());
         assertTrue(map.containsKey(TectonicRegionType.ACTIVE_SHALLOW));
         assertTrue(JointHazardCalcSetup.buildGmm() instanceof JointRuptureExperimentalIMR);
+    }
+
+    /** The per-TRT map has a GMM for each region type, and they are different models. */
+    @Test
+    public void testPerTrtGmmSupplierMap() {
+        Map<TectonicRegionType, Supplier<ScalarIMR>> map =
+                JointHazardCalcSetup.perTrtGmmSupplierMap();
+        assertEquals(2, map.size());
+
+        ScalarIMR crustal = map.get(TectonicRegionType.ACTIVE_SHALLOW).get();
+        ScalarIMR interfce = map.get(TectonicRegionType.SUBDUCTION_INTERFACE).get();
+        assertNotNull(crustal);
+        assertNotNull(interfce);
+        assertNotEquals(crustal.getName(), interfce.getName());
+    }
+
+    /**
+     * The sources of a per-TRT ERF report their own tectonic region type. This is what makes the
+     * two entry GMM map work: OpenSHA dispatches on the source's TRT, and the ERF only knows it if
+     * the rupture set carries the tectonic regimes module.
+     */
+    @Test
+    public void testPerTrtErfSourcesCarryTectonicRegionTypes() {
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        JointHazardInput.combined(makeCrustalSolution(), makeSubductionSolution())
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+
+        BaseFaultSystemSolutionERF erf = calculator.getCalc().getERF();
+        Set<TectonicRegionType> found = EnumSet.noneOf(TectonicRegionType.class);
+        for (int s = 0; s < erf.getNumSources(); s++) {
+            found.add(erf.getSource(s).getTectonicRegionType());
+        }
+        assertEquals(
+                Set.of(TectonicRegionType.ACTIVE_SHALLOW, TectonicRegionType.SUBDUCTION_INTERFACE),
+                found);
+    }
+
+    /**
+     * Calculating two solutions as one ERF gives the same hazard as calculating them separately and
+     * combining the curves probabilistically: 1 - (1 - Pc)(1 - Ps). That is what "one ERF, two
+     * solutions" is supposed to buy, so it is worth pinning down.
+     */
+    @Test
+    public void testCombinedCurveIsProbabilisticUnionOfItsParts() {
+        DiscretizedFunc crustal = perTrtSiteCurve(makeCrustalSolution());
+        DiscretizedFunc subduction = perTrtSiteCurve(makeSubductionSolution());
+
+        JointHazardMapCalculator combined =
+                new JointHazardMapCalculator(
+                        JointHazardInput.combined(makeCrustalSolution(), makeSubductionSolution())
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+        DiscretizedFunc curve = combined.calcSiteCurve(SITE, 0d);
+
+        assertTrue("expected non-zero hazard at the site", curve.getY(0) > 0);
+        for (int i = 0; i < curve.size(); i++) {
+            double expected = 1d - (1d - crustal.getY(i)) * (1d - subduction.getY(i));
+            assertEquals(
+                    "at iml " + (float) curve.getX(i),
+                    expected,
+                    curve.getY(i),
+                    1e-6 + 1e-3 * expected);
+        }
+    }
+
+    /** A site curve for a single solution, calculated with the per-TRT GMMs. */
+    private static DiscretizedFunc perTrtSiteCurve(FaultSystemSolution solution) {
+        return new JointHazardMapCalculator(
+                        JointHazardInput.perTectonicRegion(solution)
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1))
+                .calcSiteCurve(SITE, 0d);
+    }
+
+    /** End to end for two solutions calculated together. */
+    @Test
+    public void testCombinedEndToEnd() throws Exception {
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        JointHazardInput.combined(makeCrustalSolution(), makeSubductionSolution())
+                                .setRegion(mapRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+
+        File outputDir = tempFolder.newFolder("combined");
+        List<File> maps = calculator.writeMaps(outputDir);
+        assertEquals(SolHazardMapCalc.MAP_RPS.length, maps.size());
+        for (File map : maps) {
+            assertTrue(map.getName() + " should exist", map.exists());
+        }
+
+        GriddedGeoDataSet map = calculator.getCalc().buildMap(0d, ReturnPeriods.TEN_IN_50);
+        boolean anyPositive = false;
+        for (int i = 0; i < map.size(); i++) {
+            assertFalse("map values must be finite", Double.isNaN(map.get(i)));
+            anyPositive |= map.get(i) > 0;
+        }
+        assertTrue("expected non-zero ground motion near the faults", anyPositive);
+    }
+
+    /** A single solution holding both kinds of rupture, calculated per tectonic region type. */
+    @Test
+    public void testMixedSolutionPerTectonicRegion() {
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        JointHazardInput.perTectonicRegion(makeMixedSolution())
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+
+        DiscretizedFunc curve = calculator.calcSiteCurve(SITE, 0d);
+        assertTrue("expected non-zero hazard at the site", curve.getY(0) > 0);
+
+        BaseFaultSystemSolutionERF erf = calculator.getCalc().getERF();
+        Set<TectonicRegionType> found = EnumSet.noneOf(TectonicRegionType.class);
+        for (int s = 0; s < erf.getNumSources(); s++) {
+            found.add(erf.getSource(s).getTectonicRegionType());
+        }
+        assertEquals(
+                Set.of(TectonicRegionType.ACTIVE_SHALLOW, TectonicRegionType.SUBDUCTION_INTERFACE),
+                found);
+    }
+
+    /** Big enough to plot a map: a single row or column of nodes cannot be drawn. */
+    private static GriddedRegion mapRegion() {
+        return new GriddedRegion(
+                new Region(new Location(-41.6, 174.5), new Location(-41.1, 175.2)),
+                0.25,
+                GriddedRegion.ANCHOR_0_0);
+    }
+
+    /** Just enough nodes to build an ERF and calculate site curves. */
+    private static GriddedRegion smallRegion() {
+        return new GriddedRegion(
+                new Region(new Location(-41.5, 174.7), new Location(-41.3, 174.9)),
+                0.2,
+                GriddedRegion.ANCHOR_0_0);
     }
 
     /**
