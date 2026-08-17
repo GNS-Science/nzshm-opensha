@@ -23,7 +23,7 @@ jobs:
 
     - name: Clone opensha fork
       if: github.event_name != 'schedule'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       with:
         repository: GNS-Science/opensha
         ref: fix/rup-normalization-2024
@@ -32,21 +32,21 @@ jobs:
     # scheduled build: each week, we want to build against the latest upstream to catch drifts early
     - name: Clone opensha
       if: github.event_name == 'schedule'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       with:
         repository: opensha/opensha
         ref: master
         path: opensha
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
       with:
         path: main
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v2
+    - name: Set up JDK 21
+      uses: actions/setup-java@v5
       with:
-        java-version: '17'
-        distribution: 'adopt'
+        java-version: '21'
+        distribution: 'temurin'
 
     - name: Build with Gradle
       run: |
@@ -59,7 +59,7 @@ jobs:
     #       upload coverage report to Codecov
     #----------------------------------------------
     - name: Submit coverage report
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
         files: ./coverage.xml
         flags: unittests
