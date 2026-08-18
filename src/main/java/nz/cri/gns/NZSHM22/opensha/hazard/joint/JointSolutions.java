@@ -1,16 +1,22 @@
 package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 
 import com.google.common.base.Preconditions;
+import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.RuptureType;
+import nz.cri.gns.NZSHM22.opensha.scripts.RupSetPropertyBackfill;
+import org.dom4j.DocumentException;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.RupSetTectonicRegimes;
 import org.opensha.sha.earthquake.faultSysSolution.util.MergedSolutionCreator;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Solution plumbing for a crustal + subduction hazard calculation: merging solutions into one, and
- * giving a rupture set the per-rupture tectonic region types that the ERF needs.
+ * Solution plumbing for a crustal + subduction hazard calculation: backfilling section properties
+ * on older solutions, merging solutions into one, and giving a rupture set the per-rupture tectonic
+ * region types that the ERF needs.
  *
  * <p>The tectonic region types matter because OpenSHA's hazard calculator picks a GMM per source
  * from {@code source.getTectonicRegionType()}, and {@code BaseFaultSystemSolutionERF} takes that
@@ -42,17 +48,79 @@ public class JointSolutions {
      *       trust the area or length of a merged rupture.
      * </ul>
      *
-     * <p>A single solution is returned as it is, with the tectonic region types applied to it in
-     * place. There is nothing to merge it with, and copying it would only lose modules.
+     * <p>Every solution is run through {@link #backfill} first, so solutions saved before fault
+     * section properties were introduced can be calculated without being converted by hand.
+     *
+     * <p>A single solution is returned as it is (unless it needed backfilling), with the tectonic
+     * region types applied to it in place. There is nothing to merge it with, and copying it would
+     * only lose modules.
      *
      * @throws IllegalArgumentException if no solution is given
      */
     public static FaultSystemSolution merge(FaultSystemSolution... solutions) {
         Preconditions.checkArgument(solutions.length > 0, "need at least one solution to merge");
+        FaultSystemSolution[] backfilled = new FaultSystemSolution[solutions.length];
+        for (int i = 0; i < solutions.length; i++) {
+            backfilled[i] = backfill(solutions[i]);
+        }
         FaultSystemSolution merged =
-                solutions.length == 1 ? solutions[0] : MergedSolutionCreator.merge(solutions);
+                backfilled.length == 1 ? backfilled[0] : MergedSolutionCreator.merge(backfilled);
         applyTectonicRegimes(merged.getRupSet());
         return merged;
+    }
+
+    /**
+     * Backfills fault section properties with {@link RupSetPropertyBackfill} if the solution needs
+     * it, i.e. if any of its sections lacks a tectonic region type the joint hazard calculation
+     * understands. See {@link #needsBackfill}.
+     *
+     * <p>Backfilling rebuilds the rupture set, so the returned solution wraps a new rupture set;
+     * the modules of both the solution and the rupture set are carried over. Solutions that do not
+     * need it are returned unchanged.
+     *
+     * <p>This has to happen before a merge, not after: the backfill reads the fault model from the
+     * solution's logic tree branch to look up crustal domains, and {@link MergedSolutionCreator}
+     * drops that module. It also corrects section rakes, and rupture rakes are recalculated from
+     * them only while the rupture set is rebuilt.
+     *
+     * @throws IllegalStateException if the fault model data needed for the backfill cannot be read
+     */
+    public static FaultSystemSolution backfill(FaultSystemSolution solution) {
+        if (!needsBackfill(solution.getRupSet())) {
+            return solution;
+        }
+        FaultSystemRupSet rupSet;
+        try {
+            rupSet = RupSetPropertyBackfill.backfill(solution.getRupSet());
+        } catch (IOException | DocumentException e) {
+            throw new IllegalStateException(
+                    "Could not backfill fault section properties, which this solution needs"
+                            + " because some of its sections have no tectonic region type.",
+                    e);
+        }
+        FaultSystemSolution backfilled =
+                new FaultSystemSolution(rupSet, solution.getRateForAllRups());
+        for (OpenSHA_Module module : solution.getModules(true)) {
+            backfilled.addModule(module);
+        }
+        return backfilled;
+    }
+
+    /**
+     * Whether a rupture set is missing the section properties the joint hazard calculation needs. A
+     * section without a tectonic region type, or with one other than {@link
+     * TectonicRegionType#ACTIVE_SHALLOW} or {@link TectonicRegionType#SUBDUCTION_INTERFACE}, means
+     * the rupture set predates fault section properties and has to be backfilled.
+     */
+    public static boolean needsBackfill(FaultSystemRupSet rupSet) {
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            TectonicRegionType trt = section.getTectonicRegionType();
+            if (trt != TectonicRegionType.ACTIVE_SHALLOW
+                    && trt != TectonicRegionType.SUBDUCTION_INTERFACE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

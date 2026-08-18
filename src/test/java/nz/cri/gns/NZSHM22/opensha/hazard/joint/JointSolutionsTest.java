@@ -4,14 +4,18 @@ import static nz.cri.gns.NZSHM22.opensha.hazard.joint.JointTestSolutions.*;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
+import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.RupSetTectonicRegimes;
+import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Tests for {@link JointSolutions}: merging two solutions and per-rupture tectonic region types.
+ * Tests for {@link JointSolutions}: backfilling section properties, merging solutions and
+ * per-rupture tectonic region types.
  */
 public class JointSolutionsTest {
 
@@ -115,6 +119,46 @@ public class JointSolutionsTest {
         RupSetTectonicRegimes first = rupSet.getModule(RupSetTectonicRegimes.class);
         JointSolutions.applyTectonicRegimes(rupSet);
         assertSame(first, rupSet.getModule(RupSetTectonicRegimes.class));
+    }
+
+    /**
+     * A solution saved before fault section properties existed is backfilled on the way in, so it
+     * can be calculated without being converted by hand first.
+     */
+    @Test
+    public void testBackfillFillsMissingProperties() {
+        FaultSystemSolution legacy = makeLegacyCrustalSolution();
+        assertTrue(JointSolutions.needsBackfill(legacy.getRupSet()));
+
+        FaultSystemSolution backfilled = JointSolutions.backfill(legacy);
+        FaultSystemRupSet rupSet = backfilled.getRupSet();
+
+        assertFalse(JointSolutions.needsBackfill(rupSet));
+        for (FaultSection section : rupSet.getFaultSectionDataList()) {
+            assertEquals(TectonicRegionType.ACTIVE_SHALLOW, section.getTectonicRegionType());
+            assertEquals(PartitionPredicate.CRUSTAL, FaultSectionProperties.getPartition(section));
+        }
+        assertEquals(SINGLE_RUPTURE_RATE, backfilled.getRateForRup(0), 1e-12);
+    }
+
+    /** A solution that already carries its properties is left alone. */
+    @Test
+    public void testBackfillLeavesModernSolutionAlone() {
+        FaultSystemSolution crustal = makeCrustalSolution();
+        assertFalse(JointSolutions.needsBackfill(crustal.getRupSet()));
+        assertSame(crustal, JointSolutions.backfill(crustal));
+    }
+
+    /** Merging backfills each solution first, so legacy solutions can be merged as they are. */
+    @Test
+    public void testMergeBackfills() {
+        FaultSystemSolution merged =
+                JointSolutions.merge(makeLegacyCrustalSolution(), makeLegacySubductionSolution());
+
+        assertFalse(JointSolutions.needsBackfill(merged.getRupSet()));
+        RupSetTectonicRegimes regimes = merged.getRupSet().getModule(RupSetTectonicRegimes.class);
+        assertEquals(TectonicRegionType.ACTIVE_SHALLOW, regimes.get(0));
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(1));
     }
 
     /** A joint rupture has no single tectonic region type, so it cannot be given one. */

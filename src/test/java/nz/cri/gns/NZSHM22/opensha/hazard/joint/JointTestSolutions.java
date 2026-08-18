@@ -146,6 +146,44 @@ class JointTestSolutions {
         return makeSingleRuptureSolution(List.of(2, 3), false);
     }
 
+    /**
+     * A crustal solution as it was saved before fault section properties existed: no tectonic
+     * region types and no partitions. {@link
+     * nz.cri.gns.NZSHM22.opensha.scripts.RupSetPropertyBackfill} recognises such sections as
+     * crustal because their names carry no subduction column/row.
+     */
+    static FaultSystemSolution makeLegacyCrustalSolution() {
+        return stripProperties(makeCrustalSolution(), null);
+    }
+
+    /**
+     * A subduction solution as it was saved before fault section properties existed. The backfill
+     * recognises subduction sections by the column and row in their names.
+     */
+    static FaultSystemSolution makeLegacySubductionSolution() {
+        return stripProperties(makeSubductionSolution(), "Hikurangi, Subduction Interface");
+    }
+
+    /**
+     * Removes the tectonic region type and the partition from every section, and optionally renames
+     * the sections to the subduction naming that the backfill keys off.
+     *
+     * @param sectionName base name for subduction sections, or null to leave names alone
+     */
+    private static FaultSystemSolution stripProperties(
+            FaultSystemSolution solution, String sectionName) {
+        List<? extends FaultSection> sections = solution.getRupSet().getFaultSectionDataList();
+        for (int s = 0; s < sections.size(); s++) {
+            GeoJSONFaultSection section = (GeoJSONFaultSection) sections.get(s);
+            section.setTectonicRegionType(null);
+            section.getProperties().remove(FaultSectionProperties.PARTITION);
+            if (sectionName != null) {
+                section.setSectionName(sectionName + "; col: " + s + ", row: 0");
+            }
+        }
+        return solution;
+    }
+
     private static FaultSystemSolution makeSingleRuptureSolution(
             List<Integer> sectionIndices, boolean crustal) {
         List<FaultSection> all = makeSections();
