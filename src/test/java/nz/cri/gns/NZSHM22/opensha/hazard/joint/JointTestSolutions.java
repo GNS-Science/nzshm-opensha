@@ -45,7 +45,7 @@ class JointTestSolutions {
 
     private JointTestSolutions() {}
 
-    private static GeoJSONFaultSection makeSection(
+    static GeoJSONFaultSection makeSection(
             int id, TectonicRegionType trt, double lat1, double lon1, double lat2, double lon2) {
         FaultTrace trace = new FaultTrace("trace " + id);
         trace.add(new Location(lat1, lon1));
@@ -170,8 +170,7 @@ class JointTestSolutions {
      *
      * @param sectionName base name for subduction sections, or null to leave names alone
      */
-    private static FaultSystemSolution stripProperties(
-            FaultSystemSolution solution, String sectionName) {
+    static FaultSystemSolution stripProperties(FaultSystemSolution solution, String sectionName) {
         List<? extends FaultSection> sections = solution.getRupSet().getFaultSectionDataList();
         for (int s = 0; s < sections.size(); s++) {
             GeoJSONFaultSection section = (GeoJSONFaultSection) sections.get(s);
@@ -184,7 +183,7 @@ class JointTestSolutions {
         return solution;
     }
 
-    private static FaultSystemSolution makeSingleRuptureSolution(
+    static FaultSystemSolution makeSingleRuptureSolution(
             List<Integer> sectionIndices, boolean crustal) {
         List<FaultSection> all = makeSections();
         List<FaultSection> sections = new ArrayList<>();

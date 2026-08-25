@@ -15,7 +15,6 @@ import org.jfree.data.Range;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.Site;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
-import org.opensha.commons.data.function.DefaultXY_DataSet;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.function.XY_DataSet;
 import org.opensha.commons.data.xyz.GriddedGeoDataSet;
@@ -75,7 +74,7 @@ public class JointHazardMapCalculator {
         return setup.getCalc();
     }
 
-    private double[] getPeriods() {
+    protected double[] getPeriods() {
         return getInput().getPeriods();
     }
 
@@ -103,15 +102,20 @@ public class JointHazardMapCalculator {
 
         List<File> maps = new ArrayList<>();
         for (double period : getPeriods()) {
-            String periodLabel = periodLabel(period);
-            String periodPrefix = periodLabel.toLowerCase().replaceAll(" ", "_");
+            String periodLabel = HazardLabels.periodLabel(period);
+            String periodPrefix = HazardLabels.periodPrefix(period);
             for (ReturnPeriods rp : SolHazardMapCalc.MAP_RPS) {
                 GriddedGeoDataSet xyz = getCalc().buildMap(period, rp);
                 GriddedGeoDataSet logXYZ = xyz.copy();
                 logXYZ.log10();
 
                 String zLabel =
-                        "Log10 " + periodLabel + " (" + periodUnits(period) + "), " + rp.label;
+                        "Log10 "
+                                + periodLabel
+                                + " ("
+                                + HazardLabels.periodUnits(period)
+                                + "), "
+                                + rp.label;
                 maps.add(
                         getCalc()
                                 .plotMap(
@@ -119,7 +123,7 @@ public class JointHazardMapCalculator {
                                         "hazard_map_"
                                                 + periodPrefix
                                                 + "_"
-                                                + rp.name().toLowerCase(),
+                                                + HazardLabels.slug(rp.name()),
                                         logXYZ,
                                         logCPT,
                                         " ",
@@ -186,11 +190,13 @@ public class JointHazardMapCalculator {
             curves.put(entry.getKey(), calcSiteCurve(entry.getValue(), period));
         }
 
-        String periodLabel = periodLabel(period);
-        String prefix = "site_hazard_curves_" + periodLabel.toLowerCase().replaceAll(" ", "_");
+        String prefix = "site_hazard_curves_" + HazardLabels.periodPrefix(period);
         writeSiteCurvesCSV(new File(outputDir, prefix + ".csv"), curves);
         return plotSiteCurves(
-                outputDir, prefix, curves, periodLabel + " (" + periodUnits(period) + ")");
+                outputDir,
+                prefix,
+                curves,
+                HazardLabels.periodLabel(period) + " (" + HazardLabels.periodUnits(period) + ")");
     }
 
     static void writeSiteCurvesCSV(File outputFile, Map<String, DiscretizedFunc> curves)
@@ -228,8 +234,6 @@ public class JointHazardMapCalculator {
                         : null;
         PlotLineType[] lineTypes = {PlotLineType.SOLID, PlotLineType.DOTTED_AND_DASHED};
         int curveIndex = 0;
-        double minY = Double.POSITIVE_INFINITY;
-        double maxY = 0;
         for (Map.Entry<String, DiscretizedFunc> entry : curves.entrySet()) {
             DiscretizedFunc curve = entry.getValue().deepClone();
             curve.setName(entry.getKey());
@@ -240,31 +244,12 @@ public class JointHazardMapCalculator {
                             2f,
                             siteCPT == null ? Color.BLACK : siteCPT.getColor((float) curveIndex)));
             curveIndex++;
-            for (Point2D pt : curve) {
-                if (pt.getY() > 0) {
-                    minY = Math.min(minY, pt.getY());
-                    maxY = Math.max(maxY, pt.getY());
-                }
-            }
         }
-        Range yRange =
-                new Range(
-                        Math.max(1e-8, Double.isFinite(minY) ? minY : 1e-8),
-                        Math.max(1e-7, maxY * 1.2));
+        Range yRange = CurvePlots.yRange(curves.values());
 
-        // mark the return periods that the maps are built for
-        PlotLineType[] rpLineTypes = {PlotLineType.DASHED, PlotLineType.DOTTED};
-        for (int i = 0; i < SolHazardMapCalc.MAP_RPS.length; i++) {
-            ReturnPeriods rp = SolHazardMapCalc.MAP_RPS[i];
-            DefaultXY_DataSet line = new DefaultXY_DataSet();
-            line.set(curves.values().iterator().next().getMinX(), rp.oneYearProb);
-            line.set(curves.values().iterator().next().getMaxX(), rp.oneYearProb);
-            line.setName(rp.label);
-            funcs.add(line);
-            chars.add(
-                    new PlotCurveCharacterstics(
-                            rpLineTypes[i % rpLineTypes.length], 1f, Color.GRAY));
-        }
+        DiscretizedFunc reference = curves.values().iterator().next();
+        CurvePlots.addReturnPeriodLines(
+                funcs, chars, new Range(reference.getMinX(), reference.getMaxX()));
 
         PlotSpec spec =
                 new PlotSpec(
@@ -279,21 +264,5 @@ public class JointHazardMapCalculator {
         gp.drawGraphPanel(spec, true, true, null, yRange);
         PlotUtils.writePlots(outputDir, prefix, gp, 900, 900, true, false, false);
         return new File(outputDir, prefix + ".png");
-    }
-
-    static String periodLabel(double period) {
-        if (period == -1d) {
-            return "PGV";
-        }
-        if (period == 0d) {
-            return "PGA";
-        }
-        Preconditions.checkArgument(period > 0, "Unexpected period %s", period);
-        return (period == Math.rint(period) ? String.valueOf((int) period) : String.valueOf(period))
-                + "s SA";
-    }
-
-    static String periodUnits(double period) {
-        return period == -1d ? "cm/s" : "g";
     }
 }

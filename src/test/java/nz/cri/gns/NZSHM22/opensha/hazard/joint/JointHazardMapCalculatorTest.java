@@ -392,13 +392,4 @@ public class JointHazardMapCalculatorTest {
                 "annual exceedance probability must be a probability",
                 curve.getY(0) <= 1d && curve.getY(curve.size() - 1) >= 0d);
     }
-
-    @Test
-    public void testPeriodLabels() {
-        assertEquals("PGA", JointHazardMapCalculator.periodLabel(0d));
-        assertEquals("PGV", JointHazardMapCalculator.periodLabel(-1d));
-        assertEquals("1s SA", JointHazardMapCalculator.periodLabel(1d));
-        assertEquals("g", JointHazardMapCalculator.periodUnits(0d));
-        assertEquals("cm/s", JointHazardMapCalculator.periodUnits(-1d));
-    }
 }

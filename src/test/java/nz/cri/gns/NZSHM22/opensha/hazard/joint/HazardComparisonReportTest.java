@@ -169,19 +169,29 @@ public class HazardComparisonReportTest {
         assertTrue(range.getUpperBound() > 1d);
     }
 
-    /** Both curve panels share a y range, otherwise they cannot be compared by eye. */
+    /**
+     * Ids name the figures, so two configs sharing one would overwrite each other's images and the
+     * report would show the same figure under both captions. Caught before anything is calculated.
+     */
     @Test
-    public void testCurveYRangeCoversBothCurves() {
-        DiscretizedFunc first = new ArbitrarilyDiscretizedFunc();
-        DiscretizedFunc second = new ArbitrarilyDiscretizedFunc();
-        first.set(0.1, 1e-3);
-        first.set(0.2, 0d); // zeroes cannot be shown on a log axis
-        second.set(0.1, 1e-5);
-        second.set(0.2, 1e-6);
+    public void testRejectsCollidingIds() throws Exception {
+        HazardConfig classic =
+                HazardConfig.combined(
+                        "NZSHM22 v1", makeCrustalSolution(), makeSubductionSolution());
+        HazardConfig joint = HazardConfig.joint("NZSHM22-v1", makeSolution());
+        assertEquals("ids should collide for this test", classic.getId(), joint.getId());
 
-        Range range = HazardComparisonReport.curveYRange(first, second);
-        assertTrue(range.getLowerBound() <= 1e-6);
-        assertTrue(range.getUpperBound() >= 1e-3);
+        HazardComparisonReport report =
+                new HazardComparisonReport(classic, joint, tempFolder.newFolder("colliding"))
+                        .setRegion(mapRegion())
+                        .setPeriods(0d)
+                        .setSites(Map.of("Test Site", SITE));
+        try {
+            report.generate();
+            fail("expected colliding ids to be rejected");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("nzshm22_v1"));
+        }
     }
 
     /** A report over a small region, one period and one site, so that tests stay quick. */

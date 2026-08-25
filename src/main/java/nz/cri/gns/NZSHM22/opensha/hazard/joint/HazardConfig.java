@@ -93,7 +93,12 @@ public class HazardConfig {
         return solutions;
     }
 
-    protected static FaultSystemSolution[] load(List<File> files) throws IOException {
+    /**
+     * Loads solutions from disk, reporting progress, in the order the files are given.
+     *
+     * @param files the solution zip files to load
+     */
+    public static FaultSystemSolution[] load(List<File> files) throws IOException {
         FaultSystemSolution[] solutions = new FaultSystemSolution[files.size()];
         for (int i = 0; i < solutions.length; i++) {
             System.out.println("Loading " + files.get(i).getAbsolutePath());
@@ -114,10 +119,13 @@ public class HazardConfig {
         return input.getSolution();
     }
 
-    /** The name reduced to lower case letters, digits and underscores, for use in file names. */
+    /**
+     * The name reduced to lower case letters, digits and underscores, for use in file names. See
+     * {@link HazardLabels#slug}. Two configs of a report must not share an id, because their
+     * figures are named after it.
+     */
     public String getId() {
-        String id = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
-        return id.replaceAll("^_|_$", "");
+        return HazardLabels.slug(name);
     }
 
     @Override

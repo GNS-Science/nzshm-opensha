@@ -203,12 +203,16 @@ public class JointHazardInput {
         return region;
     }
 
-    /** Freezes the inputs. Called when a calculation is set up on top of them. */
-    void lock() {
+    /**
+     * Freezes the inputs so that the setters throw. Called by {@link JointHazardCalcSetup} when a
+     * calculation is set up on top of them, because changing the region or the periods afterwards
+     * would not reach the calculator that has already been built.
+     */
+    public void lock() {
         locked = true;
     }
 
-    private void checkNotLocked() {
+    protected void checkNotLocked() {
         Preconditions.checkState(!locked, "calculation has already been set up");
     }
 
@@ -230,11 +234,26 @@ public class JointHazardInput {
         return crustal ? RuptureType.CRUSTAL : RuptureType.INTERFACE;
     }
 
-    private static TectonicRegionType tectonicRegionType(FaultSection section) {
+    /**
+     * Whether a tectonic region type is one the joint hazard calculation can work with, i.e. {@link
+     * TectonicRegionType#ACTIVE_SHALLOW} or {@link TectonicRegionType#SUBDUCTION_INTERFACE}. A null
+     * type, which is what a rupture set saved before fault section properties existed carries, is
+     * not.
+     */
+    public static boolean isSupported(TectonicRegionType trt) {
+        return trt == TectonicRegionType.ACTIVE_SHALLOW
+                || trt == TectonicRegionType.SUBDUCTION_INTERFACE;
+    }
+
+    /**
+     * The tectonic region type of a section, checked against {@link #isSupported}.
+     *
+     * @throws IllegalStateException if the section carries a type the calculation cannot use
+     */
+    protected static TectonicRegionType tectonicRegionType(FaultSection section) {
         TectonicRegionType trt = section.getTectonicRegionType();
         Preconditions.checkState(
-                trt == TectonicRegionType.ACTIVE_SHALLOW
-                        || trt == TectonicRegionType.SUBDUCTION_INTERFACE,
+                isSupported(trt),
                 "Section %s (%s) has tectonic region type %s; the joint GMM only supports"
                         + " ACTIVE_SHALLOW and SUBDUCTION_INTERFACE. Rupture sets built before"
                         + " tectonic region types were written out can be fixed with"
@@ -260,13 +279,13 @@ public class JointHazardInput {
 
         /**
          * Number of single-section ruptures with a non-zero rate. Those reach the joint GMM as a
-         * plain surface rather than a compound one, and it then has to guess whether they are
+         * plain surface rather than a compound one, and it then has to infer whether they are
          * crustal or interface from their magnitude alone. Only a concern in {@link
          * GmmMode#JOINT_RUPTURE}. See {@link #getNumSingleSectionWithRate()}.
          */
         private final int numSingleSectionWithRate;
 
-        ValidationResult(
+        protected ValidationResult(
                 int numCrustal,
                 int numInterface,
                 int numJoint,
@@ -288,14 +307,20 @@ public class JointHazardInput {
         }
 
         /**
-         * Number of single-section ruptures that carry a rate and therefore end up in the ERF. The
-         * joint GMM classifies such ruptures by comparing their magnitude against crustal and
-         * interface area scaling, and as of writing that comparison in JointRuptureExperimentalIMR
-         * uses the crustal scaling for both sides, so every single-section rupture is treated as
-         * interface. In {@link GmmMode#JOINT_RUPTURE} a non-zero count here means part of the
-         * hazard is calculated with the wrong component GMM. In {@link GmmMode#PER_TECTONIC_REGION}
-         * it does not matter: the GMM is picked from the rupture's tectonic region type, not from
-         * its surface.
+         * Number of single-section ruptures that carry a rate and therefore end up in the ERF.
+         *
+         * <p>A single-section rupture reaches the joint GMM as a plain surface, which carries no
+         * section data and so no tectonic region types. The GMM falls back to classifying it by
+         * magnitude: it compares the rupture's magnitude against both {@code
+         * JointRuptureExperimentalIMR.getCrustalMag} ({@code log10(area) + 4.2}) and {@code
+         * getInterfaceMag} ({@code log10(area) + 4.0}) and picks whichever is closer.
+         *
+         * <p>That is only a guess. The two scalings differ by 0.2 magnitude units, which is small
+         * against the scatter of real scaling relationships, so a rupture whose magnitude sits near
+         * the midpoint can be classified either way and then be calculated with the wrong component
+         * GMM. In {@link GmmMode#JOINT_RUPTURE} a non-zero count here is therefore worth checking.
+         * In {@link GmmMode#PER_TECTONIC_REGION} it does not matter: the GMM is picked from the
+         * rupture's tectonic region type, not from its surface.
          */
         public int getNumSingleSectionWithRate() {
             return numSingleSectionWithRate;

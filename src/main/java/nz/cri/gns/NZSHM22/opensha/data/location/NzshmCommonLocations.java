@@ -38,7 +38,8 @@ public class NzshmCommonLocations {
         return nzLocations;
     }
 
-    private static Map<String, Location> load() {
+    /** Reads the location list resource. Called once, on first use of {@link #nzLocations()}. */
+    protected static Map<String, Location> load() {
         Map<String, Location> locations = new LinkedHashMap<>();
         try (BufferedReader reader =
                 new BufferedReader(NZSHM22_DataUtils.getReader(DATA_DIR, NZ_LOCATIONS_FILE))) {

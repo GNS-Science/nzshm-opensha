@@ -114,9 +114,7 @@ public class JointSolutions {
      */
     public static boolean needsBackfill(FaultSystemRupSet rupSet) {
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
-            TectonicRegionType trt = section.getTectonicRegionType();
-            if (trt != TectonicRegionType.ACTIVE_SHALLOW
-                    && trt != TectonicRegionType.SUBDUCTION_INTERFACE) {
+            if (!JointHazardInput.isSupported(section.getTectonicRegionType())) {
                 return true;
             }
         }

@@ -68,7 +68,7 @@ public class JointHazardCalcSetup {
         return buildComponentGmm(JointRuptureExperimentalIMR.DEFAULT_INTERFACE_GMM);
     }
 
-    private static ScalarIMR buildComponentGmm(NshmpGmm gmm) {
+    protected static ScalarIMR buildComponentGmm(NshmpGmm gmm) {
         ScalarIMR imr = new NSHMP_AttenRelSupplier(gmm).get();
         imr.setParamDefaults();
         return imr;

@@ -173,6 +173,15 @@ public class HazardComparisonReport {
                 first.getInput().getRegion().equalsRegion(second.getInput().getRegion()),
                 "Both configs must be calculated over the same region, otherwise their maps cannot"
                         + " be differenced. Use setRegion or setSpacing to set them together.");
+        // ids name the figures, so two configs sharing one would silently overwrite each other's
+        // images and the report would show the same figure under both captions
+        Preconditions.checkArgument(
+                !first.getId().equals(second.getId()),
+                "Both configs reduce to the id %s, which is what their figures are named after."
+                        + " Give them names that differ by more than punctuation: %s and %s.",
+                first.getId(),
+                first.getName(),
+                second.getName());
 
         JointHazardInput.ValidationResult firstValidation = first.getInput().validate();
         JointHazardInput.ValidationResult secondValidation = second.getInput().validate();
@@ -221,9 +230,13 @@ public class HazardComparisonReport {
                 GriddedGeoDataSet firstMap = firstCalc.getCalc().buildMap(period, rp);
                 GriddedGeoDataSet secondMap = secondCalc.getCalc().buildMap(period, rp);
 
-                String periodLabel = JointHazardMapCalculator.periodLabel(period);
-                String units = JointHazardMapCalculator.periodUnits(period);
-                String prefix = "map_" + periodPrefix(period) + "_" + rp.name().toLowerCase();
+                String periodLabel = HazardLabels.periodLabel(period);
+                String units = HazardLabels.periodUnits(period);
+                String prefix =
+                        "map_"
+                                + HazardLabels.periodPrefix(period)
+                                + "_"
+                                + HazardLabels.slug(rp.name());
                 String zLabel = "Log10 " + periodLabel + " (" + units + "), " + rp.label;
 
                 CPT cpt = sharedLogCPT(firstMap, secondMap);
@@ -285,12 +298,15 @@ public class HazardComparisonReport {
                 DiscretizedFunc firstCurve = firstCalc.calcSiteCurve(site.getValue(), period);
                 DiscretizedFunc secondCurve = secondCalc.calcSiteCurve(site.getValue(), period);
 
-                String periodLabel = JointHazardMapCalculator.periodLabel(period);
-                String xLabel =
-                        periodLabel + " (" + JointHazardMapCalculator.periodUnits(period) + ")";
-                String prefix = "curve_" + slug(siteName) + "_" + periodPrefix(period);
+                String periodLabel = HazardLabels.periodLabel(period);
+                String xLabel = periodLabel + " (" + HazardLabels.periodUnits(period) + ")";
+                String prefix =
+                        "curve_"
+                                + HazardLabels.slug(siteName)
+                                + "_"
+                                + HazardLabels.periodPrefix(period);
                 Range xRange = new Range(firstCurve.getMinX(), firstCurve.getMaxX());
-                Range yRange = curveYRange(firstCurve, secondCurve);
+                Range yRange = CurvePlots.yRange(List.of(firstCurve, secondCurve));
 
                 Row row = new Row(siteName + ", " + periodLabel);
                 row.add(
@@ -348,7 +364,7 @@ public class HazardComparisonReport {
         List<XY_DataSet> funcs = new ArrayList<>();
         List<PlotCurveCharacterstics> chars = new ArrayList<>();
         addCurve(funcs, chars, curve, curveName, color);
-        addReturnPeriodLines(funcs, chars, xRange);
+        CurvePlots.addReturnPeriodLines(funcs, chars, xRange);
 
         PlotSpec spec =
                 new PlotSpec(funcs, chars, title, xLabel, "Annual Probability of Exceedance");
@@ -377,7 +393,7 @@ public class HazardComparisonReport {
         List<PlotCurveCharacterstics> chars = new ArrayList<>();
         addCurve(funcs, chars, firstCurve, first.getName(), FIRST_COLOR);
         addCurve(funcs, chars, secondCurve, second.getName(), SECOND_COLOR);
-        addReturnPeriodLines(funcs, chars, xRange);
+        CurvePlots.addReturnPeriodLines(funcs, chars, xRange);
         PlotSpec curves =
                 new PlotSpec(funcs, chars, title, xLabel, "Annual Probability of Exceedance");
         curves.setLegendVisible(true);
@@ -426,21 +442,6 @@ public class HazardComparisonReport {
         chars.add(new PlotCurveCharacterstics(PlotLineType.SOLID, 3f, color));
     }
 
-    /** Marks the return periods that the maps are built for. */
-    protected static void addReturnPeriodLines(
-            List<XY_DataSet> funcs, List<PlotCurveCharacterstics> chars, Range xRange) {
-        PlotLineType[] lineTypes = {PlotLineType.DASHED, PlotLineType.DOTTED};
-        for (int i = 0; i < SolHazardMapCalc.MAP_RPS.length; i++) {
-            ReturnPeriods rp = SolHazardMapCalc.MAP_RPS[i];
-            DefaultXY_DataSet line = new DefaultXY_DataSet();
-            line.set(xRange.getLowerBound(), rp.oneYearProb);
-            line.set(xRange.getUpperBound(), rp.oneYearProb);
-            line.setName(rp.label);
-            funcs.add(line);
-            chars.add(new PlotCurveCharacterstics(lineTypes[i % lineTypes.length], 1f, Color.GRAY));
-        }
-    }
-
     /**
      * The ratio of the second curve to the first, over the x values where both curves still carry
      * meaningful probabilities. See {@link #MIN_COMPARABLE_PROBABILITY}.
@@ -467,23 +468,6 @@ public class HazardComparisonReport {
         max = Math.max(max, 1.1);
         double pad = 0.05 * (max - min);
         return new Range(Math.max(0d, min - pad), max + pad);
-    }
-
-    /** A y range that both curves fit into, so the two panels can be compared by eye. */
-    protected static Range curveYRange(DiscretizedFunc firstCurve, DiscretizedFunc secondCurve) {
-        double min = Double.POSITIVE_INFINITY;
-        double max = 0;
-        for (DiscretizedFunc curve : List.of(firstCurve, secondCurve)) {
-            for (int i = 0; i < curve.size(); i++) {
-                double y = curve.getY(i);
-                if (y > 0) {
-                    min = Math.min(min, y);
-                    max = Math.max(max, y);
-                }
-            }
-        }
-        return new Range(
-                Math.max(1e-8, Double.isFinite(min) ? min : 1e-8), Math.max(1e-7, max * 1.2));
     }
 
     /**
@@ -614,7 +598,22 @@ public class HazardComparisonReport {
         return String.join(", ", parts);
     }
 
-    /** The ground motion a curve reaches at a given annual probability of exceedance. */
+    /**
+     * The ground motion a curve reaches at a given annual probability of exceedance.
+     *
+     * <p>Both ends are clipped to the extent of the curve rather than extrapolated, so a return
+     * period the curve never reaches is reported as a bound, not as the true value:
+     *
+     * <ul>
+     *   <li>a probability above the whole curve, i.e. a site too quiet to reach the return period
+     *       at all, gives 0. {@link #curveStats} reports "n/a" for those rather than a change
+     *       against zero.
+     *   <li>a probability below the whole curve, i.e. a site whose hazard runs off the top of the
+     *       IML grid, gives the curve's largest x. The true ground motion is higher, so a change
+     *       computed from it understates the difference between the two configs. Reaching this end
+     *       means the curve's IML grid is too short for the site, not that the two agree.
+     * </ul>
+     */
     protected static double imlAt(DiscretizedFunc curve, double probability) {
         if (probability > curve.getMaxY()) {
             return 0d;
@@ -648,14 +647,6 @@ public class HazardComparisonReport {
 
     protected String differenceLabel() {
         return second.getName() + " vs " + first.getName();
-    }
-
-    protected static String periodPrefix(double period) {
-        return slug(JointHazardMapCalculator.periodLabel(period));
-    }
-
-    protected static String slug(String text) {
-        return text.toLowerCase().replaceAll("[^a-z0-9]+", "_").replaceAll("^_|_$", "");
     }
 
     // ---------------------------------------------------------------- HTML
@@ -851,7 +842,7 @@ public class HazardComparisonReport {
     protected String periodLabels() {
         List<String> labels = new ArrayList<>();
         for (double period : first.getInput().getPeriods()) {
-            labels.add(JointHazardMapCalculator.periodLabel(period));
+            labels.add(HazardLabels.periodLabel(period));
         }
         return String.join(", ", labels);
     }
