@@ -42,8 +42,10 @@ public class NzshmCommonLocations {
         Map<String, Location> locations = new LinkedHashMap<>();
         try (BufferedReader reader =
                 new BufferedReader(NZSHM22_DataUtils.getReader(DATA_DIR, NZ_LOCATIONS_FILE))) {
+            int lineNumber = 1;
             String line = reader.readLine(); // header
             while ((line = reader.readLine()) != null) {
+                lineNumber++;
                 if (line.isBlank()) {
                     continue;
                 }
@@ -51,17 +53,47 @@ public class NzshmCommonLocations {
                 String[] fields = line.split(",");
                 if (fields.length != 4) {
                     throw new IllegalStateException(
-                            "Expected 4 fields in " + NZ_LOCATIONS_FILE + ", got: " + line);
+                            "Expected 4 fields in "
+                                    + NZ_LOCATIONS_FILE
+                                    + " line "
+                                    + lineNumber
+                                    + ", got: "
+                                    + line);
                 }
-                locations.put(
-                        fields[1].trim(),
-                        new Location(
-                                Double.parseDouble(fields[2].trim()),
-                                Double.parseDouble(fields[3].trim())));
+                String name = fields[1].trim();
+                double latitude = parseDouble(fields[2], "latitude", lineNumber);
+                double longitude = parseDouble(fields[3], "longitude", lineNumber);
+
+                locations.put(name, new Location(latitude, longitude));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Could not read " + NZ_LOCATIONS_FILE, e);
         }
         return locations;
+    }
+
+    /**
+     * Parses a CSV field as a double, reporting the offending line if it cannot be parsed.
+     *
+     * @param field the raw field text
+     * @param fieldName the column name, used in the error message
+     * @param lineNumber the 1-based line number of the field, used in the error message
+     * @return the parsed value
+     */
+    protected static double parseDouble(String field, String fieldName, int lineNumber) {
+        try {
+            return Double.parseDouble(field.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException(
+                    "Could not parse "
+                            + fieldName
+                            + " in "
+                            + NZ_LOCATIONS_FILE
+                            + " line "
+                            + lineNumber
+                            + ": "
+                            + field,
+                    e);
+        }
     }
 }

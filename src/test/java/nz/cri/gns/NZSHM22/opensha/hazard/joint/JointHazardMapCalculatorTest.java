@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.opensha.commons.data.Site;
+import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.xyz.GriddedGeoDataSet;
 import org.opensha.commons.geo.GriddedRegion;
@@ -27,6 +28,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.erf.BaseFaultSystemSolutionERF;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
+import org.opensha.sha.gui.infoTools.IMT_Info;
 import org.opensha.sha.imr.ScalarIMR;
 import org.opensha.sha.imr.attenRelImpl.JointRuptureExperimentalIMR;
 import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
@@ -66,6 +68,64 @@ public class JointHazardMapCalculatorTest {
         assertNotNull(crustal);
         assertNotNull(interfce);
         assertNotEquals(crustal.getName(), interfce.getName());
+    }
+
+    /**
+     * The joint GMM only splits a rupture into its crustal and interface parts when it is handed a
+     * {@link org.opensha.sha.faultSurface.CompoundSurface} carrying section data. {@code
+     * SolHazardMapCalc} gives each calculation thread a {@code DistCachedERFWrapper}, which
+     * replaces every rupture surface with an opaque {@code CustomCacheWrappedSurface}, and the GMM
+     * then falls back to classifying ruptures by magnitude alone. {@link
+     * JointHazardCalcSetup#getCalc()} switches that wrapper off for {@link
+     * JointHazardInput.GmmMode#JOINT_RUPTURE}.
+     *
+     * <p>Checked end to end: the map value at a node has to agree with the hazard curve calculated
+     * at the same location, which uses the unwrapped ERF. The two use different IML grids so they
+     * differ by a percent or so; with the wrapper in place they differ by more than 20%.
+     */
+    @Test
+    public void testMapAgreesWithSiteCurves() {
+        Region border = new Region(new Location(-42.2, 174.0), new Location(-40.6, 175.8));
+        GriddedRegion region = new GriddedRegion(border, 0.2, 0.2, GriddedRegion.ANCHOR_0_0);
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        new JointHazardInput(makeSolution()).setRegion(region).setPeriods(0d));
+        calculator.calcHazardCurves();
+
+        GriddedGeoDataSet map = calculator.getCalc().buildMap(0d, ReturnPeriods.TWO_IN_50);
+        int compared = 0;
+        for (int i = 0; i < map.size(); i++) {
+            double mapValue = map.get(i);
+            if (mapValue <= 0d) {
+                continue;
+            }
+            DiscretizedFunc curve = calculator.calcSiteCurve(map.getLocation(i), 0d);
+            double curveValue =
+                    HazardComparisonReport.imlAt(curve, ReturnPeriods.TWO_IN_50.oneYearProb);
+            assertEquals(
+                    "map and site curve disagree at " + map.getLocation(i),
+                    mapValue,
+                    curveValue,
+                    0.05 * mapValue);
+            compared++;
+        }
+        assertTrue("expected some nodes with hazard", compared > 0);
+    }
+
+    /**
+     * The map IML grid is the standard USGS SA function plus exactly one point, a decade below its
+     * lowest IML. Guards against the extension being applied twice: a second point cannot rescue
+     * any site, because the curve has already reached its low IML asymptote by then.
+     */
+    @Test
+    public void testMapXValsExtendOneDecade() {
+        ArbitrarilyDiscretizedFunc standard = IMT_Info.getUSGS_SA_Function();
+        ArbitrarilyDiscretizedFunc xVals = JointHazardCalcSetup.mapXVals();
+
+        assertEquals(standard.size() + 1, xVals.size());
+        assertEquals(standard.getMinX() * 0.1, xVals.getMinX(), 1e-12);
+        assertEquals(standard.getMinX(), xVals.getX(1), 1e-12);
+        assertEquals(standard.getMaxX(), xVals.getMaxX(), 1e-12);
     }
 
     /**

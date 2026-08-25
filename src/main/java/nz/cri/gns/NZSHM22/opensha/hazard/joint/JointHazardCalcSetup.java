@@ -113,6 +113,14 @@ public class JointHazardCalcSetup {
     /**
      * The underlying map calculator, built on first use. Fault sources only; the joint rupture
      * solutions do not carry a grid source provider.
+     *
+     * <p>In {@link JointHazardInput.GmmMode#JOINT_RUPTURE} the ERF's per-thread distance cache
+     * wrapper is switched off. That wrapper replaces every rupture surface with a {@code
+     * CustomCacheWrappedSurface}, and {@link JointRuptureExperimentalIMR} only splits a rupture
+     * into its crustal and interface parts when it sees a {@code CompoundSurface} carrying section
+     * data. With the wrapper in place every rupture reaches the GMM as an opaque surface and is
+     * classified by magnitude alone, so the maps would silently not be joint calculations at all.
+     * The cost is more distance cache collisions between threads.
      */
     public SolHazardMapCalc getCalc() {
         if (calc == null) {
@@ -124,21 +132,36 @@ public class JointHazardCalcSetup {
                             IncludeBackgroundOption.EXCLUDE,
                             input.getPeriods());
             calc.setXVals(mapXVals());
+            if (input.getGmmMode() == JointHazardInput.GmmMode.JOINT_RUPTURE) {
+                calc.setDistCacheWrapper(false);
+            }
         }
         return calc;
     }
 
+    /** How far below the standard USGS grid the map curves are extended, as a factor on the IML. */
+    static final double IML_EXTENSION_FACTOR = 0.1;
+
     /**
-     * x values for the map curves: the standard USGS SA function, extended downwards so that low
-     * hazard sites still have usable curves.
+     * x values for the map curves: the standard USGS SA function, extended one decade downwards so
+     * that low hazard sites still have usable curves.
+     *
+     * <p>{@code SolHazardMapCalc.buildMap} reports no hazard at all for a site whose curve does not
+     * reach the map's return period, i.e. where the probability of exceeding the lowest IML in the
+     * grid is still below {@code ReturnPeriods.oneYearProb}. The extra decade lifts the top of the
+     * curve above that threshold for marginal sites.
+     *
+     * <p>One decade is enough. A hazard curve tends to {@code 1 - exp(-totalRate)} as the IML tends
+     * to zero, where {@code totalRate} is the rate of every rupture that passes the source distance
+     * filter, and it reaches that asymptote within a decade of the standard grid's lowest IML.
+     * Extending further cannot raise the top of the curve and so cannot rescue any further site.
      */
     static ArbitrarilyDiscretizedFunc mapXVals() {
         ArbitrarilyDiscretizedFunc xVals = new ArbitrarilyDiscretizedFunc();
         for (Point2D pt : IMT_Info.getUSGS_SA_Function()) {
             xVals.set(pt);
         }
-        xVals.set(xVals.getMinX() * 0.1, 1d);
-        xVals.set(xVals.getMinX() * 0.1, 1d);
+        xVals.set(xVals.getMinX() * IML_EXTENSION_FACTOR, 1d);
         return xVals;
     }
 }
