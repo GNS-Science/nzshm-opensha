@@ -470,15 +470,31 @@ public class HazardComparisonReport {
         return new Range(Math.max(0d, min - pad), max + pad);
     }
 
+    /** A y range that both curves fit into, so the two panels can be compared by eye. */
+    protected static Range curveYRange(DiscretizedFunc... curves) {
+        double min = Double.POSITIVE_INFINITY;
+        double max = 0;
+        for (DiscretizedFunc curve : curves) {
+            for (int i = 0; i < curve.size(); i++) {
+                double y = curve.getY(i);
+                if (y > 0) {
+                    min = Math.min(min, y);
+                    max = Math.max(max, y);
+                }
+            }
+        }
+        return new Range(
+                Math.max(1e-8, Double.isFinite(min) ? min : 1e-8), Math.max(1e-7, max * 1.2));
+    }
+
     /**
-     * A colour ramp covering both maps, so that the two are directly comparable. Values are log10
-     * ground motions; the ramp is rounded outwards to whole decades.
+     * A colour ramp covering all the given maps, so that they are directly comparable. Values are
+     * log10 ground motions; the ramp is rounded outwards to whole decades.
      */
-    protected static CPT sharedLogCPT(GriddedGeoDataSet firstMap, GriddedGeoDataSet secondMap)
-            throws IOException {
+    protected static CPT sharedLogCPT(GriddedGeoDataSet... maps) throws IOException {
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
-        for (GriddedGeoDataSet map : List.of(firstMap, secondMap)) {
+        for (GriddedGeoDataSet map : maps) {
             for (int i = 0; i < map.size(); i++) {
                 double value = map.get(i);
                 if (value > 0) {
