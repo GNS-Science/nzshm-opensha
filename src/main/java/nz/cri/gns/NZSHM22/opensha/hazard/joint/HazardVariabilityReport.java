@@ -268,11 +268,11 @@ public class HazardVariabilityReport {
         for (double period : periods) {
             for (ReturnPeriods rp : SolHazardMapCalc.MAP_RPS) {
                 List<GriddedGeoDataSet> maps = results.maps.get(mapKey(period, rp));
-                String periodLabel = JointHazardMapCalculator.periodLabel(period);
-                String units = JointHazardMapCalculator.periodUnits(period);
+                String periodLabel = HazardLabels.periodLabel(period);
+                String units = HazardLabels.periodUnits(period);
                 String prefix =
                         "map_"
-                                + HazardComparisonReport.periodPrefix(period)
+                                + HazardLabels.periodPrefix(period)
                                 + "_"
                                 + rp.name().toLowerCase(Locale.ROOT);
 
@@ -324,12 +324,12 @@ public class HazardVariabilityReport {
         for (String siteName : sites.keySet()) {
             for (double period : periods) {
                 List<DiscretizedFunc> curves = results.curves.get(curveKey(siteName, period));
-                String periodLabel = JointHazardMapCalculator.periodLabel(period);
+                String periodLabel = HazardLabels.periodLabel(period);
                 String prefix =
                         "curve_"
-                                + HazardComparisonReport.slug(siteName)
+                                + HazardLabels.slug(siteName)
                                 + "_"
-                                + HazardComparisonReport.periodPrefix(period);
+                                + HazardLabels.periodPrefix(period);
 
                 ReportPage.Row row = new ReportPage.Row(siteName + ", " + periodLabel);
                 row.add(
@@ -339,7 +339,7 @@ public class HazardVariabilityReport {
                                 curves,
                                 periodLabel
                                         + " ("
-                                        + JointHazardMapCalculator.periodUnits(period)
+                                        + HazardLabels.periodUnits(period)
                                         + ")"),
                         siteName + ", " + periodLabel,
                         curveStats(curves));
@@ -369,7 +369,7 @@ public class HazardVariabilityReport {
 
         Range xRange = new Range(curves.get(0).getMinX(), curves.get(0).getMaxX());
         Range yRange = HazardComparisonReport.curveYRange(curves.toArray(new DiscretizedFunc[0]));
-        HazardComparisonReport.addReturnPeriodLines(funcs, chars, xRange);
+        CurvePlots.addReturnPeriodLines(funcs, chars, xRange);
 
         PlotSpec spec =
                 new PlotSpec(funcs, chars, title, xLabel, "Annual Probability of Exceedance");
@@ -615,7 +615,7 @@ public class HazardVariabilityReport {
     protected String periodLabels() {
         List<String> labels = new ArrayList<>();
         for (double period : configs.get(0).getInput().getPeriods()) {
-            labels.add(JointHazardMapCalculator.periodLabel(period));
+            labels.add(HazardLabels.periodLabel(period));
         }
         return String.join(", ", labels);
     }
