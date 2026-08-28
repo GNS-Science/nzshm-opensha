@@ -50,14 +50,14 @@ public class InversionRunner {
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
-        InversionRunner runner =
-                //  new InversionRunner("src/main/resources/parameters/crustal-reproducible.jsonc");
-                new InversionRunner("src/main/resources/parameters/NZSHM_config-parallel.jsonc");
-        //   InversionRunner runner = new InversionRunner("Hikurangi-reproducible.json");
+        if (args.length != 2) {
+            System.err.println("Usage: InversionRunner <configPath> <outputSolutionZip>");
+            System.exit(1);
+        }
 
-        // InversionRunner runner = new InversionRunner("crustal-reproducible.json");
+        InversionRunner runner = new InversionRunner(args[0]);
         FaultSystemSolution solution = runner.run();
-        solution.write(new File("/tmp/inversionSolution.zip"));
+        solution.write(new File(args[1]));
 
         System.out.println(TraceTool.getTraces());
     }
