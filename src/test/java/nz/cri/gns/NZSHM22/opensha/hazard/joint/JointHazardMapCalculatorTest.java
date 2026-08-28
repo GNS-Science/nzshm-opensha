@@ -26,6 +26,7 @@ import org.opensha.sha.earthquake.EqkRupture;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.erf.BaseFaultSystemSolutionERF;
+import org.opensha.sha.earthquake.faultSysSolution.modules.RupSetTectonicRegimes;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 import org.opensha.sha.gui.infoTools.IMT_Info;
@@ -110,6 +111,55 @@ public class JointHazardMapCalculatorTest {
             compared++;
         }
         assertTrue("expected some nodes with hazard", compared > 0);
+    }
+
+    /**
+     * The setup gives the rupture set its tectonic region types in {@link
+     * JointHazardInput.GmmMode#JOINT_RUPTURE} too, even though the single-entry GMM map does not
+     * dispatch on them.
+     *
+     * <p>They are needed by the calculator's default source filter, {@code
+     * TectonicRegionDistCutoffFilter}, which drops a source beyond {@code
+     * TectonicRegionType.defaultCutoffDist()}: 300km for {@link TectonicRegionType#ACTIVE_SHALLOW}
+     * against 1000km for {@link TectonicRegionType#SUBDUCTION_INTERFACE}. Without the module the
+     * ERF reports every source as ACTIVE_SHALLOW, subduction sources are culled at 300km, and the
+     * hazard is silently zero at sites whose shaking comes from a distant interface.
+     *
+     * <p>Joint ruptures get SUBDUCTION_INTERFACE, the wider of the two cutoffs, so that they reach
+     * the joint GMM rather than being filtered out before it.
+     */
+    @Test
+    public void testJointModeAppliesTectonicRegimes() {
+        JointHazardInput input = new JointHazardInput(makeSolution());
+        assertEquals(JointHazardInput.GmmMode.JOINT_RUPTURE, input.getGmmMode());
+        new JointHazardCalcSetup(input);
+
+        RupSetTectonicRegimes regimes =
+                input.getSolution().getRupSet().getModule(RupSetTectonicRegimes.class);
+        assertNotNull("joint mode should apply tectonic regimes too", regimes);
+        assertEquals(TectonicRegionType.ACTIVE_SHALLOW, regimes.get(CRUSTAL_RUP));
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(INTERFACE_RUP));
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(JOINT_RUP));
+    }
+
+    /**
+     * The regimes reach the ERF's sources, which is where the distance cutoff filter reads them
+     * from. Before they were applied in joint mode every source came out as ACTIVE_SHALLOW.
+     */
+    @Test
+    public void testJointModeErfSourcesCarryTectonicRegionTypes() {
+        JointHazardCalcSetup setup = new JointHazardCalcSetup(new JointHazardInput(makeSolution()));
+        BaseFaultSystemSolutionERF erf = setup.getCalc().getERF();
+        erf.updateForecast();
+
+        Set<TectonicRegionType> trts = EnumSet.noneOf(TectonicRegionType.class);
+        for (int i = 0; i < erf.getNumSources(); i++) {
+            trts.add(erf.getSource(i).getTectonicRegionType());
+        }
+        assertTrue(
+                "subduction sources should not reach the distance filter as ACTIVE_SHALLOW: "
+                        + trts,
+                trts.contains(TectonicRegionType.SUBDUCTION_INTERFACE));
     }
 
     /**

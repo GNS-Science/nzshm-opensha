@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
 import org.opensha.nshmp.shaded.gmm.NshmpGmm;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.gui.infoTools.IMT_Info;
@@ -27,6 +28,16 @@ import org.opensha.sha.util.TectonicRegionType;
  * region type and OpenSHA dispatches on the source's TRT instead. That only works if the rupture
  * set says what each rupture's TRT is, so the constructor makes sure it does.
  *
+ * <p>The constructor applies the tectonic region types in {@link
+ * JointHazardInput.GmmMode#JOINT_RUPTURE} too, even though nothing dispatches on them there. The
+ * calculator's default source filter is {@code TectonicRegionDistCutoffFilter}, a per-region
+ * distance cutoff, and without the module every source reaches it as {@link
+ * TectonicRegionType#ACTIVE_SHALLOW} and is dropped beyond 300km instead of the 1000km that {@link
+ * TectonicRegionType#SUBDUCTION_INTERFACE} allows. Subduction sources would then be culled well
+ * inside their range, zeroing the hazard at sites that depend on a distant interface. Joint
+ * ruptures are given {@link TectonicRegionType#SUBDUCTION_INTERFACE} so that they get the wider
+ * cutoff; see {@link JointSolutions#tectonicRegimes(FaultSystemRupSet, TectonicRegionType)}.
+ *
  * <p>Creating a setup locks its {@link JointHazardInput}.
  */
 public class JointHazardCalcSetup {
@@ -37,10 +48,13 @@ public class JointHazardCalcSetup {
 
     public JointHazardCalcSetup(JointHazardInput input) {
         this.input = input;
-        if (input.getGmmMode() == JointHazardInput.GmmMode.PER_TECTONIC_REGION) {
-            // the ERF reads source tectonic region types from this module, not from the sections
-            JointSolutions.applyTectonicRegimes(input.getSolution().getRupSet());
-        }
+        // the ERF reads source tectonic region types from this module, not from the sections, and
+        // both the GMM dispatch and the source distance cutoffs are keyed off them
+        JointSolutions.applyTectonicRegimes(
+                input.getSolution().getRupSet(),
+                input.getGmmMode() == JointHazardInput.GmmMode.PER_TECTONIC_REGION
+                        ? null
+                        : TectonicRegionType.SUBDUCTION_INTERFACE);
         input.lock();
     }
 

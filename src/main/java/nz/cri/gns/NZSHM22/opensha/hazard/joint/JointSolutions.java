@@ -23,6 +23,14 @@ import org.opensha.sha.util.TectonicRegionType;
  * from the {@link RupSetTectonicRegimes} module rather than from the fault section data. Without
  * the module every source ends up as {@link TectonicRegionType#ACTIVE_SHALLOW} and a per-region GMM
  * map would send subduction sources to the crustal GMM.
+ *
+ * <p>They matter a second time, and in every GMM mode, because the calculator's default source
+ * filter is a per-region distance cutoff: {@code TectonicRegionDistCutoffFilter} drops a source
+ * beyond {@code TectonicRegionType.defaultCutoffDist()}, which is 300km for {@link
+ * TectonicRegionType#ACTIVE_SHALLOW} but 1000km for {@link
+ * TectonicRegionType#SUBDUCTION_INTERFACE}. A rupture set without the module therefore has its
+ * subduction sources culled at 300km, which silently zeroes the hazard at sites whose shaking comes
+ * from a distant subduction interface.
  */
 public class JointSolutions {
 
@@ -123,22 +131,45 @@ public class JointSolutions {
 
     /**
      * The tectonic region type of every rupture, derived from the tectonic region types of the
-     * sections it uses.
+     * sections it uses. Joint ruptures are rejected; use {@link #tectonicRegimes(FaultSystemRupSet,
+     * TectonicRegionType)} to give them one.
      *
      * @throws IllegalStateException if a rupture spans both crustal and interface sections. Such a
      *     rupture has no single tectonic region type, so neither GMM would be right for it; use
      *     {@link JointHazardInput.GmmMode#JOINT_RUPTURE} for those.
      */
     public static TectonicRegionType[] tectonicRegimes(FaultSystemRupSet rupSet) {
+        return tectonicRegimes(rupSet, null);
+    }
+
+    /**
+     * The tectonic region type of every rupture, derived from the tectonic region types of the
+     * sections it uses.
+     *
+     * @param jointRegime the type given to ruptures that span crustal and interface sections, or
+     *     null to reject them. Such a rupture has no true tectonic region type, so giving it one is
+     *     only meaningful where the type does not pick the GMM, i.e. in {@link
+     *     JointHazardInput.GmmMode#JOINT_RUPTURE}. Pass {@link
+     *     TectonicRegionType#SUBDUCTION_INTERFACE} there: a joint rupture always has an interface
+     *     part, and of the two region types it is the one with the wider source distance cutoff, so
+     *     the rupture is not culled before the joint GMM ever sees it.
+     * @throws IllegalStateException if a joint rupture is found and {@code jointRegime} is null
+     */
+    public static TectonicRegionType[] tectonicRegimes(
+            FaultSystemRupSet rupSet, TectonicRegionType jointRegime) {
         TectonicRegionType[] regimes = new TectonicRegionType[rupSet.getNumRuptures()];
         for (int r = 0; r < regimes.length; r++) {
             RuptureType type = JointHazardInput.typeOf(rupSet, r);
-            Preconditions.checkState(
-                    type != RuptureType.JOINT,
-                    "Rupture %s spans crustal and interface sections, so it has no single tectonic"
-                            + " region type. Calculate joint ruptures with GmmMode.JOINT_RUPTURE"
-                            + " instead.",
-                    r);
+            if (type == RuptureType.JOINT) {
+                Preconditions.checkState(
+                        jointRegime != null,
+                        "Rupture %s spans crustal and interface sections, so it has no single"
+                                + " tectonic region type. Calculate joint ruptures with"
+                                + " GmmMode.JOINT_RUPTURE instead.",
+                        r);
+                regimes[r] = jointRegime;
+                continue;
+            }
             regimes[r] =
                     type == RuptureType.CRUSTAL
                             ? TectonicRegionType.ACTIVE_SHALLOW
@@ -149,11 +180,24 @@ public class JointSolutions {
 
     /**
      * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types,
-     * unless the rupture set already has one. Idempotent.
+     * unless the rupture set already has one. Joint ruptures are rejected. Idempotent.
      */
     public static void applyTectonicRegimes(FaultSystemRupSet rupSet) {
+        applyTectonicRegimes(rupSet, null);
+    }
+
+    /**
+     * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types,
+     * unless the rupture set already has one. Idempotent.
+     *
+     * @param jointRegime the type given to joint ruptures, or null to reject them. See {@link
+     *     #tectonicRegimes(FaultSystemRupSet, TectonicRegionType)}.
+     */
+    public static void applyTectonicRegimes(
+            FaultSystemRupSet rupSet, TectonicRegionType jointRegime) {
         if (rupSet.getModule(RupSetTectonicRegimes.class) == null) {
-            rupSet.addModule(new RupSetTectonicRegimes(rupSet, tectonicRegimes(rupSet)));
+            rupSet.addModule(
+                    new RupSetTectonicRegimes(rupSet, tectonicRegimes(rupSet, jointRegime)));
         }
     }
 }

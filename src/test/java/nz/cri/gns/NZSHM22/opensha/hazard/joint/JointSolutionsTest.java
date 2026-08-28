@@ -171,4 +171,30 @@ public class JointSolutionsTest {
             assertTrue(e.getMessage(), e.getMessage().contains("JOINT_RUPTURE"));
         }
     }
+
+    /**
+     * A caller that does not dispatch GMMs on the region type can give joint ruptures a fallback
+     * one instead of having them rejected. Crustal and interface ruptures still get their own.
+     */
+    @Test
+    public void testTectonicRegimesGivesJointRupturesTheFallback() {
+        TectonicRegionType[] regimes =
+                JointSolutions.tectonicRegimes(
+                        makeRupSet(0d), TectonicRegionType.SUBDUCTION_INTERFACE);
+
+        assertEquals(TectonicRegionType.ACTIVE_SHALLOW, regimes[CRUSTAL_RUP]);
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes[INTERFACE_RUP]);
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes[JOINT_RUP]);
+    }
+
+    /** The fallback reaches the module too, so a joint rupture set can carry one. */
+    @Test
+    public void testApplyTectonicRegimesWithFallback() {
+        FaultSystemRupSet rupSet = makeRupSet(0d);
+        JointSolutions.applyTectonicRegimes(rupSet, TectonicRegionType.SUBDUCTION_INTERFACE);
+
+        RupSetTectonicRegimes regimes = rupSet.getModule(RupSetTectonicRegimes.class);
+        assertNotNull(regimes);
+        assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(JOINT_RUP));
+    }
 }
