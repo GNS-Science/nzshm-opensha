@@ -10,7 +10,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Tests for {@link HazardConfig}: the named hazard sources of a comparison report. */
+/** Tests for {@link HazardReportSource}: the named hazard sources of a comparison report. */
 public class HazardConfigTest {
 
     @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -18,8 +18,9 @@ public class HazardConfigTest {
     /** Solutions calculated together get a GMM per tectonic region type. */
     @Test
     public void testCombined() {
-        HazardConfig config =
-                HazardConfig.combined("NZSHM22", makeCrustalSolution(), makeSubductionSolution());
+        HazardReportSource config =
+                HazardReportSource.combined(
+                        "NZSHM22", makeCrustalSolution(), makeSubductionSolution());
 
         assertEquals("NZSHM22", config.getName());
         assertEquals(GmmMode.PER_TECTONIC_REGION, config.getInput().getGmmMode());
@@ -29,7 +30,7 @@ public class HazardConfigTest {
     /** A joint solution is calculated with the experimental joint GMM. */
     @Test
     public void testJoint() {
-        HazardConfig config = HazardConfig.joint("Joint", makeSolution());
+        HazardReportSource config = HazardReportSource.joint("Joint", makeSolution());
 
         assertEquals(GmmMode.JOINT_RUPTURE, config.getInput().getGmmMode());
         assertSame(config.getSolution(), config.getInput().getSolution());
@@ -38,10 +39,10 @@ public class HazardConfigTest {
     /** Ids are used in file names, so they hold nothing that needs escaping. */
     @Test
     public void testGetId() {
-        assertEquals("nzshm22", HazardConfig.joint("NZSHM22", makeSolution()).getId());
+        assertEquals("nzshm22", HazardReportSource.joint("NZSHM22", makeSolution()).getId());
         assertEquals(
                 "joint_inversion_v2",
-                HazardConfig.joint("Joint Inversion (v2)", makeSolution()).getId());
+                HazardReportSource.joint("Joint Inversion (v2)", makeSolution()).getId());
     }
 
     /** A directory of solutions is picked up in a stable order, ignoring anything else in it. */
@@ -52,7 +53,7 @@ public class HazardConfigTest {
         assertTrue(new File(dir, "a.zip").createNewFile());
         assertTrue(new File(dir, "notes.txt").createNewFile());
 
-        List<File> solutions = HazardConfig.solutionsIn(dir);
+        List<File> solutions = HazardReportSource.solutionsIn(dir);
         assertEquals(2, solutions.size());
         assertEquals("a.zip", solutions.get(0).getName());
         assertEquals("b.zip", solutions.get(1).getName());
@@ -63,7 +64,7 @@ public class HazardConfigTest {
     public void testSolutionsInRejectsEmptyDirectory() throws Exception {
         File dir = tempFolder.newFolder("empty");
         try {
-            HazardConfig.solutionsIn(dir);
+            HazardReportSource.solutionsIn(dir);
             fail("expected an empty directory to be rejected");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("No solution zip files"));
@@ -73,7 +74,7 @@ public class HazardConfigTest {
     @Test
     public void testRejectsBlankName() {
         try {
-            HazardConfig.joint("  ", makeSolution());
+            HazardReportSource.joint("  ", makeSolution());
             fail("expected a blank name to be rejected");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("name"));

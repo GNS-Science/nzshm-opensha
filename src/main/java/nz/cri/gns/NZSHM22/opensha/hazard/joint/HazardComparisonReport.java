@@ -34,7 +34,7 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 
 /**
- * Generates a standalone HTML report comparing the hazard of two {@link HazardConfig hazard
+ * Generates a standalone HTML report comparing the hazard of two {@link HazardReportSource hazard
  * sources}, typically the classic NZSHM22 model (separate crustal and subduction inversions
  * calculated together) against a joint inversion.
  *
@@ -89,8 +89,8 @@ public class HazardComparisonReport {
     protected static final Color FIRST_COLOR = new Color(0, 90, 181);
     protected static final Color SECOND_COLOR = new Color(200, 40, 30);
 
-    protected final HazardConfig first;
-    protected final HazardConfig second;
+    protected final HazardReportSource first;
+    protected final HazardReportSource second;
     protected final File outputDir;
 
     protected Map<String, Location> sites = defaultSites();
@@ -104,12 +104,14 @@ public class HazardComparisonReport {
      * @param outputPath directory the report and its images are written to
      * @return the report's index.html
      */
-    public static File generateReport(HazardConfig first, HazardConfig second, File outputPath)
+    public static File generateReport(
+            HazardReportSource first, HazardReportSource second, File outputPath)
             throws IOException {
         return new HazardComparisonReport(first, second, outputPath).generate();
     }
 
-    public HazardComparisonReport(HazardConfig first, HazardConfig second, File outputDir) {
+    public HazardComparisonReport(
+            HazardReportSource first, HazardReportSource second, File outputDir) {
         this.first = Preconditions.checkNotNull(first, "need a first config");
         this.second = Preconditions.checkNotNull(second, "need a second config");
         this.outputDir = Preconditions.checkNotNull(outputDir, "need an output directory");
@@ -205,7 +207,7 @@ public class HazardComparisonReport {
         return index;
     }
 
-    protected JointHazardMapCalculator calculate(HazardConfig config) {
+    protected JointHazardMapCalculator calculate(HazardReportSource config) {
         System.out.println(
                 "Calculating hazard for "
                         + config.getName()
@@ -846,11 +848,11 @@ public class HazardComparisonReport {
                 + validation.numJoint;
     }
 
-    protected static int sectionCount(HazardConfig config) {
+    protected static int sectionCount(HazardReportSource config) {
         return config.getSolution().getRupSet().getNumSections();
     }
 
-    protected static int ruptureCount(HazardConfig config) {
+    protected static int ruptureCount(HazardReportSource config) {
         FaultSystemRupSet rupSet = config.getSolution().getRupSet();
         return rupSet.getNumRuptures();
     }

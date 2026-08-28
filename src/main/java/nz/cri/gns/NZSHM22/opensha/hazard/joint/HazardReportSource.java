@@ -27,7 +27,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
  * thread count can be set before the report is generated. They are locked once the calculation is
  * set up.
  */
-public class HazardConfig {
+public class HazardReportSource {
 
     protected final String name;
     protected final JointHazardInput input;
@@ -36,7 +36,7 @@ public class HazardConfig {
      * @param name display name, used in headings, plot titles and image file names
      * @param input the calculation inputs
      */
-    public HazardConfig(String name, JointHazardInput input) {
+    public HazardReportSource(String name, JointHazardInput input) {
         Preconditions.checkArgument(name != null && !name.isBlank(), "need a name");
         this.name = name;
         this.input = Preconditions.checkNotNull(input, "need inputs");
@@ -48,12 +48,13 @@ public class HazardConfig {
      * calculated with the GMM for its own tectonic region type. See {@link
      * JointHazardInput#combined}.
      */
-    public static HazardConfig combined(String name, FaultSystemSolution... solutions) {
-        return new HazardConfig(name, JointHazardInput.combined(solutions));
+    public static HazardReportSource combined(String name, FaultSystemSolution... solutions) {
+        return new HazardReportSource(name, JointHazardInput.combined(solutions));
     }
 
     /** As {@link #combined(String, FaultSystemSolution...)}, loading the solutions from disk. */
-    public static HazardConfig combined(String name, List<File> solutionFiles) throws IOException {
+    public static HazardReportSource combined(String name, List<File> solutionFiles)
+            throws IOException {
         Preconditions.checkArgument(!solutionFiles.isEmpty(), "need at least one solution file");
         return combined(name, load(solutionFiles));
     }
@@ -62,14 +63,14 @@ public class HazardConfig {
      * A hazard source made up of a single joint solution, calculated with the experimental joint
      * GMM. Its ruptures may span crustal and subduction sections.
      */
-    public static HazardConfig joint(String name, FaultSystemSolution solution) {
-        return new HazardConfig(
+    public static HazardReportSource joint(String name, FaultSystemSolution solution) {
+        return new HazardReportSource(
                 name,
                 new JointHazardInput(solution).setGmmMode(JointHazardInput.GmmMode.JOINT_RUPTURE));
     }
 
     /** As {@link #joint(String, FaultSystemSolution)}, loading the solution from disk. */
-    public static HazardConfig joint(String name, File solutionFile) throws IOException {
+    public static HazardReportSource joint(String name, File solutionFile) throws IOException {
         return joint(name, FaultSystemSolution.load(solutionFile));
     }
 

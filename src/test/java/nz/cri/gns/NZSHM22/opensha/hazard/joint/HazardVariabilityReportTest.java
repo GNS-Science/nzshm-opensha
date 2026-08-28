@@ -66,7 +66,7 @@ public class HazardVariabilityReportTest {
     public void testRejectsASingleRun() {
         try {
             new HazardVariabilityReport(
-                    List.of(HazardConfig.joint("only", JointTestSolutions.makeSolution())),
+                    List.of(HazardReportSource.joint("only", JointTestSolutions.makeSolution())),
                     tempFolder.getRoot());
             fail("expected a single run to be rejected");
         } catch (IllegalArgumentException e) {
@@ -165,7 +165,7 @@ public class HazardVariabilityReportTest {
         // a directory without a solution is not a run
         assertTrue(new File(runsDir, "notARun").mkdirs());
 
-        List<HazardConfig> configs = HazardVariabilityReport.jointRunsIn(runsDir);
+        List<HazardReportSource> configs = HazardVariabilityReport.jointRunsIn(runsDir);
         assertEquals(2, configs.size());
         assertEquals("joint01", configs.get(0).getName());
         assertEquals("joint02", configs.get(1).getName());
@@ -185,10 +185,10 @@ public class HazardVariabilityReportTest {
 
     /** A report over three runs, a small region, one period and one site, so tests stay quick. */
     private HazardVariabilityReport report(File outputDir) {
-        List<HazardConfig> configs = new ArrayList<>();
+        List<HazardReportSource> configs = new ArrayList<>();
         double[] rates = {1e-3, 2e-3, 3e-3};
         for (int i = 0; i < rates.length; i++) {
-            configs.add(HazardConfig.joint("run " + (i + 1), solutionWithRate(rates[i])));
+            configs.add(HazardReportSource.joint("run " + (i + 1), solutionWithRate(rates[i])));
         }
         return new HazardVariabilityReport(configs, outputDir)
                 .setNumThreads(1)

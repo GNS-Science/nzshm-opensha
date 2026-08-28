@@ -29,9 +29,9 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
 
 /**
  * Generates a standalone HTML report on how much the hazard varies across a set of {@link
- * HazardConfig hazard sources} that are meant to be equivalent, typically repeat runs of the same
- * inversion. Where {@link HazardComparisonReport} answers "how do these two models differ", this
- * one answers "how repeatable is this model".
+ * HazardReportSource hazard sources} that are meant to be equivalent, typically repeat runs of the
+ * same inversion. Where {@link HazardComparisonReport} answers "how do these two models differ",
+ * this one answers "how repeatable is this model".
  *
  * <p>Per period and return period the report holds:
  *
@@ -72,7 +72,7 @@ public class HazardVariabilityReport {
     /** Name of the solution zip inside each run directory. See {@link #jointRunsIn}. */
     public static final String SOLUTION_FILE = "solution.zip";
 
-    protected final List<HazardConfig> configs;
+    protected final List<HazardReportSource> configs;
     protected final File outputDir;
 
     protected Map<String, Location> sites = HazardComparisonReport.defaultSites();
@@ -85,12 +85,12 @@ public class HazardVariabilityReport {
      * @param outputPath directory the report and its images are written to
      * @return the report's index.html
      */
-    public static File generateReport(List<HazardConfig> configs, File outputPath)
+    public static File generateReport(List<HazardReportSource> configs, File outputPath)
             throws IOException {
         return new HazardVariabilityReport(configs, outputPath).generate();
     }
 
-    public HazardVariabilityReport(List<HazardConfig> configs, File outputDir) {
+    public HazardVariabilityReport(List<HazardReportSource> configs, File outputDir) {
         Preconditions.checkArgument(
                 configs != null && configs.size() > 1,
                 "need at least two runs to say anything about variability");
@@ -102,11 +102,11 @@ public class HazardVariabilityReport {
      * The joint inversion runs in a directory of run directories, i.e. every {@code
      * <runsDir>/<run>/solution.zip}, sorted by run name and named after it. That is the layout the
      * batch inversion runner writes. Each solution is calculated with the experimental joint GMM,
-     * see {@link HazardConfig#joint}.
+     * see {@link HazardReportSource#joint}.
      *
      * @throws IllegalArgumentException if the directory holds no such run
      */
-    public static List<HazardConfig> jointRunsIn(File runsDir) throws IOException {
+    public static List<HazardReportSource> jointRunsIn(File runsDir) throws IOException {
         return jointRunsIn(runsDir, name -> true);
     }
 
@@ -115,8 +115,8 @@ public class HazardVariabilityReport {
      * filtered before their solutions are loaded, so a directory holding other, unrelated solutions
      * does not cost anything.
      */
-    public static List<HazardConfig> jointRunsIn(File runsDir, Predicate<String> runNameFilter)
-            throws IOException {
+    public static List<HazardReportSource> jointRunsIn(
+            File runsDir, Predicate<String> runNameFilter) throws IOException {
         Preconditions.checkArgument(
                 runsDir.isDirectory(), "%s is not a directory", runsDir.getAbsolutePath());
         File[] runs =
@@ -130,9 +130,9 @@ public class HazardVariabilityReport {
                 SOLUTION_FILE,
                 runsDir.getAbsolutePath());
         Arrays.sort(runs);
-        List<HazardConfig> configs = new ArrayList<>();
+        List<HazardReportSource> configs = new ArrayList<>();
         for (File run : runs) {
-            configs.add(HazardConfig.joint(run.getName(), new File(run, SOLUTION_FILE)));
+            configs.add(HazardReportSource.joint(run.getName(), new File(run, SOLUTION_FILE)));
         }
         return configs;
     }
@@ -146,7 +146,7 @@ public class HazardVariabilityReport {
 
     /** Sets the map region of every run, so that their maps can be compared. */
     public HazardVariabilityReport setRegion(GriddedRegion region) {
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             config.getInput().setRegion(region);
         }
         return this;
@@ -154,7 +154,7 @@ public class HazardVariabilityReport {
 
     /** Sets the map resolution of every run in degrees. */
     public HazardVariabilityReport setSpacing(double spacing) {
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             config.getInput().setSpacing(spacing);
         }
         return this;
@@ -162,7 +162,7 @@ public class HazardVariabilityReport {
 
     /** Sets the periods of every run. 0 is PGA, positive values are SA periods. */
     public HazardVariabilityReport setPeriods(double... periods) {
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             config.getInput().setPeriods(periods);
         }
         return this;
@@ -170,7 +170,7 @@ public class HazardVariabilityReport {
 
     /** Sets the thread count of every run. Runs are calculated one after the other. */
     public HazardVariabilityReport setNumThreads(int numThreads) {
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             config.getInput().setNumThreads(numThreads);
         }
         return this;
@@ -184,9 +184,9 @@ public class HazardVariabilityReport {
      * @throws IllegalStateException if a solution fails {@link JointHazardInput#validate()}
      */
     public File generate() throws IOException {
-        HazardConfig reference = configs.get(0);
+        HazardReportSource reference = configs.get(0);
         double[] periods = reference.getInput().getPeriods();
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             Preconditions.checkArgument(
                     Arrays.equals(periods, config.getInput().getPeriods()),
                     "All runs must use the same periods, got %s and %s",
@@ -199,7 +199,7 @@ public class HazardVariabilityReport {
         }
 
         List<JointHazardInput.ValidationResult> validations = new ArrayList<>();
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             validations.add(config.getInput().validate());
         }
 
@@ -229,7 +229,7 @@ public class HazardVariabilityReport {
      */
     protected Results calculate(double[] periods) {
         Results results = new Results();
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             System.out.println(
                     "Calculating hazard for "
                             + config.getName()
@@ -570,7 +570,7 @@ public class HazardVariabilityReport {
         GriddedRegion region = configs.get(0).getInput().getRegion();
         ReportPage.Table table = new ReportPage.Table();
         List<String> names = new ArrayList<>();
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             names.add(config.getName());
         }
         table.addRow("Runs", configs.size() + ": " + String.join(", ", names));
@@ -587,10 +587,11 @@ public class HazardVariabilityReport {
 
     /** A count that is the same for every run, or its range if the runs disagree. */
     protected static String range(
-            List<HazardConfig> configs, java.util.function.ToIntFunction<HazardConfig> count) {
+            List<HazardReportSource> configs,
+            java.util.function.ToIntFunction<HazardReportSource> count) {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
-        for (HazardConfig config : configs) {
+        for (HazardReportSource config : configs) {
             int value = count.applyAsInt(config);
             min = Math.min(min, value);
             max = Math.max(max, value);

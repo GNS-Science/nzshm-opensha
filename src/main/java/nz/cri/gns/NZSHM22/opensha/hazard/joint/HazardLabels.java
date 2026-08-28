@@ -8,9 +8,9 @@ import java.util.Locale;
  * the reduction of any label to a file name fragment.
  *
  * <p>Kept in one place because the maps and site curves of {@link JointHazardMapCalculator}, the
- * figures of {@link HazardComparisonReport} and the ids of {@link HazardConfig} all name their
- * files after the same labels. A file written by one has to be found by the other, so they cannot
- * afford to slugify differently.
+ * figures of {@link HazardComparisonReport} and the ids of {@link HazardReportSource} all name
+ * their files after the same labels. A file written by one has to be found by the other, so they
+ * cannot afford to slugify differently.
  */
 public class HazardLabels {
 

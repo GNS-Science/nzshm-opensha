@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.hazard.joint.HazardConfig;
+import nz.cri.gns.NZSHM22.opensha.hazard.joint.HazardReportSource;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.GmmMode;
 import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardMapCalculator;
@@ -156,7 +156,7 @@ public class JointHazardRunner {
      * <p>More than one solution is merged into a single ERF; see {@link JointHazardInput#combined}.
      */
     public static void run(Options options) throws IOException {
-        FaultSystemSolution[] solutions = HazardConfig.load(options.getSolutionFiles());
+        FaultSystemSolution[] solutions = HazardReportSource.load(options.getSolutionFiles());
         JointHazardInput input =
                 solutions.length > 1
                         ? JointHazardInput.combined(solutions)

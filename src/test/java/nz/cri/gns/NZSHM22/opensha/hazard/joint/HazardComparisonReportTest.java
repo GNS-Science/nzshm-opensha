@@ -175,10 +175,10 @@ public class HazardComparisonReportTest {
      */
     @Test
     public void testRejectsCollidingIds() throws Exception {
-        HazardConfig classic =
-                HazardConfig.combined(
+        HazardReportSource classic =
+                HazardReportSource.combined(
                         "NZSHM22 v1", makeCrustalSolution(), makeSubductionSolution());
-        HazardConfig joint = HazardConfig.joint("NZSHM22-v1", makeSolution());
+        HazardReportSource joint = HazardReportSource.joint("NZSHM22-v1", makeSolution());
         assertEquals("ids should collide for this test", classic.getId(), joint.getId());
 
         HazardComparisonReport report =
@@ -196,9 +196,10 @@ public class HazardComparisonReportTest {
 
     /** A report over a small region, one period and one site, so that tests stay quick. */
     private HazardComparisonReport report(File outputDir) {
-        HazardConfig classic =
-                HazardConfig.combined("Classic", makeCrustalSolution(), makeSubductionSolution());
-        HazardConfig joint = HazardConfig.joint("Joint", makeSolution());
+        HazardReportSource classic =
+                HazardReportSource.combined(
+                        "Classic", makeCrustalSolution(), makeSubductionSolution());
+        HazardReportSource joint = HazardReportSource.joint("Joint", makeSolution());
         classic.getInput().setNumThreads(1);
         joint.getInput().setNumThreads(1);
 
