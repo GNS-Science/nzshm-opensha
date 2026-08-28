@@ -6,6 +6,7 @@ import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.data.location.NzshmCommonLocations;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import nz.cri.gns.NZSHM22.opensha.scripts.RupSetPropertyBackfill;
 import org.opensha.commons.geo.BorderType;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
@@ -360,6 +361,11 @@ public class JointHazardInput {
      */
     public ValidationResult validate() {
         FaultSystemRupSet rupSet = solution.getRupSet();
+        try {
+            rupSet = RupSetPropertyBackfill.backfill(rupSet);
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
 
         // touches every section, so this also validates the tectonic region types
         for (int s = 0; s < rupSet.getNumSections(); s++) {

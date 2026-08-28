@@ -337,10 +337,7 @@ public class HazardVariabilityReport {
                                 prefix,
                                 siteName + " - " + configs.size() + " runs",
                                 curves,
-                                periodLabel
-                                        + " ("
-                                        + HazardLabels.periodUnits(period)
-                                        + ")"),
+                                periodLabel + " (" + HazardLabels.periodUnits(period) + ")"),
                         siteName + ", " + periodLabel,
                         curveStats(curves));
                 section.add(row);
