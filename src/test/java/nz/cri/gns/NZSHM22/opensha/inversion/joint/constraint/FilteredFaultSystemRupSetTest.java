@@ -15,6 +15,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
+import org.opensha.sha.earthquake.faultSysSolution.modules.SlipAlongRuptureModel;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 import scratch.UCERF3.enumTreeBranches.SlipAlongRuptureModels;
 
@@ -122,5 +123,100 @@ public class FilteredFaultSystemRupSetTest {
         assertEquals(2, toTest.getRupSet().getNumRuptures());
         assertEquals(rates[0], toTest.getRateForRup(0), DELTA);
         assertEquals(rates[2], toTest.getRateForRup(1), DELTA);
+
+        // the filtered modules are attached to the solution's rupture set as well
+        FaultSystemRupSet toTestRupSet = toTest.getRupSet();
+        assertEquals(1, toTestRupSet.requireModule(AveSlipModule.class).getAveSlip(0), DELTA);
+        assertEquals(3, toTestRupSet.requireModule(AveSlipModule.class).getAveSlip(1), DELTA);
+        assertEquals(1, toTestRupSet.requireModule(SectSlipRates.class).getSlipRate(0), DELTA);
+    }
+
+    @Test
+    public void sectionMappingTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
+
+        FilteredFaultSystemRupSet crustal =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        assertEquals(1, crustal.getNumSections());
+        assertEquals(CRU_SECTION, crustal.getOldSectionId(0));
+
+        FilteredFaultSystemRupSet subduction =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.HIKURANGI.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        assertEquals(1, subduction.getNumSections());
+        assertEquals(SUB_SECTION, subduction.getOldSectionId(0));
+    }
+
+    @Test
+    public void aveSlipModuleTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
+
+        // crustal keeps ruptures 0 and 2 of the original
+        FilteredFaultSystemRupSet crustal =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        AveSlipModule crustalAveSlip = crustal.requireModule(AveSlipModule.class);
+        assertEquals(1, crustalAveSlip.getAveSlip(0), DELTA);
+        assertEquals(3, crustalAveSlip.getAveSlip(1), DELTA);
+
+        // subduction keeps ruptures 1 and 2 of the original
+        FilteredFaultSystemRupSet subduction =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.HIKURANGI.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        AveSlipModule subductionAveSlip = subduction.requireModule(AveSlipModule.class);
+        assertEquals(2, subductionAveSlip.getAveSlip(0), DELTA);
+        assertEquals(3, subductionAveSlip.getAveSlip(1), DELTA);
+    }
+
+    @Test
+    public void sectSlipRatesTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
+
+        FilteredFaultSystemRupSet crustal =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        SectSlipRates crustalRates = crustal.requireModule(SectSlipRates.class);
+        assertEquals(1, crustalRates.size());
+        assertEquals(1, crustalRates.getSlipRate(0), DELTA);
+        assertEquals(1, crustalRates.getSlipRateStdDev(0), DELTA);
+        assertEquals(1, crustal.getSlipRateForSection(0), DELTA);
+        assertEquals(1, crustal.getSlipRateStdDevForSection(0), DELTA);
+
+        FilteredFaultSystemRupSet subduction =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.HIKURANGI.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+        SectSlipRates subductionRates = subduction.requireModule(SectSlipRates.class);
+        assertEquals(1, subductionRates.size());
+        assertEquals(2, subductionRates.getSlipRate(0), DELTA);
+        assertEquals(2, subductionRates.getSlipRateStdDev(0), DELTA);
+        assertEquals(2, subduction.getSlipRateForSection(0), DELTA);
+        assertEquals(2, subduction.getSlipRateStdDevForSection(0), DELTA);
+    }
+
+    @Test
+    public void slipAlongRuptureModelTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
+        FilteredFaultSystemRupSet rupSet =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+
+        assertSame(
+                original.requireModule(SlipAlongRuptureModel.class),
+                rupSet.requireModule(SlipAlongRuptureModel.class));
     }
 }

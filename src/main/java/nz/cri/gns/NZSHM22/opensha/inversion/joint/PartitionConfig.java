@@ -76,7 +76,6 @@ public class PartitionConfig {
             mappingToARow.put(sectionIds.get(i), i);
         }
 
-        // TODO: if used for SlipRateInversionConstraint, we also need to set up modules
         partitionRuptureSet =
                 FilteredFaultSystemRupSet.forIntPredicate(
                         config.ruptureSet,
