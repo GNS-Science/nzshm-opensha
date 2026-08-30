@@ -73,12 +73,19 @@ public class PartitionConfig {
         for (int i = 0; i < sectionIds.size(); i++) {
             mappingToARow.put(sectionIds.get(i), i);
         }
+    }
 
+    /**
+     * Creates the rupture set that covers only this partition. Must be called after the modules of
+     * the joint rupture set have been set up by {@link RuptureSetSetup}, because the partition
+     * rupture set takes a filtered copy of the joint rupture set's slip modules.
+     */
+    public void buildPartitionRuptureSet() {
         partitionRuptureSet =
                 FilteredFaultSystemRupSet.forIntPredicate(
-                        config.ruptureSet,
+                        parentConfig.ruptureSet,
                         partitionPredicate,
-                        config.scalingRelationship.toRupSetScalingRelationship(
+                        parentConfig.scalingRelationship.toRupSetScalingRelationship(
                                 partition.isCrustal()));
     }
 

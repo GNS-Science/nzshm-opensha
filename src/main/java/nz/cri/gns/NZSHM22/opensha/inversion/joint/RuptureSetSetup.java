@@ -109,5 +109,11 @@ public class RuptureSetSetup {
         applySlipRateFactor(PartitionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
 
         createModSectMinMags(config);
+
+        // the partition rupture sets take a filtered copy of the joint rupture set's slip modules,
+        // so they have to be built after all modules above have been set up.
+        for (PartitionConfig partition : config.partitions) {
+            partition.buildPartitionRuptureSet();
+        }
     }
 }
