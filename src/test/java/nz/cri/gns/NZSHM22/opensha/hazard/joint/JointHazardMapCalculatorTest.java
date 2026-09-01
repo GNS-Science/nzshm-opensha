@@ -75,14 +75,14 @@ public class JointHazardMapCalculatorTest {
      * The joint GMM only splits a rupture into its crustal and interface parts when it is handed a
      * {@link org.opensha.sha.faultSurface.CompoundSurface} carrying section data. {@code
      * SolHazardMapCalc} gives each calculation thread a {@code DistCachedERFWrapper}, which
-     * replaces every rupture surface with an opaque {@code CustomCacheWrappedSurface}, and the GMM
-     * then falls back to classifying ruptures by magnitude alone. {@link
-     * JointHazardCalcSetup#getCalc()} switches that wrapper off for {@link
-     * JointHazardInput.GmmMode#JOINT_RUPTURE}.
+     * rebuilds every rupture surface so that it has its own distance caches, and that rebuild has
+     * to keep the surface decomposable. It once did not, and the GMM fell back to classifying
+     * ruptures by magnitude alone.
      *
      * <p>Checked end to end: the map value at a node has to agree with the hazard curve calculated
-     * at the same location, which uses the unwrapped ERF. The two use different IML grids so they
-     * differ by a percent or so; with the wrapper in place they differ by more than 20%.
+     * at the same location, which is calculated on the unwrapped ERF. The two use different IML
+     * grids so they differ by a percent or so; when the wrapper hides the sections they differ by
+     * more than 20%.
      */
     @Test
     public void testMapAgreesWithSiteCurves() {
