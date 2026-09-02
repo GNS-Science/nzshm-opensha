@@ -83,6 +83,14 @@ public class SiteSourceComparisonRunner {
                         + "_"
                         + HazardLabels.slug(returnPeriod.name());
 
+        // one disaggregation per solution, shared by both weightings: the weighting is pure
+        // post-processing, so recalculating the contributions per weighting is wasted work
+        double iml = reference.imlForReturnPeriod(location, period, returnPeriod);
+        SiteSourceContributions referenceContributions =
+                reference.exploreAtIml(location, period, iml);
+        SiteSourceContributions comparisonContributions =
+                comparison.exploreAtIml(location, period, iml);
+
         File[] maps = new File[2];
         SectionWeighting[] weightings = {
             SectionWeighting.participation(), SectionWeighting.proximity()
@@ -99,8 +107,8 @@ public class SiteSourceComparisonRunner {
                             + ", "
                             + weightings[i].getLabel());
             SiteSourceComparison diff =
-                    SiteSourceComparison.compare(
-                            reference, comparison, location, period, returnPeriod, weightings[i]);
+                    new SiteSourceComparison(
+                            referenceContributions, comparisonContributions, weightings[i]);
             System.out.println(diff);
 
             maps[i] =

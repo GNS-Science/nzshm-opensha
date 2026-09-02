@@ -62,6 +62,10 @@ public class HazardComparisonReportTest {
                 html.contains(
                         "<a class=\"zoom\" href=\"" + HazardComparisonReport.IMAGE_DIR + "/"));
         assertTrue(html.contains("id=\"lightbox\""));
+        // the anchor closes before the caption, so the caption is not part of the link
+        assertTrue(
+                "the figure caption should not be inside the link",
+                html.contains("></a>\n<figcaption>"));
         // the source figures link to the site page instead of opening in place
         assertTrue(
                 html.contains(

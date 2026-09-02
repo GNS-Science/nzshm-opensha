@@ -973,7 +973,7 @@ public class HazardComparisonReport {
                                         + figure.path
                                         + "\" alt=\""
                                         + escape(figure.caption)
-                                        + "\">\n");
+                                        + "\"></a>\n");
                         out.write("<figcaption>" + escape(figure.caption));
                         if (figure.stats != null) {
                             out.write("<span class=\"stats\">" + escape(figure.stats) + "</span>");

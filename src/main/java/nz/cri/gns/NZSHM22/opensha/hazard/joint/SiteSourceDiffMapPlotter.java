@@ -119,6 +119,9 @@ public class SiteSourceDiffMapPlotter {
         double[] scalars = perUnit(rates, unitYears);
 
         GeographicMapMaker mapMaker = new RupSetMapMaker(sections, region(sections, comparison));
+        // the sections come from two independently numbered rupture sets, so section ids are
+        // not unique here and the GeoJSON writer keys its outline features by section id
+        mapMaker.setWriteGeoJSON(false);
         mapMaker.setScalarThickness(3f);
         // sort by how far from unchanged a section is, so the biggest changes end up on top
         mapMaker.plotSectScalars(

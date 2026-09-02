@@ -233,7 +233,7 @@ public class SiteSourcePage {
         }
         Preconditions.checkState(
                 !coloured.isEmpty(),
-                "No section carries %s%% of the hazard at this site under %s",
+                "No section carries %s percent of the hazard at this site under %s",
                 NEGLIGIBLE_PERCENT,
                 comparison.getWeighting().getLabel());
         return GeographicMapMaker.buildBufferedRegion(coloured, BUFFER_KM, true);
