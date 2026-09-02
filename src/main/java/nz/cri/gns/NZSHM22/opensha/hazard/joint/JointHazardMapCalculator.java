@@ -10,7 +10,6 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.jfree.data.Range;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.Site;
@@ -25,7 +24,6 @@ import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.commons.gui.plot.PlotSpec;
 import org.opensha.commons.gui.plot.PlotUtils;
 import org.opensha.commons.mapping.gmt.elements.GMT_CPT_Files;
-import org.opensha.commons.param.Parameter;
 import org.opensha.commons.util.cpt.CPT;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -139,19 +137,8 @@ public class JointHazardMapCalculator {
      * returned curve has linear x values (IML) and annual probabilities of exceedance as y values.
      */
     public DiscretizedFunc calcSiteCurve(Location location, double period) {
-        Map<TectonicRegionType, Supplier<ScalarIMR>> suppliers = setup.gmmSuppliers();
-        EnumMap<TectonicRegionType, ScalarIMR> gmms = new EnumMap<>(TectonicRegionType.class);
-        for (Map.Entry<TectonicRegionType, Supplier<ScalarIMR>> entry : suppliers.entrySet()) {
-            gmms.put(entry.getKey(), entry.getValue().get());
-        }
-        FaultSysHazardCalcSettings.setIMforPeriod(gmms, period);
-
-        // site params are the union over every GMM in the map
-        Site site = new Site(location);
-        for (Parameter<?> siteParam :
-                FaultSysHazardCalcSettings.getDefaultRefSiteParams(suppliers)) {
-            site.addParameter((Parameter<?>) siteParam.clone());
-        }
+        EnumMap<TectonicRegionType, ScalarIMR> gmms = setup.buildGmmMap(period);
+        Site site = setup.buildSite(location);
 
         DiscretizedFunc xVals = FaultSysHazardCalcSettings.getDefaultXVals(period);
         DiscretizedFunc logCurve = new ArbitrarilyDiscretizedFunc();

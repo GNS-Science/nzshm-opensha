@@ -91,11 +91,25 @@ public class ReportPage {
         }
     }
 
+    /** A file offered for download below the summary, e.g. the data behind a figure. */
+    protected static class Download {
+        protected final String path;
+        protected final String text;
+
+        protected Download(String path, String text) {
+            this.path = path;
+            this.text = text;
+        }
+    }
+
     protected final String title;
     protected final File outputDir;
     protected final List<Section> sections = new ArrayList<>();
+    protected final List<Download> downloads = new ArrayList<>();
     protected String intro;
     protected Table summary;
+    protected String backHref;
+    protected String backText;
 
     public ReportPage(String title, File outputDir) {
         this.title = Preconditions.checkNotNull(title, "need a title");
@@ -116,6 +130,47 @@ public class ReportPage {
     public ReportPage add(Section section) {
         sections.add(section);
         return this;
+    }
+
+    /**
+     * Adds a link back to the page this one was reached from, shown above the title. Used by the
+     * per-site pages of a report to get back to the report.
+     *
+     * @param href the target, relative to this page
+     * @param text the link text
+     */
+    public ReportPage setBackLink(String href, String text) {
+        this.backHref = href;
+        this.backText = text;
+        return this;
+    }
+
+    /**
+     * Adds a file to the list of downloads below the summary, e.g. the CSV behind a figure.
+     *
+     * @param file the file, which has to sit below this page's directory
+     * @param text the link text
+     */
+    public ReportPage addDownload(File file, String text) {
+        downloads.add(new Download(relativePath(file), text));
+        return this;
+    }
+
+    /**
+     * A file's path relative to this page's directory, for use as an href.
+     *
+     * @throws IllegalArgumentException if the file does not sit below the page's directory, because
+     *     a standalone report has to be able to move as one directory
+     */
+    protected String relativePath(File file) {
+        String base = outputDir.getAbsoluteFile().toPath().normalize().toString();
+        String target = file.getAbsoluteFile().toPath().normalize().toString();
+        Preconditions.checkArgument(
+                target.startsWith(base + File.separator),
+                "%s is not below the report directory %s",
+                target,
+                base);
+        return target.substring(base.length() + 1).replace(File.separatorChar, '/');
     }
 
     /** The directory images are written to, created if it does not exist yet. */
@@ -143,6 +198,14 @@ public class ReportPage {
             out.write("<style>\n" + css() + "</style>\n");
             out.write("</head>\n<body>\n");
 
+            if (backHref != null) {
+                out.write(
+                        "<p class=\"back\"><a href=\""
+                                + backHref
+                                + "\">&larr; "
+                                + escape(backText)
+                                + "</a></p>\n");
+            }
             out.write("<h1>" + escape(title) + "</h1>\n");
             out.write(
                     "<p class=\"meta\">Generated "
@@ -155,6 +218,7 @@ public class ReportPage {
                             + "</p>\n");
 
             writeSummary(out);
+            writeDownloads(out);
 
             out.write("<nav><ul>\n");
             for (Section section : sections) {
@@ -201,6 +265,22 @@ public class ReportPage {
         return index;
     }
 
+    protected void writeDownloads(Writer out) throws IOException {
+        if (downloads.isEmpty()) {
+            return;
+        }
+        out.write("<ul class=\"downloads\">\n");
+        for (Download download : downloads) {
+            out.write(
+                    "<li><a href=\""
+                            + download.path
+                            + "\">"
+                            + escape(download.text)
+                            + "</a></li>\n");
+        }
+        out.write("</ul>\n");
+    }
+
     protected void writeSummary(Writer out) throws IOException {
         if (summary == null) {
             return;
@@ -245,6 +325,9 @@ public class ReportPage {
                 + " border-bottom: 1px solid #ddd; padding-bottom: .3rem; }\n"
                 + "h3 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; color: #444; }\n"
                 + ".meta { color: #666; }\n"
+                + ".back { margin: 0 0 .5rem; }\n"
+                + "ul.downloads { list-style: none; padding: 0; display: flex; gap: 1rem;"
+                + " font-size: .9rem; }\n"
                 + "table.summary { border-collapse: collapse; margin: 1rem 0; }\n"
                 + "table.summary th, table.summary td { border: 1px solid #ddd; padding: .35rem"
                 + " .7rem; text-align: left; font-weight: normal; }\n"

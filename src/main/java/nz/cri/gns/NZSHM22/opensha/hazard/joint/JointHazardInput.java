@@ -75,8 +75,8 @@ public class JointHazardInput {
     /** Default map resolution in degrees, i.e. roughly 10km. */
     public static final double DEFAULT_SPACING = NZSHM22_GriddedData.GRID_SPACING;
 
-    /** Default calculation periods: PGA and 3s SA. */
-    public static final double[] DEFAULT_PERIODS = {0d, 3d};
+    /** Default calculation periods: PGA and 1s SA. */
+    public static final double[] DEFAULT_PERIODS = {0d, 1d};
 
     /**
      * Sites that hazard curves are calculated for: the nzshm-common "NZ" locations. See {@link

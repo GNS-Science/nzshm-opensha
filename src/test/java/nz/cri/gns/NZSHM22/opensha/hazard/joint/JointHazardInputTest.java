@@ -185,13 +185,13 @@ public class JointHazardInputTest {
 
     /**
      * The defaults implement the requested specification: all of New Zealand at 0.1 degrees, PGA
-     * and SA(3.0), curves at the nzshm-common NZ locations. Return periods (2% and 10% in 50 years)
+     * and SA(1.0), curves at the nzshm-common NZ locations. Return periods (2% and 10% in 50 years)
      * come from {@link SolHazardMapCalc#MAP_RPS}.
      */
     @Test
     public void testDefaults() {
         assertEquals(0.1, JointHazardInput.DEFAULT_SPACING, 1e-9);
-        assertArrayEquals(new double[] {0d, 3d}, JointHazardInput.DEFAULT_PERIODS, 1e-9);
+        assertArrayEquals(new double[] {0d, 1d}, JointHazardInput.DEFAULT_PERIODS, 1e-9);
         assertEquals(NzshmCommonLocations.nzLocations(), JointHazardInput.defaultSites());
 
         assertEquals(
