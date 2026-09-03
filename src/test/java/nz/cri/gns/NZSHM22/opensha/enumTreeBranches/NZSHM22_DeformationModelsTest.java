@@ -84,8 +84,8 @@ public class NZSHM22_DeformationModelsTest {
         Map<Integer, NZSHM22_DeformationModel.DeformationHelper.SlipDeformation> deformations =
                 helper.getDeformations();
 
-        assertEquals(2, deformations.get(0).getRowNum());
-        assertEquals(5, deformations.get(1).getRowNum());
+        assertEquals(2, deformations.get(0).rowNum);
+        assertEquals(5, deformations.get(1).rowNum);
     }
 
     // parse errors report the actual line number

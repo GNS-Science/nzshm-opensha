@@ -561,15 +561,6 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
 
             /** The 1-based line number of this row in the deformation model file. */
             int rowNum;
-
-            /**
-             * The 1-based line number of this row in the deformation model file.
-             *
-             * @return the line number
-             */
-            public int getRowNum() {
-                return rowNum;
-            }
         }
 
         protected static Map<Integer, SlipDeformation> loadDeformations(
