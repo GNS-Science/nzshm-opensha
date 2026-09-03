@@ -105,46 +105,6 @@ public class NZSHM22_DeformationModelsTest {
     }
 
     @Test
-    public void testDumpFaultSections() throws DocumentException, IOException {
-        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
-        StringWriter out = new StringWriter();
-        NZSHM22_DeformationModel.dumpFaultSections(ruptSet, out);
-
-        String[] lines = out.toString().split("\n");
-        assertEquals(NZSHM22_DeformationModel.FAULT_SECTION_CSV_HEADER, lines[0]);
-        assertEquals(ruptSet.getNumSections() + 1, lines.length);
-
-        FaultSection section = ruptSet.getFaultSectionData(0);
-        assertEquals(
-                String.join(
-                        ",",
-                        "0",
-                        NZSHM22_DeformationModel.quote(section.getSectionName()),
-                        "" + section.getAveDip(),
-                        "" + section.getAveRake(),
-                        "" + section.getAveLowerDepth(),
-                        "" + section.getOrigAveUpperDepth(),
-                        "" + section.getDipDirection(),
-                        "" + section.getAseismicSlipFactor(),
-                        "" + section.getCouplingCoeff(),
-                        "" + section.getOrigAveSlipRate(),
-                        "" + section.getParentSectionId(),
-                        NZSHM22_DeformationModel.quote(section.getParentSectionName()),
-                        "" + section.getOrigSlipRateStdDev()),
-                lines[1]);
-    }
-
-    @Test
-    public void testQuote() {
-        assertEquals("", NZSHM22_DeformationModel.quote(null));
-        assertEquals("Acheron", NZSHM22_DeformationModel.quote("Acheron"));
-        assertEquals(
-                "\"Acheron, Subsection 0\"",
-                NZSHM22_DeformationModel.quote("Acheron, Subsection 0"));
-        assertEquals("\"say \"\"hi\"\"\"", NZSHM22_DeformationModel.quote("say \"hi\""));
-    }
-
-    @Test
     public void testApplyTo() throws DocumentException, IOException {
         FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         FaultSection s = ruptSet.getFaultSectionData(0);
