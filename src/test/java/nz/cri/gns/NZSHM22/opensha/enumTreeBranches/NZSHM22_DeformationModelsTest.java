@@ -239,6 +239,7 @@ public class NZSHM22_DeformationModelsTest {
                         for (int i = 0; i < ruptSet.getNumSections(); i++) {
                             SlipDeformation deformation = new SlipDeformation();
                             deformation.sectionId = i;
+                            deformation.rowNum = i + 1;
                             result.put(i, deformation);
                         }
                         return result;
@@ -252,7 +253,9 @@ public class NZSHM22_DeformationModelsTest {
             message = x.getMessage();
         }
         assertEquals(
-                "Section 1 Deformation parent id 0 does not match section parent id 1", message);
+                "Section 1 Deformation parent id 0 does not match section parent id 1"
+                        + " (deformation model line 2)",
+                message);
     }
 
     // error messages of deformations loaded from a file carry the source line number

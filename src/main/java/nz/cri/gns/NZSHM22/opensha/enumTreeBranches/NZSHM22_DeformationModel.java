@@ -614,20 +614,6 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             return deformations;
         }
 
-        /**
-         * Describes the source line of a deformation for error messages. Empty if the deformation
-         * did not come from a file.
-         *
-         * @param deformation the deformation
-         * @return a string describing the source line, or an empty string
-         */
-        protected static String rowInfo(SlipDeformation deformation) {
-            if (deformation.rowNum == 0) {
-                return "";
-            }
-            return " (deformation model line " + deformation.rowNum + ")";
-        }
-
         public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
             for (FaultSection section : rupSet.getFaultSectionDataList()) {
                 if (predicate != null && !predicate.test(section.getSectionId())) {
@@ -649,7 +635,9 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                     Preconditions.checkArgument(
                             deformation.sectionId == sectionId,
                             "Deformation section id does not match section id."
-                                    + rowInfo(deformation));
+                                    + " (deformation model line "
+                                    + deformation.rowNum
+                                    + ")");
                     Preconditions.checkArgument(
                             deformation.parentId == parentId,
                             "Section "
@@ -658,7 +646,9 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                                     + deformation.parentId
                                     + " does not match section parent id "
                                     + parentId
-                                    + rowInfo(deformation));
+                                    + " (deformation model line "
+                                    + deformation.rowNum
+                                    + ")");
                     section.setAveSlipRate(deformation.slip);
                     section.setSlipRateStdDev(deformation.stdv);
                 }
