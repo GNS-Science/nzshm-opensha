@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.inversion.BaseInversionInputGenerator;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.util.TraceTool;
 import org.dom4j.DocumentException;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -45,6 +46,12 @@ public class InversionRunner {
         Annealer runner = new Annealer(config.getAnnealingConfig(), config.ruptureSet);
         FaultSystemSolution solution = runner.runInversion(inputGenerator);
         solution.addModule(new ConfigModule(config));
+        for (PartitionConfig partition : config.partitions) {
+            if (partition.deformationModelFile != null) {
+                solution.addModule(
+                        new CustomDeformationModel(partition.deformationModel.getCustomModel()));
+            }
+        }
 
         return solution;
     }

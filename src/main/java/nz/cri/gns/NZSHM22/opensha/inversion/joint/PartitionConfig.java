@@ -29,6 +29,8 @@ public class PartitionConfig {
     public double slipRateUncertaintyConstraintScalingFactor;
     public boolean unmodifiedSlipRateStdvs;
     public NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
+    // path of a deformation model CSV file, only valid with NZSHM22_DeformationModel.CUSTOM
+    public String deformationModelFile;
 
     // MFD section
     public double totalRateM5;
