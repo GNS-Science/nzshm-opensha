@@ -76,7 +76,7 @@ public class HazardComparisonReportTest {
 
         List<String> images = imagesIn(html);
         // two return periods and one site, each with two configs and a difference, plus the one
-        // source influence difference map
+        // source difference map
         assertEquals(10, images.size());
         for (String image : images) {
             File file = new File(outputDir, image);
@@ -86,7 +86,7 @@ public class HazardComparisonReportTest {
         // the difference figures are the point of the report
         assertTrue(images.stream().anyMatch(i -> i.contains("map_pga_two_in_50_diff")));
         assertTrue(images.stream().anyMatch(i -> i.contains("curve_test_site_pga_diff")));
-        assertTrue(images.stream().anyMatch(i -> i.contains("test_site_influence_diff")));
+        assertTrue(images.stream().anyMatch(i -> i.contains("test_site_diff")));
     }
 
     /**
@@ -103,8 +103,8 @@ public class HazardComparisonReportTest {
     }
 
     /**
-     * Each source site gets its own page holding the maps the report itself does not show: both
-     * weightings, each solution on its own and their difference.
+     * Each source site gets its own page holding what the report itself does not show: each
+     * solution's own map beside the difference, and the sections that changed most.
      */
     @Test
     public void testSourceSitePage() throws Exception {
@@ -118,16 +118,18 @@ public class HazardComparisonReportTest {
         String html = Files.readString(page.toPath(), StandardCharsets.UTF_8);
         assertTrue(html.contains("Test Site hazard sources"));
         assertTrue("expected a link back to the report", html.contains("../../index.html"));
-        assertTrue(html.contains(SectionWeighting.proximity().getLabel()));
-        assertTrue(html.contains(SectionWeighting.participation().getLabel()));
+        assertTrue(html.contains(HazardLabels.SECTION_HAZARD));
+        assertTrue(
+                "expected the table of the sections that changed most",
+                html.contains("sections whose hazard changed most"));
 
-        // both weightings, each with a difference and one map per solution
+        // the difference and one map per solution
         List<String> images = imagesIn(html);
-        assertEquals(6, images.size());
+        assertEquals(3, images.size());
         for (String image : images) {
             assertTrue(image + " should exist", new File(siteDir, image).exists());
         }
-        assertTrue(new File(siteDir, "test_site_influence_sections.csv").exists());
+        assertTrue(new File(siteDir, "test_site_sections.csv").exists());
     }
 
     /** Maps of different regions cannot be differenced, so this is caught before calculating. */

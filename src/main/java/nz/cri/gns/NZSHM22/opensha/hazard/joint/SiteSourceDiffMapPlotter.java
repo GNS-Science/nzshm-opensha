@@ -17,9 +17,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 /**
  * Draws a {@link SiteSourceComparison} as a map: the sections that are a source for the site in
  * either solution, coloured by how much the hazard reaching the site through each of them changed.
- * The counterpart of {@link SiteSourceMapPlotter}, which draws one solution on its own, and it
- * takes its weighting from the comparison so that a participation map and an influence map each get
- * their own difference map.
+ * The counterpart of {@link SiteSourceMapPlotter}, which draws one solution on its own.
  *
  * <p>The colour is the change itself — {@link SiteSourceComparison#getDifferences()}, the
  * comparison solution's contribution minus the reference solution's — on a diverging scale centred
@@ -37,31 +35,28 @@ import org.opensha.sha.faultSurface.FaultSection;
  * in those reads as a row of zeroes.
  *
  * <p>Sections that are negligible in <em>both</em> solutions are left off the map entirely; see
- * {@link #setOmitBelowPercent}. The single solution maps grey those out instead, because there
+ * {@link #setOmitBelowRate}. The single solution maps grey those out instead, because there
  * "small" is still a value worth placing, but on a difference map they carry no change worth
  * looking at and only clutter the sections that do.
  */
 public class SiteSourceDiffMapPlotter {
 
-    private double omitBelowPercent = Double.NaN;
+    private double omitBelowRate = Double.NaN;
     private double bufferKm = SiteSourceMapPlotter.DEFAULT_BUFFER_KM;
     private Region region;
     private CPT cpt;
 
     /**
-     * Sets the share of its own solution's hazard that a section has to reach, in at least one of
-     * the two solutions, to appear on the map at all. Unset by default, in which case every section
-     * that is a source in either solution is drawn.
+     * Sets the hazard a section has to carry, in at least one of the two solutions, to appear on
+     * the map at all. Unset by default, in which case every section that is a source in either
+     * solution is drawn.
      *
-     * @param omitBelowPercent the threshold in percent, so 0.2 means "leave out unless the section
-     *     carries 0.2% of the site's hazard in one solution or the other", or {@link Double#NaN} to
-     *     draw everything
+     * @param omitBelowRate the threshold in 1/yr, or {@link Double#NaN} to draw every section
      */
-    public SiteSourceDiffMapPlotter setOmitBelowPercent(double omitBelowPercent) {
+    public SiteSourceDiffMapPlotter setOmitBelowRate(double omitBelowRate) {
         Preconditions.checkArgument(
-                Double.isNaN(omitBelowPercent) || omitBelowPercent > 0,
-                "omitBelowPercent must be positive");
-        this.omitBelowPercent = omitBelowPercent;
+                Double.isNaN(omitBelowRate) || omitBelowRate > 0, "omitBelowRate must be positive");
+        this.omitBelowRate = omitBelowRate;
         return this;
     }
 
@@ -108,13 +103,13 @@ public class SiteSourceDiffMapPlotter {
                 "Could not create output directory %s",
                 outputDir.getAbsolutePath());
 
-        List<FaultSection> sections = sections(comparison, omitBelowPercent);
+        List<FaultSection> sections = sections(comparison, omitBelowRate);
         Preconditions.checkState(
                 !sections.isEmpty(),
-                "No section reaches the %s percent threshold, so there would be nothing to draw",
-                omitBelowPercent);
+                "No section reaches the %s /yr threshold, so there would be nothing to draw",
+                omitBelowRate);
 
-        double[] rates = differences(comparison, omitBelowPercent);
+        double[] rates = differences(comparison, omitBelowRate);
         double unitYears = unitYears(rates);
         double[] scalars = perUnit(rates, unitYears);
 
@@ -128,7 +123,7 @@ public class SiteSourceDiffMapPlotter {
                 toList(scalars),
                 toList(sortables(scalars)),
                 differenceCPT(scalars),
-                comparison.getWeighting().getLabel() + " Change (" + rateUnit(unitYears) + ")");
+                HazardLabels.SECTION_HAZARD + " Change (" + HazardLabels.rateUnit(unitYears) + ")");
 
         mapMaker.setScatterSymbol(
                 PlotSymbol.INV_TRIANGLE, 10f, PlotSymbol.INV_TRIANGLE, Color.BLACK);
@@ -142,22 +137,26 @@ public class SiteSourceDiffMapPlotter {
      * Whether a section carries enough of the site's hazard, in one solution or the other, to be
      * worth drawing.
      *
-     * @param maxPercentage the section's larger of its two shares, see {@link
-     *     SiteSourceComparison#getMaxPercentages()}
-     * @param omitBelowPercent the threshold, or {@link Double#NaN} to draw everything
+     * <p>The test is on an absolute rate rather than on a share of the site's total, because the
+     * two solutions have different totals: a share threshold cuts the two sides at different
+     * amounts of hazard and drops sections from one map that its neighbour still draws.
+     *
+     * @param maxRate the larger of the section's two contributions, see {@link
+     *     SiteSourceComparison#getMaxRates()}
+     * @param omitBelowRate the threshold in 1/yr, or {@link Double#NaN} to draw everything
      */
-    protected static boolean isDrawn(double maxPercentage, double omitBelowPercent) {
-        return Double.isNaN(omitBelowPercent) || maxPercentage >= omitBelowPercent;
+    protected static boolean isDrawn(double maxRate, double omitBelowRate) {
+        return Double.isNaN(omitBelowRate) || maxRate >= omitBelowRate;
     }
 
     /** The sections the map draws, in the comparison's section order. */
     protected static List<FaultSection> sections(
-            SiteSourceComparison comparison, double omitBelowPercent) {
+            SiteSourceComparison comparison, double omitBelowRate) {
         List<FaultSection> all = comparison.getSections();
-        double[] maxPercentages = comparison.getMaxPercentages();
+        double[] maxRates = comparison.getMaxRates();
         List<FaultSection> drawn = new ArrayList<>();
         for (int i = 0; i < all.size(); i++) {
-            if (isDrawn(maxPercentages[i], omitBelowPercent)) {
+            if (isDrawn(maxRates[i], omitBelowRate)) {
                 drawn.add(all.get(i));
             }
         }
@@ -168,30 +167,20 @@ public class SiteSourceDiffMapPlotter {
      * The change in contribution of each drawn section, in 1/yr, aligned with {@link #sections}.
      */
     protected static double[] differences(
-            SiteSourceComparison comparison, double omitBelowPercent) {
+            SiteSourceComparison comparison, double omitBelowRate) {
         double[] all = comparison.getDifferences();
-        double[] maxPercentages = comparison.getMaxPercentages();
-        double[] drawn = new double[sections(comparison, omitBelowPercent).size()];
+        double[] maxRates = comparison.getMaxRates();
+        double[] drawn = new double[sections(comparison, omitBelowRate).size()];
         int next = 0;
         for (int i = 0; i < all.length; i++) {
-            if (isDrawn(maxPercentages[i], omitBelowPercent)) {
+            if (isDrawn(maxRates[i], omitBelowRate)) {
                 drawn[next++] = all[i];
             }
         }
         return drawn;
     }
 
-    /**
-     * The number of years the changes are reported over: the smallest power of ten that puts the
-     * largest change on the map at one or above.
-     *
-     * <p>Section contributions are rates of the order of a thousandth per year, and a colour bar
-     * labelled in those comes out as a row of zeroes, because the axis is formatted to a few
-     * decimal places. Reporting the same numbers over a thousand or ten thousand years puts them in
-     * a range a legend can print without saying anything different.
-     *
-     * @param rates the changes in 1/yr
-     */
+    /** The number of years the changes are reported over. See {@link HazardLabels#rateUnitYears}. */
     protected static double unitYears(double[] rates) {
         double largest = 0;
         for (double rate : rates) {
@@ -199,10 +188,7 @@ public class SiteSourceDiffMapPlotter {
                 largest = Math.max(largest, Math.abs(rate));
             }
         }
-        if (largest <= 0) {
-            return 1d;
-        }
-        return Math.pow(10, Math.max(0, Math.ceil(-Math.log10(largest))));
+        return HazardLabels.rateUnitYears(largest);
     }
 
     /** The rates converted from 1/yr to per {@code unitYears} years. */
@@ -212,13 +198,6 @@ public class SiteSourceDiffMapPlotter {
             scaled[i] = rates[i] * unitYears;
         }
         return scaled;
-    }
-
-    /** How a rate over the given number of years is named on the colour bar. */
-    protected static String rateUnit(double unitYears) {
-        return unitYears == 1d
-                ? "1/yr"
-                : "per " + String.format("%,d", (long) unitYears) + " years";
     }
 
     /**
@@ -276,7 +255,7 @@ public class SiteSourceDiffMapPlotter {
     protected static String title(SiteSourceComparison comparison, String siteName) {
         return siteName
                 + " "
-                + comparison.getWeighting().getLabel()
+                + HazardLabels.SECTION_HAZARD
                 + " Change, "
                 + HazardLabels.periodLabel(comparison.getPeriod())
                 + " > "

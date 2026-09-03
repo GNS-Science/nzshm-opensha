@@ -29,25 +29,25 @@ public class SiteSourceMapPlotterTest {
         return new SiteSourceContributions(solution, SITE, 0d, 0.5d, rupRates);
     }
 
-    /** Sections are coloured by their share of the site's total, in percent. */
+    /**
+     * Sections are coloured by an absolute rate, scaled to a round number of years, not by a share
+     * of the site's total: a share would mean the same amount of hazard got a different colour on
+     * each of a pair of maps whose solutions have different totals.
+     */
     @Test
-    public void testPercentages() {
-        double[] percentages = new SiteSourceMapPlotter().percentages(contributions());
-        assertArrayEquals(new double[] {25d, 25d, 75d, 75d}, percentages, 1e-9);
-        assertEquals(75d, SiteSourceMapPlotter.max(percentages), 1e-9);
+    public void testValues() {
+        double[] values = SiteSourceMapPlotter.perUnit(contributions().getSectionRates(), 1000d);
+        assertArrayEquals(new double[] {1d, 1d, 3d, 3d}, values, 1e-9);
+        assertEquals(3d, SiteSourceMapPlotter.max(values), 1e-9);
     }
 
     /**
-     * Under a partitioning weighting the section percentages add to 100 rather than over-counting
-     * multi-section ruptures the way participation does.
+     * The contributions deliberately over-count: a rupture reaches the site through every section
+     * it breaks, so they overlap and add to more than the site's total rate of 4e-3.
      */
     @Test
-    public void testPercentagesUnderProximityWeighting() {
-        double[] percentages =
-                new SiteSourceMapPlotter()
-                        .setWeighting(SectionWeighting.proximity())
-                        .percentages(contributions());
-        assertEquals(100d, sum(percentages), 1e-6);
+    public void testContributionsOverlap() {
+        assertEquals(8e-3, sum(contributions().getSectionRates()), 1e-12);
     }
 
     static double sum(double[] values) {
@@ -60,7 +60,7 @@ public class SiteSourceMapPlotterTest {
 
     /**
      * The scalars cover only the sections that are a source for the site, in section order, and are
-     * clamped at the bottom of the scale. They stay percentages: it is the colour scale that is
+     * clamped at the bottom of the scale. They stay linear: it is the colour scale that is
      * logarithmic, not the values, which is what lets the legend read "0.1%" instead of "-1".
      */
     @Test
@@ -85,24 +85,24 @@ public class SiteSourceMapPlotterTest {
     /** Sections that no rupture reaching the site runs over are left off the map entirely. */
     @Test
     public void testDrawnExcludesNonContributors() {
-        double[] percentages = new SiteSourceMapPlotter().percentages(contributions());
+        double[] values = contributions().getSectionRates();
         // the joint rupture has no rate here, but its sections are used by the other two
-        assertEquals(4, SiteSourceMapPlotter.numDrawn(percentages, Double.NaN));
+        assertEquals(4, SiteSourceMapPlotter.numDrawn(values, Double.NaN));
 
-        percentages[2] = 0;
-        assertEquals(3, SiteSourceMapPlotter.numDrawn(percentages, Double.NaN));
+        values[2] = 0;
+        assertEquals(3, SiteSourceMapPlotter.numDrawn(values, Double.NaN));
         List<FaultSection> drawn =
-                SiteSourceMapPlotter.drawn(contributions().getRupSet(), percentages, Double.NaN);
+                SiteSourceMapPlotter.drawn(contributions().getRupSet(), values, Double.NaN);
         assertEquals(List.of(0, 1, 3), drawn.stream().map(FaultSection::getSectionId).toList());
     }
 
     /** Sections that are a source but a negligible one are left off too. */
     @Test
     public void testDrawnExcludesNegligibleSections() {
-        // the crustal sections carry 25% each here and the interface ones 75% each
-        double[] percentages = new SiteSourceMapPlotter().percentages(contributions());
+        // the crustal sections carry 1e-3 each here and the interface ones 3e-3 each
+        double[] values = contributions().getSectionRates();
         List<FaultSection> drawn =
-                SiteSourceMapPlotter.drawn(contributions().getRupSet(), percentages, 50d);
+                SiteSourceMapPlotter.drawn(contributions().getRupSet(), values, 2e-3);
         assertEquals(List.of(2, 3), drawn.stream().map(FaultSection::getSectionId).toList());
     }
 
@@ -111,7 +111,7 @@ public class SiteSourceMapPlotterTest {
     public void testRejectsThresholdAboveEverything() throws IOException {
         try {
             new SiteSourceMapPlotter()
-                    .setOmitBelowPercent(99d)
+                    .setOmitBelowRate(1d)
                     .plot(tempFolder.newFolder("above"), "sources", contributions(), "Test Site");
             fail("expected a threshold above the largest contribution to be rejected");
         } catch (IllegalStateException expected) {
@@ -125,15 +125,14 @@ public class SiteSourceMapPlotterTest {
         File outputDir = tempFolder.newFolder("grey");
         File map =
                 new SiteSourceMapPlotter()
-                        .setWeighting(SectionWeighting.proximity())
-                        .setOmitBelowPercent(1d)
+                        .setOmitBelowRate(2e-3)
                         .plot(outputDir, "sources", contributions(), "Test Site");
         assertTrue(map.exists());
     }
 
     /**
-     * The palette reports its bounds as percentages rather than as logarithms, which is what makes
-     * OpenSHA label the colour bar in percent.
+     * The palette reports its bounds as rates rather than as logarithms, which is what makes
+     * OpenSHA label the colour bar in rates.
      */
     @Test
     public void testLogCPT() throws IOException {

@@ -19,11 +19,19 @@ import org.opensha.sha.faultSurface.FaultSection;
  * Draws {@link SiteSourceContributions} as a map: the fault sections of the solution, coloured by
  * how much of the site's hazard reaches it through each of them, with the site itself marked.
  *
- * <p>The colour of a section is its percentage contribution, from {@link
- * SiteSourceContributions#getSectionRates(SectionWeighting)}. Which question the map answers — "how
- * much hazard passes through this section" or "how much did this section shake the site" — is the
- * {@link SectionWeighting}; see there, because the two give very different maps for a rupture set
- * with long multi-fault ruptures.
+ * <p>The colour of a section is {@link SiteSourceContributions#getSectionRates()} itself, an
+ * absolute rate of exceedance, reported over a round number of years so that the legend does not
+ * read as a row of zeroes. It is deliberately not a share of the site's total: two solutions have
+ * two different totals, so a share would colour the same amount of hazard differently on each of a
+ * pair of maps meant to be read side by side, and a share threshold would drop sections from one
+ * map that its neighbour still draws. {@link #setUnitYears} and {@link #setMaxRate} let a caller
+ * fix the unit and the top of the scale across both.
+ *
+ * <p>The map answers "how much of this site's hazard passes through this section", which means the
+ * contributions overlap: a rupture is credited to every section it runs over, so the section rates
+ * sum to well over the site's total. That overlap is the point — a long multi-fault rupture reaches
+ * the site through all of it, and drawing the whole footprint is what shows which ruptures the
+ * hazard comes from.
  *
  * <p>Only the sections that matter are drawn. A section that no rupture reaching the site's
  * intensity level runs over is not a source for the site at all, and {@link #setOmitBelowPercent}
@@ -40,13 +48,12 @@ import org.opensha.sha.faultSurface.FaultSection;
  * <p>The colour scale is logarithmic, which is not cosmetic: contributions span many orders of
  * magnitude, so on a linear scale a single dominant fault would saturate the map and everything
  * else would be one colour. It is the <em>scale</em> that is logarithmic, not the values — the CPT
- * carries {@link CPT#setLog10}, so the scalars stay percentages and the legend is labelled in
- * percentages ("0.1%") rather than in their logarithms ("-1").
+ * carries {@link CPT#setLog10}, so the scalars stay linear rates and the legend is labelled in
+ * rates rather than in their logarithms.
  *
- * <p>The top of the scale is anchored on the largest contribution, rounded up to a whole decade;
- * the bottom is either {@link #setGreyBelowPercent} or {@link #setNumDecades} decades below the
- * top. Anchoring on the data rather than on a fixed range keeps the map readable across sites whose
- * absolute hazard differs widely, at the cost of making colours incomparable between two such maps.
+ * <p>The top of the scale is anchored on {@link #setMaxRate}, or on the largest contribution on the
+ * map, rounded up to a whole decade; the bottom is either {@link #setOmitBelowRate} or {@link
+ * #setNumDecades} decades below the top.
  */
 public class SiteSourceMapPlotter {
 
@@ -60,8 +67,9 @@ public class SiteSourceMapPlotter {
     private double bufferKm = DEFAULT_BUFFER_KM;
     private Region region;
     private CPT cpt;
-    private SectionWeighting weighting = SectionWeighting.participation();
-    private double omitBelowPercent = Double.NaN;
+    private double omitBelowRate = Double.NaN;
+    private double maxRate = Double.NaN;
+    private double unitYears = Double.NaN;
 
     /**
      * Sets how many decades of contribution the colour scale covers below the largest contributing
@@ -74,22 +82,44 @@ public class SiteSourceMapPlotter {
     }
 
     /**
-     * Sets the contribution, as a percentage of the site's total, below which a section is left off
-     * the map. The threshold becomes the bottom of the colour scale, so it takes the place of
-     * {@link #setNumDecades}.
+     * Sets the contribution, in 1/yr, below which a section is left off the map. The threshold
+     * becomes the bottom of the colour scale, so it takes the place of {@link #setNumDecades}.
      *
      * <p>Unset by default, in which case every section that is a source for the site is drawn, the
      * scale runs {@link #setNumDecades} decades below the largest contribution, and anything below
      * that is clamped to the bottom colour.
      *
-     * @param omitBelowPercent the threshold in percent, so 0.2 means "leave out below 0.2% of the
-     *     site's hazard", or {@link Double#NaN} to draw every source
+     * @param omitBelowRate the threshold in 1/yr, or {@link Double#NaN} to draw every source
      */
-    public SiteSourceMapPlotter setOmitBelowPercent(double omitBelowPercent) {
+    public SiteSourceMapPlotter setOmitBelowRate(double omitBelowRate) {
         Preconditions.checkArgument(
-                Double.isNaN(omitBelowPercent) || omitBelowPercent > 0,
-                "omitBelowPercent must be positive");
-        this.omitBelowPercent = omitBelowPercent;
+                Double.isNaN(omitBelowRate) || omitBelowRate > 0, "omitBelowRate must be positive");
+        this.omitBelowRate = omitBelowRate;
+        return this;
+    }
+
+    /**
+     * Sets the contribution the top of the colour scale is anchored on, in 1/yr. Defaults to the
+     * largest contribution on this map, which frames each map on its own sources; pass the largest
+     * over several solutions to put them all on one scale, which is what makes two of these maps
+     * comparable at a glance.
+     */
+    public SiteSourceMapPlotter setMaxRate(double maxRate) {
+        Preconditions.checkArgument(
+                Double.isNaN(maxRate) || maxRate > 0, "maxRate must be positive");
+        this.maxRate = maxRate;
+        return this;
+    }
+
+    /**
+     * Sets the number of years the rates are reported over on the legend. Defaults to whatever
+     * {@link HazardLabels#rateUnitYears} makes of this map's own largest contribution; set it
+     * explicitly so that two maps meant to be read together are labelled in the same unit.
+     */
+    public SiteSourceMapPlotter setUnitYears(double unitYears) {
+        Preconditions.checkArgument(
+                Double.isNaN(unitYears) || unitYears > 0, "unitYears must be positive");
+        this.unitYears = unitYears;
         return this;
     }
 
@@ -107,19 +137,6 @@ public class SiteSourceMapPlotter {
     public SiteSourceMapPlotter setBufferKm(double bufferKm) {
         this.bufferKm = bufferKm;
         return this;
-    }
-
-    /**
-     * Sets how each rupture's contribution is shared among its sections, which is what the map is
-     * actually showing. Defaults to {@link SectionWeighting#participation()}.
-     */
-    public SiteSourceMapPlotter setWeighting(SectionWeighting weighting) {
-        this.weighting = weighting;
-        return this;
-    }
-
-    public SectionWeighting getWeighting() {
-        return weighting;
     }
 
     /** Sets the colour palette. It is rescaled to the data, so pass an unscaled instance. */
@@ -155,25 +172,33 @@ public class SiteSourceMapPlotter {
                 outputDir.getAbsolutePath());
 
         FaultSystemRupSet rupSet = contributions.getRupSet();
-        double[] percentages = percentages(contributions);
-        double max = max(percentages);
+        double[] rates = contributions.getSectionRates();
+        double largest = max(rates);
         Preconditions.checkState(
-                max > 0, "No section contributes anything, so there is nothing to draw");
+                largest > 0, "No section contributes anything, so there is nothing to draw");
         Preconditions.checkState(
-                Double.isNaN(omitBelowPercent) || omitBelowPercent < max,
-                "Every section contributes less than the %s percent threshold; the largest is %s",
-                omitBelowPercent,
-                max);
+                Double.isNaN(omitBelowRate) || omitBelowRate < largest,
+                "Every section contributes less than the %s /yr threshold; the largest is %s",
+                omitBelowRate,
+                largest);
+
+        // the rates are scaled to a round number of years before anything else, so that the
+        // threshold, the scale and the legend are all in the one unit the caller asked for
+        double years = Double.isNaN(unitYears) ? HazardLabels.rateUnitYears(largest) : unitYears;
+        double[] values = perUnit(rates, years);
+        double omitBelow = omitBelowRate * years;
 
         // anchor the scale on the largest contribution, rounded up to a whole decade so that the
-        // legend reads in round numbers
-        double logMax = Math.ceil(Math.log10(max));
+        // legend reads in round numbers. Anchoring on a rate given by the caller instead puts
+        // several maps of the same site on one scale.
+        double logMax =
+                Math.ceil(Math.log10(Double.isNaN(maxRate) ? largest * years : maxRate * years));
         double logMin =
-                Double.isNaN(omitBelowPercent) ? logMax - numDecades : Math.log10(omitBelowPercent);
+                Double.isNaN(omitBelowRate) ? logMax - numDecades : Math.log10(omitBelow);
         // with a threshold nothing drawn falls below the scale, so the clamp only bites when there
         // is none and the bottom decade has to hold whatever is under it
-        List<FaultSection> drawn = drawn(rupSet, percentages, omitBelowPercent);
-        double[] scalars = scalars(percentages, omitBelowPercent, Math.pow(10, logMin));
+        List<FaultSection> drawn = drawn(rupSet, values, omitBelow);
+        double[] scalars = scalars(values, omitBelow, Math.pow(10, logMin));
 
         // only the drawn sections are handed to the map maker, because it draws an outline for
         // every section it is given whether or not that section has a scalar
@@ -186,7 +211,10 @@ public class SiteSourceMapPlotter {
                 scalars,
                 scalars,
                 logCPT(logMin, logMax),
-                weighting.getLabel() + " (% of Site Hazard)");
+                HazardLabels.SECTION_HAZARD
+                        + " ("
+                        + HazardLabels.rateUnit(years)
+                        + "; Sections Overlap)");
 
         mapMaker.setScatterSymbol(
                 PlotSymbol.INV_TRIANGLE, 10f, PlotSymbol.INV_TRIANGLE, Color.BLACK);
@@ -196,15 +224,13 @@ public class SiteSourceMapPlotter {
         return new File(outputDir, prefix + ".png");
     }
 
-    /** Each section's contribution as a percentage of the site's total rate of exceedance. */
-    protected double[] percentages(SiteSourceContributions contributions) {
-        double[] rates = contributions.getSectionRates(weighting);
-        double total = contributions.getTotalRate();
-        double[] percentages = new double[rates.length];
-        for (int s = 0; s < rates.length; s++) {
-            percentages[s] = 100 * rates[s] / total;
+    /** The rates converted from 1/yr to per {@code unitYears} years. */
+    protected static double[] perUnit(double[] rates, double unitYears) {
+        double[] scaled = new double[rates.length];
+        for (int i = 0; i < rates.length; i++) {
+            scaled[i] = rates[i] * unitYears;
         }
-        return percentages;
+        return scaled;
     }
 
     protected static double max(double[] values) {
@@ -219,31 +245,29 @@ public class SiteSourceMapPlotter {
      * Whether a section is worth drawing: it has to be a source for the site at all, and to clear
      * the threshold if there is one.
      *
-     * @param percentage the section's share of the site's hazard
-     * @param omitBelowPercent the threshold, or {@link Double#NaN} to draw every source
+     * @param value the section's contribution, in the map's own rate unit
+     * @param omitBelow the threshold in the same unit, or {@link Double#NaN} to draw every source
      */
-    protected static boolean isDrawn(double percentage, double omitBelowPercent) {
-        return percentage > 0 && (Double.isNaN(omitBelowPercent) || percentage >= omitBelowPercent);
+    protected static boolean isDrawn(double value, double omitBelow) {
+        return value > 0 && (Double.isNaN(omitBelow) || value >= omitBelow);
     }
 
     /**
-     * The scalars the map is coloured by: the percentage contribution itself, aligned with {@link
-     * #drawn} and clamped at the bottom of the scale.
+     * The scalars the map is coloured by: the contribution itself, aligned with {@link #drawn} and
+     * clamped at the bottom of the scale.
      *
-     * <p>These stay linear percentages even though the scale is logarithmic. A log10 {@link CPT}
-     * takes linear values and logs them itself, which is what lets the legend be labelled in
-     * percentages.
+     * <p>These stay linear rates even though the scale is logarithmic. A log10 {@link CPT} takes
+     * linear values and logs them itself, which is what lets the legend be labelled in rates.
      *
-     * @param omitBelowPercent the threshold, or {@link Double#NaN} to draw every source
-     * @param clampAtPercent bottom of the colour scale, in percent
+     * @param omitBelow the threshold, or {@link Double#NaN} to draw every source
+     * @param clampAt bottom of the colour scale, in the same unit
      */
-    protected static double[] scalars(
-            double[] percentages, double omitBelowPercent, double clampAtPercent) {
-        double[] scalars = new double[numDrawn(percentages, omitBelowPercent)];
+    protected static double[] scalars(double[] values, double omitBelow, double clampAt) {
+        double[] scalars = new double[numDrawn(values, omitBelow)];
         int i = 0;
-        for (double percentage : percentages) {
-            if (isDrawn(percentage, omitBelowPercent)) {
-                scalars[i++] = Math.max(clampAtPercent, percentage);
+        for (double value : values) {
+            if (isDrawn(value, omitBelow)) {
+                scalars[i++] = Math.max(clampAt, value);
             }
         }
         return scalars;
@@ -255,10 +279,10 @@ public class SiteSourceMapPlotter {
      * map entirely.
      */
     protected static List<FaultSection> drawn(
-            FaultSystemRupSet rupSet, double[] percentages, double omitBelowPercent) {
-        List<FaultSection> drawn = new ArrayList<>(numDrawn(percentages, omitBelowPercent));
-        for (int s = 0; s < percentages.length; s++) {
-            if (isDrawn(percentages[s], omitBelowPercent)) {
+            FaultSystemRupSet rupSet, double[] values, double omitBelow) {
+        List<FaultSection> drawn = new ArrayList<>(numDrawn(values, omitBelow));
+        for (int s = 0; s < values.length; s++) {
+            if (isDrawn(values[s], omitBelow)) {
                 drawn.add(rupSet.getFaultSectionData(s));
             }
         }
@@ -266,10 +290,10 @@ public class SiteSourceMapPlotter {
     }
 
     /** How many sections the map draws. */
-    protected static int numDrawn(double[] percentages, double omitBelowPercent) {
+    protected static int numDrawn(double[] values, double omitBelow) {
         int count = 0;
-        for (double percentage : percentages) {
-            if (isDrawn(percentage, omitBelowPercent)) {
+        for (double value : values) {
+            if (isDrawn(value, omitBelow)) {
                 count++;
             }
         }
@@ -277,13 +301,12 @@ public class SiteSourceMapPlotter {
     }
 
     /**
-     * The palette rescaled onto a logarithmic percentage scale running from {@code 10^logMin} to
-     * {@code 10^logMax} percent.
+     * The palette rescaled onto a logarithmic scale running from {@code 10^logMin} to {@code
+     * 10^logMax}.
      *
      * <p>The CPT's own values are the logarithms — that is what it is rescaled onto — but {@link
-     * CPT#setLog10} tells it that, so it logs the linear percentages handed to it and reports its
-     * bounds as percentages. OpenSHA then draws the legend on a logarithmic axis labelled in
-     * percent.
+     * CPT#setLog10} tells it that, so it logs the linear rates handed to it and reports its bounds
+     * as rates. OpenSHA then draws the legend on a logarithmic axis labelled in rates.
      */
     protected CPT logCPT(double logMin, double logMax) throws IOException {
         CPT scaled = getCPT().rescale(logMin, logMax);
@@ -309,10 +332,10 @@ public class SiteSourceMapPlotter {
                 : GeographicMapMaker.buildBufferedRegion(rupSet.getFaultSectionDataList());
     }
 
-    protected String title(SiteSourceContributions contributions, String siteName) {
+    protected static String title(SiteSourceContributions contributions, String siteName) {
         return siteName
                 + " "
-                + weighting.getLabel()
+                + HazardLabels.SECTION_HAZARD
                 + ", "
                 + HazardLabels.periodLabel(contributions.getPeriod())
                 + " > "

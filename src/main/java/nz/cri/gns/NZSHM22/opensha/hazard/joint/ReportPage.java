@@ -54,11 +54,23 @@ public class ReportPage {
         }
     }
 
+    /** A data table shown below a section's figures, e.g. the numbers behind a map. */
+    public static class DataTable {
+        protected final String title;
+        protected final Table table;
+
+        public DataTable(String title, Table table) {
+            this.title = title;
+            this.table = table;
+        }
+    }
+
     /** A section of the report, e.g. all the maps. */
     public static class Section {
         protected final String title;
         protected final String id;
         protected final List<Row> rows = new ArrayList<>();
+        protected final List<DataTable> tables = new ArrayList<>();
 
         public Section(String title, String id) {
             this.title = title;
@@ -67,6 +79,10 @@ public class ReportPage {
 
         public void add(Row row) {
             rows.add(row);
+        }
+
+        public void add(DataTable table) {
+            tables.add(table);
         }
     }
 
@@ -255,6 +271,9 @@ public class ReportPage {
                     }
                     out.write("</div>\n");
                 }
+                for (DataTable table : section.tables) {
+                    writeDataTable(out, table);
+                }
                 out.write("</section>\n");
             }
 
@@ -279,6 +298,31 @@ public class ReportPage {
                             + "</a></li>\n");
         }
         out.write("</ul>\n");
+    }
+
+    /**
+     * A plain grid of numbers: the first row of the table is the heading, every other cell is data.
+     * Unlike {@link #writeSummary} nothing here is a row label, and the table scrolls sideways in
+     * its own box rather than widening the page.
+     */
+    protected void writeDataTable(Writer out, DataTable table) throws IOException {
+        out.write("<h3>" + escape(table.title) + "</h3>\n");
+        out.write("<div class=\"table-scroll\">\n<table class=\"data\">\n");
+        if (!table.table.header.isEmpty()) {
+            out.write("<tr>");
+            for (String cell : table.table.header) {
+                out.write("<th>" + escape(cell) + "</th>");
+            }
+            out.write("</tr>\n");
+        }
+        for (List<String> row : table.table.rows) {
+            out.write("<tr>");
+            for (String cell : row) {
+                out.write("<td>" + escape(cell) + "</td>");
+            }
+            out.write("</tr>\n");
+        }
+        out.write("</table>\n</div>\n");
     }
 
     protected void writeSummary(Writer out) throws IOException {
@@ -333,6 +377,14 @@ public class ReportPage {
                 + " .7rem; text-align: left; font-weight: normal; }\n"
                 + "table.summary tr:first-child th { font-weight: bold; background: #f4f4f4; }\n"
                 + "table.summary th:first-child { font-weight: bold; }\n"
+                + "div.table-scroll { overflow-x: auto; }\n"
+                + "table.data { border-collapse: collapse; margin: .5rem 0 1.5rem; font-size:"
+                + " .85rem; white-space: nowrap; }\n"
+                + "table.data th, table.data td { border: 1px solid #ddd; padding: .3rem .6rem;"
+                + " text-align: right; }\n"
+                + "table.data th { background: #f4f4f4; }\n"
+                + "table.data th:first-child, table.data td:first-child { text-align: left;"
+                + " white-space: normal; }\n"
                 + "nav ul { list-style: none; padding: 0; display: flex; gap: 1rem; }\n"
                 + ".figures { display: flex; flex-wrap: wrap; gap: 1rem; }\n"
                 + "figure { flex: 1 1 30%; min-width: 280px; margin: 0; }\n"

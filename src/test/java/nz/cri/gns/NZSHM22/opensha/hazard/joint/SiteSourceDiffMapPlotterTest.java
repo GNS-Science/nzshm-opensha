@@ -38,10 +38,7 @@ public class SiteSourceDiffMapPlotterTest {
     @Test
     public void testDifferencesForOneSidedSections() {
         SiteSourceComparison comparison =
-                new SiteSourceComparison(
-                        contributions(1e-3, 0d),
-                        contributions(1e-3, 2e-3),
-                        SectionWeighting.participation());
+                new SiteSourceComparison(contributions(1e-3, 0d), contributions(1e-3, 2e-3));
         double[] differences = SiteSourceDiffMapPlotter.differences(comparison, Double.NaN);
         assertEquals(0d, differences[0], 1e-12);
         assertEquals(2e-3, differences[2], 1e-12);
@@ -59,19 +56,32 @@ public class SiteSourceDiffMapPlotterTest {
      */
     @Test
     public void testOmitsNegligibleSections() {
-        // the crustal sections carry a third of one solution and two thirds of the other, the
-        // interface sections the other way round, so a threshold between the two keeps only one
-        // pair
+        // the crustal sections carry 1e-3 in both solutions and the interface ones about 9e-3, so
+        // a threshold between the two keeps only the interface pair
         SiteSourceComparison comparison =
                 new SiteSourceComparison(
-                        contributions(1e-3, 9e-3),
-                        contributions(1e-3, 9e-3 - 1e-4),
-                        SectionWeighting.participation());
-        List<FaultSection> sections = SiteSourceDiffMapPlotter.sections(comparison, 50d);
+                        contributions(1e-3, 9e-3), contributions(1e-3, 9e-3 - 1e-4));
+        List<FaultSection> sections = SiteSourceDiffMapPlotter.sections(comparison, 5e-3);
         assertEquals(
                 List.of("Section 2", "Section 3"),
                 sections.stream().map(FaultSection::getSectionName).collect(Collectors.toList()));
-        assertEquals(sections.size(), SiteSourceDiffMapPlotter.differences(comparison, 50d).length);
+        assertEquals(
+                sections.size(), SiteSourceDiffMapPlotter.differences(comparison, 5e-3).length);
+    }
+
+    /**
+     * The cut is on an absolute rate, so a section survives or not on what it carries and not on
+     * how the other solution's total moved. This is the bug the rate threshold exists for: under a
+     * share threshold the section below would pass on the reference map and fail on the comparison
+     * one beside it, purely because the comparison's total grew.
+     */
+    @Test
+    public void testThresholdIsNotAffectedByTheOtherSolutionsTotal() {
+        // the interface sections contribute the same 2e-3 either way; the comparison's total is
+        // far larger because its crustal ruptures grew, which halves their share of it
+        SiteSourceComparison comparison =
+                new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(9e-3, 2e-3));
+        assertEquals(4, SiteSourceDiffMapPlotter.sections(comparison, 1e-3).size());
     }
 
     /** Bigger changes sort above smaller ones, so they end up on top of the map. */
@@ -142,9 +152,9 @@ public class SiteSourceDiffMapPlotterTest {
     /** The colour bar says which unit it is in. */
     @Test
     public void testRateUnit() {
-        assertEquals("1/yr", SiteSourceDiffMapPlotter.rateUnit(1d));
-        assertEquals("per 1,000 years", SiteSourceDiffMapPlotter.rateUnit(1000d));
-        assertEquals("per 10,000 years", SiteSourceDiffMapPlotter.rateUnit(10000d));
+        assertEquals("1/yr", HazardLabels.rateUnit(1d));
+        assertEquals("per 1,000 years", HazardLabels.rateUnit(1000d));
+        assertEquals("per 10,000 years", HazardLabels.rateUnit(10000d));
     }
 
     /** Plotting writes the map. */
@@ -163,7 +173,7 @@ public class SiteSourceDiffMapPlotterTest {
     public void testRejectsThresholdAboveEverything() throws IOException {
         try {
             new SiteSourceDiffMapPlotter()
-                    .setOmitBelowPercent(99d)
+                    .setOmitBelowRate(1d)
                     .plot(tempFolder.newFolder("empty"), "diff", comparison(), "Test Site");
             fail("expected a threshold that leaves out every section to be rejected");
         } catch (IllegalStateException expected) {
@@ -175,10 +185,7 @@ public class SiteSourceDiffMapPlotterTest {
     @Test
     public void testRejectsNoChange() throws IOException {
         SiteSourceComparison unchanged =
-                new SiteSourceComparison(
-                        contributions(1e-3, 2e-3),
-                        contributions(1e-3, 2e-3),
-                        SectionWeighting.participation());
+                new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(1e-3, 2e-3));
         try {
             new SiteSourceDiffMapPlotter()
                     .plot(tempFolder.newFolder("same"), "diff", unchanged, "Test Site");

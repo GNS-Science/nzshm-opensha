@@ -339,8 +339,8 @@ public class HazardComparisonReport {
     }
 
     /**
-     * The influence difference map of each source site, each linking to a page holding that site's
-     * other source maps. See {@link SiteSourcePage}.
+     * The difference map of each source site, each linking to a page holding that site's other
+     * source maps and the sections that changed most. See {@link SiteSourcePage}.
      *
      * <p>Only the first period is mapped. A disaggregation is a pass over every rupture of both
      * solutions, so one per site is already the expensive part of the report; a second period would
@@ -361,11 +361,17 @@ public class HazardComparisonReport {
 
         Row row =
                 new Row(
-                        "Section influence, "
+                        HazardLabels.SECTION_HAZARD
+                                + ", "
                                 + HazardLabels.periodLabel(period)
                                 + " at "
                                 + SOURCE_RETURN_PERIOD.label
-                                + ". Click a map for that site's other source maps.");
+                                + ". Each fault section is coloured by how much the hazard reaching"
+                                + " the site through it changed: the annual rate at which ruptures"
+                                + " running over that section push the site over the level. A"
+                                + " rupture is credited to every section it breaks, so a long"
+                                + " multi-fault rupture is drawn along its whole length. Click a"
+                                + " map for that site's own page.");
         List<String> skipped = new ArrayList<>();
         for (Map.Entry<String, Location> site : sourceSites.entrySet()) {
             System.out.println("Mapping hazard sources at " + site.getKey());

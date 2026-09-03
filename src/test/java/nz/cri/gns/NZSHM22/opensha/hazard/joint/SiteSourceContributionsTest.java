@@ -52,6 +52,82 @@ public class SiteSourceContributionsTest {
         assertArrayEquals(new double[] {1e-3, 1e-3, 2e-3, 2e-3}, sectionRates, 1e-12);
     }
 
+    /**
+     * A section's rupture rate counts every rupture that uses it whatever it does at the site, so
+     * the joint rupture is in there even though it contributes no hazard.
+     */
+    @Test
+    public void testSectionSolutionRates() {
+        // every rupture of the test solution has a rate of 1e-3, and every section is used by two
+        // of the three: its own single-fault rupture and the joint one
+        assertArrayEquals(
+                new double[] {2e-3, 2e-3, 2e-3, 2e-3},
+                contributions().getSectionSolutionRates(),
+                1e-12);
+    }
+
+    /**
+     * Magnitudes cover only the ruptures that reach the site, so the joint rupture is left out
+     * while it contributes nothing, and a section that is no source at all has none.
+     */
+    @Test
+    public void testSectionMagnitudes() {
+        SiteSourceContributions contributions = contributions();
+        double crustalMag = contributions.getRupSet().getMagForRup(CRUSTAL_RUP);
+        double interfaceMag = contributions.getRupSet().getMagForRup(INTERFACE_RUP);
+        assertArrayEquals(
+                new double[] {crustalMag, crustalMag, interfaceMag, interfaceMag},
+                contributions.getSectionMeanMags(),
+                1e-9);
+        assertArrayEquals(
+                new double[] {crustalMag, crustalMag, interfaceMag, interfaceMag},
+                contributions.getSectionMaxMags(),
+                1e-9);
+
+        double[] noSources = noContributions().getSectionMeanMags();
+        for (double mag : noSources) {
+            assertTrue("a section that is no source has no magnitude", Double.isNaN(mag));
+        }
+    }
+
+    /**
+     * A joint rupture reaching the site pulls the crustal sections' hazard up to its own magnitude
+     * and shows up as their joint share, which is what says the change came from joint ruptures.
+     */
+    @Test
+    public void testJointRuptureRaisesMagnitudeAndShare() {
+        SiteSourceContributions contributions = withJoint();
+        double crustalMag = contributions.getRupSet().getMagForRup(CRUSTAL_RUP);
+        double jointMag = contributions.getRupSet().getMagForRup(JOINT_RUP);
+        assertTrue("the joint rupture should be the larger event", jointMag > crustalMag);
+
+        // section 0 takes 1e-3 from the crustal rupture and 3e-3 from the joint one
+        assertEquals(4e-3, contributions.getSectionRates()[0], 1e-12);
+        assertEquals(3e-3, contributions.getSectionJointRates()[0], 1e-12);
+        assertEquals(
+                (1e-3 * crustalMag + 3e-3 * jointMag) / 4e-3,
+                contributions.getSectionMeanMags()[0],
+                1e-9);
+        assertEquals(jointMag, contributions.getSectionMaxMags()[0], 1e-9);
+    }
+
+    /** Contributions where the joint rupture dominates the crustal sections. */
+    static SiteSourceContributions withJoint() {
+        FaultSystemSolution solution = makeSolution();
+        double[] rupRates = new double[solution.getRupSet().getNumRuptures()];
+        rupRates[CRUSTAL_RUP] = 1e-3;
+        rupRates[INTERFACE_RUP] = 2e-3;
+        rupRates[JOINT_RUP] = 3e-3;
+        return new SiteSourceContributions(solution, SITE, 0d, 0.5d, rupRates);
+    }
+
+    /** Contributions where no rupture reaches the site at all. */
+    static SiteSourceContributions noContributions() {
+        FaultSystemSolution solution = makeSolution();
+        return new SiteSourceContributions(
+                solution, SITE, 0d, 0.5d, new double[solution.getRupSet().getNumRuptures()]);
+    }
+
     /** Ruptures come back largest first, and ones contributing nothing are left out entirely. */
     @Test
     public void testTopRuptures() {

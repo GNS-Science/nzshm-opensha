@@ -4,11 +4,13 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.hazard.joint.JointHazardInput.RuptureType;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -39,12 +41,8 @@ public class SiteSourceContributions {
     private final double iml;
     private final double[] rupRates;
 
-    /** Grid spacing in km of the section surfaces built to measure site distances. */
-    public static final double SURFACE_GRID_SPACING = 1d;
-
     private double totalRate = Double.NaN;
-    private double[] sectionRates;
-    private double[] sectionDistances;
+    private SectionStats sectionStats;
 
     /**
      * @param solution the solution the contributions were calculated from
@@ -127,69 +125,127 @@ public class SiteSourceContributions {
     }
 
     /**
-     * The hazard that reaches the site through each fault section, under {@link
-     * SectionWeighting#participation()}: the sum of {@link #getRupRate} over every rupture that
-     * uses the section, indexed by section index. Cached.
+     * The hazard that reaches the site through each fault section: the sum of {@link #getRupRate}
+     * over every rupture that uses the section, indexed by section index. Cached.
      *
-     * <p>Note that these do not sum to {@link #getTotalRate()}. A multi-section rupture contributes
-     * its full rate to each of its sections, so a rupture spanning ten sections is counted ten
-     * times over. The quantity is per section — "how much of this site's hazard passes through this
-     * section" — not a partition of the total. Use {@link #getSectionRates(SectionWeighting)} with
-     * {@link SectionWeighting#proximity()} for a weighting that does partition it.
+     * <p>Note that these do not sum to {@link #getTotalRate()}. Hazard is calculated per rupture,
+     * and a multi-section rupture reaches the site through every section it runs over, so a rupture
+     * spanning ten sections is counted in all ten. The quantity is per section — "how much of this
+     * site's hazard passes through this section" — not a partition of the total, and a single
+     * section's share of the total can exceed 100%.
      */
     public double[] getSectionRates() {
-        if (sectionRates == null) {
-            sectionRates = getSectionRates(SectionWeighting.participation());
-        }
-        return sectionRates;
+        return sectionStats().hazardRates;
     }
 
     /**
-     * The hazard credited to each fault section, indexed by section index, sharing each rupture's
-     * contribution among its sections the way the given weighting says. Not cached.
+     * The part of {@link #getSectionRates()} that comes from {@link RuptureType#JOINT} ruptures,
+     * i.e. ruptures spanning crustal and interface sections. Indexed by section index.
      *
-     * @param weighting how a rupture's contribution is shared among its sections; see {@link
-     *     SectionWeighting} for what the choice means
+     * <p>This is what says whether a change at a section is the joint ruptures: a section whose
+     * hazard is mostly joint is one the joint rupture set reached.
      */
-    public double[] getSectionRates(SectionWeighting weighting) {
-        FaultSystemRupSet rupSet = getRupSet();
-        double[] distances = getSectionDistances();
-        double[] rates = new double[rupSet.getNumSections()];
-        for (int r = 0; r < rupRates.length; r++) {
-            if (rupRates[r] <= 0) {
-                continue;
-            }
-            List<Integer> sections = rupSet.getSectionsIndicesForRup(r);
-            double[] weights = weighting.weights(sections, distances);
-            for (int i = 0; i < sections.size(); i++) {
-                rates[sections.get(i)] += rupRates[r] * weights[i];
-            }
-        }
-        return rates;
+    public double[] getSectionJointRates() {
+        return sectionStats().jointRates;
     }
 
     /**
-     * Distance from the site to each fault section's surface, in km, indexed by section index.
-     * Cached, because the section surfaces have to be built to measure it.
+     * The magnitude the hazard through each section comes from, as a mean over the contributing
+     * ruptures that use it, weighted by what each contributes. {@link Double#NaN} for a section
+     * that is not a source for the site.
      *
-     * <p>This is {@code rRup}, the closest distance to the section's rupture surface, which is what
-     * a GMM sees. A rupture's own {@code rRup} is the smallest of these over its sections, so these
-     * distances are what {@link SectionWeighting} uses to decide which part of a rupture actually
-     * shook the site.
+     * <p>Weighting by contribution rather than by rate is deliberate: the question is what size of
+     * event is actually shaking the site through this section, not what the section's ruptures
+     * average out at.
      */
-    public double[] getSectionDistances() {
-        if (sectionDistances == null) {
+    public double[] getSectionMeanMags() {
+        return sectionStats().meanMags;
+    }
+
+    /**
+     * The largest magnitude among the contributing ruptures that use each section, {@link
+     * Double#NaN} for a section that is not a source for the site. Unlike {@link
+     * #getSectionMeanMags()} a single rare rupture moves this as much as a dominant one.
+     */
+    public double[] getSectionMaxMags() {
+        return sectionStats().maxMags;
+    }
+
+    /**
+     * The solution's own rate of rupturing each section, in 1/yr: the sum of the solution rate of
+     * every rupture that uses it, whatever that rupture does at the site. Indexed by section index.
+     *
+     * <p>Not a hazard quantity, and orders of magnitude larger than {@link #getSectionRates()},
+     * which counts only the part of a rupture's rate that pushes the site over the level. It is
+     * here to separate the two ways a section's hazard can change: the section ruptures more often,
+     * or the same ruptures now matter more at the site.
+     */
+    public double[] getSectionSolutionRates() {
+        return sectionStats().solutionRates;
+    }
+
+    /** Per-section quantities, all derived in one pass over the rupture set. Cached. */
+    protected SectionStats sectionStats() {
+        if (sectionStats == null) {
+            sectionStats = new SectionStats();
+        }
+        return sectionStats;
+    }
+
+    /**
+     * The per-section view of the contributions, built in one pass because every quantity here
+     * needs the same walk over the ruptures and their section lists, which is the expensive part.
+     */
+    protected class SectionStats {
+        protected final double[] hazardRates;
+        protected final double[] jointRates;
+        protected final double[] meanMags;
+        protected final double[] maxMags;
+        protected final double[] solutionRates;
+
+        protected SectionStats() {
             FaultSystemRupSet rupSet = getRupSet();
-            double[] distances = new double[rupSet.getNumSections()];
-            for (int s = 0; s < distances.length; s++) {
-                distances[s] =
-                        rupSet.getFaultSectionData(s)
-                                .getFaultSurface(SURFACE_GRID_SPACING, false, false)
-                                .getDistanceRup(site);
+            int numSections = rupSet.getNumSections();
+            hazardRates = new double[numSections];
+            jointRates = new double[numSections];
+            meanMags = new double[numSections];
+            maxMags = new double[numSections];
+            solutionRates = new double[numSections];
+            Arrays.fill(maxMags, Double.NaN);
+
+            // magnitudes are accumulated as a contribution-weighted sum and divided through at the
+            // end, so that a section's mean is over exactly the ruptures that reached the site
+            double[] magSums = new double[numSections];
+
+            for (int r = 0; r < rupRates.length; r++) {
+                double solutionRate = solution.getRateForRup(r);
+                double contribution = rupRates[r];
+                if (solutionRate <= 0 && contribution <= 0) {
+                    continue;
+                }
+                double mag = rupSet.getMagForRup(r);
+                boolean joint =
+                        contribution > 0 && JointHazardInput.typeOf(rupSet, r) == RuptureType.JOINT;
+                for (int s : rupSet.getSectionsIndicesForRup(r)) {
+                    solutionRates[s] += solutionRate;
+                    if (contribution <= 0) {
+                        continue;
+                    }
+                    hazardRates[s] += contribution;
+                    magSums[s] += contribution * mag;
+                    if (joint) {
+                        jointRates[s] += contribution;
+                    }
+                    if (Double.isNaN(maxMags[s]) || mag > maxMags[s]) {
+                        maxMags[s] = mag;
+                    }
+                }
             }
-            sectionDistances = distances;
+
+            for (int s = 0; s < numSections; s++) {
+                meanMags[s] = hazardRates[s] > 0 ? magSums[s] / hazardRates[s] : Double.NaN;
+            }
         }
-        return sectionDistances;
     }
 
     /**

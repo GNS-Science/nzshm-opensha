@@ -12,23 +12,19 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
 import org.opensha.sha.faultSurface.FaultSection;
 
 /**
- * The per-site page of a {@link HazardComparisonReport}: every source map of one site, for two
- * solutions, on one page. The report itself shows only the influence difference map of each site
- * and links to the page for the rest.
+ * The per-site page of a {@link HazardComparisonReport}: where one site's hazard comes from in two
+ * solutions, and what changed. The report itself shows only the difference map of each site and
+ * links here for the rest.
  *
- * <p>Six maps, from one disaggregation of each solution at one intensity measure level:
+ * <p>From one disaggregation of each solution at one intensity measure level: the difference map,
+ * {@link SiteSourceDiffMapPlotter}, each solution's own map, {@link SiteSourceMapPlotter}, and
+ * {@link #TABLE_ROWS} rows of the sections that changed most.
  *
- * <ul>
- *   <li>the influence and participation difference maps, {@link SiteSourceDiffMapPlotter}, and
- *   <li>the influence and participation map of each solution on its own, {@link
- *       SiteSourceMapPlotter}.
- * </ul>
- *
- * <p>All three maps of a weighting share one region and one greying threshold, so that the two
- * solutions and their difference can be read against each other rather than each being framed on
- * its own sources. The region is a buffer around the sections that clear the threshold in either
- * solution — the sections the maps are actually about — because the sections that are a source for
- * a site at all reach most of the country once long multi-fault ruptures are involved.
+ * <p>The three maps share one region and one threshold, so that the two solutions and their
+ * difference can be read against each other rather than each being framed on its own sources. The
+ * region is a buffer around the sections that clear the threshold in either solution — the sections
+ * the maps are actually about — because the sections that are a source for a site at all reach most
+ * of the country once long multi-fault ruptures are involved.
  */
 public class SiteSourcePage {
 
@@ -36,18 +32,26 @@ public class SiteSourcePage {
     public static final String SOURCES_DIR = "sources";
 
     /**
-     * Share of a site's hazard a section has to carry to be worth showing. Sections below it are
-     * left off every map, see {@link SiteSourceMapPlotter#setOmitBelowPercent} and {@link
-     * SiteSourceDiffMapPlotter#setOmitBelowPercent}.
+     * Share of a site's hazard a section has to carry to be worth showing, as a percentage of the
+     * <em>reference</em> solution's total. It is turned into an absolute rate once, by {@link
+     * #negligibleRate}, and that one rate is the cut on all three maps.
+     *
+     * <p>Taking it from one solution matters. The two solutions have different totals, so a
+     * threshold applied to each map's own share cuts the two sides at different amounts of hazard,
+     * and sections drop out of one map that the map beside it still draws — which looks like a
+     * finding and is not one.
      */
     public static final double NEGLIGIBLE_PERCENT = 0.2;
 
     /** Padding, in km, around the sections the maps are about. */
     public static final double BUFFER_KM = 50d;
 
+    /** How many sections the page tabulates. The CSV download carries the rest. */
+    public static final int TABLE_ROWS = 20;
+
     /** What a finished page offers back to the report that links to it. */
     public static class Result {
-        /** Path of the influence difference map, relative to the report directory. */
+        /** Path of the difference map, relative to the report directory. */
         public final String mapPath;
 
         /** Path of the per-site page, relative to the report directory. */
@@ -87,7 +91,7 @@ public class SiteSourcePage {
     }
 
     /**
-     * Disaggregates both solutions at the site and writes the page and its six maps.
+     * Disaggregates both solutions at the site and writes the page, its three maps and its table.
      *
      * @param reportDir the report's directory; the page goes in a subdirectory of it
      * @param siteName the site's name, which also names its subdirectory
@@ -111,90 +115,88 @@ public class SiteSourcePage {
                 siteDir.getAbsolutePath());
         File imageDir = new File(siteDir, ReportPage.IMAGE_DIR);
 
-        // one disaggregation per solution, shared by both weightings and by all six maps
+        // one disaggregation per solution, shared by all three maps and the table
         double iml = reference.imlForReturnPeriod(location, period, returnPeriod);
         SiteSourceContributions referenceContributions =
                 reference.exploreAtIml(location, period, iml);
         SiteSourceContributions comparisonContributions =
                 comparison.exploreAtIml(location, period, iml);
 
-        SiteSourceComparison influence =
-                new SiteSourceComparison(
-                        referenceContributions,
-                        comparisonContributions,
-                        SectionWeighting.proximity());
-        SiteSourceComparison participation =
-                new SiteSourceComparison(
-                        referenceContributions,
-                        comparisonContributions,
-                        SectionWeighting.participation());
+        SiteSourceComparison changes =
+                new SiteSourceComparison(referenceContributions, comparisonContributions);
 
         ReportPage.Section section = new ReportPage.Section("Source maps", "sources");
-        File influenceDiff =
-                addWeighting(section, imageDir, slug, influence, siteName, "influence");
-        addWeighting(section, imageDir, slug, participation, siteName, "participation");
+        File diff = addMaps(section, imageDir, slug, changes, siteName);
+        section.add(
+                new ReportPage.DataTable(
+                        "The " + TABLE_ROWS + " sections whose hazard changed most",
+                        changeTable(changes)));
 
         ReportPage page =
                 new ReportPage(siteName + " hazard sources", siteDir)
-                        .setIntro(intro(siteName, period, returnPeriod, influence))
-                        .setSummary(summary(location, period, influence))
+                        .setIntro(intro(siteName, period, returnPeriod))
+                        .setSummary(summary(location, period, changes))
                         .setBackLink("../../" + ReportPage.INDEX_FILE, "Back to the comparison")
                         .add(section);
 
-        File influenceCsv = new File(siteDir, slug + "_influence_sections.csv");
-        influence.writeCSV(influenceCsv, 0);
-        page.addDownload(influenceCsv, "Section influence, both solutions (CSV)");
-        File participationCsv = new File(siteDir, slug + "_participation_sections.csv");
-        participation.writeCSV(participationCsv, 0);
-        page.addDownload(participationCsv, "Hazard through section, both solutions (CSV)");
+        File csv = new File(siteDir, slug + "_sections.csv");
+        changes.writeCSV(csv, 0);
+        page.addDownload(csv, "Every section, both solutions (CSV)");
 
         page.write();
 
         String base = SOURCES_DIR + "/" + slug + "/";
         return new Result(
-                base + ReportPage.IMAGE_DIR + "/" + influenceDiff.getName(),
+                base + ReportPage.IMAGE_DIR + "/" + diff.getName(),
                 base + ReportPage.INDEX_FILE,
-                stats(influence));
+                stats(changes));
     }
 
     /**
-     * Adds one weighting's row of three maps — the difference, then each solution on its own — and
-     * returns the difference map.
+     * Adds the row of three maps — the difference, then each solution on its own — and returns the
+     * difference map.
      */
-    protected File addWeighting(
+    protected File addMaps(
             ReportPage.Section section,
             File imageDir,
             String slug,
             SiteSourceComparison comparison,
-            String siteName,
-            String weightingSlug)
+            String siteName)
             throws IOException {
         Region region = region(comparison);
-        String prefix = slug + "_" + weightingSlug;
+        double floor = negligibleRate(comparison);
+        // one scale and one unit across both single solution maps, so that the same amount of
+        // hazard is the same colour on each and the pair can be read against each other
+        double top = max(comparison.getMaxRates());
+        double years = HazardLabels.rateUnitYears(top);
 
         File diff =
                 new SiteSourceDiffMapPlotter()
-                        .setOmitBelowPercent(NEGLIGIBLE_PERCENT)
+                        .setOmitBelowRate(floor)
                         .setRegion(region)
-                        .plot(imageDir, prefix + "_diff", comparison, siteName);
+                        .plot(imageDir, slug + "_diff", comparison, siteName);
         File referenceMap =
                 plotOne(
                         imageDir,
-                        prefix + "_reference",
+                        slug + "_reference",
                         comparison.getReference(),
-                        comparison.getWeighting(),
                         region,
+                        floor,
+                        top,
+                        years,
                         siteName + " - " + referenceName);
         File comparisonMap =
                 plotOne(
                         imageDir,
-                        prefix + "_comparison",
+                        slug + "_comparison",
                         comparison.getComparison(),
-                        comparison.getWeighting(),
                         region,
+                        floor,
+                        top,
+                        years,
                         siteName + " - " + comparisonName);
 
-        ReportPage.Row row = new ReportPage.Row(comparison.getWeighting().getLabel());
+        ReportPage.Row row = new ReportPage.Row(HazardLabels.SECTION_HAZARD);
         row.add(diff, "Change, " + comparisonName + " vs " + referenceName, stats(comparison));
         row.add(referenceMap, referenceName, null);
         row.add(comparisonMap, comparisonName, null);
@@ -206,15 +208,34 @@ public class SiteSourcePage {
             File imageDir,
             String prefix,
             SiteSourceContributions contributions,
-            SectionWeighting weighting,
             Region region,
+            double omitBelowRate,
+            double maxRate,
+            double unitYears,
             String siteName)
             throws IOException {
         return new SiteSourceMapPlotter()
-                .setWeighting(weighting)
-                .setOmitBelowPercent(NEGLIGIBLE_PERCENT)
+                .setOmitBelowRate(omitBelowRate)
+                .setMaxRate(maxRate)
+                .setUnitYears(unitYears)
                 .setRegion(region)
                 .plot(imageDir, prefix, contributions, siteName);
+    }
+
+    /**
+     * The contribution, in 1/yr, below which a section is left off every map: {@link
+     * #NEGLIGIBLE_PERCENT} of the reference solution's total rate of exceedance.
+     */
+    protected static double negligibleRate(SiteSourceComparison comparison) {
+        return NEGLIGIBLE_PERCENT / 100 * comparison.getReference().getTotalRate();
+    }
+
+    protected static double max(double[] values) {
+        double max = 0;
+        for (double value : values) {
+            max = Math.max(max, value);
+        }
+        return max;
     }
 
     /**
@@ -224,18 +245,18 @@ public class SiteSourcePage {
      */
     protected static Region region(SiteSourceComparison comparison) {
         List<FaultSection> sections = comparison.getSections();
-        double[] percentages = comparison.getMaxPercentages();
+        double[] rates = comparison.getMaxRates();
+        double floor = negligibleRate(comparison);
         List<FaultSection> coloured = new ArrayList<>();
         for (int i = 0; i < sections.size(); i++) {
-            if (percentages[i] >= NEGLIGIBLE_PERCENT) {
+            if (rates[i] >= floor) {
                 coloured.add(sections.get(i));
             }
         }
         Preconditions.checkState(
                 !coloured.isEmpty(),
-                "No section carries %s percent of the hazard at this site under %s",
-                NEGLIGIBLE_PERCENT,
-                comparison.getWeighting().getLabel());
+                "No section carries %s /yr of the hazard at this site",
+                floor);
         return GeographicMapMaker.buildBufferedRegion(coloured, BUFFER_KM, true);
     }
 
@@ -248,11 +269,7 @@ public class SiteSourcePage {
                 referenceRate, comparisonRate, comparisonRate / referenceRate);
     }
 
-    protected String intro(
-            String siteName,
-            double period,
-            ReturnPeriods returnPeriod,
-            SiteSourceComparison comparison) {
+    protected String intro(String siteName, double period, ReturnPeriods returnPeriod) {
         return "Where the hazard at "
                 + siteName
                 + " comes from, at the "
@@ -262,10 +279,73 @@ public class SiteSourcePage {
                 + " reaches at "
                 + returnPeriod.label
                 + ". Both solutions are disaggregated at that one level, so their rates can be"
-                + " compared. Sections carrying less than "
+                + " compared. The maps colour each fault section by the hazard that reaches the"
+                + " site through it: the annual rate at which ruptures running over that section"
+                + " push the site over the level. Hazard is calculated per rupture, not per"
+                + " section, so a rupture that breaks ten sections is counted in all ten — the"
+                + " shares overlap and do not add up to the site's total, and one section can carry"
+                + " more than 100% of it. That is deliberate: a long multi-fault rupture reaches"
+                + " the site through every section it runs over, and colouring the whole footprint"
+                + " is what shows which ruptures the hazard comes from. Sections carrying less than "
                 + NEGLIGIBLE_PERCENT
                 + "% of the site's hazard in both solutions are left off, as are sections that no"
                 + " rupture reaching the level runs over.";
+    }
+
+    /**
+     * The sections whose hazard changed most, as the page tabulates them: the difference map read
+     * as numbers.
+     *
+     * <p>The three pairs of columns separate the ways a section's hazard can change. The rupture
+     * rate says whether the section simply breaks more often. The magnitudes say whether the same
+     * section is now carrying larger events, which is what happens when joint ruptures reach it.
+     * The joint share says outright how much of the section's hazard now comes from ruptures
+     * spanning crustal and interface sections.
+     */
+    protected ReportPage.Table changeTable(SiteSourceComparison comparison) {
+        ReportPage.Table table =
+                new ReportPage.Table(
+                        "Section",
+                        HazardLabels.SECTION_HAZARD + ", " + referenceName + " (1/yr)",
+                        HazardLabels.SECTION_HAZARD + ", " + comparisonName + " (1/yr)",
+                        "Change (1/yr)",
+                        "Rupture rate, " + referenceName + " (1/yr)",
+                        "Rupture rate, " + comparisonName + " (1/yr)",
+                        "Mean M, " + referenceName,
+                        "Mean M, " + comparisonName,
+                        "Max M, " + referenceName,
+                        "Max M, " + comparisonName,
+                        "Joint share, " + comparisonName + " (%)");
+        for (SiteSourceComparison.SectionChange change : comparison.topChanges(TABLE_ROWS)) {
+            table.addRow(
+                    change.name,
+                    rate(change.referenceRate),
+                    rate(change.comparisonRate),
+                    signedRate(change.getChange()),
+                    rate(change.referenceSolutionRate),
+                    rate(change.comparisonSolutionRate),
+                    mag(change.referenceMeanMag),
+                    mag(change.comparisonMeanMag),
+                    mag(change.referenceMaxMag),
+                    mag(change.comparisonMaxMag),
+                    String.format("%.0f%%", change.jointPercent));
+        }
+        return table;
+    }
+
+    /** A rate to three significant figures, or a dash where the section is not a source at all. */
+    protected static String rate(double rate) {
+        return rate > 0 ? String.format("%.3g", rate) : "-";
+    }
+
+    /** As {@link #rate}, always signed, so that a gain and a loss can be told apart at a glance. */
+    protected static String signedRate(double rate) {
+        return rate == 0 ? "-" : String.format("%+.3g", rate);
+    }
+
+    /** A magnitude, or a dash where the solution routes no hazard through the section. */
+    protected static String mag(double mag) {
+        return Double.isNaN(mag) ? "-" : String.format("%.2f", mag);
     }
 
     protected ReportPage.Table summary(

@@ -16,9 +16,9 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * [siteName] [period]}. The reference solution sets the intensity measure level that both are
  * disaggregated at; see {@link SiteSourceComparison} for why there has to be only one.
  *
- * <p>It writes the diff of each of the two maps that {@link SiteSourceExplorerRunner} produces: the
- * participation diff, showing which faults carry more or less of the site's hazard than before, and
- * the influence diff, showing which stretches of fault do more or less of the shaking.
+ * <p>It writes the difference map that {@link SiteSourceExplorerRunner} draws one solution of,
+ * showing which faults carry more or less of the site's hazard than before, and the per-section
+ * numbers behind it as a CSV.
  */
 public class SiteSourceComparisonRunner {
 
@@ -29,9 +29,8 @@ public class SiteSourceComparisonRunner {
     public static final double DEFAULT_PERIOD = 0d;
     public static final ReturnPeriods DEFAULT_RETURN_PERIOD = ReturnPeriods.TEN_IN_50;
 
-    /** Sections below this share of their own solution's hazard are left off the diff maps. */
-    public static final double OMIT_BELOW_PERCENT =
-            SiteSourceExplorerRunner.INFLUENCE_OMIT_BELOW_PERCENT;
+    /** Sections below this share of their own solution's hazard are left off the difference map. */
+    public static final double OMIT_BELOW_PERCENT = SiteSourceExplorerRunner.OMIT_BELOW_PERCENT;
 
     protected SiteSourceComparisonRunner() {}
 
@@ -46,8 +45,7 @@ public class SiteSourceComparisonRunner {
     }
 
     /**
-     * Compares two solutions at one site and writes a diff map per {@link SectionWeighting}, plus a
-     * per-section CSV.
+     * Compares two solutions at one site and writes the difference map and a per-section CSV.
      *
      * @param referenceFile the baseline solution, which also sets the intensity measure level
      * @param comparisonFile the solution compared against it
@@ -55,9 +53,9 @@ public class SiteSourceComparisonRunner {
      * @param siteName one of the {@link NzshmCommonLocations#nzLocations()} names
      * @param period the calculation period, 0 for PGA
      * @param returnPeriod the return period that sets the level, read off the reference curve
-     * @return the maps that were written, participation first
+     * @return the map that was written
      */
-    public static File[] run(
+    public static File run(
             File referenceFile,
             File comparisonFile,
             File outputDir,
@@ -91,37 +89,28 @@ public class SiteSourceComparisonRunner {
         SiteSourceContributions comparisonContributions =
                 comparison.exploreAtIml(location, period, iml);
 
-        File[] maps = new File[2];
-        SectionWeighting[] weightings = {
-            SectionWeighting.participation(), SectionWeighting.proximity()
-        };
-        String[] suffixes = {"_participation", "_influence"};
-        for (int i = 0; i < weightings.length; i++) {
-            System.out.println(
-                    "Comparing "
-                            + returnPeriod.label
-                            + " "
-                            + HazardLabels.periodLabel(period)
-                            + " at "
-                            + siteName
-                            + ", "
-                            + weightings[i].getLabel());
-            SiteSourceComparison diff =
-                    new SiteSourceComparison(
-                            referenceContributions, comparisonContributions, weightings[i]);
-            System.out.println(diff);
+        System.out.println(
+                "Comparing "
+                        + returnPeriod.label
+                        + " "
+                        + HazardLabels.periodLabel(period)
+                        + " at "
+                        + siteName);
+        SiteSourceComparison diff =
+                new SiteSourceComparison(referenceContributions, comparisonContributions);
+        System.out.println(diff);
 
-            maps[i] =
-                    new SiteSourceDiffMapPlotter()
-                            .setOmitBelowPercent(OMIT_BELOW_PERCENT)
-                            .plot(outputDir, prefix + suffixes[i], diff, siteName);
-            System.out.println("Wrote " + maps[i]);
+        File map =
+                new SiteSourceDiffMapPlotter()
+                        .setOmitBelowRate(
+                                OMIT_BELOW_PERCENT / 100 * referenceContributions.getTotalRate())
+                        .plot(outputDir, prefix + "_diff", diff, siteName);
+        System.out.println("Wrote " + map);
 
-            File csv = new File(outputDir, prefix + suffixes[i] + "_sections.csv");
-            diff.writeCSV(csv, 0);
-            System.out.println("Wrote " + csv);
-        }
-        return maps;
+        File csv = new File(outputDir, prefix + "_sections.csv");
+        diff.writeCSV(csv, 0);
+        System.out.println("Wrote " + csv);
+        return map;
     }
 
     /**

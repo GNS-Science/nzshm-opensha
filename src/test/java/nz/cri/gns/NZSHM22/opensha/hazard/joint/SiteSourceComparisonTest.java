@@ -38,10 +38,7 @@ public class SiteSourceComparisonTest {
     }
 
     static SiteSourceComparison comparison() {
-        return new SiteSourceComparison(
-                contributions(1e-3, 2e-3),
-                contributions(2e-3, 1e-3),
-                SectionWeighting.participation());
+        return new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(2e-3, 1e-3));
     }
 
     static List<String> names(List<FaultSection> sections) {
@@ -71,10 +68,7 @@ public class SiteSourceComparisonTest {
     @Test
     public void testRatioForOneSidedSection() {
         SiteSourceComparison comparison =
-                new SiteSourceComparison(
-                        contributions(1e-3, 0d),
-                        contributions(1e-3, 2e-3),
-                        SectionWeighting.participation());
+                new SiteSourceComparison(contributions(1e-3, 0d), contributions(1e-3, 2e-3));
 
         // the interface sections are a source only in the comparison solution
         assertEquals(
@@ -90,10 +84,7 @@ public class SiteSourceComparisonTest {
     @Test
     public void testDropsSectionsThatAreNoSourceInEither() {
         SiteSourceComparison comparison =
-                new SiteSourceComparison(
-                        contributions(1e-3, 0d),
-                        contributions(2e-3, 0d),
-                        SectionWeighting.participation());
+                new SiteSourceComparison(contributions(1e-3, 0d), contributions(2e-3, 0d));
         assertEquals(List.of("Section 0", "Section 1"), names(comparison.getSections()));
     }
 
@@ -108,10 +99,7 @@ public class SiteSourceComparisonTest {
     @Test
     public void testDifferenceForOneSidedSection() {
         SiteSourceComparison comparison =
-                new SiteSourceComparison(
-                        contributions(1e-3, 0d),
-                        contributions(1e-3, 2e-3),
-                        SectionWeighting.participation());
+                new SiteSourceComparison(contributions(1e-3, 0d), contributions(1e-3, 2e-3));
         double[] differences = comparison.getDifferences();
         assertEquals(0d, differences[0], 1e-12);
         assertEquals(2e-3, differences[2], 1e-12);
@@ -140,7 +128,7 @@ public class SiteSourceComparisonTest {
                         IML * 2,
                         new double[solution.getRupSet().getNumRuptures()]);
         try {
-            new SiteSourceComparison(reference, other, SectionWeighting.participation());
+            new SiteSourceComparison(reference, other);
             fail("expected differing intensity measure levels to be rejected");
         } catch (IllegalArgumentException expected) {
             // as expected
@@ -159,31 +147,84 @@ public class SiteSourceComparisonTest {
                         IML,
                         new double[solution.getRupSet().getNumRuptures()]);
         try {
-            new SiteSourceComparison(
-                    contributions(1e-3, 2e-3), elsewhere, SectionWeighting.participation());
+            new SiteSourceComparison(contributions(1e-3, 2e-3), elsewhere);
             fail("expected differing sites to be rejected");
         } catch (IllegalArgumentException expected) {
             // as expected
         }
     }
 
+    /**
+     * The changes come back largest first and carry the columns that separate the ways a section's
+     * hazard can move: its rupture rate, the size of the events behind it, and how much of it is
+     * now joint.
+     */
+    @Test
+    public void testTopChanges() {
+        FaultSystemSolution solution = makeSolution();
+        double[] withJoint = new double[solution.getRupSet().getNumRuptures()];
+        withJoint[CRUSTAL_RUP] = 1e-3;
+        withJoint[INTERFACE_RUP] = 2e-3;
+        withJoint[JOINT_RUP] = 3e-3;
+        SiteSourceComparison comparison =
+                new SiteSourceComparison(
+                        contributions(1e-3, 2e-3),
+                        new SiteSourceContributions(solution, SITE, 0d, IML, withJoint));
+
+        List<SiteSourceComparison.SectionChange> changes = comparison.topChanges(0);
+        assertEquals(4, changes.size());
+        // the crustal sections gain the joint rupture, the interface ones gain it too but they
+        // already carried the larger single-fault rupture, so all four move by the same 3e-3
+        assertEquals(3e-3, changes.get(0).getChange(), 1e-12);
+
+        SiteSourceComparison.SectionChange crustal =
+                changes.stream()
+                        .filter(change -> change.name.equals("Section 0"))
+                        .findFirst()
+                        .orElseThrow();
+        assertEquals(1e-3, crustal.referenceRate, 1e-12);
+        assertEquals(4e-3, crustal.comparisonRate, 1e-12);
+        // the rupture rate is a property of the solution, which is the same on both sides here
+        assertEquals(crustal.referenceSolutionRate, crustal.comparisonSolutionRate, 1e-12);
+        assertEquals(75d, crustal.jointPercent, 1e-9);
+        assertTrue(
+                "the joint rupture should raise the size of the events behind the section",
+                crustal.comparisonMeanMag > crustal.referenceMeanMag);
+    }
+
+    /** A section only one solution routes hazard through has no magnitude on the other side. */
+    @Test
+    public void testChangeOfSectionOnlyOneSolutionHas() {
+        SiteSourceComparison comparison =
+                new SiteSourceComparison(contributions(1e-3, 0d), contributions(1e-3, 2e-3));
+        SiteSourceComparison.SectionChange added =
+                comparison.topChanges(0).stream()
+                        .filter(change -> change.name.equals("Section 2"))
+                        .findFirst()
+                        .orElseThrow();
+        assertEquals(0d, added.referenceRate, 1e-12);
+        assertTrue(Double.isNaN(added.referenceMeanMag));
+        assertTrue(Double.isNaN(added.referenceMaxMag));
+        assertFalse(Double.isNaN(added.comparisonMeanMag));
+    }
+
     /** The CSV lists every compared section, largest absolute change first. */
     @Test
     public void testWriteCSV() throws IOException {
         File file = new File(tempFolder.getRoot(), "diff.csv");
-        new SiteSourceComparison(
-                        contributions(1e-3, 2e-3),
-                        contributions(9e-3, 2e-3),
-                        SectionWeighting.participation())
+        new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(9e-3, 2e-3))
                 .writeCSV(file, 0);
 
         CSVFile<String> csv = CSVFile.readFile(file, true);
         assertEquals(5, csv.getNumRows());
         assertEquals("Section", csv.get(0, 0));
+        assertEquals(13, csv.getLine(0).size());
         // the crustal sections changed by 8e-3, the interface ones not at all
         assertEquals("Section 0", csv.get(1, 0));
         assertEquals("Section 1", csv.get(2, 0));
         assertEquals(9d, Double.parseDouble(csv.get(1, 4)), 1e-6);
         assertEquals(1d, Double.parseDouble(csv.get(4, 4)), 1e-6);
+        // nothing joint reaches the site in either solution
+        assertEquals(0d, Double.parseDouble(csv.get(1, 12)), 1e-9);
     }
 }

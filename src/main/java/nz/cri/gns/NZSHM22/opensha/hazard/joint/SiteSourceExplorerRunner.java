@@ -12,12 +12,9 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * Command line entry point for {@link SiteSourceExplorer}: works out which ruptures of a solution
  * drive the hazard at one named site and draws them on maps.
  *
- * <p>Two maps are written, from the same set of contributions under two different {@link
- * SectionWeighting}s. The participation map credits every section of a rupture with the whole of
- * that rupture, so it shows which faults carry the site's hazard; the influence map shares each
- * rupture out by proximity, so it shows which stretches of fault actually shook the site. Long
- * multi-fault ruptures make the two look very different, and neither is wrong — see {@link
- * SectionWeighting}.
+ * <p>The map credits every section of a rupture with the whole of that rupture, so it shows which
+ * faults the site's hazard reaches it through. A long multi-fault rupture is therefore drawn along
+ * its whole length, which is what shows how far the ruptures behind the site's hazard run.
  *
  * <p>Usage: {@code SiteSourceExplorerRunner <solution.zip> [outputDir] [siteName] [period]}, where
  * the site name is one of {@link NzshmCommonLocations#nzLocations()} and the period is 0 for PGA.
@@ -42,10 +39,10 @@ public class SiteSourceExplorerRunner {
     public static final int RUPTURE_CSV_LIMIT = 5000;
 
     /**
-     * Contribution below which a section is left off the influence map, as a percentage of the
-     * site's total hazard. Sections under this are a source for the site, but a negligible one.
+     * Contribution below which a section is left off the map, as a percentage of the site's total
+     * hazard. Sections under this are a source for the site, but a negligible one.
      */
-    public static final double INFLUENCE_OMIT_BELOW_PERCENT = 0.2;
+    public static final double OMIT_BELOW_PERCENT = 0.2;
 
     protected SiteSourceExplorerRunner() {}
 
@@ -113,15 +110,9 @@ public class SiteSourceExplorerRunner {
 
         File map =
                 new SiteSourceMapPlotter()
-                        .setWeighting(SectionWeighting.participation())
-                        .plot(outputDir, prefix + "_participation", contributions, siteName);
+                        .setOmitBelowRate(OMIT_BELOW_PERCENT / 100 * contributions.getTotalRate())
+                        .plot(outputDir, prefix + "_sections", contributions, siteName);
         System.out.println("Wrote " + map);
-        System.out.println(
-                "Wrote "
-                        + new SiteSourceMapPlotter()
-                                .setWeighting(SectionWeighting.proximity())
-                                .setOmitBelowPercent(INFLUENCE_OMIT_BELOW_PERCENT)
-                                .plot(outputDir, prefix + "_influence", contributions, siteName));
 
         File csv = new File(outputDir, prefix + "_ruptures.csv");
         contributions.writeCSV(csv, RUPTURE_CSV_LIMIT);
@@ -143,13 +134,13 @@ public class SiteSourceExplorerRunner {
     }
 
     /**
-     * How many sections the influence map draws and how many of those clear the grey threshold. A
-     * section is a source for the site if any rupture that runs over it reaches the site's
-     * intensity level; with long multi-fault ruptures that is most of the rupture set, which is why
-     * the map greys the negligible ones rather than colouring the whole country.
+     * How many sections are a source for the site and how many of those clear the map's threshold.
+     * A section is a source if any rupture that runs over it reaches the site's intensity level;
+     * with long multi-fault ruptures that is most of the rupture set, which is why the map leaves
+     * the negligible ones off rather than colouring the whole country.
      */
     protected static String sectionSummary(SiteSourceContributions contributions) {
-        double[] rates = contributions.getSectionRates(SectionWeighting.proximity());
+        double[] rates = contributions.getSectionRates();
         double total = contributions.getTotalRate();
         int sources = 0;
         int aboveThreshold = 0;
@@ -158,7 +149,7 @@ public class SiteSourceExplorerRunner {
                 continue;
             }
             sources++;
-            if (100 * rate / total >= INFLUENCE_OMIT_BELOW_PERCENT) {
+            if (100 * rate / total >= OMIT_BELOW_PERCENT) {
                 aboveThreshold++;
             }
         }
@@ -169,7 +160,7 @@ public class SiteSourceExplorerRunner {
                 + " a source for this site, "
                 + aboveThreshold
                 + " above the "
-                + INFLUENCE_OMIT_BELOW_PERCENT
-                + "% influence threshold";
+                + OMIT_BELOW_PERCENT
+                + "% threshold";
     }
 }
