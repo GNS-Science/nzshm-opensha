@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.reports.TabularMfds;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
@@ -65,6 +66,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected transient ArchiveInput rupSetInput;
     protected transient NZSHM22_InversionFaultSystemRuptSet rupSet = null;
     protected NZSHM22_DeformationModel deformationModel = null;
+    protected String customDeformationModelFile = null;
     protected transient List<InversionConstraint> constraints = new ArrayList<>();
     private transient EnergyChangeCompletionCriteria energyChangeCompletionCriteria = null;
     private transient IterationCompletionCriteria iterationCompletionCriteria = null;
@@ -546,6 +548,22 @@ public abstract class NZSHM22_AbstractInversionRunner {
     }
 
     /**
+     * Sets the deformation model to the CUSTOM model with data from the specified file. The file
+     * data is stored in the solution as a CustomDeformationModel module.
+     *
+     * @param fileName the path of a deformation model CSV file
+     * @return this runner
+     * @throws IOException if the file cannot be read
+     */
+    public NZSHM22_AbstractInversionRunner setDeformationModelFile(String fileName)
+            throws IOException {
+        this.deformationModel = NZSHM22_DeformationModel.CUSTOM;
+        this.deformationModel.setCustomModelFile(fileName);
+        this.customDeformationModelFile = fileName;
+        return this;
+    }
+
+    /**
      * @param mfdEqualityConstraintWt
      * @param mfdInequalityConstraintWt
      * @return
@@ -969,6 +987,9 @@ public abstract class NZSHM22_AbstractInversionRunner {
         solution.addModule(progress.getProgress());
         solution.addModule(NZSHM22_AbstractRuptureSetBuilder.createBuildInfo());
         solution.addModule(new NZSHM22_InversionRunnerModule(this));
+        if (customDeformationModelFile != null) {
+            solution.addModule(new CustomDeformationModel(deformationModel.getCustomModel()));
+        }
         if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
             solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
         }

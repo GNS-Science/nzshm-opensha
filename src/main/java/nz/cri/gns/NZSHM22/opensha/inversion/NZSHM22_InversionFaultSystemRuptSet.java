@@ -7,6 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_FaultPolyMgr;
+import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.util.io.archive.ArchiveInput;
@@ -174,6 +175,10 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     protected void applyDeformationModel(NZSHM22_LogicTreeBranch branch) {
         NZSHM22_DeformationModel model = branch.getValue(NZSHM22_DeformationModel.class);
+        CustomDeformationModel customDeformationModel = getModule(CustomDeformationModel.class);
+        if (model != null && customDeformationModel != null) {
+            model.setCustomModel(customDeformationModel.getModelData());
+        }
         if (model != null) {
             model.applyTo(this, (sectionId) -> true);
         }

@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
 import com.google.common.base.Preconditions;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +21,8 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 public enum NZSHM22_DeformationModel implements LogicTreeNode {
     FAULT_MODEL("Use deformation model as provided by the fault model", "any", null),
+
+    CUSTOM("The deformation model is specified in a file outside the logic tree", "any", null),
 
     GEOD_NO_PRIOR_2022_RmlsZToxMDAwODc_(
             "geodetic, no geological prior constraint",
@@ -512,23 +515,52 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         this.helper = new DeformationHelper(fileName);
     }
 
+    /** Loads a deformation model file and applies it to a rupture set. */
     public static class DeformationHelper {
         Map<Integer, SlipDeformation> deformations = null;
         String fileName;
+        String customModel;
 
         public DeformationHelper(String fileName) {
             this.fileName = fileName;
         }
 
+        /**
+         * Sets the deformation model as CSV text data. Discards any previously loaded deformations.
+         *
+         * @param customModel the CSV data of a deformation model
+         */
+        public void setCustomModel(String customModel) {
+            this.customModel = customModel;
+            this.deformations = null;
+        }
+
+        public String getCustomModel() {
+            return customModel;
+        }
+
+        /**
+         * Returns a stream of the deformation model data, either the side-loaded custom data or the
+         * bundled resource.
+         *
+         * @return a stream of CSV data
+         */
         public InputStream getStream() {
+            if (customModel != null) {
+                return new ByteArrayInputStream(customModel.getBytes(StandardCharsets.UTF_8));
+            }
             return getClass().getResourceAsStream(resourcePath + fileName);
         }
 
+        /** One row of a deformation model file. */
         public static class SlipDeformation {
             int sectionId;
             int parentId;
             double slip;
             double stdv;
+
+            /** The 1-based line number of this row in the deformation model file. */
+            int rowNum;
         }
 
         protected static Map<Integer, SlipDeformation> loadDeformations(
@@ -536,26 +568,27 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             Map<Integer, SlipDeformation> result = new HashMap<>();
             try (BufferedReader in = new BufferedReader(new InputStreamReader(deformationsFile))) {
                 String line;
+                // 1-based so that it matches the line numbers of a text editor
                 int rowNum = 0;
                 while ((line = in.readLine()) != null) {
+                    // comments are counted so that row numbers reflect the actual file position
+                    rowNum++;
+                    if (line.startsWith("%") || line.startsWith("//")) {
+                        continue;
+                    }
                     try {
-                        if (line.startsWith("%") || line.startsWith("//")) {
-                            continue;
-                        }
                         String[] data = line.split(",");
                         SlipDeformation deformation = new SlipDeformation();
                         deformation.sectionId = Integer.parseInt(data[0].trim());
                         deformation.parentId = Integer.parseInt(data[1].trim());
                         deformation.slip = Double.parseDouble(data[2].trim());
                         deformation.stdv = Double.parseDouble(data[3].trim());
+                        deformation.rowNum = rowNum;
                         result.put(deformation.sectionId, deformation);
                     } catch (Exception x) {
-                        System.err.println("Error parsing deformation model at line " + rowNum);
-                        x.printStackTrace();
-                        System.err.println(x);
-                        throw x;
+                        throw new RuntimeException(
+                                "Error parsing deformation model at line " + rowNum, x);
                     }
-                    rowNum++;
                 }
                 return result;
             }
@@ -592,7 +625,10 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                 if (deformation != null) {
                     Preconditions.checkArgument(
                             deformation.sectionId == sectionId,
-                            "Deformation section id does not match section id.");
+                            "Deformation section id does not match section id."
+                                    + " (deformation model line "
+                                    + deformation.rowNum
+                                    + ")");
                     Preconditions.checkArgument(
                             deformation.parentId == parentId,
                             "Section "
@@ -600,7 +636,10 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                                     + " Deformation parent id "
                                     + deformation.parentId
                                     + " does not match section parent id "
-                                    + parentId);
+                                    + parentId
+                                    + " (deformation model line "
+                                    + deformation.rowNum
+                                    + ")");
                     section.setAveSlipRate(deformation.slip);
                     section.setSlipRateStdDev(deformation.stdv);
                 }
@@ -608,15 +647,49 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         }
     }
 
+    /**
+     * Sets the deformation model as CSV text data. Intended for the CUSTOM model, which has no
+     * bundled file of its own.
+     *
+     * @param customModel the CSV data of a deformation model
+     */
+    public void setCustomModel(String customModel) {
+        helper.setCustomModel(customModel);
+    }
+
+    /**
+     * Sets the deformation model to the contents of the specified file. Intended for the CUSTOM
+     * model, which has no bundled file of its own.
+     *
+     * @param fileName the path of a deformation model CSV file
+     * @throws IOException if the file cannot be read
+     */
+    public void setCustomModelFile(String fileName) throws IOException {
+        setCustomModel(Files.readString(Paths.get(fileName)));
+    }
+
+    public String getCustomModel() {
+        return helper.getCustomModel();
+    }
+
+    /**
+     * Returns true if this model has any deformation data, either bundled or side-loaded.
+     *
+     * @return true if there is data to apply
+     */
+    protected boolean hasData() {
+        return fileName != null || helper.getCustomModel() != null;
+    }
+
     /** Used for testing only */
     public void load() {
-        if (fileName != null) {
+        if (hasData()) {
             helper.getDeformations();
         }
     }
 
     public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
-        if (fileName != null) {
+        if (hasData()) {
             helper.applyTo(rupSet, predicate);
         }
     }

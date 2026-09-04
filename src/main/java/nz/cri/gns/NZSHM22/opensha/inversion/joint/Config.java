@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoProbabilityModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_PaleoRates;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.EstimatedJointScalingRelationship;
@@ -100,6 +101,23 @@ public class Config {
         }
 
         hydrateScalingRelationship();
+
+        int customDeformationModels = 0;
+        for (PartitionConfig config : partitions) {
+            if (config.deformationModelFile != null) {
+                Preconditions.checkState(
+                        config.deformationModel == NZSHM22_DeformationModel.CUSTOM,
+                        "deformationModelFile is only valid for the CUSTOM deformation model, but"
+                                + " the deformation model is "
+                                + config.deformationModel);
+                customDeformationModels++;
+            }
+        }
+        Preconditions.checkState(
+                customDeformationModels <= 1,
+                "Only one partition can specify a deformationModelFile, but "
+                        + customDeformationModels
+                        + " do.");
 
         for (PartitionConfig config : partitions) {
             config.init(this);
