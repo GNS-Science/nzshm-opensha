@@ -14,6 +14,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.FaultSourceMfdPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
@@ -135,6 +136,9 @@ public class NZSHM22_ReportPageGen {
         possibleRupSetPlots.put("PartitionSummaryTable", new PartitionSummaryTable());
         possiblePlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
         possibleRupSetPlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
+        // not partitioned: the decomposition is about ruptures that cross fault and partition
+        // boundaries, which is exactly what filtering by partition would remove
+        possiblePlots.put("FaultSourceMfdPlot", new FaultSourceMfdPlot());
     }
 
     /**
@@ -307,6 +311,12 @@ public class NZSHM22_ReportPageGen {
         if (!solution.getRupSet().hasModule(ClusterRuptures.class)) {
             solution.getRupSet()
                     .addModule(new ClusterRuptures.SingleStranded(solution.getRupSet(), null));
+        }
+
+        if (compSolution != null && !compSolution.getRupSet().hasModule(ClusterRuptures.class)) {
+            compSolution
+                    .getRupSet()
+                    .addModule(new ClusterRuptures.SingleStranded(compSolution.getRupSet(), null));
         }
 
         NZSHM22_LogicTreeBranch branch =
