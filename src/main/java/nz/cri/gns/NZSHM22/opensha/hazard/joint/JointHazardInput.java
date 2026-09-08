@@ -161,10 +161,28 @@ public class JointHazardInput {
         return this;
     }
 
-    /** Sets the calculation periods. 0 is PGA, -1 is PGV, positive values are SA periods. */
+    /**
+     * Sets the calculation periods. 0 is PGA, positive values are SA periods.
+     *
+     * <p>PGV (-1) is rejected: {@link JointHazardCalcSetup} applies a single SA intensity measure
+     * level grid to every period, which spans roughly 0.00025 to 10 g and is orders of magnitude
+     * below real PGV values in cm/s. A PGV curve would saturate over the whole grid and the map
+     * would silently come out flat at the largest level rather than fail.
+     */
     public JointHazardInput setPeriods(double... periods) {
         checkNotLocked();
         Preconditions.checkArgument(periods.length > 0, "need at least one period");
+        for (double period : periods) {
+            Preconditions.checkArgument(
+                    period != -1d,
+                    "PGV (-1) is not supported: the intensity measure level grid used for the"
+                            + " calculation is an SA grid and does not cover PGV values. Use 0 for PGA"
+                            + " or a positive SA period.");
+            Preconditions.checkArgument(
+                    period >= 0d,
+                    "periods must be 0 (PGA) or a positive SA period, got %s",
+                    period);
+        }
         this.periods = periods;
         return this;
     }
