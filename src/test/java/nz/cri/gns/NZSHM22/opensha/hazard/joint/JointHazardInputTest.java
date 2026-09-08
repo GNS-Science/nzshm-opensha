@@ -207,4 +207,39 @@ public class JointHazardInputTest {
                     region.contains(location) || region.distanceToLocation(location) < 20);
         }
     }
+
+    /**
+     * PGV (-1) is rejected because the calculation applies an SA intensity measure level grid to
+     * every period; a PGV curve would saturate over that grid and produce a silently flat map.
+     */
+    @Test
+    public void testPeriodsRejectPGV() {
+        JointHazardInput input = new JointHazardInput(makeSolution());
+
+        try {
+            input.setPeriods(0d, -1d);
+            fail("expected PGV to be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("PGV"));
+        }
+
+        try {
+            input.setPeriods(-2d);
+            fail("expected a negative period to be rejected");
+        } catch (IllegalArgumentException expected) {
+            // as expected
+        }
+
+        try {
+            input.setPeriods();
+            fail("expected an empty period list to be rejected");
+        } catch (IllegalArgumentException expected) {
+            // as expected
+        }
+
+        // the rejected calls leave the periods untouched
+        assertArrayEquals(JointHazardInput.DEFAULT_PERIODS, input.getPeriods(), 1e-9);
+
+        assertArrayEquals(new double[] {0d, 1.5d}, input.setPeriods(0d, 1.5d).getPeriods(), 1e-9);
+    }
 }
