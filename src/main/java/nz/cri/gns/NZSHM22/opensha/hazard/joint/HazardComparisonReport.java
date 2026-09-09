@@ -62,6 +62,7 @@ public class HazardComparisonReport {
                     "Christchurch",
                     "Dunedin",
                     "Westport",
+                    "Franz Josef(SRG 164)",
                     "Queenstown",
                     "Invercargill");
 
@@ -78,7 +79,7 @@ public class HazardComparisonReport {
      * nothing to disaggregate and would be skipped anyway.
      */
     public static final List<String> DEFAULT_SOURCE_SITE_NAMES =
-            List.of("Gisborne", "Taupo", "Wellington", "Kaikoura", "Franz Josef", "Christchurch");
+            List.of("Gisborne", "Taupo", "Wellington", "Kaikoura", "Franz Josef(SRG 164)", "Christchurch");
 
     /** Return period that the source maps disaggregate at. */
     public static final ReturnPeriods SOURCE_RETURN_PERIOD = ReturnPeriods.TEN_IN_50;
