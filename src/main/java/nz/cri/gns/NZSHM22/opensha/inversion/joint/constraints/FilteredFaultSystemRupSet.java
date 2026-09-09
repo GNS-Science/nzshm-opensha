@@ -13,10 +13,10 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.SlipAlongRuptureModel
 import org.opensha.sha.faultSurface.FaultSection;
 
 /// A rupture set that has reduced fault sections and/or ruptures.  Ruptures that are empty after
-// filtering are removed.
+/// filtering are removed.
 /// The AveSlipModule and SectSlipRates of the original rupture set are filtered and attached to the
-// result, and the original SlipAlongRuptureModel is carried over. All other modules are not copied
-// over.
+/// result, and the original SlipAlongRuptureModel is carried over. All other modules are not copied
+/// over.
 public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
 
     final Map<Integer, Integer> newToOldRuptures;
@@ -57,9 +57,6 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
      * rupture set. AveSlipModule values are taken from the original, unfiltered rupture,
      * SectSlipRates values from the original section. The SlipAlongRuptureModel is stateless and is
      * shared with the original rupture set.
-     *
-     * <p>The modules are created with this rupture set as their parent so that adding them does not
-     * trigger a copy, which would fail because rupture and section counts differ.
      *
      * @param original the rupture set that this rupture set was filtered from
      */
