@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import nz.cri.gns.NZSHM22.opensha.data.location.NzshmCommonLocations;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
@@ -92,7 +93,20 @@ public class JointHazardInput {
      */
     public static final double MAX_FRACTIONAL_MAG_DIFF = 0.05;
 
-    private final FaultSystemSolution solution;
+    /** Loads the solution on demand. Never null; see {@link #getSolution()}. */
+    private final Supplier<FaultSystemSolution> solutionSupplier;
+
+    /**
+     * Whether {@link #release()} can actually let go of the solution, i.e. whether the supplier can
+     * produce it again. False for inputs handed a solution that is already in memory.
+     */
+    private final boolean releasable;
+
+    /**
+     * The solution, once loaded. Null before the first {@link #getSolution()} and after a {@link
+     * #release()}.
+     */
+    private FaultSystemSolution solution;
 
     private GmmMode gmmMode = GmmMode.JOINT_RUPTURE;
     private GriddedRegion region;
@@ -102,8 +116,27 @@ public class JointHazardInput {
 
     private boolean locked = false;
 
+    /**
+     * Inputs for a solution that is already in memory. Such an input cannot be {@link #release()
+     * released}: there would be no way of getting the solution back.
+     */
     public JointHazardInput(FaultSystemSolution solution) {
+        Preconditions.checkNotNull(solution, "need a solution");
         this.solution = solution;
+        this.solutionSupplier = () -> solution;
+        this.releasable = false;
+    }
+
+    /**
+     * Inputs for a solution that is loaded on demand and can be {@link #release() released} again,
+     * so that a report over many runs does not have to hold them all at once.
+     *
+     * @param solutionSupplier loads the solution, called again after every release
+     */
+    public JointHazardInput(Supplier<FaultSystemSolution> solutionSupplier) {
+        this.solutionSupplier =
+                Preconditions.checkNotNull(solutionSupplier, "need a solution supplier");
+        this.releasable = true;
     }
 
     /**
@@ -113,8 +146,8 @@ public class JointHazardInput {
      * interface GMM. See {@link JointSolutions#merge} for what the merge does and does not
      * preserve.
      *
-     * <p>A single solution is passed through unmerged, which makes this equivalent to {@link
-     * #perTectonicRegion}.
+     * <p>A single solution is passed through unmerged, i.e. backfilled and given its tectonic
+     * region types but not copied, which makes this equivalent to {@link #perTectonicRegion}.
      *
      * @throws IllegalArgumentException if no solution is given
      */
@@ -128,11 +161,54 @@ public class JointHazardInput {
      * ruptures. Each rupture is calculated with the GMM for its own tectonic region type.
      */
     public static JointHazardInput perTectonicRegion(FaultSystemSolution solution) {
-        return new JointHazardInput(solution).setGmmMode(GmmMode.PER_TECTONIC_REGION);
+        return forSolution(solution, GmmMode.PER_TECTONIC_REGION);
     }
 
+    /**
+     * Inputs for a single solution whose ruptures may span both tectonic region types, calculated
+     * with the experimental joint GMM.
+     */
+    public static JointHazardInput joint(FaultSystemSolution solution) {
+        return forSolution(solution, GmmMode.JOINT_RUPTURE);
+    }
+
+    /**
+     * Inputs for a single solution in the given GMM mode. The solution is backfilled if it predates
+     * fault section properties, so that a single solution can be read wherever {@link #combined}
+     * could read it. See {@link JointSolutions#backfill}.
+     */
+    public static JointHazardInput forSolution(FaultSystemSolution solution, GmmMode gmmMode) {
+        return new JointHazardInput(JointSolutions.backfill(solution)).setGmmMode(gmmMode);
+    }
+
+    /** The solution, loaded on first use if these inputs were given a supplier. */
     public FaultSystemSolution getSolution() {
+        if (solution == null) {
+            solution = Preconditions.checkNotNull(solutionSupplier.get(), "no solution supplied");
+        }
         return solution;
+    }
+
+    /** Whether the solution is in memory, i.e. loaded and not released since. */
+    public boolean isLoaded() {
+        return solution != null;
+    }
+
+    /**
+     * Lets go of the solution so that it can be garbage collected, for a caller that is done with
+     * it. The next {@link #getSolution()} loads it again.
+     *
+     * <p>Only inputs built from a supplier can be released; one handed a solution directly has no
+     * way of getting it back and is left alone.
+     *
+     * @return whether the solution was actually released
+     */
+    public boolean release() {
+        if (!releasable) {
+            return false;
+        }
+        solution = null;
+        return true;
     }
 
     /** Sets how ground motions are calculated. Defaults to {@link GmmMode#JOINT_RUPTURE}. */
@@ -377,6 +453,7 @@ public class JointHazardInput {
      *     rupture is found in {@link GmmMode#PER_TECTONIC_REGION}.
      */
     public ValidationResult validate() {
+        FaultSystemSolution solution = getSolution();
         FaultSystemRupSet rupSet = solution.getRupSet();
 
         // touches every section, so this also validates the tectonic region types

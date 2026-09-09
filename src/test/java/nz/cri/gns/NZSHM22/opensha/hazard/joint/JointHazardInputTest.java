@@ -242,4 +242,55 @@ public class JointHazardInputTest {
 
         assertArrayEquals(new double[] {0d, 1.5d}, input.setPeriods(0d, 1.5d).getPeriods(), 1e-9);
     }
+
+    /**
+     * A single solution is backfilled on the way in, so that whatever {@link
+     * JointHazardInput#combined} can read the single-solution factories can read too.
+     */
+    @Test
+    public void testPerTectonicRegionBackfillsLegacySolutions() {
+        JointHazardInput input = JointHazardInput.perTectonicRegion(makeLegacyCrustalSolution());
+
+        assertEquals(GmmMode.PER_TECTONIC_REGION, input.getGmmMode());
+        assertFalse(JointSolutions.needsBackfill(input.getSolution().getRupSet()));
+    }
+
+    @Test
+    public void testJointBackfillsLegacySolutions() {
+        JointHazardInput input = JointHazardInput.joint(makeLegacySubductionSolution());
+
+        assertEquals(GmmMode.JOINT_RUPTURE, input.getGmmMode());
+        assertFalse(JointSolutions.needsBackfill(input.getSolution().getRupSet()));
+    }
+
+    /** A supplied solution is loaded once, on demand, and loaded again after a release. */
+    @Test
+    public void testSuppliedSolutionIsLoadedOnDemandAndReleasable() {
+        int[] loads = {0};
+        JointHazardInput input =
+                new JointHazardInput(
+                        () -> {
+                            loads[0]++;
+                            return makeSolution();
+                        });
+
+        assertEquals(0, loads[0]);
+        FaultSystemSolution solution = input.getSolution();
+        assertEquals(1, loads[0]);
+        assertSame(solution, input.getSolution());
+
+        assertTrue(input.release());
+        assertNotSame(solution, input.getSolution());
+        assertEquals(2, loads[0]);
+    }
+
+    /** A solution handed over directly cannot be released: there is no way of getting it back. */
+    @Test
+    public void testSolutionHeldDirectlyIsNotReleased() {
+        FaultSystemSolution solution = makeSolution();
+        JointHazardInput input = new JointHazardInput(solution);
+
+        assertFalse(input.release());
+        assertSame(solution, input.getSolution());
+    }
 }

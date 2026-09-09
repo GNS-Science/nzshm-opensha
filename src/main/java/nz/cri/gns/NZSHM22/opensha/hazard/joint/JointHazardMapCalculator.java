@@ -164,9 +164,12 @@ public class JointHazardMapCalculator {
      * @param sites named sites, in the order they should appear in the legend
      * @param period the period to plot, 0 for PGA
      * @return the png that was written
+     * @throws IllegalArgumentException if no site is given: there would be no curve to scale the
+     *     plot to and nothing to write to the CSV
      */
     public File writeSiteCurves(File outputDir, Map<String, Location> sites, double period)
             throws IOException {
+        Preconditions.checkArgument(sites != null && !sites.isEmpty(), "need at least one site");
         Preconditions.checkState(
                 outputDir.exists() || outputDir.mkdirs(),
                 "Could not create output directory %s",
@@ -186,8 +189,14 @@ public class JointHazardMapCalculator {
                 HazardLabels.periodLabel(period) + " (" + HazardLabels.periodUnits(period) + ")");
     }
 
+    /**
+     * Writes one row per site, all sharing the first curve's x values as the header.
+     *
+     * @throws IllegalArgumentException if there is no curve to take the header from
+     */
     static void writeSiteCurvesCSV(File outputFile, Map<String, DiscretizedFunc> curves)
             throws IOException {
+        Preconditions.checkArgument(!curves.isEmpty(), "need at least one curve");
         DiscretizedFunc reference = curves.values().iterator().next();
         CSVFile<String> csv = new CSVFile<>(true);
         List<String> header = new ArrayList<>();
@@ -207,9 +216,15 @@ public class JointHazardMapCalculator {
         csv.writeToFile(outputFile);
     }
 
+    /**
+     * Plots every site's curve on one pair of axes, scaled to the first curve's x range.
+     *
+     * @throws IllegalArgumentException if there is no curve to scale the plot to
+     */
     static File plotSiteCurves(
             File outputDir, String prefix, Map<String, DiscretizedFunc> curves, String xAxisLabel)
             throws IOException {
+        Preconditions.checkArgument(!curves.isEmpty(), "need at least one curve");
         List<XY_DataSet> funcs = new ArrayList<>();
         List<PlotCurveCharacterstics> chars = new ArrayList<>();
 
