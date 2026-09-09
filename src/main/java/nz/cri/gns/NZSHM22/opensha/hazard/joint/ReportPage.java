@@ -27,30 +27,52 @@ public class ReportPage {
 
     public static final String INDEX_FILE = "index.html";
 
-    /** A figure in the report: an image, its caption and an optional line of statistics. */
+    /**
+     * A figure in the report: an image, its caption, an optional line of statistics and an optional
+     * page it links to. A figure with no link opens full size in place instead.
+     */
     public static class Figure {
         protected final String path;
         protected final String caption;
         protected final String stats;
+        protected final String link;
 
-        protected Figure(String path, String caption, String stats) {
+        protected Figure(String path, String caption, String stats, String link) {
             this.path = path;
             this.caption = caption;
             this.stats = stats;
+            this.link = link;
         }
     }
 
     /** A row of figures shown side by side, e.g. two maps and their difference. */
     public static class Row {
-        protected final String title;
+        protected String title;
         protected final List<Figure> figures = new ArrayList<>();
 
         public Row(String title) {
             this.title = title;
         }
 
+        /** Replaces the row title, e.g. to add a note about what could not be drawn. */
+        public Row setTitle(String title) {
+            this.title = title;
+            return this;
+        }
+
+        /** An image in the page's own image directory, which opens full size when clicked. */
         public void add(File image, String caption, String stats) {
-            figures.add(new Figure(IMAGE_DIR + "/" + image.getName(), caption, stats));
+            figures.add(new Figure(IMAGE_DIR + "/" + image.getName(), caption, stats, null));
+        }
+
+        /**
+         * An image anywhere below the page's directory, which opens another page when clicked.
+         *
+         * @param path the image, relative to the page
+         * @param link the page the figure links to, relative to the page
+         */
+        public void add(String path, String caption, String stats, String link) {
+            figures.add(new Figure(path, caption, stats, link));
         }
     }
 
@@ -255,9 +277,13 @@ public class ReportPage {
                     out.write("<div class=\"figures\">\n");
                     for (Figure figure : row.figures) {
                         out.write("<figure>\n");
+                        // a figure with no link opens full size in the lightbox instead,
+                        // which the script hooks up by the zoom class
                         out.write(
-                                "<a href=\""
-                                        + figure.path
+                                "<a "
+                                        + (figure.link == null
+                                                ? "class=\"zoom\" href=\"" + figure.path
+                                                : "href=\"" + figure.link)
                                         + "\"><img src=\""
                                         + figure.path
                                         + "\" alt=\""
@@ -402,7 +428,7 @@ public class ReportPage {
     protected static String script() {
         return "var box = document.getElementById('lightbox');\n"
                 + "var boxImage = document.getElementById('lightbox-image');\n"
-                + "document.querySelectorAll('figure a').forEach(function (link) {\n"
+                + "document.querySelectorAll('figure a.zoom').forEach(function (link) {\n"
                 + "  link.addEventListener('click', function (event) {\n"
                 + "    event.preventDefault();\n"
                 + "    boxImage.src = link.getAttribute('href');\n"

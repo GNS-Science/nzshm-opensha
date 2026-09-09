@@ -66,13 +66,15 @@ public class JointHazardRunner {
      * Loads the solutions, validates them and writes the maps and site curves.
      *
      * <p>More than one solution is merged into a single ERF; see {@link JointHazardInput#combined}.
+     * A single solution is read the same way, so that whatever the multi-solution mode can read the
+     * single-solution mode can read too; see {@link JointHazardInput#forSolution}.
      */
     public static void run(Options options) throws IOException {
         FaultSystemSolution[] solutions = HazardReportSource.load(options.getSolutionFiles());
         JointHazardInput input =
                 solutions.length > 1
                         ? JointHazardInput.combined(solutions)
-                        : new JointHazardInput(solutions[0]).setGmmMode(options.getMode());
+                        : JointHazardInput.forSolution(solutions[0], options.getMode());
         run(input, options.getOutputDir(), options.getSpacing());
     }
 

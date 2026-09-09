@@ -442,4 +442,27 @@ public class JointHazardMapCalculatorTest {
                 "annual exceedance probability must be a probability",
                 curve.getY(0) <= 1d && curve.getY(curve.size() - 1) >= 0d);
     }
+
+    /**
+     * Every site curve plot is scaled to the first curve, so a call with no site has nothing to
+     * scale to. It is rejected where the mistake was made rather than in the plotting helpers.
+     */
+    @Test
+    public void testWriteSiteCurvesRejectsNoSites() {
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        new JointHazardInput(makeSolution())
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+
+        try {
+            calculator.writeSiteCurves(tempFolder.newFolder("curves"), Map.of(), 0d);
+            fail("expected an empty site map to be rejected");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("at least one site"));
+        } catch (java.io.IOException e) {
+            fail(e.getMessage());
+        }
+    }
 }

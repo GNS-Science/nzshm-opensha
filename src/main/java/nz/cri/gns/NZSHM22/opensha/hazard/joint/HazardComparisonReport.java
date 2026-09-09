@@ -4,11 +4,6 @@ import com.google.common.base.Preconditions;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -88,10 +83,10 @@ public class HazardComparisonReport {
     /** Return period that the source maps disaggregate at. */
     public static final ReturnPeriods SOURCE_RETURN_PERIOD = ReturnPeriods.TEN_IN_50;
 
-    /** Directory that images are written to, relative to the report. */
-    public static final String IMAGE_DIR = "images";
+    /** Directory that images are written to, relative to the report. See {@link ReportPage}. */
+    public static final String IMAGE_DIR = ReportPage.IMAGE_DIR;
 
-    public static final String INDEX_FILE = "index.html";
+    public static final String INDEX_FILE = ReportPage.INDEX_FILE;
 
     /**
      * Ratios that the difference colour ramp is scaled to, i.e. 1.1 means a scale running from a
@@ -233,27 +228,36 @@ public class HazardComparisonReport {
         JointHazardInput.ValidationResult firstValidation = first.getInput().validate();
         JointHazardInput.ValidationResult secondValidation = second.getInput().validate();
 
-        imageDir = new File(outputDir, IMAGE_DIR);
-        Preconditions.checkState(
-                imageDir.exists() || imageDir.mkdirs(),
-                "Could not create output directory %s",
-                imageDir.getAbsolutePath());
+        ReportPage page = new ReportPage(title(), outputDir);
+        page.setIntro(intro());
+        page.setSummary(summary(firstValidation, secondValidation));
+        imageDir = page.imageDir();
 
         JointHazardMapCalculator firstCalc = calculate(first);
         JointHazardMapCalculator secondCalc = calculate(second);
 
-        List<Section> sections = new ArrayList<>();
-        sections.add(mapSection(firstCalc, secondCalc, periods));
-        Section sourceSection = sourceSection(firstCalc, secondCalc, periods[0]);
+        page.add(mapSection(firstCalc, secondCalc, periods));
+        ReportPage.Section sourceSection = sourceSection(firstCalc, secondCalc, periods[0]);
         if (sourceSection != null) {
-            sections.add(sourceSection);
+            page.add(sourceSection);
         }
-        sections.add(curveSection(firstCalc, secondCalc, periods));
+        page.add(curveSection(firstCalc, secondCalc, periods));
 
-        File index = new File(outputDir, INDEX_FILE);
-        writeHtml(index, sections, firstValidation, secondValidation);
+        File index = page.write();
         System.out.println("Wrote hazard comparison report to " + index.getAbsolutePath());
         return index;
+    }
+
+    /** The line of prose below the title, explaining how to read the difference maps. */
+    protected String intro() {
+        return "Map differences are the ratio of "
+                + second.getName()
+                + " to "
+                + first.getName()
+                + " on a logarithmic scale that always covers the whole range of change, so red"
+                + " means "
+                + second.getName()
+                + " gives stronger shaking. Captions report the same change as a percentage.";
     }
 
     protected JointHazardMapCalculator calculate(HazardReportSource config) {
@@ -270,12 +274,12 @@ public class HazardComparisonReport {
     }
 
     /** One hazard map per period and return period, for each config, plus their difference. */
-    protected Section mapSection(
+    protected ReportPage.Section mapSection(
             JointHazardMapCalculator firstCalc,
             JointHazardMapCalculator secondCalc,
             double[] periods)
             throws IOException {
-        Section section = new Section("Hazard maps", "maps");
+        ReportPage.Section section = new ReportPage.Section("Hazard maps", "maps");
         for (double period : periods) {
             for (ReturnPeriods rp : SolHazardMapCalc.MAP_RPS) {
                 GriddedGeoDataSet firstMap = firstCalc.getCalc().buildMap(period, rp);
@@ -291,7 +295,7 @@ public class HazardComparisonReport {
                 String zLabel = "Log10 " + periodLabel + " (" + units + "), " + rp.label;
 
                 CPT cpt = sharedLogCPT(firstMap, secondMap);
-                Row row = new Row(periodLabel + ", " + rp.label);
+                ReportPage.Row row = new ReportPage.Row(periodLabel + ", " + rp.label);
                 row.add(
                         firstCalc
                                 .getCalc()
@@ -348,10 +352,10 @@ public class HazardComparisonReport {
      *
      * @return the section, or null if no site could be disaggregated at all
      */
-    protected Section sourceSection(
+    protected ReportPage.Section sourceSection(
             JointHazardMapCalculator firstCalc, JointHazardMapCalculator secondCalc, double period)
             throws IOException {
-        Section section = new Section("Hazard sources", "sources");
+        ReportPage.Section section = new ReportPage.Section("Hazard sources", "sources");
         SiteSourcePage pages =
                 new SiteSourcePage(
                         new SiteSourceExplorer(firstCalc.getSetup()),
@@ -359,8 +363,8 @@ public class HazardComparisonReport {
                         first.getName(),
                         second.getName());
 
-        Row row =
-                new Row(
+        ReportPage.Row row =
+                new ReportPage.Row(
                         HazardLabels.SECTION_HAZARD
                                 + ", "
                                 + HazardLabels.periodLabel(period)
@@ -395,7 +399,7 @@ public class HazardComparisonReport {
             return null;
         }
         if (!skipped.isEmpty()) {
-            row.title = row.title + " No fault hazard to disaggregate at " + join(skipped) + ".";
+            row.setTitle(row.title + " No fault hazard to disaggregate at " + join(skipped) + ".");
         }
         section.add(row);
         return section;
@@ -412,12 +416,12 @@ public class HazardComparisonReport {
     }
 
     /** One hazard curve per site and period, for each config, plus their comparison. */
-    protected Section curveSection(
+    protected ReportPage.Section curveSection(
             JointHazardMapCalculator firstCalc,
             JointHazardMapCalculator secondCalc,
             double[] periods)
             throws IOException {
-        Section section = new Section("Hazard curves", "curves");
+        ReportPage.Section section = new ReportPage.Section("Hazard curves", "curves");
         for (Map.Entry<String, Location> site : sites.entrySet()) {
             String siteName = site.getKey();
             for (double period : periods) {
@@ -434,7 +438,7 @@ public class HazardComparisonReport {
                 Range xRange = new Range(firstCurve.getMinX(), firstCurve.getMaxX());
                 Range yRange = CurvePlots.yRange(List.of(firstCurve, secondCurve));
 
-                Row row = new Row(siteName + ", " + periodLabel);
+                ReportPage.Row row = new ReportPage.Row(siteName + ", " + periodLabel);
                 row.add(
                         plotCurve(
                                 prefix + "_" + first.getId(),
@@ -854,199 +858,37 @@ public class HazardComparisonReport {
         return second.getName() + " vs " + first.getName();
     }
 
-    // ---------------------------------------------------------------- HTML
+    // ---------------------------------------------------------------- report
 
-    /**
-     * A figure in the report: an image, its caption, an optional line of statistics and an optional
-     * page it links to. A figure with no link opens full size in place instead.
-     */
-    protected static class Figure {
-        protected final String path;
-        protected final String caption;
-        protected final String stats;
-        protected final String link;
-
-        protected Figure(String path, String caption, String stats, String link) {
-            this.path = path;
-            this.caption = caption;
-            this.stats = stats;
-            this.link = link;
-        }
-    }
-
-    /** A row of figures shown side by side, e.g. the two maps and their difference. */
-    protected static class Row {
-        protected String title;
-        protected final List<Figure> figures = new ArrayList<>();
-
-        protected Row(String title) {
-            this.title = title;
-        }
-
-        /** An image in the report's own image directory, which opens full size when clicked. */
-        protected void add(File image, String caption, String stats) {
-            figures.add(new Figure(IMAGE_DIR + "/" + image.getName(), caption, stats, null));
-        }
-
-        /**
-         * An image anywhere below the report directory, which opens another page when clicked.
-         *
-         * @param path the image, relative to the report directory
-         * @param link the page the figure links to, relative to the report directory
-         */
-        protected void add(String path, String caption, String stats, String link) {
-            figures.add(new Figure(path, caption, stats, link));
-        }
-    }
-
-    /** A section of the report, e.g. all the maps. */
-    protected static class Section {
-        protected final String title;
-        protected final String id;
-        protected final List<Row> rows = new ArrayList<>();
-
-        protected Section(String title, String id) {
-            this.title = title;
-            this.id = id;
-        }
-
-        protected void add(Row row) {
-            rows.add(row);
-        }
-    }
-
-    protected void writeHtml(
-            File index,
-            List<Section> sections,
+    /** The summary table at the top of the report, one column per config. */
+    protected ReportPage.Table summary(
             JointHazardInput.ValidationResult firstValidation,
-            JointHazardInput.ValidationResult secondValidation)
-            throws IOException {
-        try (Writer out = Files.newBufferedWriter(index.toPath(), StandardCharsets.UTF_8)) {
-            out.write("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
-            out.write("<meta charset=\"utf-8\">\n");
-            out.write("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
-            out.write("<title>" + escape(title()) + "</title>\n");
-            out.write("<style>\n" + css() + "</style>\n");
-            out.write("</head>\n<body>\n");
-
-            out.write("<h1>" + escape(title()) + "</h1>\n");
-            out.write(
-                    "<p class=\"meta\">Generated "
-                            + escape(
-                                    LocalDateTime.now()
-                                            .format(
-                                                    DateTimeFormatter.ofPattern(
-                                                            "yyyy-MM-dd HH:mm")))
-                            + ". Map differences are the ratio of "
-                            + escape(second.getName())
-                            + " to "
-                            + escape(first.getName())
-                            + " on a logarithmic scale that always covers the whole range of"
-                            + " change, so red means "
-                            + escape(second.getName())
-                            + " gives stronger shaking. Captions report the same change as a"
-                            + " percentage.</p>\n");
-
-            writeSummary(out, firstValidation, secondValidation);
-
-            out.write("<nav><ul>\n");
-            for (Section section : sections) {
-                out.write(
-                        "<li><a href=\"#"
-                                + section.id
-                                + "\">"
-                                + escape(section.title)
-                                + "</a></li>\n");
-            }
-            out.write("</ul></nav>\n");
-
-            for (Section section : sections) {
-                out.write("<section id=\"" + section.id + "\">\n");
-                out.write("<h2>" + escape(section.title) + "</h2>\n");
-                for (Row row : section.rows) {
-                    out.write("<h3>" + escape(row.title) + "</h3>\n");
-                    out.write("<div class=\"figures\">\n");
-                    for (Figure figure : row.figures) {
-                        out.write("<figure>\n");
-                        // a figure with no link opens full size in the lightbox instead,
-                        // which the script hooks up by the zoom class
-                        out.write(
-                                "<a "
-                                        + (figure.link == null
-                                                ? "class=\"zoom\" href=\"" + figure.path
-                                                : "href=\"" + figure.link)
-                                        + "\"><img src=\""
-                                        + figure.path
-                                        + "\" alt=\""
-                                        + escape(figure.caption)
-                                        + "\"></a>\n");
-                        out.write("<figcaption>" + escape(figure.caption));
-                        if (figure.stats != null) {
-                            out.write("<span class=\"stats\">" + escape(figure.stats) + "</span>");
-                        }
-                        out.write("</figcaption>\n</figure>\n");
-                    }
-                    out.write("</div>\n");
-                }
-                out.write("</section>\n");
-            }
-
-            out.write("<div id=\"lightbox\"><img id=\"lightbox-image\" alt=\"\"></div>\n");
-            out.write("<script>\n" + script() + "</script>\n");
-            out.write("</body>\n</html>\n");
-        }
-    }
-
-    protected void writeSummary(
-            Writer out,
-            JointHazardInput.ValidationResult firstValidation,
-            JointHazardInput.ValidationResult secondValidation)
-            throws IOException {
+            JointHazardInput.ValidationResult secondValidation) {
         GriddedRegion region = first.getInput().getRegion();
-        out.write("<table class=\"summary\">\n<tr><th></th><th>");
-        out.write(
-                escape(first.getName()) + "</th><th>" + escape(second.getName()) + "</th></tr>\n");
-        summaryRow(
-                out,
-                "Ground motion models",
-                first.getInput().getGmmMode().toString(),
-                second.getInput().getGmmMode().toString());
-        summaryRow(
-                out,
-                "Fault sections",
-                String.valueOf(sectionCount(first)),
-                String.valueOf(sectionCount(second)));
-        summaryRow(
-                out,
-                "Ruptures",
-                String.valueOf(ruptureCount(first)),
-                String.valueOf(ruptureCount(second)));
-        summaryRow(
-                out,
-                "Crustal / interface / joint ruptures",
-                ruptureMix(firstValidation),
-                ruptureMix(secondValidation));
-        out.write(
-                "<tr><th>Region</th><td colspan=\"2\">"
-                        + region.getNodeCount()
-                        + " sites at "
-                        + (float) region.getSpacing()
-                        + " degrees</td></tr>\n");
-        out.write(
-                "<tr><th>Periods</th><td colspan=\"2\">" + escape(periodLabels()) + "</td></tr>\n");
-        out.write("</table>\n");
-    }
-
-    protected static void summaryRow(
-            Writer out, String label, String firstValue, String secondValue) throws IOException {
-        out.write(
-                "<tr><th>"
-                        + escape(label)
-                        + "</th><td>"
-                        + escape(firstValue)
-                        + "</td><td>"
-                        + escape(secondValue)
-                        + "</td></tr>\n");
+        return new ReportPage.Table("", first.getName(), second.getName())
+                .addRow(
+                        "Ground motion models",
+                        first.getInput().getGmmMode().toString(),
+                        second.getInput().getGmmMode().toString())
+                .addRow(
+                        "Fault sections",
+                        String.valueOf(sectionCount(first)),
+                        String.valueOf(sectionCount(second)))
+                .addRow(
+                        "Ruptures",
+                        String.valueOf(ruptureCount(first)),
+                        String.valueOf(ruptureCount(second)))
+                .addRow(
+                        "Crustal / interface / joint ruptures",
+                        ruptureMix(firstValidation),
+                        ruptureMix(secondValidation))
+                .addRow(
+                        "Region",
+                        region.getNodeCount()
+                                + " sites at "
+                                + (float) region.getSpacing()
+                                + " degrees")
+                .addRow("Periods", periodLabels());
     }
 
     protected static String ruptureMix(JointHazardInput.ValidationResult validation) {
@@ -1076,54 +918,5 @@ public class HazardComparisonReport {
 
     protected String title() {
         return "Hazard comparison: " + first.getName() + " vs " + second.getName();
-    }
-
-    protected static String escape(String text) {
-        return text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
-    }
-
-    protected static String css() {
-        return "body { font-family: system-ui, Arial, sans-serif; margin: 0 auto; padding: 1.5rem;"
-                + " max-width: 1600px; color: #222; }\n"
-                + "h1 { font-size: 1.6rem; } h2 { font-size: 1.3rem; margin-top: 2.5rem;"
-                + " border-bottom: 1px solid #ddd; padding-bottom: .3rem; }\n"
-                + "h3 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; color: #444; }\n"
-                + ".meta { color: #666; }\n"
-                + "table.summary { border-collapse: collapse; margin: 1rem 0; }\n"
-                + "table.summary th, table.summary td { border: 1px solid #ddd; padding: .35rem"
-                + " .7rem; text-align: left; font-weight: normal; }\n"
-                + "table.summary tr:first-child th { font-weight: bold; background: #f4f4f4; }\n"
-                + "table.summary th:first-child { font-weight: bold; }\n"
-                + "nav ul { list-style: none; padding: 0; display: flex; gap: 1rem; }\n"
-                + ".figures { display: flex; flex-wrap: wrap; gap: 1rem; }\n"
-                + "figure { flex: 1 1 30%; min-width: 280px; margin: 0; }\n"
-                + "figure img { width: 100%; height: auto; border: 1px solid #ddd; cursor:"
-                + " zoom-in; }\n"
-                + "figcaption { font-size: .85rem; color: #444; padding-top: .3rem; }\n"
-                + "figcaption .stats { display: block; color: #777; }\n"
-                + "#lightbox { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0,"
-                + " .85); align-items: center; justify-content: center; cursor: zoom-out; z-index:"
-                + " 10; }\n"
-                + "#lightbox.open { display: flex; }\n"
-                + "#lightbox img { max-width: 96vw; max-height: 96vh; }\n";
-    }
-
-    protected static String script() {
-        return "var box = document.getElementById('lightbox');\n"
-                + "var boxImage = document.getElementById('lightbox-image');\n"
-                + "document.querySelectorAll('figure a.zoom').forEach(function (link) {\n"
-                + "  link.addEventListener('click', function (event) {\n"
-                + "    event.preventDefault();\n"
-                + "    boxImage.src = link.getAttribute('href');\n"
-                + "    box.classList.add('open');\n"
-                + "  });\n"
-                + "});\n"
-                + "box.addEventListener('click', function () { box.classList.remove('open'); });\n"
-                + "document.addEventListener('keydown', function (event) {\n"
-                + "  if (event.key === 'Escape') { box.classList.remove('open'); }\n"
-                + "});\n";
     }
 }
