@@ -146,9 +146,9 @@ public class JointHazardCalcSetup {
                             IncludeBackgroundOption.EXCLUDE,
                             input.getPeriods());
             calc.setXVals(mapXVals());
-            if (input.getGmmMode() == JointHazardInput.GmmMode.JOINT_RUPTURE) {
-                calc.setDistCacheWrapper(false);
-            }
+            //            if (input.getGmmMode() == JointHazardInput.GmmMode.JOINT_RUPTURE) {
+            //                calc.setDistCacheWrapper(false);
+            //            }
         }
         return calc;
     }
