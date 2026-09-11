@@ -94,6 +94,8 @@ This is how joint inversions work currently.
 - `FilteredFaultSystemRupSet` will recalculate area and magnitude of the filtered ruptures, but will copy the slip from 
   the original ruptures. Since joint ruptures will now only have fault sections of that specific partition, area and
   magnitude will be different from before.
+- Magnitude is calculated in `EstimatedJointScalingRelationship` as 
+  `Math.log10(subductionArea * 1e-6 * Math.pow(10, 4.0) + crustalArea * 1e-6 * Math.pow(10, 4.2))`
 
 ### Slip Constraints
 
