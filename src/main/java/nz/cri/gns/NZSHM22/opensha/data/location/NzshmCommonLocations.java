@@ -17,6 +17,9 @@ import org.opensha.commons.geo.Location;
  * LOCATION_LISTS["NZ"]}, resolved against that project's {@code locations.json}. It is held here as
  * a resource rather than fetched, so update {@code data/location/nzshm_common_nz_locations.csv}
  * when nzshm-common changes.
+ *
+ * <p>A few sites that nzshm-common does not list are appended to the resource, currently "Franz
+ * Josef(SRG 164)", the Seismic Risk Group's Franz Josef site.
  */
 public class NzshmCommonLocations {
 

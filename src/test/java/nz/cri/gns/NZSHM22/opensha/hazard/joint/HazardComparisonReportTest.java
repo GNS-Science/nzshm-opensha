@@ -98,7 +98,7 @@ public class HazardComparisonReportTest {
         Map<String, Location> sites = HazardComparisonReport.defaultSourceSites();
         assertEquals(
                 HazardComparisonReport.DEFAULT_SOURCE_SITE_NAMES, new ArrayList<>(sites.keySet()));
-        assertNotNull("expected a site on the Alpine Fault", sites.get("Franz Josef"));
+        assertNotNull("expected a site on the Alpine Fault", sites.get("Franz Josef(SRG 164)"));
         assertNotNull("expected a site in the TVZ", sites.get("Taupo"));
     }
 

@@ -254,9 +254,7 @@ public class SiteSourcePage {
             }
         }
         Preconditions.checkState(
-                !coloured.isEmpty(),
-                "No section carries %s /yr of the hazard at this site",
-                floor);
+                !coloured.isEmpty(), "No section carries %s /yr of the hazard at this site", floor);
         return GeographicMapMaker.buildBufferedRegion(coloured, BUFFER_KM, true);
     }
 

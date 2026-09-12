@@ -193,8 +193,7 @@ public class SiteSourceMapPlotter {
         // several maps of the same site on one scale.
         double logMax =
                 Math.ceil(Math.log10(Double.isNaN(maxRate) ? largest * years : maxRate * years));
-        double logMin =
-                Double.isNaN(omitBelowRate) ? logMax - numDecades : Math.log10(omitBelow);
+        double logMin = Double.isNaN(omitBelowRate) ? logMax - numDecades : Math.log10(omitBelow);
         // with a threshold nothing drawn falls below the scale, so the clamp only bites when there
         // is none and the bottom decade has to hold whatever is under it
         List<FaultSection> drawn = drawn(rupSet, values, omitBelow);

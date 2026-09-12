@@ -35,9 +35,9 @@ import org.opensha.sha.faultSurface.FaultSection;
  * in those reads as a row of zeroes.
  *
  * <p>Sections that are negligible in <em>both</em> solutions are left off the map entirely; see
- * {@link #setOmitBelowRate}. The single solution maps grey those out instead, because there
- * "small" is still a value worth placing, but on a difference map they carry no change worth
- * looking at and only clutter the sections that do.
+ * {@link #setOmitBelowRate}. The single solution maps grey those out instead, because there "small"
+ * is still a value worth placing, but on a difference map they carry no change worth looking at and
+ * only clutter the sections that do.
  */
 public class SiteSourceDiffMapPlotter {
 
@@ -166,8 +166,7 @@ public class SiteSourceDiffMapPlotter {
     /**
      * The change in contribution of each drawn section, in 1/yr, aligned with {@link #sections}.
      */
-    protected static double[] differences(
-            SiteSourceComparison comparison, double omitBelowRate) {
+    protected static double[] differences(SiteSourceComparison comparison, double omitBelowRate) {
         double[] all = comparison.getDifferences();
         double[] maxRates = comparison.getMaxRates();
         double[] drawn = new double[sections(comparison, omitBelowRate).size()];
@@ -180,7 +179,9 @@ public class SiteSourceDiffMapPlotter {
         return drawn;
     }
 
-    /** The number of years the changes are reported over. See {@link HazardLabels#rateUnitYears}. */
+    /**
+     * The number of years the changes are reported over. See {@link HazardLabels#rateUnitYears}.
+     */
     protected static double unitYears(double[] rates) {
         double largest = 0;
         for (double rate : rates) {
