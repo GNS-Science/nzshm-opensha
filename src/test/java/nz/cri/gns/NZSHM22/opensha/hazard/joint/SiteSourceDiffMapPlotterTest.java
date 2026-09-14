@@ -181,17 +181,21 @@ public class SiteSourceDiffMapPlotterTest {
         }
     }
 
-    /** Two identical solutions leave no change to draw, which is said rather than drawn blank. */
+    /**
+     * Two identical solutions are a valid comparison: the map is drawn with every section in the
+     * neutral colour rather than failing.
+     */
     @Test
-    public void testRejectsNoChange() throws IOException {
+    public void testDrawsNoChange() throws IOException {
         SiteSourceComparison unchanged =
                 new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(1e-3, 2e-3));
-        try {
-            new SiteSourceDiffMapPlotter()
-                    .plot(tempFolder.newFolder("same"), "diff", unchanged, "Test Site");
-            fail("expected an unchanged comparison to be rejected");
-        } catch (IllegalStateException expected) {
-            // as expected
-        }
+        SiteSourceDiffMapPlotter plotter = new SiteSourceDiffMapPlotter();
+
+        File map = plotter.plot(tempFolder.newFolder("same"), "diff", unchanged, "Test Site");
+
+        assertTrue(map.exists());
+        CPT cpt = plotter.differenceCPT(new double[] {0d, 0d});
+        assertEquals(-1d, cpt.getMinValue(), 1e-12);
+        assertEquals(1d, cpt.getMaxValue(), 1e-12);
     }
 }

@@ -24,11 +24,13 @@ public class JointHazardRunnerTest {
 
     private File crustal;
     private File subduction;
+    private File outputDir;
 
     @Before
     public void createSolutionFiles() throws IOException {
         crustal = tempFolder.newFile("crustal.zip");
         subduction = tempFolder.newFile("subduction.zip");
+        outputDir = new File(tempFolder.getRoot(), "hazard");
     }
 
     /** A single solution keeps the mode it was given. */
@@ -37,13 +39,13 @@ public class JointHazardRunnerTest {
         Options options =
                 new Options(
                         List.of(crustal),
-                        JointHazardRunner.DEFAULT_OUTPUT_DIR,
+                        outputDir,
                         JointHazardInput.DEFAULT_SPACING,
                         GmmMode.JOINT_RUPTURE);
 
         assertEquals(List.of(crustal), options.getSolutionFiles());
         assertEquals(GmmMode.JOINT_RUPTURE, options.getMode());
-        assertEquals(JointHazardRunner.DEFAULT_OUTPUT_DIR, options.getOutputDir());
+        assertEquals(outputDir, options.getOutputDir());
         assertEquals(JointHazardInput.DEFAULT_SPACING, options.getSpacing(), 1e-9);
     }
 
@@ -56,7 +58,7 @@ public class JointHazardRunnerTest {
         Options options =
                 new Options(
                         List.of(crustal, subduction),
-                        JointHazardRunner.DEFAULT_OUTPUT_DIR,
+                        outputDir,
                         JointHazardInput.DEFAULT_SPACING,
                         GmmMode.JOINT_RUPTURE);
 
@@ -68,10 +70,7 @@ public class JointHazardRunnerTest {
     public void testRejectsNoSolutions() {
         try {
             new Options(
-                    List.of(),
-                    JointHazardRunner.DEFAULT_OUTPUT_DIR,
-                    JointHazardInput.DEFAULT_SPACING,
-                    GmmMode.JOINT_RUPTURE);
+                    List.of(), outputDir, JointHazardInput.DEFAULT_SPACING, GmmMode.JOINT_RUPTURE);
             fail("expected no solutions to be rejected");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("at least one solution"));

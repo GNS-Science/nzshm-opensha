@@ -132,6 +132,27 @@ public class HazardComparisonReportTest {
         assertTrue(new File(siteDir, "test_site_sections.csv").exists());
     }
 
+    /**
+     * A source site with no fault hazard at the return period is named as skipped, and leaves no
+     * files behind, while the other sites are still mapped.
+     */
+    @Test
+    public void testSkipsSourceSiteWithoutHazard() throws Exception {
+        File outputDir = tempFolder.newFolder("skipped");
+        File index =
+                report(outputDir)
+                        .setSourceSites(
+                                // beyond every tectonic region's source distance cutoff
+                                Map.of("Test Site", SITE, "Far Site", new Location(-20d, 150d)))
+                        .generate();
+
+        String html = Files.readString(index.toPath(), StandardCharsets.UTF_8);
+        assertTrue(html.contains("No fault hazard to disaggregate at Far Site."));
+        File sourcesDir = new File(outputDir, SiteSourcePage.SOURCES_DIR);
+        assertTrue(new File(sourcesDir, "test_site").exists());
+        assertFalse(new File(sourcesDir, "far_site").exists());
+    }
+
     /** Maps of different regions cannot be differenced, so this is caught before calculating. */
     @Test
     public void testRejectsMismatchedRegions() throws Exception {
@@ -248,6 +269,27 @@ public class HazardComparisonReportTest {
     public void testRatioCPTColoursZero() throws Exception {
         CPT cpt = ratioCPT(4d);
         assertTrue(cpt.isLog10());
+        assertEquals(cpt.getMinColor(), cpt.getColor(0f));
+    }
+
+    /**
+     * A node that lost all its hazard is coloured as a decrease even when no other node went down.
+     * Without a decrease side, the bottom of the ramp would be the neutral no-change colour.
+     */
+    @Test
+    public void testRatioCPTColoursZeroWithoutOtherDecreases() throws Exception {
+        GriddedRegion region = mapRegion();
+        GriddedGeoDataSet ratio = new GriddedGeoDataSet(region, false);
+        for (int i = 0; i < region.getNodeCount(); i++) {
+            ratio.set(i, 2d);
+        }
+        ratio.set(0, 0d);
+        ratio.set(1, 1d);
+
+        CPT cpt = HazardComparisonReport.ratioCPT(ratio);
+
+        assertTrue("zero needs a decrease side to fall off", cpt.getMinValue() < 1d);
+        assertNotEquals(cpt.getColor(1f), cpt.getColor(0f));
         assertEquals(cpt.getMinColor(), cpt.getColor(0f));
     }
 

@@ -16,12 +16,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
  */
 public class JointHazardRunner {
 
-    /** Output directory used when {@code --out} is not given. */
-    public static final File DEFAULT_OUTPUT_DIR = new File("hazard");
-
     protected JointHazardRunner() {}
 
-    /** A parsed command line: which solutions to calculate, how and where to. */
+    /** Run options: which solutions to calculate, how and where to. */
     public static class Options {
         protected final List<File> solutionFiles;
         protected final File outputDir;

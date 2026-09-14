@@ -386,20 +386,21 @@ public class HazardComparisonReport {
         List<String> skipped = new ArrayList<>();
         for (Map.Entry<String, Location> site : sourceSites.entrySet()) {
             System.out.println("Mapping hazard sources at " + site.getKey());
-            try {
-                SiteSourcePage.Result result =
-                        pages.write(
-                                outputDir,
-                                site.getKey(),
-                                site.getValue(),
-                                period,
-                                SOURCE_RETURN_PERIOD);
-                row.add(result.mapPath, site.getKey(), result.stats, result.pagePath);
-            } catch (IllegalStateException e) {
+            SiteSourcePage.Result result =
+                    pages.write(
+                            outputDir,
+                            site.getKey(),
+                            site.getValue(),
+                            period,
+                            SOURCE_RETURN_PERIOD);
+            if (result == null) {
                 // a site whose fault hazard never reaches the return period has no level to
                 // disaggregate at; report it and carry on rather than losing the whole report
-                System.out.println("  skipped: " + e.getMessage());
+                System.out.println(
+                        "  skipped: the hazard never reaches " + SOURCE_RETURN_PERIOD.label);
                 skipped.add(site.getKey());
+            } else {
+                row.add(result.mapPath, site.getKey(), result.stats, result.pagePath);
             }
         }
         if (row.figures.isEmpty()) {
@@ -673,9 +674,12 @@ public class HazardComparisonReport {
     protected static CPT ratioCPT(GriddedGeoDataSet ratioMap) throws IOException {
         double smallest = 1d;
         double largest = 1d;
+        boolean anyZero = false;
         for (int i = 0; i < ratioMap.size(); i++) {
             double ratio = ratioMap.get(i);
-            if (Double.isFinite(ratio) && ratio > 0) {
+            if (ratio == 0d) {
+                anyZero = true;
+            } else if (Double.isFinite(ratio) && ratio > 0) {
                 smallest = Math.min(smallest, ratio);
                 largest = Math.max(largest, ratio);
             }
@@ -683,6 +687,11 @@ public class HazardComparisonReport {
         // each side is rounded outwards on its own, so the ramp is used across its whole width even
         // when every node moved the same way; a side with nothing on it gets no width at all
         double down = smallest < 1d ? ratioScale(1d / smallest) : 1d;
+        // a node that lost all its hazard is off the bottom of the log scale; make sure there is a
+        // decrease side for it to fall off, or it would take the neutral colour
+        if (anyZero && down == 1d) {
+            down = RATIO_SCALES[0];
+        }
         double up = largest > 1d ? ratioScale(largest) : 1d;
         if (down == 1d && up == 1d) {
             // the two models agree everywhere, so give the ramp somewhere to be

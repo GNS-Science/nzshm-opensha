@@ -92,12 +92,20 @@ public class SiteSourceExplorer {
     }
 
     /**
+     * Whether a hazard curve reaches a return period, i.e. whether {@link
+     * #imlForReturnPeriod(DiscretizedFunc, ReturnPeriods)} has a level to return for it.
+     */
+    public static boolean reaches(DiscretizedFunc curve, ReturnPeriods returnPeriod) {
+        return returnPeriod.oneYearProb <= curve.getMaxY();
+    }
+
+    /**
      * {@link #imlForReturnPeriod(Location, double, ReturnPeriods)} for an already computed curve.
      */
     public static double imlForReturnPeriod(DiscretizedFunc curve, ReturnPeriods returnPeriod) {
         double poe = returnPeriod.oneYearProb;
         Preconditions.checkState(
-                poe <= curve.getMaxY(),
+                reaches(curve, returnPeriod),
                 "The curve does not reach %s (%s per year); its largest probability of exceedance is"
                         + " %s. The site's hazard is too low for this return period.",
                 returnPeriod.label,
@@ -129,6 +137,43 @@ public class SiteSourceExplorer {
      * @throws IllegalStateException if no rupture contributes anything at the level
      */
     public SiteSourceContributions exploreAtIml(Location location, double period, double iml) {
+        SiteSourceContributions contributions = disaggregate(location, period, iml);
+        Preconditions.checkState(
+                contributions != null,
+                "Nothing contributes to exceeding %s at %s. Either the level is above anything the"
+                        + " solution can produce at this site, or every source was dropped by the"
+                        + " distance filters.",
+                iml,
+                location);
+        return contributions;
+    }
+
+    /**
+     * As {@link #exploreAtIml}, but a level that nothing reaches gives contributions that are all
+     * zero rather than a failure. For a comparison at a level set by another solution, where a
+     * solution that no longer reaches that level is the finding rather than an error.
+     *
+     * @throws IllegalArgumentException if the level is not a finite number
+     */
+    public SiteSourceContributions exploreAtImlOrZero(
+            Location location, double period, double iml) {
+        Preconditions.checkArgument(
+                Double.isFinite(iml), "the level has to be finite, got %s", iml);
+        SiteSourceContributions contributions = disaggregate(location, period, iml);
+        if (contributions != null) {
+            return contributions;
+        }
+        FaultSystemSolution solution = setup.getInput().getSolution();
+        return new SiteSourceContributions(
+                solution, location, period, iml, new double[solution.getRupSet().getNumRuptures()]);
+    }
+
+    /**
+     * Runs the disaggregation.
+     *
+     * @return the contributions, or null if nothing contributes to exceeding the level
+     */
+    protected SiteSourceContributions disaggregate(Location location, double period, double iml) {
         FaultSystemSolution solution = setup.getInput().getSolution();
         BaseFaultSystemSolutionERF erf = setup.getCalc().getERF();
         EnumMap<TectonicRegionType, ScalarIMR> gmms = setup.buildGmmMap(period);
@@ -149,14 +194,9 @@ public class SiteSourceExplorer {
                         erf,
                         JointHazardCalcSetup.sourceFilters(),
                         DisaggregationCalculator.getDefaultParams());
-        Preconditions.checkState(
-                success,
-                "Nothing contributes to exceeding %s at %s. Either the level is above anything the"
-                        + " solution can produce at this site, or every source was dropped by the"
-                        + " distance filters.",
-                iml,
-                location);
-
+        if (!success) {
+            return null;
+        }
         return new SiteSourceContributions(
                 solution, location, period, iml, rupRates(erf, disagg, solution));
     }

@@ -79,7 +79,8 @@ public class SiteSourceComparison {
 
     /**
      * Explores two solutions at one site and compares them, at the intensity measure level the
-     * reference solution's hazard curve reaches at the given return period.
+     * reference solution's hazard curve reaches at the given return period. A comparison solution
+     * that nothing in reaches the level contributes zero everywhere.
      *
      * @param reference explorer for the baseline solution, which also sets the level
      * @param comparison explorer for the solution being compared against it
@@ -96,7 +97,7 @@ public class SiteSourceComparison {
         double iml = reference.imlForReturnPeriod(location, period, returnPeriod);
         return new SiteSourceComparison(
                 reference.exploreAtIml(location, period, iml),
-                comparison.exploreAtIml(location, period, iml));
+                comparison.exploreAtImlOrZero(location, period, iml));
     }
 
     public SiteSourceContributions getReference() {

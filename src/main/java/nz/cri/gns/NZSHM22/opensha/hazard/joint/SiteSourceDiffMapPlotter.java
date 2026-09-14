@@ -225,6 +225,9 @@ public class SiteSourceDiffMapPlotter {
      * The palette laid out over the changes on the map, with no change on its neutral colour. Each
      * side is fitted to the data and rounded outwards on its own, so nothing is clipped and a map
      * whose sections all moved the same way still uses the whole ramp. See {@link DivergingCPT}.
+     *
+     * <p>If nothing changed at all, the ramp runs from -1 to 1 so that every section is drawn in
+     * the neutral colour, which is the answer for two solutions that agree.
      */
     protected CPT differenceCPT(double[] scalars) throws IOException {
         double smallest = 0;
@@ -237,8 +240,10 @@ public class SiteSourceDiffMapPlotter {
         }
         double min = -DivergingCPT.niceCeiling(-smallest);
         double max = DivergingCPT.niceCeiling(largest);
-        Preconditions.checkState(
-                min < 0 || max > 0, "Nothing changed at this site, so there is nothing to draw");
+        if (min == 0 && max == 0) {
+            min = -1d;
+            max = 1d;
+        }
         return DivergingCPT.centredOnZero(getCPT(), min, max);
     }
 

@@ -107,6 +107,30 @@ public class SiteSourceExplorerTest {
         }
     }
 
+    /** Whether a curve reaches a return period is whether a level can be read off it. */
+    @Test
+    public void testReaches() {
+        DiscretizedFunc high =
+                curve(new double[] {0.01, 0.1, 1.0}, new double[] {1e-1, 1e-3, 1e-5});
+        DiscretizedFunc low = curve(new double[] {0.01, 0.1, 1.0}, new double[] {1e-4, 1e-5, 1e-6});
+        assertTrue(SiteSourceExplorer.reaches(high, ReturnPeriods.TEN_IN_50));
+        assertFalse(SiteSourceExplorer.reaches(low, ReturnPeriods.TEN_IN_50));
+    }
+
+    /**
+     * For a comparison, a level the solution cannot reach is a result: every rupture contributes
+     * zero.
+     */
+    @Test
+    public void testExploreAtImlOrZero() {
+        SiteSourceExplorer explorer = new SiteSourceExplorer(makeSolution());
+        SiteSourceContributions contributions = explorer.exploreAtImlOrZero(SITE, 0d, 1e3);
+
+        assertEquals(0d, contributions.getTotalRate(), 0d);
+        assertEquals(0, contributions.getNumContributingRuptures());
+        assertEquals(1e3, contributions.getIml(), 0d);
+    }
+
     /**
      * A level nothing can reach leaves nothing to explore, and says so rather than returning
      * zeroes.

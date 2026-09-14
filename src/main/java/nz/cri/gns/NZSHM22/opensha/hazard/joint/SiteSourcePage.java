@@ -3,8 +3,14 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.gui.plot.GeographicMapMaker;
@@ -91,14 +97,22 @@ public class SiteSourcePage {
     }
 
     /**
-     * Disaggregates both solutions at the site and writes the page, its three maps and its table.
+     * Disaggregates both solutions at the site and writes the page, its maps and its table.
+     *
+     * <p>A comparison solution that no longer reaches the reference level at all, or that routes
+     * too little hazard through any section to be drawn, is still written: that is the biggest
+     * change a site can show. Only its own map is left off.
+     *
+     * <p>Nothing is left behind if writing fails part way: the site's directory is removed again.
      *
      * @param reportDir the report's directory; the page goes in a subdirectory of it
      * @param siteName the site's name, which also names its subdirectory
      * @param location the site
      * @param period the calculation period, 0 for PGA
      * @param returnPeriod the return period that sets the intensity measure level
-     * @return where the report should point, see {@link Result}
+     * @return where the report should point, see {@link Result}, or null without writing anything
+     *     if the reference solution's hazard at the site never reaches the return period, so that
+     *     there is no level to disaggregate at
      */
     public Result write(
             File reportDir,
@@ -107,23 +121,45 @@ public class SiteSourcePage {
             double period,
             ReturnPeriods returnPeriod)
             throws IOException {
+        DiscretizedFunc referenceCurve = reference.siteCurve(location, period);
+        if (!SiteSourceExplorer.reaches(referenceCurve, returnPeriod)) {
+            return null;
+        }
+
+        // one disaggregation per solution, shared by all three maps and the table
+        double iml = SiteSourceExplorer.imlForReturnPeriod(referenceCurve, returnPeriod);
+        SiteSourceContributions referenceContributions =
+                reference.exploreAtIml(location, period, iml);
+        SiteSourceContributions comparisonContributions =
+                comparison.exploreAtImlOrZero(location, period, iml);
+        SiteSourceComparison changes =
+                new SiteSourceComparison(referenceContributions, comparisonContributions);
+
         String slug = HazardLabels.slug(siteName);
         File siteDir = new File(new File(reportDir, SOURCES_DIR), slug);
         Preconditions.checkState(
                 siteDir.exists() || siteDir.mkdirs(),
                 "Could not create output directory %s",
                 siteDir.getAbsolutePath());
+        try {
+            return writePage(siteDir, slug, siteName, location, period, returnPeriod, changes);
+        } catch (IOException | RuntimeException e) {
+            deleteRecursively(siteDir);
+            throw e;
+        }
+    }
+
+    /** Writes the page, its maps and its table into the site's directory. */
+    protected Result writePage(
+            File siteDir,
+            String slug,
+            String siteName,
+            Location location,
+            double period,
+            ReturnPeriods returnPeriod,
+            SiteSourceComparison changes)
+            throws IOException {
         File imageDir = new File(siteDir, ReportPage.IMAGE_DIR);
-
-        // one disaggregation per solution, shared by all three maps and the table
-        double iml = reference.imlForReturnPeriod(location, period, returnPeriod);
-        SiteSourceContributions referenceContributions =
-                reference.exploreAtIml(location, period, iml);
-        SiteSourceContributions comparisonContributions =
-                comparison.exploreAtIml(location, period, iml);
-
-        SiteSourceComparison changes =
-                new SiteSourceComparison(referenceContributions, comparisonContributions);
 
         ReportPage.Section section = new ReportPage.Section("Source maps", "sources");
         File diff = addMaps(section, imageDir, slug, changes, siteName);
@@ -152,9 +188,22 @@ public class SiteSourcePage {
                 stats(changes));
     }
 
+    /** Deletes a directory and everything below it. Does nothing if it does not exist. */
+    protected static void deleteRecursively(File dir) throws IOException {
+        if (!dir.exists()) {
+            return;
+        }
+        try (Stream<Path> paths = Files.walk(dir.toPath())) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
+                Files.delete(path);
+            }
+        }
+    }
+
     /**
-     * Adds the row of three maps — the difference, then each solution on its own — and returns the
-     * difference map.
+     * Adds the row of maps — the difference, then each solution on its own — and returns the
+     * difference map. A solution with no section above the threshold has no map of its own, and the
+     * row title says so.
      */
     protected File addMaps(
             ReportPage.Section section,
@@ -175,33 +224,81 @@ public class SiteSourcePage {
                         .setOmitBelowRate(floor)
                         .setRegion(region)
                         .plot(imageDir, slug + "_diff", comparison, siteName);
-        File referenceMap =
-                plotOne(
-                        imageDir,
-                        slug + "_reference",
-                        comparison.getReference(),
-                        region,
-                        floor,
-                        top,
-                        years,
-                        siteName + " - " + referenceName);
-        File comparisonMap =
-                plotOne(
-                        imageDir,
-                        slug + "_comparison",
-                        comparison.getComparison(),
-                        region,
-                        floor,
-                        top,
-                        years,
-                        siteName + " - " + comparisonName);
-
         ReportPage.Row row = new ReportPage.Row(HazardLabels.SECTION_HAZARD);
         row.add(diff, "Change, " + comparisonName + " vs " + referenceName, stats(comparison));
-        row.add(referenceMap, referenceName, null);
-        row.add(comparisonMap, comparisonName, null);
+        List<String> undrawn = new ArrayList<>();
+        addOne(
+                row,
+                undrawn,
+                imageDir,
+                slug + "_reference",
+                comparison.getReference(),
+                region,
+                floor,
+                top,
+                years,
+                siteName,
+                referenceName);
+        addOne(
+                row,
+                undrawn,
+                imageDir,
+                slug + "_comparison",
+                comparison.getComparison(),
+                region,
+                floor,
+                top,
+                years,
+                siteName,
+                comparisonName);
+        if (!undrawn.isEmpty()) {
+            row.setTitle(
+                    row.title
+                            + ". No section carries "
+                            + NEGLIGIBLE_PERCENT
+                            + "% of "
+                            + referenceName
+                            + "'s hazard in "
+                            + String.join(" or ", undrawn)
+                            + ", so there is no map of it.");
+        }
         section.add(row);
         return diff;
+    }
+
+    /**
+     * Adds one solution's own map to the row, or its name to {@code undrawn} if none of its
+     * sections clears the threshold.
+     */
+    protected static void addOne(
+            ReportPage.Row row,
+            List<String> undrawn,
+            File imageDir,
+            String prefix,
+            SiteSourceContributions contributions,
+            Region region,
+            double floor,
+            double top,
+            double years,
+            String siteName,
+            String solutionName)
+            throws IOException {
+        // the same test the plotter makes before it will draw anything
+        if (!(max(contributions.getSectionRates()) > floor)) {
+            undrawn.add(solutionName);
+            return;
+        }
+        File map =
+                plotOne(
+                        imageDir,
+                        prefix,
+                        contributions,
+                        region,
+                        floor,
+                        top,
+                        years,
+                        siteName + " - " + solutionName);
+        row.add(map, solutionName, null);
     }
 
     protected static File plotOne(
