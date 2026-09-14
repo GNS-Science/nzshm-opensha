@@ -14,12 +14,12 @@ import org.opensha.commons.data.IntegerSampler;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.Inversions;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ConstraintRange;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionMisfits;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
@@ -237,11 +237,7 @@ public class Annealer {
 
         tsa.setPerturbationFunc(config.perturbationFunction);
         if (config.perturbationFunction.isVariable()) {
-            double[] basis = config.variablePerturbationBasis;
-            if (basis == null) {
-                basis = Inversions.getDefaultVariablePerturbationBasis(rupSet);
-            }
-            tsa.setVariablePerturbationBasis(basis);
+            tsa.setVariablePerturbationBasis(config.getVariablePerturbationBasis(rupSet));
         }
 
         tsa.setNonnegativeityConstraintAlgorithm(config.nonNegAlgorithm);
@@ -263,6 +259,15 @@ public class Annealer {
         return createSolution(tsa, progress);
     }
 
+    /**
+     * Assembles the FaultSystemSolution from the finished annealer, attaching the diagnostic
+     * modules needed to judge solution quality.
+     *
+     * @param tsa the annealer that has finished iterating
+     * @param progress the progress tracker wrapped around the completion criteria
+     * @return the solution
+     * @throws IOException
+     */
     protected FaultSystemSolution createSolution(
             ThreadedSimulatedAnnealing tsa, ProgressTrackingCompletionCriteria progress)
             throws IOException {
@@ -276,6 +281,12 @@ public class Annealer {
         FaultSystemSolution solution = new FaultSystemSolution(rupSet, solution_adjusted);
         solution.addModule(progress.getProgress());
         solution.addModule(NZSHM22_AbstractRuptureSetBuilder.createBuildInfo());
+        // Misfits are in the units of each constraint's weighting type, so unlike energy they can
+        // be
+        // compared across runs that use different weights.
+        InversionMisfits misfits = new InversionMisfits(tsa);
+        solution.addModule(misfits);
+        solution.addModule(misfits.getMisfitStats());
         if (tsa instanceof ReweightEvenFitSimulatedAnnealing) {
             solution.addModule(((ReweightEvenFitSimulatedAnnealing) tsa).getMisfitProgress());
         }

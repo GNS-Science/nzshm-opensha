@@ -40,7 +40,11 @@ public class InversionRunner {
         List<InversionConstraint> constraints = generateConstraints(config);
 
         InversionInputGenerator inputGenerator =
-                new BaseInversionInputGenerator(config.ruptureSet, constraints, null, null);
+                new BaseInversionInputGenerator(
+                        config.ruptureSet,
+                        constraints,
+                        config.getAnnealingConfig().getInitialSolution(config.ruptureSet),
+                        null);
 
         Annealer runner = new Annealer(config.getAnnealingConfig(), config.ruptureSet);
         FaultSystemSolution solution = runner.runInversion(inputGenerator);

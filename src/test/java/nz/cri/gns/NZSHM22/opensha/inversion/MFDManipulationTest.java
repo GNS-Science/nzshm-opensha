@@ -215,6 +215,83 @@ public class MFDManipulationTest {
         // 1) > 1);
     }
 
+    /**
+     * Builds a subduction-like target MFD: 1e-20 below minMag, then a decaying rate above it, on
+     * the same 5.05 + 0.1i binning the real subduction targets use.
+     */
+    public static IncrementalMagFreqDist subductionLikeDist(double minMag) {
+        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, 47, 0.1);
+        for (int i = 0; i < dist.size(); i++) {
+            if (dist.getX(i) < minMag) {
+                dist.set(i, 1e-20);
+            } else {
+                dist.set(i, 0.0087 * Math.pow(0.78, i - dist.getClosestXIndex(minMag)));
+            }
+        }
+        return dist;
+    }
+
+    /** Hikurangi has minMag 7.5, which used to be rejected by the hard coded M7.0 anchor. */
+    @Test
+    public void anchorFollowsMinMagAboveSeven() {
+        IncrementalMagFreqDist dist = subductionLikeDist(7.5);
+
+        UncertainIncrMagFreqDist actual =
+                MFDManipulation.addMfdUncertainty(dist, 7.5, 20, 0.001, 0.1);
+
+        int minMagBin = dist.getClosestXIndex(7.5);
+        // bins below minMag are pinned hard
+        for (int i = 0; i < minMagBin; i++) {
+            assertEquals(1e-20, actual.getStdDevs().getY(i), 0);
+        }
+        // in-range bins follow stdDev = scalar * rate(anchor)^power * rate(m)^(1 - power)
+        double anchorRate = dist.getY(minMagBin);
+        for (int i = minMagBin; i < dist.size(); i++) {
+            double expected = 0.1 * Math.pow(anchorRate, 0.001) * Math.pow(dist.getY(i), 1 - 0.001);
+            assertEquals(expected, actual.getStdDevs().getY(i), expected * 1e-12);
+        }
+    }
+
+    /** The crustal path anchors below M7.0, so it must be unaffected by the fix. */
+    @Test
+    public void anchorStaysAtSevenForCrustalMinMags() {
+        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
+        for (int i = 0; i < BINS; i++) {
+            dist.set(i, i + 1);
+        }
+
+        UncertainIncrMagFreqDist actual =
+                MFDManipulation.addMfdUncertainty(dist, 6.799, 20.0, 0.25, 0.1);
+
+        double anchorRate =
+                dist.getY(dist.getClosestXIndex(MFDManipulation.FIRST_WEIGHT_POWER_MAG));
+        int minMagBin = dist.getClosestXIndex(6.799);
+        for (int i = minMagBin; i < BINS; i++) {
+            double expected = 0.1 * Math.pow(anchorRate, 0.25) * Math.pow(dist.getY(i), 0.75);
+            assertEquals(expected, actual.getStdDevs().getY(i), expected * 1e-12);
+        }
+    }
+
+    /**
+     * Moving the anchor can only rescale the whole stdDev curve uniformly, since rate(anchor)
+     * enters the formula solely as rate(anchor)^power.
+     */
+    @Test
+    public void anchorOnlyRescalesTheCurve() {
+        IncrementalMagFreqDist dist = subductionLikeDist(7.5);
+
+        UncertainIncrMagFreqDist atMinMag =
+                MFDManipulation.addMfdUncertainty(dist, 7.5, 20, 0.25, 0.1);
+        // same curve anchored a decade of rate lower, via a larger scalar
+        UncertainIncrMagFreqDist rescaled =
+                MFDManipulation.addMfdUncertainty(dist, 7.5, 20, 0.25, 0.2);
+
+        int minMagBin = dist.getClosestXIndex(7.5);
+        for (int i = minMagBin; i < dist.size(); i++) {
+            assertEquals(2.0, rescaled.getStdDevs().getY(i) / atMinMag.getStdDevs().getY(i), 1e-9);
+        }
+    }
+
     @Test
     public void testRestrictMFDConstraintMagRange() {
         IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);

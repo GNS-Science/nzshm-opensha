@@ -1,0 +1,141 @@
+// Joint inversion with every constraint in the even-fit balance.
+//
+// Differences from NZSHM_config-parallel-fix-inversion.jsonc, and why:
+//
+// 1. Subduction slip and MFD are NORMALIZED_BY_UNCERTAINTY rather than NORMALIZED.
+//    ReweightEvenFitSimulatedAnnealing only rebalances uncertainty-weighted constraints,
+//    so under the old weights Hikurangi and Puysegur sat outside the balance entirely at
+//    hand-set weights. Slip (1e5) always beat MFD (1e4), which left Puysegur slip fitted
+//    to 0.7% while its MFD ran 28% under target in every bin.
+//
+// 2. Every uncertainty weight starts at the same value. The reweighter can only move a
+//    weight within 100x of where it started, and in the old config crustal MFD pinned
+//    itself to exactly that bound and stayed there, never reaching even fit.
+//
+// 3. That shared starting value is 0.1 rather than 1. Scaling all weights by k scales
+//    every energy by k^2, and acceptance is exp(-dE/T), so the overall weight scale acts
+//    as an annealing temperature. A lower scale searches hotter and finds more diverse
+//    solutions at the same fit. conserveTotalWeight preserves whatever scale you start
+//    at, so this is independent of the balance between constraints.
+//
+// 4. perturbationFunction is VARIABLE_EXPONENTIAL_SCALE, which perturbs each rupture on
+//    its own a-priori rate scale instead of a fixed 8-decade range.
+//
+// Measured against the old config, both run for 20 minutes on the run_4 rupture set:
+//    crustal slip   0.777 -> 0.676 sigma     Hikurangi MFD  35.6% -> 6.8%
+//    crustal MFD    11.6% -> 6.8%            Puysegur MFD   28.0% -> 5.8%
+//    paleo          0.777 -> 0.676 sigma     Hikurangi slip 24.5% -> 33.8%
+//                                            Puysegur slip   0.3% -> 6.0%
+//    ruptures above 1e-7/yr   4,587 -> 22,571
+//    effective rupture count    788 -> 1,593
+//
+// Note the old config gets worse on diversity the longer it runs: ruptures above
+// 1e-7/yr fall from 7,830 at 240s to 4,587 at 20 minutes to 4,861 at an hour, while the
+// near-zero tail keeps growing.
+//
+// The subduction slip fits are the ones that get worse. Puysegur was previously
+// over-fitted because its weight was stuck at the reweighter's lower bound. Both
+// subduction slip sigmas are OpenSHA's DEFAULT_FRACT_STD_DEV fallback of 0.5 * rate,
+// because the subduction deformation models carry no slip rate stddevs, so Hikurangi
+// at 33.8% is sitting at the same 0.676 sigma as every other constraint. That is what
+// even fit means here. If subduction slip should be held tighter, give those
+// deformation models real standard deviations rather than raising the weight.
+{
+  "ruptureSetPath": "C:\\runs\\run_4\\mergedRupset_15km_cffPatch2km_cff0SelfStiffness.zip",
+  "annealing": {
+    "inversionSecs": 240,
+    "selectionInterval": 10,
+    // Keep averaging on and at the selection interval. Averaging roughly doubles the
+    // number of meaningful non-zero rates. Raising this interval also starves the
+    // reweighter, which runs once per averaging round.
+    "inversionAveragingIntervalSecs": 10,
+    "inversionNumSolutionAverages": 4,
+    "inversionThreadsPerSelector": 0,
+    "inversionAveragingEnabled": true,
+    "perturbationFunction": "VARIABLE_EXPONENTIAL_SCALE",
+    // LIMIT_ZERO_RATES leaves a large tail of near-zero rates. Threshold them after the
+    // run instead: discarding everything below 1e-9 removes ~90% of the non-zero
+    // ruptures and 0.007% of the total rate. TRY_ZERO_RATES_OFTEN does the cleanup
+    // during annealing but destroys a quarter of the genuine ruptures doing it.
+    "nonNegAlgorithm": "LIMIT_ZERO_RATES",
+    "excludeRupturesBelowMinMag": false,
+    "reweightTargetQuantity": "MAD",
+    "coolingSchedule": "FAST_SA"
+  },
+  "partitions": [
+    {
+      "partition": "CRUSTAL",
+
+      "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
+      "slipRateUncertaintyConstraintWt": 0.1,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": true,
+
+      "deformationModel": "FAULT_MODEL",
+      "totalRateM5": 3.4,
+      "bValue": 0.959,
+      "minMag": 6.799,
+      "maxMag": 10.0,
+      "maxMagType": "MANIPULATE_MFD",
+      "mfdTransitionMag": 7.85,
+      "mfdUncertaintyWeight": 0.1,
+      "mfdUncertaintyPower": 0.25,
+      "mfdUncertaintyScalar": 0.1,
+      "spatialSeisPDF": "FLOOR_ADDOPTIEEPASCOMB_CRU",
+      "polygonBufferSize": 12,
+      "polygonMinBufferSize": 0
+    },
+    {
+      "partition": "HIKURANGI",
+      "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
+      "slipRateUncertaintyConstraintWt": 0.1,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      // true so the real sigmas are used where they exist; subduction sections have
+      // none, so SlipRateInversionConstraint substitutes 0.5 * rate.
+      "unmodifiedSlipRateStdvs": true,
+      "deformationModel": "SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A",
+      "totalRateM5": 21.5,
+      "bValue": 1.097,
+      "minMag": 7.5,
+      "mfdTransitionMag": 9.15,
+      "mfdEqualityConstraintWt": 0.0,
+      "mfdInequalityConstraintWt": 0,
+      // power ~0 makes sigma = scalar * rate, so within the target magnitude range this
+      // is the same constraint the equality weight expressed, only visible to the
+      // reweighter. Below minMag it is 10x weaker, which still pins those bins hard.
+      "mfdUncertaintyWeight": 0.1,
+      "mfdUncertaintyPower": 0.001,
+      "mfdUncertaintyScalar": 0.1
+    },
+    {
+      "partition": "PUYSEGUR",
+      "slipRateWeightingType": "NORMALIZED_BY_UNCERTAINTY",
+      "slipRateUncertaintyConstraintWt": 0.1,
+      "slipRateUncertaintyConstraintScalingFactor": 0.0,
+      "unmodifiedSlipRateStdvs": true,
+      "deformationModel": "SBD_0_1_PUY_30_0PT7",
+      "totalRateM5": 4.6,
+      "bValue": 0.902,
+      "minMag": 7.0,
+      "mfdTransitionMag": 9.15,
+      "mfdEqualityConstraintWt": 0.0,
+      "mfdInequalityConstraintWt": 0,
+      "mfdUncertaintyWeight": 0.1,
+      "mfdUncertaintyPower": 0.001,
+      "mfdUncertaintyScalar": 0.1
+    }
+  ],
+  "scalingRelationshipName": "JOIN_ESTIMATE",
+  "recalcMags": true,
+
+  "sansSlipRateFactor": 0.9,
+  "tvzSlipRateFactor": 0.7,
+
+  // Scaled with everything else so the relative balance is unchanged. The Laplacian is
+  // not uncertainty-weighted, so it is the one constraint the reweighter cannot adjust.
+  "paleoRateConstraintWt": 0.1,
+  "paleoParentRateSmoothnessConstraintWeight": 10000000.0,
+  "paleoRates": "PALEO_RI_GEOLOGIC_MAY24",
+  "paleoProbabilityModel": "NZSHM22_C_42",
+  "extraPaleoRatesFile": null
+}

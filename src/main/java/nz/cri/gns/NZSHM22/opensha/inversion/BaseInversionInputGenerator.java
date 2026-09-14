@@ -1,9 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.util.io.archive.ArchiveInput;
+import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
@@ -23,6 +29,26 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
             double[] initialSolution,
             double[] waterLevelRates) {
         super(rupSet, constraints, initialSolution, waterLevelRates);
+    }
+
+    /**
+     * Loads rupture rates from either a solution archive or a bare CSV in the same format as the
+     * rates of a solution archive.
+     *
+     * @param path a solution zip or a rates CSV
+     * @return one rate per rupture
+     * @throws IOException if the file cannot be read
+     */
+    public static double[] loadRates(String path) throws IOException {
+        File file = new File(path);
+        CSVFile<String> ratesCSV;
+        if (path.endsWith(".zip")) {
+            ArchiveInput.ZipFileInput zipFile = new ArchiveInput.ZipFileInput(file);
+            ratesCSV = CSV_BackedModule.loadFromArchive(zipFile, "solution/", "rates.csv");
+        } else {
+            ratesCSV = CSVFile.readFile(file, false);
+        }
+        return FaultSystemSolution.loadRatesCSV(ratesCSV);
     }
 
     /**

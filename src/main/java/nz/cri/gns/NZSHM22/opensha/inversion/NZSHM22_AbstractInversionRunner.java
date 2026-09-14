@@ -12,11 +12,9 @@ import nz.cri.gns.NZSHM22.opensha.reports.TabularMfds;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
-import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.io.archive.ArchiveInput;
-import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -469,15 +467,7 @@ public abstract class NZSHM22_AbstractInversionRunner {
     }
 
     public double[] loadRates(String path) throws IOException {
-        File file = new File(path);
-        CSVFile<String> ratesCSV;
-        if (path.endsWith(".zip")) {
-            ArchiveInput.ZipFileInput zipFile = new ArchiveInput.ZipFileInput(file);
-            ratesCSV = CSV_BackedModule.loadFromArchive(zipFile, "solution/", "rates.csv");
-        } else {
-            ratesCSV = CSVFile.readFile(file, false);
-        }
-        return FaultSystemSolution.loadRatesCSV(ratesCSV);
+        return BaseInversionInputGenerator.loadRates(path);
     }
 
     /**

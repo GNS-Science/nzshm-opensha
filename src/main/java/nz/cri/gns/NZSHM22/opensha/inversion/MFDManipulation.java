@@ -64,6 +64,28 @@ public class MFDManipulation {
         return newMFDConstraints;
     }
 
+    /**
+     * Wraps the MFD with standard deviations of the form
+     *
+     * <pre>stdDev(m) = uncertaintyScalar * rate(anchor)^power * rate(m)^(1 - power)</pre>
+     *
+     * for bins within [minimize_below_mag, minimizeAboveMag], and 1e-20 outside that range so those
+     * bins are pinned hard to their (near zero) target.
+     *
+     * <p>The anchor magnitude only scales the whole stdDev curve uniformly - it enters the formula
+     * solely as rate(anchor)^power - so it is interchangeable with uncertaintyScalar and cannot
+     * change the shape of the curve. It exists to avoid anchoring on a bin whose rate is zero,
+     * which would make the result infinite. {@link #FIRST_WEIGHT_POWER_MAG} suits the crustal
+     * inversion, whose minMag sits just below it; partitions with a higher minMag (subduction)
+     * anchor on their own first in-range bin instead.
+     *
+     * @param mfd the target MFD to add uncertainties to
+     * @param minimize_below_mag bins below this magnitude are pinned to near zero
+     * @param minimizeAboveMag bins above this magnitude are pinned to near zero
+     * @param power 0 gives a constant relative uncertainty, 1 a constant absolute one
+     * @param uncertaintyScalar the relative uncertainty at the anchor magnitude
+     * @return the MFD wrapped with standard deviations
+     */
     public static UncertainIncrMagFreqDist addMfdUncertainty(
             IncrementalMagFreqDist mfd,
             double minimize_below_mag,
@@ -72,13 +94,14 @@ public class MFDManipulation {
             double uncertaintyScalar) {
         int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
         int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
-        int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
+        double anchorMag = Math.max(FIRST_WEIGHT_POWER_MAG, minimize_below_mag);
+        int firstWeightPowerBin = mfd.getClosestXIndex(anchorMag);
         Preconditions.checkArgument(
                 minMagBin <= firstWeightPowerBin,
-                "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
+                "minMag may not be above the bin of " + anchorMag);
         Preconditions.checkArgument(
                 firstWeightPowerBin <= maxMagBin,
-                "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
+                "maxMag may not be below the bin of " + anchorMag);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
                         * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
