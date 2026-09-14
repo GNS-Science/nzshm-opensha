@@ -2,11 +2,17 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 
 import java.awt.geom.Point2D;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.opensha.commons.data.Site;
 import org.opensha.commons.data.function.ArbitrarilyDiscretizedFunc;
+import org.opensha.commons.geo.Location;
+import org.opensha.commons.param.Parameter;
 import org.opensha.nshmp.shaded.gmm.NshmpGmm;
+import org.opensha.sha.calc.sourceFilters.SourceFilter;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.util.FaultSysHazardCalcSettings;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.param.IncludeBackgroundOption;
 import org.opensha.sha.gui.infoTools.IMT_Info;
@@ -122,6 +128,46 @@ public class JointHazardCalcSetup {
         return input.getGmmMode() == JointHazardInput.GmmMode.PER_TECTONIC_REGION
                 ? perTrtGmmSupplierMap()
                 : gmmSupplierMap();
+    }
+
+    /**
+     * Instantiates this setup's GMMs and sets them to the given period. The map has the same shape
+     * as {@link #gmmSuppliers()}, so OpenSHA dispatches sources to GMMs exactly the way the map
+     * calculation does.
+     *
+     * @param period 0 for PGA, -1 for PGV, a positive value for an SA period in seconds
+     */
+    public EnumMap<TectonicRegionType, ScalarIMR> buildGmmMap(double period) {
+        EnumMap<TectonicRegionType, ScalarIMR> gmms = new EnumMap<>(TectonicRegionType.class);
+        for (Map.Entry<TectonicRegionType, Supplier<ScalarIMR>> entry : gmmSuppliers().entrySet()) {
+            gmms.put(entry.getKey(), entry.getValue().get());
+        }
+        FaultSysHazardCalcSettings.setIMforPeriod(gmms, period);
+        return gmms;
+    }
+
+    /**
+     * A site at the given location, carrying the default reference site parameters (Vs30 and the
+     * like) of every GMM in this setup. The parameters are the union over the GMMs, so the same
+     * site can be handed to whichever GMM a source dispatches to.
+     */
+    public Site buildSite(Location location) {
+        Site site = new Site(location);
+        for (Parameter<?> siteParam :
+                FaultSysHazardCalcSettings.getDefaultRefSiteParams(gmmSuppliers())) {
+            site.addParameter((Parameter<?>) siteParam.clone());
+        }
+        return site;
+    }
+
+    /**
+     * The source filters that hazard calculations use, i.e. the OpenSHA defaults. Chiefly {@code
+     * TectonicRegionDistCutoffFilter}, which drops a source once it is further from the site than
+     * the cutoff for its tectonic region type. Sources dropped by these filters contribute nothing
+     * and are invisible to anything downstream, including {@link SiteSourceExplorer}.
+     */
+    public static List<SourceFilter> sourceFilters() {
+        return FaultSysHazardCalcSettings.getDefaultSourceFilters().getEnabledFilters();
     }
 
     /**

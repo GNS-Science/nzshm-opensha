@@ -173,6 +173,32 @@ public class HazardVariabilityReportTest {
                 JointHazardInput.GmmMode.JOINT_RUPTURE, configs.get(0).getInput().getGmmMode());
     }
 
+    /**
+     * Runs are read from disk one at a time and let go again once their maps and curves have been
+     * extracted, so that a set of large solutions is never all in memory at once. The first run is
+     * the exception: its calculator does the plotting and holds its solution.
+     */
+    @Test
+    public void testReleasesSolutionsAfterCalculating() throws Exception {
+        List<HazardReportSource> configs = runsOnDisk("release", 2);
+        for (HazardReportSource config : configs) {
+            assertFalse(
+                    config.getName() + " should not be loaded yet", config.getInput().isLoaded());
+        }
+
+        new HazardVariabilityReport(configs, tempFolder.newFolder("release-report"))
+                .setNumThreads(1)
+                .setRegion(mapRegion())
+                .setPeriods(0d)
+                .setSites(Map.of("Test Site", JointTestSolutions.SITE))
+                .generate();
+
+        assertTrue(
+                "the plotting calculator holds the first run",
+                configs.get(0).getInput().isLoaded());
+        assertFalse("a calculated run should be let go", configs.get(1).getInput().isLoaded());
+    }
+
     @Test
     public void testRejectsADirectoryWithoutRuns() throws Exception {
         try {
@@ -181,6 +207,18 @@ public class HazardVariabilityReportTest {
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("solution.zip"));
         }
+    }
+
+    /** Named runs written to a directory of run directories, loaded lazily. */
+    private List<HazardReportSource> runsOnDisk(String name, int runs) throws Exception {
+        File runsDir = tempFolder.newFolder(name + "-runs");
+        for (int i = 0; i < runs; i++) {
+            File runDir = new File(runsDir, "run" + (i + 1));
+            assertTrue(runDir.mkdirs());
+            solutionWithRate(1e-3 * (i + 1))
+                    .write(new File(runDir, HazardVariabilityReport.SOLUTION_FILE));
+        }
+        return HazardVariabilityReport.jointRunsIn(runsDir);
     }
 
     /** A report over three runs, a small region, one period and one site, so tests stay quick. */

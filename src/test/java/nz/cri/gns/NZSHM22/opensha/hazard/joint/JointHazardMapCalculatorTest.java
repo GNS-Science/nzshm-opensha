@@ -75,14 +75,14 @@ public class JointHazardMapCalculatorTest {
      * The joint GMM only splits a rupture into its crustal and interface parts when it is handed a
      * {@link org.opensha.sha.faultSurface.CompoundSurface} carrying section data. {@code
      * SolHazardMapCalc} gives each calculation thread a {@code DistCachedERFWrapper}, which
-     * replaces every rupture surface with an opaque {@code CustomCacheWrappedSurface}, and the GMM
-     * then falls back to classifying ruptures by magnitude alone. {@link
-     * JointHazardCalcSetup#getCalc()} switches that wrapper off for {@link
-     * JointHazardInput.GmmMode#JOINT_RUPTURE}.
+     * rebuilds every rupture surface so that it has its own distance caches, and that rebuild has
+     * to keep the surface decomposable. It once did not, and the GMM fell back to classifying
+     * ruptures by magnitude alone.
      *
      * <p>Checked end to end: the map value at a node has to agree with the hazard curve calculated
-     * at the same location, which uses the unwrapped ERF. The two use different IML grids so they
-     * differ by a percent or so; with the wrapper in place they differ by more than 20%.
+     * at the same location, which is calculated on the unwrapped ERF. The two use different IML
+     * grids so they differ by a percent or so; when the wrapper hides the sections they differ by
+     * more than 20%.
      */
     @Test
     public void testMapAgreesWithSiteCurves() {
@@ -441,5 +441,28 @@ public class JointHazardMapCalculatorTest {
         assertTrue(
                 "annual exceedance probability must be a probability",
                 curve.getY(0) <= 1d && curve.getY(curve.size() - 1) >= 0d);
+    }
+
+    /**
+     * Every site curve plot is scaled to the first curve, so a call with no site has nothing to
+     * scale to. It is rejected where the mistake was made rather than in the plotting helpers.
+     */
+    @Test
+    public void testWriteSiteCurvesRejectsNoSites() {
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(
+                        new JointHazardInput(makeSolution())
+                                .setRegion(smallRegion())
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+
+        try {
+            calculator.writeSiteCurves(tempFolder.newFolder("curves"), Map.of(), 0d);
+            fail("expected an empty site map to be rejected");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("at least one site"));
+        } catch (java.io.IOException e) {
+            fail(e.getMessage());
+        }
     }
 }
