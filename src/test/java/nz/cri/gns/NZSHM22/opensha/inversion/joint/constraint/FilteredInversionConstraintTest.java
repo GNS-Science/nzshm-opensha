@@ -83,7 +83,9 @@ public class FilteredInversionConstraintTest {
         assertTrue(matrix.get(0, 0) > 0);
         // rupture does not have this fault section
         assertEquals(0, matrix.get(0, 1), DELTA);
-        assertEquals(matrix.get(0, 0), matrix.get(0, 2), DELTA);
+        // the joint rupture contributes the average slip of the unfiltered rupture (3) while the
+        // crustal only rupture contributes its own (1)
+        assertEquals(3 * matrix.get(0, 0), matrix.get(0, 2), DELTA);
 
         // trying the same for hikurangi
 
@@ -107,6 +109,7 @@ public class FilteredInversionConstraintTest {
         // rupture does not have this fault section
         assertEquals(0, matrix.get(0, 0), DELTA);
         assertTrue(matrix.get(0, 1) > 0);
-        assertEquals(matrix.get(0, 1), matrix.get(0, 2), DELTA);
+        // average slip of the unfiltered joint rupture (3) vs the subduction only rupture (2)
+        assertEquals(1.5 * matrix.get(0, 1), matrix.get(0, 2), DELTA);
     }
 }

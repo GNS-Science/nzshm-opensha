@@ -20,12 +20,6 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
  */
 public class SharedConstraintGenerator {
 
-    // Setting this flag to true means we calculate joint rupture magnitude separately for crustal
-    // and subduction components for MFD constraint encoding.
-    // Setting this flag to false means we calculate joint rupture magnitude over the whole rupture
-    // for MFD constraint encoding.
-    static final boolean SPLIT_RUPSET_MFDS = true;
-
     public static List<InversionConstraint> buildSlipRateConstraints(PartitionConfig config) {
         List<InversionConstraint> constraints = new ArrayList<>();
         if (config.slipRateWeightingType == NORMALIZED_BY_UNCERTAINTY) {
@@ -33,7 +27,7 @@ public class SharedConstraintGenerator {
                     new NamedInversionConstraint(
                             NZSHM22_SlipRateInversionConstraintBuilder.buildUncertaintyConstraint(
                                     config.slipRateUncertaintyConstraintWt,
-                                    config.parentConfig.ruptureSet,
+                                    config.partitionRuptureSet,
                                     config.slipRateUncertaintyConstraintScalingFactor,
                                     config.unmodifiedSlipRateStdvs),
                             config.partition));
@@ -46,7 +40,7 @@ public class SharedConstraintGenerator {
                                 new SlipRateInversionConstraint(
                                         config.slipRateConstraintWt_normalized,
                                         ConstraintWeightingType.NORMALIZED,
-                                        config.parentConfig.ruptureSet),
+                                        config.partitionRuptureSet),
                                 config.partition));
             }
 
@@ -58,7 +52,7 @@ public class SharedConstraintGenerator {
                                 new SlipRateInversionConstraint(
                                         config.slipRateConstraintWt_unnormalized,
                                         ConstraintWeightingType.UNNORMALIZED,
-                                        config.parentConfig.ruptureSet),
+                                        config.partitionRuptureSet),
                                 config.partition));
             }
         }
@@ -92,7 +86,7 @@ public class SharedConstraintGenerator {
             constraints.add(
                     new NamedInversionConstraint(
                             new MFDInversionConstraint(
-                                    config.parentConfig.ruptureSet,
+                                    config.partitionRuptureSet,
                                     config.mfdEqualityConstraintWt,
                                     false,
                                     mfdEqualityConstraints),
@@ -105,7 +99,7 @@ public class SharedConstraintGenerator {
             constraints.add(
                     new NamedInversionConstraint(
                             new MFDInversionConstraint(
-                                    config.parentConfig.ruptureSet,
+                                    config.partitionRuptureSet,
                                     config.mfdInequalityConstraintWt,
                                     true,
                                     mfdInequalityConstraints),
@@ -117,24 +111,12 @@ public class SharedConstraintGenerator {
             constraints.add(
                     new NamedInversionConstraint(
                             new MFDInversionConstraint(
-                                    config.parentConfig.ruptureSet,
+                                    config.partitionRuptureSet,
                                     config.mfdUncertaintyWeight,
                                     false,
                                     ConstraintWeightingType.NORMALIZED_BY_UNCERTAINTY,
                                     config.mfdUncertaintyWeightedConstraints),
                             config.partition));
-        }
-
-        if (SPLIT_RUPSET_MFDS) {
-            constraints =
-                    constraints.stream()
-                            .map(
-                                    constraint -> {
-                                        constraint.setRuptureSet(config.partitionRuptureSet);
-                                        return new FilteredInversionConstraint(
-                                                constraint, config.partitionRuptureSet);
-                                    })
-                            .collect(Collectors.toList());
         }
 
         return constraints;
@@ -150,6 +132,17 @@ public class SharedConstraintGenerator {
 
         constraints.addAll(buildSlipRateConstraints(config));
         constraints.addAll(buildMfdConstraints(config));
+
+        // The constraints are built against the partition rupture set, which has its own,
+        // consecutive rupture ids. Wrapping them translates the encoded columns back to the
+        // rupture ids of the joint rupture set.
+        constraints =
+                constraints.stream()
+                        .map(
+                                constraint ->
+                                        new FilteredInversionConstraint(
+                                                constraint, config.partitionRuptureSet))
+                        .collect(Collectors.toList());
 
         return constraints;
     }
