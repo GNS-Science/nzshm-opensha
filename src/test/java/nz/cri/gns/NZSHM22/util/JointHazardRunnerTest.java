@@ -14,8 +14,9 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Tests for {@link JointHazardRunner}'s command line parsing. The calculation itself is covered by
- * the joint hazard tests; what matters here is that solutions, options and mistakes are told apart.
+ * Tests for {@link JointHazardRunner.Options}. The calculation itself is covered by the joint
+ * hazard tests; what matters here is which GMM mode a set of solutions ends up being calculated
+ * with.
  */
 public class JointHazardRunnerTest {
 
@@ -23,119 +24,56 @@ public class JointHazardRunnerTest {
 
     private File crustal;
     private File subduction;
+    private File outputDir;
 
     @Before
     public void createSolutionFiles() throws IOException {
         crustal = tempFolder.newFile("crustal.zip");
         subduction = tempFolder.newFile("subduction.zip");
+        outputDir = new File(tempFolder.getRoot(), "hazard");
     }
 
-    /** A single solution is calculated with the joint GMM, with the documented defaults. */
+    /** A single solution keeps the mode it was given. */
     @Test
-    public void testSingleSolutionDefaults() {
-        Options options = JointHazardRunner.parse(new String[] {crustal.getPath()});
+    public void testSingleSolutionKeepsMode() {
+        Options options =
+                new Options(
+                        List.of(crustal),
+                        outputDir,
+                        JointHazardInput.DEFAULT_SPACING,
+                        GmmMode.JOINT_RUPTURE);
 
         assertEquals(List.of(crustal), options.getSolutionFiles());
         assertEquals(GmmMode.JOINT_RUPTURE, options.getMode());
-        assertEquals(JointHazardRunner.DEFAULT_OUTPUT_DIR, options.getOutputDir());
-        assertEquals(JointHazardInput.DEFAULT_SPACING, options.getSpacing(), 1e-9);
-    }
-
-    @Test
-    public void testPerTrtFlag() {
-        Options options = JointHazardRunner.parse(new String[] {"--per-trt", crustal.getPath()});
-        assertEquals(GmmMode.PER_TECTONIC_REGION, options.getMode());
-    }
-
-    /** Options are named, so they can be given before, after or between the solutions. */
-    @Test
-    public void testNamedOptions() {
-        File outputDir = new File("some/output");
-        Options options =
-                JointHazardRunner.parse(
-                        new String[] {
-                            "--out",
-                            outputDir.getPath(),
-                            crustal.getPath(),
-                            "--spacing",
-                            "0.25",
-                            subduction.getPath()
-                        });
-
-        assertEquals(List.of(crustal, subduction), options.getSolutionFiles());
         assertEquals(outputDir, options.getOutputDir());
-        assertEquals(0.25, options.getSpacing(), 1e-9);
-    }
-
-    /** More than two solutions can be calculated together, in the order they are given. */
-    @Test
-    public void testManySolutions() throws IOException {
-        File third = tempFolder.newFile("subduction2.zip");
-        Options options =
-                JointHazardRunner.parse(
-                        new String[] {crustal.getPath(), subduction.getPath(), third.getPath()});
-
-        assertEquals(List.of(crustal, subduction, third), options.getSolutionFiles());
+        assertEquals(JointHazardInput.DEFAULT_SPACING, options.getSpacing(), 1e-9);
     }
 
     /**
      * Merged solutions cannot hold joint ruptures, so more than one solution is always calculated
-     * per tectonic region type whether or not the flag is given.
+     * per tectonic region type whatever mode was asked for.
      */
     @Test
     public void testManySolutionsImplyPerTectonicRegion() {
         Options options =
-                JointHazardRunner.parse(new String[] {crustal.getPath(), subduction.getPath()});
-        assertEquals(GmmMode.PER_TECTONIC_REGION, options.getMode());
-    }
+                new Options(
+                        List.of(crustal, subduction),
+                        outputDir,
+                        JointHazardInput.DEFAULT_SPACING,
+                        GmmMode.JOINT_RUPTURE);
 
-    /**
-     * The point of named options: a mistyped solution path used to be silently taken for the output
-     * directory, and the run would then quietly calculate the wrong thing.
-     */
-    @Test
-    public void testRejectsMissingSolutionFile() {
-        String message = parseFailure(new String[] {crustal.getPath(), "subducton.zip"}); // typo
-        assertTrue(message, message.contains("does not exist"));
+        assertEquals(List.of(crustal, subduction), options.getSolutionFiles());
+        assertEquals(GmmMode.PER_TECTONIC_REGION, options.getMode());
     }
 
     @Test
     public void testRejectsNoSolutions() {
-        assertTrue(parseFailure(new String[] {"--per-trt"}).contains("at least one solution"));
-    }
-
-    @Test
-    public void testRejectsUnknownOption() {
-        String message = parseFailure(new String[] {crustal.getPath(), "--nope"});
-        assertTrue(message, message.contains("Unknown option --nope"));
-    }
-
-    @Test
-    public void testRejectsFlagWithoutValue() {
-        String message = parseFailure(new String[] {crustal.getPath(), "--spacing"});
-        assertTrue(message, message.contains("--spacing needs a value"));
-    }
-
-    @Test
-    public void testRejectsNonNumericSpacing() {
-        String message = parseFailure(new String[] {crustal.getPath(), "--spacing", "coarse"});
-        assertTrue(message, message.contains("needs a number"));
-    }
-
-    @Test
-    public void testRejectsNegativeSpacing() {
-        String message = parseFailure(new String[] {crustal.getPath(), "--spacing", "-0.1"});
-        assertTrue(message, message.contains("must be positive"));
-    }
-
-    /** Parses a command line, expecting it to fail, and returns the failure message. */
-    private static String parseFailure(String[] args) {
         try {
-            JointHazardRunner.parse(args);
+            new Options(
+                    List.of(), outputDir, JointHazardInput.DEFAULT_SPACING, GmmMode.JOINT_RUPTURE);
+            fail("expected no solutions to be rejected");
         } catch (IllegalArgumentException e) {
-            return e.getMessage();
+            assertTrue(e.getMessage(), e.getMessage().contains("at least one solution"));
         }
-        fail("expected parsing to fail");
-        return null;
     }
 }

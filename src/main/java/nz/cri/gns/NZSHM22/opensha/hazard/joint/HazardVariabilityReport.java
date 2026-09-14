@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 import org.jfree.data.Range;
 import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.data.function.XY_DataSet;
@@ -53,7 +54,12 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * <p>All configs must be calculated over the same region and the same periods. Use {@link
  * #setRegion} or {@link #setSpacing} to set them together. Runs are calculated one after the other
  * and each solution is released once its maps and curves have been extracted, so the report's
- * memory use does not grow with the number of runs.
+ * memory use does not grow with the number of runs. That only works for a config that can reload
+ * its solution, i.e. one built from a file; see {@link JointHazardInput#release()}. The first run
+ * is the exception, see {@link #calculate}.
+ *
+ * <p>A run is validated just before it is calculated rather than all of them up front, because
+ * validating a run means holding its solution.
  */
 public class HazardVariabilityReport {
 
@@ -198,10 +204,7 @@ public class HazardVariabilityReport {
                             + " be compared. Use setRegion or setSpacing to set them together.");
         }
 
-        List<JointHazardInput.ValidationResult> validations = new ArrayList<>();
-        for (HazardReportSource config : configs) {
-            validations.add(config.getInput().validate());
-        }
+        Results results = calculate(periods);
 
         ReportPage page = new ReportPage(title(), outputDir);
         page.setIntro(
@@ -209,10 +212,8 @@ public class HazardVariabilityReport {
                         + configs.size()
                         + " runs of the same model. Both variability maps are percentages of the"
                         + " mean hazard, so warmer means the runs agree less well there.");
-        page.setSummary(summary(validations));
+        page.setSummary(summary(results));
         imageDir = page.imageDir();
-
-        Results results = calculate(periods);
 
         page.add(mapSection(results, periods));
         page.add(curveSection(results, periods));
@@ -223,13 +224,24 @@ public class HazardVariabilityReport {
     }
 
     /**
-     * The maps and curves of every run. Runs are calculated one at a time and only their results
-     * are kept, so that a set of large solutions does not all have to be in memory at once. The
-     * first run's calculator is held on to because plotting a map goes through it.
+     * The maps and curves of every run, plus what the summary says about it. Runs are validated and
+     * calculated one at a time and only their results are kept, so that a set of large solutions
+     * does not all have to be in memory at once.
+     *
+     * <p>The first run is the exception: plotting a map goes through a calculator and a calculator
+     * holds its solution, so the first one stays in memory for the whole report.
+     *
+     * @throws IllegalStateException if a solution fails {@link JointHazardInput#validate()}
      */
     protected Results calculate(double[] periods) {
         Results results = new Results();
         for (HazardReportSource config : configs) {
+            results.validations.add(config.getInput().validate());
+            results.runs.add(
+                    new Run(
+                            config.getName(),
+                            HazardComparisonReport.sectionCount(config),
+                            HazardComparisonReport.ruptureCount(config)));
             System.out.println(
                     "Calculating hazard for "
                             + config.getName()
@@ -256,6 +268,9 @@ public class HazardVariabilityReport {
 
             if (results.plotter == null) {
                 results.plotter = calculator;
+            } else {
+                // everything this run contributes has been extracted, so let the solution go
+                config.release();
             }
         }
         return results;
@@ -549,10 +564,25 @@ public class HazardVariabilityReport {
 
     // ---------------------------------------------------------------- plumbing
 
+    /** What the summary says about one run, kept so that its solution can be released. */
+    protected static class Run {
+        protected final String name;
+        protected final int numSections;
+        protected final int numRuptures;
+
+        protected Run(String name, int numSections, int numRuptures) {
+            this.name = name;
+            this.numSections = numSections;
+            this.numRuptures = numRuptures;
+        }
+    }
+
     /** What every run contributed, keyed by map and by curve. */
     protected static class Results {
         protected final Map<String, List<GriddedGeoDataSet>> maps = new LinkedHashMap<>();
         protected final Map<String, List<DiscretizedFunc>> curves = new LinkedHashMap<>();
+        protected final List<Run> runs = new ArrayList<>();
+        protected final List<JointHazardInput.ValidationResult> validations = new ArrayList<>();
 
         /** The first run's calculator, kept because plotting a map goes through one. */
         protected JointHazardMapCalculator plotter;
@@ -566,18 +596,19 @@ public class HazardVariabilityReport {
         return siteName + "_" + period;
     }
 
-    protected ReportPage.Table summary(List<JointHazardInput.ValidationResult> validations) {
+    /** The summary table, built from what {@link #calculate} recorded about each run. */
+    protected ReportPage.Table summary(Results results) {
         GriddedRegion region = configs.get(0).getInput().getRegion();
         ReportPage.Table table = new ReportPage.Table();
         List<String> names = new ArrayList<>();
-        for (HazardReportSource config : configs) {
-            names.add(config.getName());
+        for (Run run : results.runs) {
+            names.add(run.name);
         }
-        table.addRow("Runs", configs.size() + ": " + String.join(", ", names));
+        table.addRow("Runs", results.runs.size() + ": " + String.join(", ", names));
         table.addRow("Ground motion models", configs.get(0).getInput().getGmmMode().toString());
-        table.addRow("Fault sections", range(configs, HazardComparisonReport::sectionCount));
-        table.addRow("Ruptures", range(configs, HazardComparisonReport::ruptureCount));
-        table.addRow("Crustal / interface / joint ruptures", ruptureMix(validations));
+        table.addRow("Fault sections", range(results.runs, run -> run.numSections));
+        table.addRow("Ruptures", range(results.runs, run -> run.numRuptures));
+        table.addRow("Crustal / interface / joint ruptures", ruptureMix(results.validations));
         table.addRow(
                 "Region",
                 region.getNodeCount() + " sites at " + (float) region.getSpacing() + " degrees");
@@ -586,13 +617,11 @@ public class HazardVariabilityReport {
     }
 
     /** A count that is the same for every run, or its range if the runs disagree. */
-    protected static String range(
-            List<HazardReportSource> configs,
-            java.util.function.ToIntFunction<HazardReportSource> count) {
+    protected static String range(List<Run> runs, ToIntFunction<Run> count) {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
-        for (HazardReportSource config : configs) {
-            int value = count.applyAsInt(config);
+        for (Run run : runs) {
+            int value = count.applyAsInt(run);
             min = Math.min(min, value);
             max = Math.max(max, value);
         }

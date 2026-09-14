@@ -4,11 +4,6 @@ import com.google.common.base.Preconditions;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -45,9 +40,11 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  *   <li>a hazard curve per site and period, for the sites of {@link #defaultSites()}.
  * </ul>
  *
- * <p>Differences are reported as the percentage change from the first config to the second, i.e.
- * {@code 100 * (second - first) / first}, so red means the second config gives stronger shaking.
- * Clicking any figure opens it full size.
+ * <p>Map differences are drawn as the ratio of the second config to the first on a logarithmic
+ * scale, so red means the second config gives stronger shaking, and the scale always covers the
+ * whole range of change rather than clipping the extremes. See {@link #ratioCPT}. Figure captions
+ * report the same thing as a percentage change, {@code 100 * (second - first) / first}, which reads
+ * more naturally in prose. Clicking any figure opens it full size.
  *
  * <p>Both configs must be calculated over the same region and the same periods, otherwise the maps
  * cannot be differenced. Use {@link #setRegion} or {@link #setSpacing} to set them together.
@@ -65,20 +62,47 @@ public class HazardComparisonReport {
                     "Christchurch",
                     "Dunedin",
                     "Westport",
+                    "Franz Josef(SRG 164)",
                     "Queenstown",
                     "Invercargill");
 
-    /** Directory that images are written to, relative to the report. */
-    public static final String IMAGE_DIR = "images";
+    /**
+     * Sites that the sources of the hazard are mapped at, a spread down the country rather than the
+     * full curve site list: over the northern Hikurangi interface (Gisborne), in the Taupo Volcanic
+     * Zone (Taupo), where crustal and interface sources meet (Wellington), in the Marlborough fault
+     * system (Kaikoura), on the Alpine Fault (Franz Josef) and at some distance from any major
+     * fault (Christchurch).
+     *
+     * <p>Each site costs a full disaggregation of both solutions, so the list is deliberately
+     * short. It also deliberately leaves out the sites whose hazard is almost all distributed
+     * seismicity, Auckland above all: these calculations exclude the background, so such a site has
+     * nothing to disaggregate and would be skipped anyway.
+     */
+    public static final List<String> DEFAULT_SOURCE_SITE_NAMES =
+            List.of(
+                    "Gisborne",
+                    "Taupo",
+                    "Wellington",
+                    "Kaikoura",
+                    "Franz Josef(SRG 164)",
+                    "Christchurch");
 
-    public static final String INDEX_FILE = "index.html";
+    /** Return period that the source maps disaggregate at. */
+    public static final ReturnPeriods SOURCE_RETURN_PERIOD = ReturnPeriods.TEN_IN_50;
+
+    /** Directory that images are written to, relative to the report. See {@link ReportPage}. */
+    public static final String IMAGE_DIR = ReportPage.IMAGE_DIR;
+
+    public static final String INDEX_FILE = ReportPage.INDEX_FILE;
 
     /**
-     * Percentage changes that the difference colour ramp is scaled to. The smallest one that covers
-     * the bulk of a difference map is used, so that a map of small differences does not come out
-     * flat and a map of large ones does not saturate. See {@link #percentDiffCPT}.
+     * Ratios that the difference colour ramp is scaled to, i.e. 1.1 means a scale running from a
+     * tenth less to a tenth more. The smallest one that covers the whole map is used, so that a map
+     * of small differences does not come out flat. See {@link #ratioCPT}.
      */
-    protected static final double[] PERCENT_DIFF_SCALES = {10d, 25d, 50d, 100d, 200d, 500d};
+    protected static final double[] RATIO_SCALES = {
+        1.1, 1.25, 1.5, 2d, 3d, 5d, 10d, 30d, 100d, 300d, 1000d
+    };
 
     /**
      * Annual exceedance probability below which curve values are ignored when comparing. Curves get
@@ -94,6 +118,7 @@ public class HazardComparisonReport {
     protected final File outputDir;
 
     protected Map<String, Location> sites = defaultSites();
+    protected Map<String, Location> sourceSites = defaultSourceSites();
     protected File imageDir;
 
     /**
@@ -119,9 +144,19 @@ public class HazardComparisonReport {
 
     /** The sites of {@link #DEFAULT_SITE_NAMES}, in that order. */
     public static Map<String, Location> defaultSites() {
+        return namedSites(DEFAULT_SITE_NAMES);
+    }
+
+    /** The sites of {@link #DEFAULT_SOURCE_SITE_NAMES}, in that order. */
+    public static Map<String, Location> defaultSourceSites() {
+        return namedSites(DEFAULT_SOURCE_SITE_NAMES);
+    }
+
+    /** Looks up named sites in {@link JointHazardInput#defaultSites()}, keeping the given order. */
+    protected static Map<String, Location> namedSites(List<String> names) {
         Map<String, Location> all = JointHazardInput.defaultSites();
         Map<String, Location> sites = new LinkedHashMap<>();
-        for (String name : DEFAULT_SITE_NAMES) {
+        for (String name : names) {
             Location location = all.get(name);
             Preconditions.checkState(location != null, "Unknown location %s", name);
             sites.put(name, location);
@@ -133,6 +168,18 @@ public class HazardComparisonReport {
     public HazardComparisonReport setSites(Map<String, Location> sites) {
         Preconditions.checkArgument(sites != null && !sites.isEmpty(), "need at least one site");
         this.sites = sites;
+        return this;
+    }
+
+    /**
+     * Sets the sites that the sources of the hazard are mapped at. Defaults to {@link
+     * #defaultSourceSites()}. Each site costs a disaggregation of both solutions, so keep the list
+     * short.
+     */
+    public HazardComparisonReport setSourceSites(Map<String, Location> sourceSites) {
+        Preconditions.checkArgument(
+                sourceSites != null && !sourceSites.isEmpty(), "need at least one source site");
+        this.sourceSites = sourceSites;
         return this;
     }
 
@@ -188,23 +235,36 @@ public class HazardComparisonReport {
         JointHazardInput.ValidationResult firstValidation = first.getInput().validate();
         JointHazardInput.ValidationResult secondValidation = second.getInput().validate();
 
-        imageDir = new File(outputDir, IMAGE_DIR);
-        Preconditions.checkState(
-                imageDir.exists() || imageDir.mkdirs(),
-                "Could not create output directory %s",
-                imageDir.getAbsolutePath());
+        ReportPage page = new ReportPage(title(), outputDir);
+        page.setIntro(intro());
+        page.setSummary(summary(firstValidation, secondValidation));
+        imageDir = page.imageDir();
 
         JointHazardMapCalculator firstCalc = calculate(first);
         JointHazardMapCalculator secondCalc = calculate(second);
 
-        List<Section> sections = new ArrayList<>();
-        sections.add(mapSection(firstCalc, secondCalc, periods));
-        sections.add(curveSection(firstCalc, secondCalc, periods));
+        page.add(mapSection(firstCalc, secondCalc, periods));
+        ReportPage.Section sourceSection = sourceSection(firstCalc, secondCalc, periods[0]);
+        if (sourceSection != null) {
+            page.add(sourceSection);
+        }
+        page.add(curveSection(firstCalc, secondCalc, periods));
 
-        File index = new File(outputDir, INDEX_FILE);
-        writeHtml(index, sections, firstValidation, secondValidation);
+        File index = page.write();
         System.out.println("Wrote hazard comparison report to " + index.getAbsolutePath());
         return index;
+    }
+
+    /** The line of prose below the title, explaining how to read the difference maps. */
+    protected String intro() {
+        return "Map differences are the ratio of "
+                + second.getName()
+                + " to "
+                + first.getName()
+                + " on a logarithmic scale that always covers the whole range of change, so red"
+                + " means "
+                + second.getName()
+                + " gives stronger shaking. Captions report the same change as a percentage.";
     }
 
     protected JointHazardMapCalculator calculate(HazardReportSource config) {
@@ -221,12 +281,12 @@ public class HazardComparisonReport {
     }
 
     /** One hazard map per period and return period, for each config, plus their difference. */
-    protected Section mapSection(
+    protected ReportPage.Section mapSection(
             JointHazardMapCalculator firstCalc,
             JointHazardMapCalculator secondCalc,
             double[] periods)
             throws IOException {
-        Section section = new Section("Hazard maps", "maps");
+        ReportPage.Section section = new ReportPage.Section("Hazard maps", "maps");
         for (double period : periods) {
             for (ReturnPeriods rp : SolHazardMapCalc.MAP_RPS) {
                 GriddedGeoDataSet firstMap = firstCalc.getCalc().buildMap(period, rp);
@@ -242,7 +302,7 @@ public class HazardComparisonReport {
                 String zLabel = "Log10 " + periodLabel + " (" + units + "), " + rp.label;
 
                 CPT cpt = sharedLogCPT(firstMap, secondMap);
-                Row row = new Row(periodLabel + ", " + rp.label);
+                ReportPage.Row row = new ReportPage.Row(periodLabel + ", " + rp.label);
                 row.add(
                         firstCalc
                                 .getCalc()
@@ -268,32 +328,108 @@ public class HazardComparisonReport {
                         second.getName(),
                         mapStats(secondMap, units));
 
-                GriddedGeoDataSet diff = percentDiff(firstMap, secondMap);
+                // the map is a ratio on a log scale, which covers the whole range of changes;
+                // the caption reports the same thing as percentages, which read more naturally
+                GriddedGeoDataSet ratioMap = ratioMap(firstMap, secondMap);
                 row.add(
                         firstCalc
                                 .getCalc()
                                 .plotMap(
                                         imageDir,
                                         prefix + "_diff",
-                                        diff,
-                                        percentDiffCPT(diff),
+                                        ratioMap,
+                                        ratioCPT(ratioMap),
                                         differenceLabel(),
-                                        "% change, " + periodLabel + ", " + rp.label),
+                                        "Ratio, " + periodLabel + ", " + rp.label),
                         "Difference",
-                        diffStats(diff));
+                        diffStats(percentDiff(firstMap, secondMap)));
                 section.add(row);
             }
         }
         return section;
     }
 
+    /**
+     * The difference map of each source site, each linking to a page holding that site's other
+     * source maps and the sections that changed most. See {@link SiteSourcePage}.
+     *
+     * <p>Only the first period is mapped. A disaggregation is a pass over every rupture of both
+     * solutions, so one per site is already the expensive part of the report; a second period would
+     * double it for a view the curves already cover.
+     *
+     * @return the section, or null if no site could be disaggregated at all
+     */
+    protected ReportPage.Section sourceSection(
+            JointHazardMapCalculator firstCalc, JointHazardMapCalculator secondCalc, double period)
+            throws IOException {
+        ReportPage.Section section = new ReportPage.Section("Hazard sources", "sources");
+        SiteSourcePage pages =
+                new SiteSourcePage(
+                        new SiteSourceExplorer(firstCalc.getSetup()),
+                        new SiteSourceExplorer(secondCalc.getSetup()),
+                        first.getName(),
+                        second.getName());
+
+        ReportPage.Row row =
+                new ReportPage.Row(
+                        HazardLabels.SECTION_HAZARD
+                                + ", "
+                                + HazardLabels.periodLabel(period)
+                                + " at "
+                                + SOURCE_RETURN_PERIOD.label
+                                + ". Each fault section is coloured by how much the hazard reaching"
+                                + " the site through it changed: the annual rate at which ruptures"
+                                + " running over that section push the site over the level. A"
+                                + " rupture is credited to every section it breaks, so a long"
+                                + " multi-fault rupture is drawn along its whole length. Click a"
+                                + " map for that site's own page.");
+        List<String> skipped = new ArrayList<>();
+        for (Map.Entry<String, Location> site : sourceSites.entrySet()) {
+            System.out.println("Mapping hazard sources at " + site.getKey());
+            SiteSourcePage.Result result =
+                    pages.write(
+                            outputDir,
+                            site.getKey(),
+                            site.getValue(),
+                            period,
+                            SOURCE_RETURN_PERIOD);
+            if (result == null) {
+                // a site whose fault hazard never reaches the return period has no level to
+                // disaggregate at; report it and carry on rather than losing the whole report
+                System.out.println(
+                        "  skipped: the hazard never reaches " + SOURCE_RETURN_PERIOD.label);
+                skipped.add(site.getKey());
+            } else {
+                row.add(result.mapPath, site.getKey(), result.stats, result.pagePath);
+            }
+        }
+        if (row.figures.isEmpty()) {
+            return null;
+        }
+        if (!skipped.isEmpty()) {
+            row.setTitle(row.title + " No fault hazard to disaggregate at " + join(skipped) + ".");
+        }
+        section.add(row);
+        return section;
+    }
+
+    /** Names joined for a sentence, e.g. "Auckland, Dunedin and Invercargill". */
+    protected static String join(List<String> names) {
+        if (names.size() == 1) {
+            return names.get(0);
+        }
+        return String.join(", ", names.subList(0, names.size() - 1))
+                + " and "
+                + names.get(names.size() - 1);
+    }
+
     /** One hazard curve per site and period, for each config, plus their comparison. */
-    protected Section curveSection(
+    protected ReportPage.Section curveSection(
             JointHazardMapCalculator firstCalc,
             JointHazardMapCalculator secondCalc,
             double[] periods)
             throws IOException {
-        Section section = new Section("Hazard curves", "curves");
+        ReportPage.Section section = new ReportPage.Section("Hazard curves", "curves");
         for (Map.Entry<String, Location> site : sites.entrySet()) {
             String siteName = site.getKey();
             for (double period : periods) {
@@ -310,7 +446,7 @@ public class HazardComparisonReport {
                 Range xRange = new Range(firstCurve.getMinX(), firstCurve.getMaxX());
                 Range yRange = CurvePlots.yRange(List.of(firstCurve, secondCurve));
 
-                Row row = new Row(siteName + ", " + periodLabel);
+                ReportPage.Row row = new ReportPage.Row(siteName + ", " + periodLabel);
                 row.add(
                         plotCurve(
                                 prefix + "_" + first.getId(),
@@ -520,29 +656,82 @@ public class HazardComparisonReport {
     }
 
     /**
-     * A diverging colour ramp for a difference map, centred on no change and scaled to the smallest
-     * of {@link #PERCENT_DIFF_SCALES} that covers all but the most extreme 5% of the map. Outliers
-     * are allowed to saturate rather than flattening the rest of the map.
+     * A diverging colour ramp for a ratio map, logarithmic and symmetric about one, so that halving
+     * and doubling are the same distance from the centre and no change sits on the neutral colour.
+     *
+     * <p>The scale always covers the whole map, each side rounded out on its own to the smallest of
+     * {@link #RATIO_SCALES} that contains it. Percentage change is a poor thing to put a linear
+     * scale on — it is bounded below by -100% and unbounded above, so a map with a tenfold increase
+     * somewhere either saturates or squashes every decrease into a sliver of the ramp. On a log
+     * ratio scale halving and doubling are the same distance from the centre and nothing has to be
+     * clipped. See {@link #divergingRatioCPT} for why the two sides are scaled separately.
+     *
+     * <p>The values plotted are the ratios themselves rather than their logarithms, because {@link
+     * CPT#setLog10} makes the palette do the logarithm and OpenSHA then labels the colour bar in
+     * ratios. Ratios of zero, where the second model has no hazard at all, fall off the bottom and
+     * take the ramp's end colour.
      */
-    protected static CPT percentDiffCPT(GriddedGeoDataSet diff) throws IOException {
-        double[] values = finiteValues(diff);
-        double extent = 0;
-        if (values.length > 0) {
-            extent =
-                    Math.max(
-                            Math.abs(values[(int) (0.025 * (values.length - 1))]),
-                            Math.abs(values[(int) Math.ceil(0.975 * (values.length - 1))]));
-        }
-        double scale = PERCENT_DIFF_SCALES[PERCENT_DIFF_SCALES.length - 1];
-        for (double candidate : PERCENT_DIFF_SCALES) {
-            if (extent <= candidate) {
-                scale = candidate;
-                break;
+    protected static CPT ratioCPT(GriddedGeoDataSet ratioMap) throws IOException {
+        double smallest = 1d;
+        double largest = 1d;
+        boolean anyZero = false;
+        for (int i = 0; i < ratioMap.size(); i++) {
+            double ratio = ratioMap.get(i);
+            if (ratio == 0d) {
+                anyZero = true;
+            } else if (Double.isFinite(ratio) && ratio > 0) {
+                smallest = Math.min(smallest, ratio);
+                largest = Math.max(largest, ratio);
             }
         }
-        CPT cpt = GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance().rescale(-scale, scale);
+        // each side is rounded outwards on its own, so the ramp is used across its whole width even
+        // when every node moved the same way; a side with nothing on it gets no width at all
+        double down = smallest < 1d ? ratioScale(1d / smallest) : 1d;
+        // a node that lost all its hazard is off the bottom of the log scale; make sure there is a
+        // decrease side for it to fall off, or it would take the neutral colour
+        if (anyZero && down == 1d) {
+            down = RATIO_SCALES[0];
+        }
+        double up = largest > 1d ? ratioScale(largest) : 1d;
+        if (down == 1d && up == 1d) {
+            // the two models agree everywhere, so give the ramp somewhere to be
+            up = RATIO_SCALES[0];
+        }
+
+        CPT cpt = divergingRatioCPT(-Math.log10(down), Math.log10(up));
+        cpt.setLog10(true);
         cpt.setNanColor(Color.LIGHT_GRAY);
+        // a node where the second model has no hazard has a ratio of zero, which is off the bottom
+        // of any log scale; clamp it to the end of the ramp rather than leaving it uncoloured
+        cpt.setBelowMinColor(cpt.getMinColor());
+        cpt.setAboveMaxColor(cpt.getMaxColor());
         return cpt;
+    }
+
+    /**
+     * A diverging ramp over log ratios from {@code logMin} to {@code logMax}, with the palette's
+     * neutral colour pinned to no change however lopsided those bounds are. See {@link
+     * DivergingCPT}.
+     *
+     * @param logMin log10 of the smallest ratio on the map, at most zero
+     * @param logMax log10 of the largest ratio on the map, at least zero
+     */
+    protected static CPT divergingRatioCPT(double logMin, double logMax) throws IOException {
+        return DivergingCPT.centredOnZero(
+                GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), logMin, logMax);
+    }
+
+    /**
+     * The smallest of {@link #RATIO_SCALES} that covers the given extent, or the next power of ten
+     * if none of them does. Never returns less than the extent, so a map is never clipped.
+     */
+    protected static double ratioScale(double extent) {
+        for (double candidate : RATIO_SCALES) {
+            if (extent <= candidate) {
+                return candidate;
+            }
+        }
+        return Math.pow(10, Math.ceil(Math.log10(extent)));
     }
 
     protected static GriddedGeoDataSet log10(GriddedGeoDataSet map) {
@@ -552,8 +741,26 @@ public class HazardComparisonReport {
     }
 
     /**
-     * The percentage change from the first map to the second. Nodes where the first map has no
-     * hazard are left as NaN: there is no meaningful percentage to report there.
+     * The ratio of the second map to the first, which is what the difference map draws. Nodes where
+     * the first map has no hazard are left as NaN: there is nothing to take a ratio against.
+     */
+    protected static GriddedGeoDataSet ratioMap(
+            GriddedGeoDataSet firstMap, GriddedGeoDataSet secondMap) {
+        Preconditions.checkArgument(
+                firstMap.size() == secondMap.size(), "maps must cover the same region");
+        GriddedGeoDataSet ratio =
+                new GriddedGeoDataSet(firstMap.getRegion(), firstMap.isLatitudeX());
+        for (int i = 0; i < firstMap.size(); i++) {
+            double a = firstMap.get(i);
+            ratio.set(i, a > 0 ? secondMap.get(i) / a : Double.NaN);
+        }
+        return ratio;
+    }
+
+    /**
+     * The percentage change from the first map to the second, which the difference map is captioned
+     * with. Nodes where the first map has no hazard are left as NaN: there is no meaningful
+     * percentage to report there.
      */
     protected static GriddedGeoDataSet percentDiff(
             GriddedGeoDataSet firstMap, GriddedGeoDataSet secondMap) {
@@ -667,177 +874,37 @@ public class HazardComparisonReport {
         return second.getName() + " vs " + first.getName();
     }
 
-    // ---------------------------------------------------------------- HTML
+    // ---------------------------------------------------------------- report
 
-    /** A figure in the report: an image, its caption and an optional line of statistics. */
-    protected static class Figure {
-        protected final String path;
-        protected final String caption;
-        protected final String stats;
-
-        protected Figure(String path, String caption, String stats) {
-            this.path = path;
-            this.caption = caption;
-            this.stats = stats;
-        }
-    }
-
-    /** A row of figures shown side by side, e.g. the two maps and their difference. */
-    protected static class Row {
-        protected final String title;
-        protected final List<Figure> figures = new ArrayList<>();
-
-        protected Row(String title) {
-            this.title = title;
-        }
-
-        protected void add(File image, String caption, String stats) {
-            figures.add(new Figure(IMAGE_DIR + "/" + image.getName(), caption, stats));
-        }
-    }
-
-    /** A section of the report, e.g. all the maps. */
-    protected static class Section {
-        protected final String title;
-        protected final String id;
-        protected final List<Row> rows = new ArrayList<>();
-
-        protected Section(String title, String id) {
-            this.title = title;
-            this.id = id;
-        }
-
-        protected void add(Row row) {
-            rows.add(row);
-        }
-    }
-
-    protected void writeHtml(
-            File index,
-            List<Section> sections,
+    /** The summary table at the top of the report, one column per config. */
+    protected ReportPage.Table summary(
             JointHazardInput.ValidationResult firstValidation,
-            JointHazardInput.ValidationResult secondValidation)
-            throws IOException {
-        try (Writer out = Files.newBufferedWriter(index.toPath(), StandardCharsets.UTF_8)) {
-            out.write("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
-            out.write("<meta charset=\"utf-8\">\n");
-            out.write("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
-            out.write("<title>" + escape(title()) + "</title>\n");
-            out.write("<style>\n" + css() + "</style>\n");
-            out.write("</head>\n<body>\n");
-
-            out.write("<h1>" + escape(title()) + "</h1>\n");
-            out.write(
-                    "<p class=\"meta\">Generated "
-                            + escape(
-                                    LocalDateTime.now()
-                                            .format(
-                                                    DateTimeFormatter.ofPattern(
-                                                            "yyyy-MM-dd HH:mm")))
-                            + ". Differences are the change from "
-                            + escape(first.getName())
-                            + " to "
-                            + escape(second.getName())
-                            + ", so red means "
-                            + escape(second.getName())
-                            + " gives stronger shaking.</p>\n");
-
-            writeSummary(out, firstValidation, secondValidation);
-
-            out.write("<nav><ul>\n");
-            for (Section section : sections) {
-                out.write(
-                        "<li><a href=\"#"
-                                + section.id
-                                + "\">"
-                                + escape(section.title)
-                                + "</a></li>\n");
-            }
-            out.write("</ul></nav>\n");
-
-            for (Section section : sections) {
-                out.write("<section id=\"" + section.id + "\">\n");
-                out.write("<h2>" + escape(section.title) + "</h2>\n");
-                for (Row row : section.rows) {
-                    out.write("<h3>" + escape(row.title) + "</h3>\n");
-                    out.write("<div class=\"figures\">\n");
-                    for (Figure figure : row.figures) {
-                        out.write("<figure>\n");
-                        out.write(
-                                "<a href=\""
-                                        + figure.path
-                                        + "\"><img src=\""
-                                        + figure.path
-                                        + "\" alt=\""
-                                        + escape(figure.caption)
-                                        + "\"></a>\n");
-                        out.write("<figcaption>" + escape(figure.caption));
-                        if (figure.stats != null) {
-                            out.write("<span class=\"stats\">" + escape(figure.stats) + "</span>");
-                        }
-                        out.write("</figcaption>\n</figure>\n");
-                    }
-                    out.write("</div>\n");
-                }
-                out.write("</section>\n");
-            }
-
-            out.write("<div id=\"lightbox\"><img id=\"lightbox-image\" alt=\"\"></div>\n");
-            out.write("<script>\n" + script() + "</script>\n");
-            out.write("</body>\n</html>\n");
-        }
-    }
-
-    protected void writeSummary(
-            Writer out,
-            JointHazardInput.ValidationResult firstValidation,
-            JointHazardInput.ValidationResult secondValidation)
-            throws IOException {
+            JointHazardInput.ValidationResult secondValidation) {
         GriddedRegion region = first.getInput().getRegion();
-        out.write("<table class=\"summary\">\n<tr><th></th><th>");
-        out.write(
-                escape(first.getName()) + "</th><th>" + escape(second.getName()) + "</th></tr>\n");
-        summaryRow(
-                out,
-                "Ground motion models",
-                first.getInput().getGmmMode().toString(),
-                second.getInput().getGmmMode().toString());
-        summaryRow(
-                out,
-                "Fault sections",
-                String.valueOf(sectionCount(first)),
-                String.valueOf(sectionCount(second)));
-        summaryRow(
-                out,
-                "Ruptures",
-                String.valueOf(ruptureCount(first)),
-                String.valueOf(ruptureCount(second)));
-        summaryRow(
-                out,
-                "Crustal / interface / joint ruptures",
-                ruptureMix(firstValidation),
-                ruptureMix(secondValidation));
-        out.write(
-                "<tr><th>Region</th><td colspan=\"2\">"
-                        + region.getNodeCount()
-                        + " sites at "
-                        + (float) region.getSpacing()
-                        + " degrees</td></tr>\n");
-        out.write(
-                "<tr><th>Periods</th><td colspan=\"2\">" + escape(periodLabels()) + "</td></tr>\n");
-        out.write("</table>\n");
-    }
-
-    protected static void summaryRow(
-            Writer out, String label, String firstValue, String secondValue) throws IOException {
-        out.write(
-                "<tr><th>"
-                        + escape(label)
-                        + "</th><td>"
-                        + escape(firstValue)
-                        + "</td><td>"
-                        + escape(secondValue)
-                        + "</td></tr>\n");
+        return new ReportPage.Table("", first.getName(), second.getName())
+                .addRow(
+                        "Ground motion models",
+                        first.getInput().getGmmMode().toString(),
+                        second.getInput().getGmmMode().toString())
+                .addRow(
+                        "Fault sections",
+                        String.valueOf(sectionCount(first)),
+                        String.valueOf(sectionCount(second)))
+                .addRow(
+                        "Ruptures",
+                        String.valueOf(ruptureCount(first)),
+                        String.valueOf(ruptureCount(second)))
+                .addRow(
+                        "Crustal / interface / joint ruptures",
+                        ruptureMix(firstValidation),
+                        ruptureMix(secondValidation))
+                .addRow(
+                        "Region",
+                        region.getNodeCount()
+                                + " sites at "
+                                + (float) region.getSpacing()
+                                + " degrees")
+                .addRow("Periods", periodLabels());
     }
 
     protected static String ruptureMix(JointHazardInput.ValidationResult validation) {
@@ -867,54 +934,5 @@ public class HazardComparisonReport {
 
     protected String title() {
         return "Hazard comparison: " + first.getName() + " vs " + second.getName();
-    }
-
-    protected static String escape(String text) {
-        return text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
-    }
-
-    protected static String css() {
-        return "body { font-family: system-ui, Arial, sans-serif; margin: 0 auto; padding: 1.5rem;"
-                + " max-width: 1600px; color: #222; }\n"
-                + "h1 { font-size: 1.6rem; } h2 { font-size: 1.3rem; margin-top: 2.5rem;"
-                + " border-bottom: 1px solid #ddd; padding-bottom: .3rem; }\n"
-                + "h3 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; color: #444; }\n"
-                + ".meta { color: #666; }\n"
-                + "table.summary { border-collapse: collapse; margin: 1rem 0; }\n"
-                + "table.summary th, table.summary td { border: 1px solid #ddd; padding: .35rem"
-                + " .7rem; text-align: left; font-weight: normal; }\n"
-                + "table.summary tr:first-child th { font-weight: bold; background: #f4f4f4; }\n"
-                + "table.summary th:first-child { font-weight: bold; }\n"
-                + "nav ul { list-style: none; padding: 0; display: flex; gap: 1rem; }\n"
-                + ".figures { display: flex; flex-wrap: wrap; gap: 1rem; }\n"
-                + "figure { flex: 1 1 30%; min-width: 280px; margin: 0; }\n"
-                + "figure img { width: 100%; height: auto; border: 1px solid #ddd; cursor:"
-                + " zoom-in; }\n"
-                + "figcaption { font-size: .85rem; color: #444; padding-top: .3rem; }\n"
-                + "figcaption .stats { display: block; color: #777; }\n"
-                + "#lightbox { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0,"
-                + " .85); align-items: center; justify-content: center; cursor: zoom-out; z-index:"
-                + " 10; }\n"
-                + "#lightbox.open { display: flex; }\n"
-                + "#lightbox img { max-width: 96vw; max-height: 96vh; }\n";
-    }
-
-    protected static String script() {
-        return "var box = document.getElementById('lightbox');\n"
-                + "var boxImage = document.getElementById('lightbox-image');\n"
-                + "document.querySelectorAll('figure a').forEach(function (link) {\n"
-                + "  link.addEventListener('click', function (event) {\n"
-                + "    event.preventDefault();\n"
-                + "    boxImage.src = link.getAttribute('href');\n"
-                + "    box.classList.add('open');\n"
-                + "  });\n"
-                + "});\n"
-                + "box.addEventListener('click', function () { box.classList.remove('open'); });\n"
-                + "document.addEventListener('keydown', function (event) {\n"
-                + "  if (event.key === 'Escape') { box.classList.remove('open'); }\n"
-                + "});\n";
     }
 }
