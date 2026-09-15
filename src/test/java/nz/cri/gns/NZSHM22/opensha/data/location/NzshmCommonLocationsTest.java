@@ -9,11 +9,11 @@ import org.opensha.commons.geo.Location;
 /** Tests for {@link NzshmCommonLocations}. */
 public class NzshmCommonLocationsTest {
 
-    /** The nzshm-common "NZ" list has 36 locations. */
+    /** The nzshm-common "NZ" list has 36 locations, plus the one site added on top of it. */
     @Test
     public void testNzLocationsAreLoaded() {
         Map<String, Location> locations = NzshmCommonLocations.nzLocations();
-        assertEquals(36, locations.size());
+        assertEquals(37, locations.size());
     }
 
     /** Spot checks against nzshm-common's locations.json. */
@@ -34,6 +34,12 @@ public class NzshmCommonLocationsTest {
         // the list goes well beyond the main centres
         assertTrue(locations.containsKey("Franz Josef"));
         assertTrue(locations.containsKey("Hanmer Springs"));
+
+        // added on top of the nzshm-common list
+        Location srg164 = locations.get("Franz Josef(SRG 164)");
+        assertNotNull(srg164);
+        assertEquals(-43.38, srg164.getLatitude(), 1e-9);
+        assertEquals(170.19, srg164.getLongitude(), 1e-9);
     }
 
     /** All locations sit within New Zealand. */

@@ -179,25 +179,49 @@ public class JointSolutions {
     }
 
     /**
-     * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types,
-     * unless the rupture set already has one. Joint ruptures are rejected. Idempotent.
+     * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types.
+     * Joint ruptures are rejected. Idempotent.
      */
     public static void applyTectonicRegimes(FaultSystemRupSet rupSet) {
         applyTectonicRegimes(rupSet, null);
     }
 
     /**
-     * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types,
-     * unless the rupture set already has one. Idempotent.
+     * Adds a {@link RupSetTectonicRegimes} module derived from the section tectonic region types.
+     * Idempotent.
+     *
+     * <p>A rupture set that already carries such a module keeps it, but only if it says the same
+     * thing as the section data does. A module that disagrees is not silently trusted: it decides
+     * both which GMM each source gets and how far from a site the source survives the distance
+     * cutoff, so a stale one quietly produces the wrong hazard. The usual way to get one is to
+     * reuse a rupture set across GMM modes, where a joint rupture is given a region type in {@link
+     * JointHazardInput.GmmMode#JOINT_RUPTURE} but has to be rejected in {@link
+     * JointHazardInput.GmmMode#PER_TECTONIC_REGION}.
      *
      * @param jointRegime the type given to joint ruptures, or null to reject them. See {@link
      *     #tectonicRegimes(FaultSystemRupSet, TectonicRegionType)}.
+     * @throws IllegalStateException if the rupture set already has a module that disagrees with the
+     *     region types the section data implies
      */
     public static void applyTectonicRegimes(
             FaultSystemRupSet rupSet, TectonicRegionType jointRegime) {
-        if (rupSet.getModule(RupSetTectonicRegimes.class) == null) {
-            rupSet.addModule(
-                    new RupSetTectonicRegimes(rupSet, tectonicRegimes(rupSet, jointRegime)));
+        TectonicRegionType[] regimes = tectonicRegimes(rupSet, jointRegime);
+        RupSetTectonicRegimes existing = rupSet.getModule(RupSetTectonicRegimes.class);
+        if (existing == null) {
+            rupSet.addModule(new RupSetTectonicRegimes(rupSet, regimes));
+            return;
+        }
+        for (int r = 0; r < regimes.length; r++) {
+            Preconditions.checkState(
+                    existing.get(r) == regimes[r],
+                    "The rupture set already carries tectonic region types that disagree with its"
+                            + " fault sections: rupture %s is %s there but %s by its sections."
+                            + " Calculating with the wrong region types sends the rupture to the"
+                            + " wrong GMM and to the wrong source distance cutoff, so load the"
+                            + " solution again rather than reusing this rupture set.",
+                    r,
+                    existing.get(r),
+                    regimes[r]);
         }
     }
 }

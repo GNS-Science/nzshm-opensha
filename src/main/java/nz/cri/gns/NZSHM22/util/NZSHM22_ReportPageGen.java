@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
@@ -22,6 +23,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
+import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SlipRatePlots;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SolMFDPlot;
 
 public class NZSHM22_ReportPageGen {
@@ -95,27 +97,40 @@ public class NZSHM22_ReportPageGen {
     static Map<String, AbstractRupSetPlot> possiblePlots;
     static Map<String, AbstractRupSetPlot> possibleRupSetPlots;
 
+    /**
+     * Plots that are run once per partition (in addition to once for the whole solution) when the
+     * rupture set has a PartitionMfds module. Add a plot class here to have it split by partition.
+     */
+    static final Set<Class<? extends AbstractRupSetPlot>> PARTITIONED_PLOTS =
+            Set.of(SolMFDPlot.class, SlipRatePlots.class);
+
+    /**
+     * Wraps a plot in a {@link PartitionPlotWrapper} if it is one of the {@link
+     * #PARTITIONED_PLOTS}, otherwise returns it unchanged.
+     *
+     * @param plot the plot to consider
+     * @return the plot, possibly wrapped
+     */
+    public static AbstractRupSetPlot splitByPartition(AbstractRupSetPlot plot) {
+        for (Class<? extends AbstractRupSetPlot> partitioned : PARTITIONED_PLOTS) {
+            if (partitioned.isInstance(plot)) {
+                return new PartitionPlotWrapper(plot);
+            }
+        }
+        return plot;
+    }
+
     static {
         possiblePlots = new HashMap<>();
         List<AbstractRupSetPlot> choices =
                 ReportPageGen.getDefaultSolutionPlots(ReportPageGen.PlotLevel.FULL);
         for (AbstractRupSetPlot plot : choices) {
-            String simpleName = plot.getClass().getSimpleName();
-            if (simpleName.equals("SolMFDPlot")) {
-                possiblePlots.put(simpleName, new PartitionPlotWrapper(plot));
-            } else {
-                possiblePlots.put(simpleName, plot);
-            }
+            possiblePlots.put(plot.getClass().getSimpleName(), splitByPartition(plot));
         }
         possibleRupSetPlots = new HashMap<>();
         choices = ReportPageGen.getDefaultRupSetPlots(ReportPageGen.PlotLevel.FULL);
         for (AbstractRupSetPlot plot : choices) {
-            String simpleName = plot.getClass().getSimpleName();
-            if (simpleName.equals("SolMFDPlot")) {
-                possibleRupSetPlots.put(simpleName, new PartitionPlotWrapper(plot));
-            } else {
-                possibleRupSetPlots.put(simpleName, plot);
-            }
+            possibleRupSetPlots.put(plot.getClass().getSimpleName(), splitByPartition(plot));
         }
         possibleRupSetPlots.put("PartitionSummaryTable", new PartitionSummaryTable());
         possiblePlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
@@ -259,9 +274,15 @@ public class NZSHM22_ReportPageGen {
         return solution;
     }
 
+    /**
+     * Wraps all plots that should be split by partition in a {@link PartitionPlotWrapper}.
+     *
+     * @param plots the plots to wrap
+     * @return the list of plots, with partitionable plots wrapped
+     */
     protected List<AbstractRupSetPlot> wrapPlots(List<AbstractRupSetPlot> plots) {
         return plots.stream()
-                .map(p -> p instanceof SolMFDPlot ? new PartitionPlotWrapper(p) : p)
+                .map(NZSHM22_ReportPageGen::splitByPartition)
                 .collect(Collectors.toList());
     }
 

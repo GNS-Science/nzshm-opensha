@@ -10,7 +10,6 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.jfree.data.Range;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.data.Site;
@@ -25,7 +24,6 @@ import org.opensha.commons.gui.plot.PlotLineType;
 import org.opensha.commons.gui.plot.PlotSpec;
 import org.opensha.commons.gui.plot.PlotUtils;
 import org.opensha.commons.mapping.gmt.elements.GMT_CPT_Files;
-import org.opensha.commons.param.Parameter;
 import org.opensha.commons.util.cpt.CPT;
 import org.opensha.sha.calc.HazardCurveCalculator;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -139,19 +137,8 @@ public class JointHazardMapCalculator {
      * returned curve has linear x values (IML) and annual probabilities of exceedance as y values.
      */
     public DiscretizedFunc calcSiteCurve(Location location, double period) {
-        Map<TectonicRegionType, Supplier<ScalarIMR>> suppliers = setup.gmmSuppliers();
-        EnumMap<TectonicRegionType, ScalarIMR> gmms = new EnumMap<>(TectonicRegionType.class);
-        for (Map.Entry<TectonicRegionType, Supplier<ScalarIMR>> entry : suppliers.entrySet()) {
-            gmms.put(entry.getKey(), entry.getValue().get());
-        }
-        FaultSysHazardCalcSettings.setIMforPeriod(gmms, period);
-
-        // site params are the union over every GMM in the map
-        Site site = new Site(location);
-        for (Parameter<?> siteParam :
-                FaultSysHazardCalcSettings.getDefaultRefSiteParams(suppliers)) {
-            site.addParameter((Parameter<?>) siteParam.clone());
-        }
+        EnumMap<TectonicRegionType, ScalarIMR> gmms = setup.buildGmmMap(period);
+        Site site = setup.buildSite(location);
 
         DiscretizedFunc xVals = FaultSysHazardCalcSettings.getDefaultXVals(period);
         DiscretizedFunc logCurve = new ArbitrarilyDiscretizedFunc();
@@ -177,9 +164,12 @@ public class JointHazardMapCalculator {
      * @param sites named sites, in the order they should appear in the legend
      * @param period the period to plot, 0 for PGA
      * @return the png that was written
+     * @throws IllegalArgumentException if no site is given: there would be no curve to scale the
+     *     plot to and nothing to write to the CSV
      */
     public File writeSiteCurves(File outputDir, Map<String, Location> sites, double period)
             throws IOException {
+        Preconditions.checkArgument(sites != null && !sites.isEmpty(), "need at least one site");
         Preconditions.checkState(
                 outputDir.exists() || outputDir.mkdirs(),
                 "Could not create output directory %s",
@@ -199,8 +189,14 @@ public class JointHazardMapCalculator {
                 HazardLabels.periodLabel(period) + " (" + HazardLabels.periodUnits(period) + ")");
     }
 
+    /**
+     * Writes one row per site, all sharing the first curve's x values as the header.
+     *
+     * @throws IllegalArgumentException if there is no curve to take the header from
+     */
     static void writeSiteCurvesCSV(File outputFile, Map<String, DiscretizedFunc> curves)
             throws IOException {
+        Preconditions.checkArgument(!curves.isEmpty(), "need at least one curve");
         DiscretizedFunc reference = curves.values().iterator().next();
         CSVFile<String> csv = new CSVFile<>(true);
         List<String> header = new ArrayList<>();
@@ -220,9 +216,15 @@ public class JointHazardMapCalculator {
         csv.writeToFile(outputFile);
     }
 
+    /**
+     * Plots every site's curve on one pair of axes, scaled to the first curve's x range.
+     *
+     * @throws IllegalArgumentException if there is no curve to scale the plot to
+     */
     static File plotSiteCurves(
             File outputDir, String prefix, Map<String, DiscretizedFunc> curves, String xAxisLabel)
             throws IOException {
+        Preconditions.checkArgument(!curves.isEmpty(), "need at least one curve");
         List<XY_DataSet> funcs = new ArrayList<>();
         List<PlotCurveCharacterstics> chars = new ArrayList<>();
 
