@@ -14,8 +14,8 @@ import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Tests for {@link JointSolutions}: backfilling section properties, merging solutions and
- * per-rupture tectonic region types.
+ * Tests for {@link JointSolutions}: backfilling section properties, merging solutions, dropping
+ * negligible rupture rates and per-rupture tectonic region types.
  */
 public class JointSolutionsTest {
 
@@ -231,5 +231,60 @@ public class JointSolutionsTest {
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("JOINT_RUPTURE"));
         }
+    }
+
+    /** Rates below the cutoff are zeroed, which takes those ruptures out of the ERF. */
+    @Test
+    public void testFilterRates() {
+        FaultSystemSolution solution = makeSolution();
+        double[] rates = solution.getRateForAllRups();
+        rates[0] = 1e-12;
+        rates[1] = 1e-3;
+        rates[2] = 1e-9;
+
+        FaultSystemSolution filtered = JointSolutions.filterRates(solution, 1e-9);
+
+        assertEquals("below the cutoff", 0d, filtered.getRateForRup(0), 0d);
+        assertEquals("well above it", 1e-3, filtered.getRateForRup(1), 0d);
+        assertEquals("on the cutoff, so kept", 1e-9, filtered.getRateForRup(2), 0d);
+    }
+
+    /** Filtering leaves the original solution and its rupture set alone. */
+    @Test
+    public void testFilterRatesDoesNotTouchTheOriginal() {
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+
+        FaultSystemSolution filtered = JointSolutions.filterRates(solution, 1e-9);
+
+        assertNotSame(solution, filtered);
+        assertEquals(1e-12, solution.getRateForRup(0), 0d);
+        assertSame(
+                "the rupture set is shared, so rupture indices still line up",
+                solution.getRupSet(),
+                filtered.getRupSet());
+        assertEquals(solution.getRupSet().getNumRuptures(), filtered.getRupSet().getNumRuptures());
+    }
+
+    /** A solution with nothing to drop, or a cutoff of zero, comes back unchanged. */
+    @Test
+    public void testFilterRatesKeepsEverythingWhenItCan() {
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+
+        assertSame(solution, JointSolutions.filterRates(solution, 1e-13));
+        assertSame(
+                "a cutoff of zero filters nothing",
+                solution,
+                JointSolutions.filterRates(solution, 0d));
+    }
+
+    /** A rate that is already zero is left alone rather than counted as newly dropped. */
+    @Test
+    public void testFilterRatesIgnoresZeroRates() {
+        FaultSystemSolution solution = makeSolution();
+        java.util.Arrays.fill(solution.getRateForAllRups(), 0d);
+
+        assertSame(solution, JointSolutions.filterRates(solution, 1e-9));
     }
 }

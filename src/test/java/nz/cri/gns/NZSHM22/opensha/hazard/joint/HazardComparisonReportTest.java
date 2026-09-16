@@ -200,45 +200,17 @@ public class HazardComparisonReportTest {
         assertEquals(50d, diff.get(1), 1e-9);
     }
 
-    /** The difference map is the ratio, undefined where the first map has no hazard. */
-    @Test
-    public void testRatioMap() {
-        GriddedRegion region = mapRegion();
-        GriddedGeoDataSet first = new GriddedGeoDataSet(region, false);
-        GriddedGeoDataSet second = new GriddedGeoDataSet(region, false);
-        for (int i = 0; i < region.getNodeCount(); i++) {
-            first.set(i, i == 0 ? 0d : 0.2);
-            second.set(i, i == 0 ? 0.1 : 0.3);
-        }
-
-        GriddedGeoDataSet ratio = HazardComparisonReport.ratioMap(first, second);
-        assertTrue("no hazard to compare against", Double.isNaN(ratio.get(0)));
-        assertEquals(1.5, ratio.get(1), 1e-9);
-    }
-
     /**
-     * The difference colour ramp follows the data: small differences are not flattened, and large
-     * ones are covered rather than clipped.
+     * The difference colour ramp is fitted to the extremes of the map, so nothing is clipped and a
+     * map of small differences does not come out flat.
      */
     @Test
-    public void testRatioCPTScalesToTheData() throws Exception {
-        assertEquals(1.1, ratioCPT(1.05).getMaxValue(), 1e-9);
-        assertEquals(2d, ratioCPT(1.8).getMaxValue(), 1e-9);
-        assertEquals(30d, ratioCPT(10.4).getMaxValue(), 1e-9);
-        // a map of decreases scales the other side instead
-        assertEquals(0.5, ratioCPT(1 / 1.8).getMinValue(), 1e-9);
-    }
-
-    /**
-     * However far the map runs, the scale covers it. A tenfold increase used to saturate against a
-     * ramp that stopped at +500%.
-     */
-    @Test
-    public void testRatioCPTCoversEverything() throws Exception {
-        assertTrue(ratioCPT(10.4).getMaxValue() >= 10.4);
-        assertTrue(ratioCPT(2500d).getMaxValue() >= 2500d);
-        assertTrue(ratioCPT(1e6).getMaxValue() >= 1e6);
-        assertTrue(ratioCPT(1e-6).getMinValue() <= 1e-6);
+    public void testPercentDiffCPTScalesToTheData() throws Exception {
+        assertEquals(5d, percentDiffCPT(-33d, 5d).getMaxValue(), 1e-9);
+        assertEquals(-33d, percentDiffCPT(-33d, 5d).getMinValue(), 1e-9);
+        // the extremes are used as they are, not rounded outwards to a nicer number
+        assertEquals(186.43, percentDiffCPT(-33.28, 186.43).getMaxValue(), 1e-9);
+        assertEquals(-33.28, percentDiffCPT(-33.28, 186.43).getMinValue(), 1e-9);
     }
 
     /**
@@ -246,61 +218,73 @@ public class HazardComparisonReportTest {
      * the whole ramp instead of spending half of it on changes that do not occur.
      */
     @Test
-    public void testRatioCPTFitsEachSide() throws Exception {
-        CPT cpt = ratioCPT(1.8);
-        assertEquals(2d, cpt.getMaxValue(), 1e-9);
+    public void testPercentDiffCPTFitsEachSide() throws Exception {
+        CPT increases = percentDiffCPT(10d, 80d);
+        assertEquals(80d, increases.getMaxValue(), 1e-9);
         assertEquals(
-                "nothing decreased, so the ramp starts at no change", 1d, cpt.getMinValue(), 1e-9);
+                "nothing decreased, so the ramp starts at no change",
+                0d,
+                increases.getMinValue(),
+                1e-9);
+
+        CPT decreases = percentDiffCPT(-80d, -10d);
+        assertEquals(-80d, decreases.getMinValue(), 1e-9);
+        assertEquals(
+                "nothing increased, so the ramp stops at no change",
+                0d,
+                decreases.getMaxValue(),
+                1e-9);
     }
 
     /** No change keeps the palette's neutral colour however lopsided the two sides are. */
     @Test
-    public void testRatioCPTPinsNoChange() throws Exception {
-        CPT lopsided = HazardComparisonReport.divergingRatioCPT(-Math.log10(1.5), Math.log10(100d));
-        CPT even = HazardComparisonReport.divergingRatioCPT(-1d, 1d);
-        assertEquals(even.getColorRaw(0f), lopsided.getColorRaw(0f));
-        // the bounds are the log ratios the ramp is laid out over
-        assertEquals(-Math.log10(1.5), lopsided.getMinValue(), 1e-9);
-        assertEquals(Math.log10(100d), lopsided.getMaxValue(), 1e-9);
+    public void testPercentDiffCPTPinsNoChange() throws Exception {
+        CPT lopsided = percentDiffCPT(-33d, 186d);
+        CPT even = percentDiffCPT(-100d, 100d);
+        assertEquals(even.getColor(0f), lopsided.getColor(0f));
     }
 
-    /** Nodes where the second model has no hazard at all sit at the bottom of the ramp. */
+    /** The ramp is linear in percent, not a log ratio scale, so its labels read as percentages. */
     @Test
-    public void testRatioCPTColoursZero() throws Exception {
-        CPT cpt = ratioCPT(4d);
-        assertTrue(cpt.isLog10());
-        assertEquals(cpt.getMinColor(), cpt.getColor(0f));
+    public void testPercentDiffCPTIsLinear() throws Exception {
+        assertFalse(percentDiffCPT(-33d, 186d).isLog10());
+    }
+
+    /** A map with no change anywhere still gets a ramp rather than an empty one. */
+    @Test
+    public void testPercentDiffCPTHandlesNoChange() throws Exception {
+        CPT cpt = percentDiffCPT(0d, 0d);
+        assertTrue(cpt.getMaxValue() > cpt.getMinValue());
+        assertEquals(0d, cpt.getMinValue(), 1e-9);
     }
 
     /**
-     * A node that lost all its hazard is coloured as a decrease even when no other node went down.
-     * Without a decrease side, the bottom of the ramp would be the neutral no-change colour.
+     * Nodes with no percentage change to show, i.e. NaN, are drawn in grey rather than left out.
      */
     @Test
-    public void testRatioCPTColoursZeroWithoutOtherDecreases() throws Exception {
+    public void testPercentDiffCPTColoursMissingNodes() throws Exception {
         GriddedRegion region = mapRegion();
-        GriddedGeoDataSet ratio = new GriddedGeoDataSet(region, false);
+        GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
         for (int i = 0; i < region.getNodeCount(); i++) {
-            ratio.set(i, 2d);
+            diff.set(i, 20d);
         }
-        ratio.set(0, 0d);
-        ratio.set(1, 1d);
+        diff.set(0, Double.NaN);
 
-        CPT cpt = HazardComparisonReport.ratioCPT(ratio);
+        CPT cpt = HazardComparisonReport.percentDiffCPT(diff);
 
-        assertTrue("zero needs a decrease side to fall off", cpt.getMinValue() < 1d);
-        assertNotEquals(cpt.getColor(1f), cpt.getColor(0f));
-        assertEquals(cpt.getMinColor(), cpt.getColor(0f));
+        assertEquals(java.awt.Color.LIGHT_GRAY, cpt.getNanColor());
+        // NaN nodes are ignored when the ramp is fitted
+        assertEquals(20d, cpt.getMaxValue(), 1e-9);
     }
 
-    /** The ramp a difference map gets when every node changed by the same factor. */
-    private static CPT ratioCPT(double factor) throws Exception {
+    /** The ramp a difference map gets when its percentage changes run from min to max. */
+    private static CPT percentDiffCPT(double min, double max) throws Exception {
         GriddedRegion region = mapRegion();
-        GriddedGeoDataSet ratio = new GriddedGeoDataSet(region, false);
+        GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
         for (int i = 0; i < region.getNodeCount(); i++) {
-            ratio.set(i, factor);
+            diff.set(i, min + (max - min) * i / (double) (region.getNodeCount() - 1));
         }
-        return HazardComparisonReport.ratioCPT(ratio);
+        return HazardComparisonReport.percentDiffCPT(diff);
     }
 
     /** The curve ratio ignores the tail where the two curves are just noise. */

@@ -22,13 +22,32 @@ import org.opensha.sha.faultSurface.FaultSection;
  * <p>The colour is the change itself — {@link SiteSourceComparison#getDifferences()}, the
  * comparison solution's contribution minus the reference solution's — on a diverging scale centred
  * on no change. A section's colour is therefore the rate of exceedance the new solution routes
- * through it that the old one did not, which makes the colours additive: they say where the change
- * in the site's total came from, and a section carrying a thousandth of the site's hazard cannot
- * look like one carrying a tenth of it however much it moved in relative terms.
+ * through it that the old one did not, so the map says where the change in the site's total came
+ * from and not merely which sections moved most in relative terms.
  *
- * <p>The scale is linear and fitted to the map, each side rounded outwards on its own to a round
- * number and neither side clipped. A difference is always finite, including for a section that only
- * one of the two solutions has, so unlike a ratio there is nothing here that a scale cannot hold.
+ * <p>The scale is fitted to the map, each side rounded outwards on its own to a round number and
+ * neither side clipped. A difference is always finite, including for a section that only one of the
+ * two solutions has, so unlike a ratio there is nothing here that a scale cannot hold.
+ *
+ * <p>Colour follows the logarithm of the change, out from zero in both directions. A site's hazard
+ * is usually dominated by one or two sections, and on a linear ramp their changes set the scale and
+ * leave every other section in the first sliver of the palette, all but colourless — which is the
+ * map at its least useful, because those are the sections a reader cannot get from the summary
+ * numbers. Log spacing gives each decade of change the same share of the palette, so a section that
+ * moved by a tenth of the largest change still has a colour worth reading.
+ *
+ * <p>What that costs is proportionality: on a log ramp one section's colour being twice as strong
+ * as another's no longer means it carried twice the change, only that it was bigger. Colours stop
+ * being additive in the eye, and a reader after the actual amounts wants the table or the CSV, not
+ * the map. What the map keeps is the ordering and the order of magnitude, and it keeps them for
+ * every section rather than for the largest one or two.
+ *
+ * <p>Changes smaller than {@link #setNoChangeRate} count as none and are drawn in one flat colour,
+ * {@link #setZeroColor}, which says outright which sections did not really move. That rate defaults
+ * to {@link #setOmitBelowRate}, i.e. the same amount of hazard that decides whether a section is
+ * worth drawing at all, so a section is coloured only if it moved by as much as it had to carry to
+ * be on the map in the first place. With neither set the ramp falls back to covering {@link
+ * #DEFAULT_LOG_DECADES} decades below its largest change.
  *
  * <p>Changes are drawn per a round number of years rather than per year — see {@link #unitYears} —
  * because the rates involved are of the order of a thousandth per year, and a colour bar labelled
@@ -41,7 +60,16 @@ import org.opensha.sha.faultSurface.FaultSection;
  */
 public class SiteSourceDiffMapPlotter {
 
+    /**
+     * Decades of change the colour ramp covers when nothing says what counts as no change. Only a
+     * fallback: a map that knows its own negligible rate uses that instead. See {@link
+     * #setNoChangeRate}.
+     */
+    public static final double DEFAULT_LOG_DECADES = 3d;
+
     private double omitBelowRate = Double.NaN;
+    private double noChangeRate = Double.NaN;
+    private Color zeroColor = DivergingCPT.DEFAULT_ZERO_COLOR;
     private double bufferKm = SiteSourceMapPlotter.DEFAULT_BUFFER_KM;
     private Region region;
     private CPT cpt;
@@ -57,6 +85,33 @@ public class SiteSourceDiffMapPlotter {
         Preconditions.checkArgument(
                 Double.isNaN(omitBelowRate) || omitBelowRate > 0, "omitBelowRate must be positive");
         this.omitBelowRate = omitBelowRate;
+        return this;
+    }
+
+    /**
+     * Sets the change, in 1/yr, below which the map calls it no change: the floor of its log colour
+     * ramp, and the half-width of the flat band drawn in {@link #setZeroColor}.
+     *
+     * <p>Defaults to {@link #setOmitBelowRate}, which is the amount of hazard a section has to
+     * carry to be drawn at all, so that a section is given a colour only once it has moved by as
+     * much as it needed to carry to be on the map. With neither set, the ramp covers {@link
+     * #DEFAULT_LOG_DECADES} decades below its own largest change instead.
+     *
+     * @param noChangeRate the rate in 1/yr, or {@link Double#NaN} to fall back as above
+     */
+    public SiteSourceDiffMapPlotter setNoChangeRate(double noChangeRate) {
+        Preconditions.checkArgument(
+                Double.isNaN(noChangeRate) || noChangeRate > 0, "noChangeRate must be positive");
+        this.noChangeRate = noChangeRate;
+        return this;
+    }
+
+    /**
+     * Sets the colour of the no-change band. Defaults to {@link DivergingCPT#DEFAULT_ZERO_COLOR};
+     * pass null to leave the band in the palette's own neutral colour.
+     */
+    public SiteSourceDiffMapPlotter setZeroColor(Color zeroColor) {
+        this.zeroColor = zeroColor;
         return this;
     }
 
@@ -122,7 +177,7 @@ public class SiteSourceDiffMapPlotter {
         mapMaker.plotSectScalars(
                 toList(scalars),
                 toList(sortables(scalars)),
-                differenceCPT(scalars),
+                differenceCPT(scalars, unitYears),
                 HazardLabels.SECTION_HAZARD + " Change (" + HazardLabels.rateUnit(unitYears) + ")");
 
         mapMaker.setScatterSymbol(
@@ -222,14 +277,20 @@ public class SiteSourceDiffMapPlotter {
     }
 
     /**
-     * The palette laid out over the changes on the map, with no change on its neutral colour. Each
-     * side is fitted to the data and rounded outwards on its own, so nothing is clipped and a map
-     * whose sections all moved the same way still uses the whole ramp. See {@link DivergingCPT}.
+     * The palette laid out over the changes on the map, logarithmically out from no change in both
+     * directions. Each side is fitted to the data and rounded outwards on its own, so nothing is
+     * clipped and a map whose sections all moved the same way still uses the whole ramp; the two
+     * sides are coloured at the same rate, so an increase and a decrease of the same size look
+     * equally strong. Changes below {@link #logFloor} are the no-change band. See {@link
+     * DivergingCPT}.
      *
      * <p>If nothing changed at all, the ramp runs from -1 to 1 so that every section is drawn in
-     * the neutral colour, which is the answer for two solutions that agree.
+     * the no-change colour, which is the answer for two solutions that agree.
+     *
+     * @param scalars the changes, in the units the map is drawn in
+     * @param unitYears the years those units are per, used to convert the no-change rate
      */
-    protected CPT differenceCPT(double[] scalars) throws IOException {
+    protected CPT differenceCPT(double[] scalars, double unitYears) throws IOException {
         double smallest = 0;
         double largest = 0;
         for (double scalar : scalars) {
@@ -244,7 +305,27 @@ public class SiteSourceDiffMapPlotter {
             min = -1d;
             max = 1d;
         }
-        return DivergingCPT.centredOnZero(getCPT(), min, max);
+        return DivergingCPT.ramp(getCPT(), min, max)
+                .logFloor(logFloor(min, max, unitYears))
+                .zeroColor(zeroColor)
+                .build();
+    }
+
+    /**
+     * The magnitude the colour ramp bottoms out at, in the units the map is drawn in: {@link
+     * #setNoChangeRate} if it has been set, otherwise {@link #setOmitBelowRate}, otherwise {@link
+     * #DEFAULT_LOG_DECADES} decades below the larger side of the ramp.
+     *
+     * <p>A floor at or above the ramp's own extent leaves the whole map in the no-change colour.
+     * That is the honest answer when no section moved by as much as the map calls negligible, and
+     * {@link DivergingCPT} draws it as such rather than treating it as an error.
+     */
+    protected double logFloor(double min, double max, double unitYears) {
+        double absolute = Double.isNaN(noChangeRate) ? omitBelowRate : noChangeRate;
+        if (!Double.isNaN(absolute)) {
+            return absolute * unitYears;
+        }
+        return Math.max(-min, max) / Math.pow(10, DEFAULT_LOG_DECADES);
     }
 
     /** A buffer around the drawn sections, or the region that was set. */

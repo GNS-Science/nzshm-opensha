@@ -40,11 +40,14 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  *   <li>a hazard curve per site and period, for the sites of {@link #defaultSites()}.
  * </ul>
  *
- * <p>Map differences are drawn as the ratio of the second config to the first on a logarithmic
- * scale, so red means the second config gives stronger shaking, and the scale always covers the
- * whole range of change rather than clipping the extremes. See {@link #ratioCPT}. Figure captions
- * report the same thing as a percentage change, {@code 100 * (second - first) / first}, which reads
- * more naturally in prose. Clicking any figure opens it full size.
+ * <p>Map differences are drawn as the percentage change from the first config to the second, {@code
+ * 100 * (second - first) / first}, so red means the second config gives stronger shaking. The scale
+ * runs from the smallest to the largest change on the map, so nothing is clipped, and it colours
+ * decreases and increases at the same rate, so a change of a given size looks the same whichever
+ * way it went. Colour follows the logarithm of the change in both directions, so an outlier
+ * somewhere does not flatten the rest of the map, and changes under {@link #NO_CHANGE_PERCENT}
+ * count as none and are drawn in green. See {@link #percentDiffCPT}. Figure captions report the
+ * same numbers. Clicking any figure opens it full size.
  *
  * <p>Both configs must be calculated over the same region and the same periods, otherwise the maps
  * cannot be differenced. Use {@link #setRegion} or {@link #setSpacing} to set them together.
@@ -96,13 +99,22 @@ public class HazardComparisonReport {
     public static final String INDEX_FILE = ReportPage.INDEX_FILE;
 
     /**
-     * Ratios that the difference colour ramp is scaled to, i.e. 1.1 means a scale running from a
-     * tenth less to a tenth more. The smallest one that covers the whole map is used, so that a map
-     * of small differences does not come out flat. See {@link #ratioCPT}.
+     * Half-width in percent of the difference colour ramp when the two configs agree everywhere. A
+     * ramp needs a non-empty range even when there is no change to show. See {@link
+     * #percentDiffCPT}.
      */
-    protected static final double[] RATIO_SCALES = {
-        1.1, 1.25, 1.5, 2d, 3d, 5d, 10d, 30d, 100d, 300d, 1000d
-    };
+    protected static final double EMPTY_DIFF_SCALE = 1d;
+
+    /**
+     * Percentage change below which the difference maps call it no change: the floor of their log
+     * colour ramp, and the half-width of the band drawn in {@link #NO_CHANGE_COLOR}. An absolute
+     * figure rather than a share of the map's range, so that it means the same thing on every map
+     * in the report. See {@link #percentDiffCPT}.
+     */
+    protected static final double NO_CHANGE_PERCENT = 1d;
+
+    /** The colour of the no-change band on the difference maps. See {@link #NO_CHANGE_PERCENT}. */
+    protected static final Color NO_CHANGE_COLOR = DivergingCPT.DEFAULT_ZERO_COLOR;
 
     /**
      * Annual exceedance probability below which curve values are ignored when comparing. Curves get
@@ -257,14 +269,15 @@ public class HazardComparisonReport {
 
     /** The line of prose below the title, explaining how to read the difference maps. */
     protected String intro() {
-        return "Map differences are the ratio of "
-                + second.getName()
-                + " to "
+        return "Map differences are the percentage change from "
                 + first.getName()
-                + " on a logarithmic scale that always covers the whole range of change, so red"
-                + " means "
+                + " to "
                 + second.getName()
-                + " gives stronger shaking. Captions report the same change as a percentage.";
+                + ", on a log scale that always covers the whole range of change, so red means "
+                + second.getName()
+                + " gives stronger shaking and green means a change of under "
+                + (int) NO_CHANGE_PERCENT
+                + "%. Captions report the same numbers.";
     }
 
     protected JointHazardMapCalculator calculate(HazardReportSource config) {
@@ -299,7 +312,7 @@ public class HazardComparisonReport {
                                 + HazardLabels.periodPrefix(period)
                                 + "_"
                                 + HazardLabels.slug(rp.name());
-                String zLabel = "Log10 " + periodLabel + " (" + units + "), " + rp.label;
+                String zLabel = periodLabel + " (" + units + "), " + rp.label;
 
                 CPT cpt = sharedLogCPT(firstMap, secondMap);
                 ReportPage.Row row = new ReportPage.Row(periodLabel + ", " + rp.label);
@@ -309,7 +322,7 @@ public class HazardComparisonReport {
                                 .plotMap(
                                         imageDir,
                                         prefix + "_" + first.getId(),
-                                        log10(firstMap),
+                                        firstMap,
                                         cpt,
                                         first.getName(),
                                         zLabel),
@@ -321,28 +334,28 @@ public class HazardComparisonReport {
                                 .plotMap(
                                         imageDir,
                                         prefix + "_" + second.getId(),
-                                        log10(secondMap),
+                                        secondMap,
                                         cpt,
                                         second.getName(),
                                         zLabel),
                         second.getName(),
                         mapStats(secondMap, units));
 
-                // the map is a ratio on a log scale, which covers the whole range of changes;
-                // the caption reports the same thing as percentages, which read more naturally
-                GriddedGeoDataSet ratioMap = ratioMap(firstMap, secondMap);
+                // the map and its caption show the same thing: percentage change, on a ramp
+                // fitted to the extremes of this map with no change on the neutral colour
+                GriddedGeoDataSet diffMap = percentDiff(firstMap, secondMap);
                 row.add(
                         firstCalc
                                 .getCalc()
                                 .plotMap(
                                         imageDir,
                                         prefix + "_diff",
-                                        ratioMap,
-                                        ratioCPT(ratioMap),
+                                        diffMap,
+                                        percentDiffCPT(diffMap),
                                         differenceLabel(),
-                                        "Ratio, " + periodLabel + ", " + rp.label),
+                                        "% change, " + periodLabel + ", " + rp.label),
                         "Difference",
-                        diffStats(percentDiff(firstMap, secondMap)));
+                        diffStats(diffMap));
                 section.add(row);
             }
         }
@@ -626,8 +639,13 @@ public class HazardComparisonReport {
     }
 
     /**
-     * A colour ramp covering all the given maps, so that they are directly comparable. Values are
-     * log10 ground motions; the ramp is rounded outwards to whole decades.
+     * A colour ramp covering all the given maps, so that they are directly comparable. The ramp is
+     * logarithmic, rounded outwards to whole decades.
+     *
+     * <p>The CPT's own values are the logarithms — that is what it is rescaled onto — but {@link
+     * CPT#setLog10} tells it that, so it takes the linear ground motions handed to it, logs them
+     * itself, and OpenSHA labels the colour bar in g rather than in log10 g. See {@link
+     * SiteSourceMapPlotter#logCPT}, which does the same thing.
      */
     protected static CPT sharedLogCPT(GriddedGeoDataSet... maps) throws IOException {
         double min = Double.POSITIVE_INFINITY;
@@ -651,116 +669,73 @@ public class HazardComparisonReport {
             max = min + 1d;
         }
         CPT cpt = GMT_CPT_Files.RAINBOW_UNIFORM.instance().rescale(min, max);
-        cpt.setNanColor(Color.LIGHT_GRAY);
-        return cpt;
-    }
-
-    /**
-     * A diverging colour ramp for a ratio map, logarithmic and symmetric about one, so that halving
-     * and doubling are the same distance from the centre and no change sits on the neutral colour.
-     *
-     * <p>The scale always covers the whole map, each side rounded out on its own to the smallest of
-     * {@link #RATIO_SCALES} that contains it. Percentage change is a poor thing to put a linear
-     * scale on — it is bounded below by -100% and unbounded above, so a map with a tenfold increase
-     * somewhere either saturates or squashes every decrease into a sliver of the ramp. On a log
-     * ratio scale halving and doubling are the same distance from the centre and nothing has to be
-     * clipped. See {@link #divergingRatioCPT} for why the two sides are scaled separately.
-     *
-     * <p>The values plotted are the ratios themselves rather than their logarithms, because {@link
-     * CPT#setLog10} makes the palette do the logarithm and OpenSHA then labels the colour bar in
-     * ratios. Ratios of zero, where the second model has no hazard at all, fall off the bottom and
-     * take the ramp's end colour.
-     */
-    protected static CPT ratioCPT(GriddedGeoDataSet ratioMap) throws IOException {
-        double smallest = 1d;
-        double largest = 1d;
-        boolean anyZero = false;
-        for (int i = 0; i < ratioMap.size(); i++) {
-            double ratio = ratioMap.get(i);
-            if (ratio == 0d) {
-                anyZero = true;
-            } else if (Double.isFinite(ratio) && ratio > 0) {
-                smallest = Math.min(smallest, ratio);
-                largest = Math.max(largest, ratio);
-            }
-        }
-        // each side is rounded outwards on its own, so the ramp is used across its whole width even
-        // when every node moved the same way; a side with nothing on it gets no width at all
-        double down = smallest < 1d ? ratioScale(1d / smallest) : 1d;
-        // a node that lost all its hazard is off the bottom of the log scale; make sure there is a
-        // decrease side for it to fall off, or it would take the neutral colour
-        if (anyZero && down == 1d) {
-            down = RATIO_SCALES[0];
-        }
-        double up = largest > 1d ? ratioScale(largest) : 1d;
-        if (down == 1d && up == 1d) {
-            // the two models agree everywhere, so give the ramp somewhere to be
-            up = RATIO_SCALES[0];
-        }
-
-        CPT cpt = divergingRatioCPT(-Math.log10(down), Math.log10(up));
         cpt.setLog10(true);
         cpt.setNanColor(Color.LIGHT_GRAY);
-        // a node where the second model has no hazard has a ratio of zero, which is off the bottom
-        // of any log scale; clamp it to the end of the ramp rather than leaving it uncoloured
+        // a site with no hazard at all is off the bottom of any log scale; clamp it to the end of
+        // the ramp rather than leaving it uncoloured
         cpt.setBelowMinColor(cpt.getMinColor());
         cpt.setAboveMaxColor(cpt.getMaxColor());
         return cpt;
     }
 
     /**
-     * A diverging ramp over log ratios from {@code logMin} to {@code logMax}, with the palette's
-     * neutral colour pinned to no change however lopsided those bounds are. See {@link
-     * DivergingCPT}.
+     * A diverging colour ramp for a percentage change map, running from the largest decrease to the
+     * largest increase on the map with no change on the palette's neutral colour.
      *
-     * @param logMin log10 of the smallest ratio on the map, at most zero
-     * @param logMax log10 of the largest ratio on the map, at least zero
+     * <p>The ends are the map's own extremes, not rounded, so the ramp covers exactly what the map
+     * holds and the caption's min and max are the ends of the colour bar. Nothing is clipped, so
+     * the below-min and above-max colours are never reached by real data; they are set anyway so
+     * that rounding at the ends cannot leave a node uncoloured.
+     *
+     * <p>Colour is spent on the logarithm of the change, out from zero in both directions, so that
+     * one node that moved by a couple of hundred percent does not push every ordinary change into
+     * the first sliver of the palette and leave the map looking flat. The ramp bottoms out at
+     * {@link #NO_CHANGE_PERCENT}: smaller changes count as none and are drawn in {@link
+     * #NO_CHANGE_COLOR}, which says which cells did not really move rather than leaving them to
+     * fade into the palette. That floor is an absolute percentage, so a cell is the no-change
+     * colour on the same terms on every map in the report.
+     *
+     * <p>The two sides are coloured at the same rate, {@link DivergingCPT.Scaling#BALANCED}, so a
+     * decrease and an increase of the same size look equally strong and only the larger side
+     * reaches full saturation. A map where nearly everything moved one way still uses the ramp's
+     * whole width, because the range itself stays asymmetric; what it does not do is make the
+     * smaller side look bigger than it is.
+     *
+     * <p>Unrounded ends mean the colour bar's tick labels land on round numbers inside the range
+     * rather than on the ends themselves. Zero is always one of them: the ticks are multiples of
+     * the tick interval and the range straddles zero. The bar's axis stays linear in percent, so
+     * the no-change band is drawn at its true width and the log spacing shows up as colour changing
+     * fastest either side of it.
+     *
+     * <p>Nodes where the first config has no hazard are NaN, have no percentage change to show, and
+     * are drawn in grey. See {@link #percentDiff}.
      */
-    protected static CPT divergingRatioCPT(double logMin, double logMax) throws IOException {
-        return DivergingCPT.centredOnZero(
-                GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), logMin, logMax);
-    }
-
-    /**
-     * The smallest of {@link #RATIO_SCALES} that covers the given extent, or the next power of ten
-     * if none of them does. Never returns less than the extent, so a map is never clipped.
-     */
-    protected static double ratioScale(double extent) {
-        for (double candidate : RATIO_SCALES) {
-            if (extent <= candidate) {
-                return candidate;
-            }
+    protected static CPT percentDiffCPT(GriddedGeoDataSet percentMap) throws IOException {
+        double[] values = finiteValues(percentMap);
+        // finiteValues sorts, so the extremes are the ends; clamped so that a map that moved only
+        // one way still has zero at the end of the ramp rather than inside it
+        double min = values.length == 0 ? 0d : Math.min(0d, values[0]);
+        double max = values.length == 0 ? 0d : Math.max(0d, values[values.length - 1]);
+        if (min == 0d && max == 0d) {
+            // the two configs agree everywhere, so give the ramp somewhere to be
+            max = EMPTY_DIFF_SCALE;
         }
-        return Math.pow(10, Math.ceil(Math.log10(extent)));
-    }
 
-    protected static GriddedGeoDataSet log10(GriddedGeoDataSet map) {
-        GriddedGeoDataSet log = map.copy();
-        log.log10();
-        return log;
-    }
-
-    /**
-     * The ratio of the second map to the first, which is what the difference map draws. Nodes where
-     * the first map has no hazard are left as NaN: there is nothing to take a ratio against.
-     */
-    protected static GriddedGeoDataSet ratioMap(
-            GriddedGeoDataSet firstMap, GriddedGeoDataSet secondMap) {
-        Preconditions.checkArgument(
-                firstMap.size() == secondMap.size(), "maps must cover the same region");
-        GriddedGeoDataSet ratio =
-                new GriddedGeoDataSet(firstMap.getRegion(), firstMap.isLatitudeX());
-        for (int i = 0; i < firstMap.size(); i++) {
-            double a = firstMap.get(i);
-            ratio.set(i, a > 0 ? secondMap.get(i) / a : Double.NaN);
-        }
-        return ratio;
+        CPT cpt =
+                DivergingCPT.ramp(GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), min, max)
+                        .logFloor(NO_CHANGE_PERCENT)
+                        .zeroColor(NO_CHANGE_COLOR)
+                        .build();
+        cpt.setNanColor(Color.LIGHT_GRAY);
+        cpt.setBelowMinColor(cpt.getMinColor());
+        cpt.setAboveMaxColor(cpt.getMaxColor());
+        return cpt;
     }
 
     /**
-     * The percentage change from the first map to the second, which the difference map is captioned
-     * with. Nodes where the first map has no hazard are left as NaN: there is no meaningful
-     * percentage to report there.
+     * The percentage change from the first map to the second, which is what the difference map
+     * draws and what its caption reports. Nodes where the first map has no hazard are left as NaN:
+     * there is no meaningful percentage to report there.
      */
     protected static GriddedGeoDataSet percentDiff(
             GriddedGeoDataSet firstMap, GriddedGeoDataSet secondMap) {
@@ -898,6 +873,7 @@ public class HazardComparisonReport {
                         "Crustal / interface / joint ruptures",
                         ruptureMix(firstValidation),
                         ruptureMix(secondValidation))
+                .addRow("Minimum rupture rate", rateCutoff(first), rateCutoff(second))
                 .addRow(
                         "Region",
                         region.getNodeCount()
@@ -905,6 +881,14 @@ public class HazardComparisonReport {
                                 + (float) region.getSpacing()
                                 + " degrees")
                 .addRow("Periods", periodLabels());
+    }
+
+    /**
+     * The rupture rate cutoff a config was calculated with. See {@link JointSolutions#filterRates}.
+     */
+    protected static String rateCutoff(HazardReportSource config) {
+        double rate = config.getInput().getMinRuptureRate();
+        return rate > 0 ? (float) rate + " /yr" : "none";
     }
 
     protected static String ruptureMix(JointHazardInput.ValidationResult validation) {

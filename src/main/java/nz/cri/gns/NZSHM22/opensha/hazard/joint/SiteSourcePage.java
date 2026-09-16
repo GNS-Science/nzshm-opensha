@@ -384,7 +384,12 @@ public class SiteSourcePage {
                 + " is what shows which ruptures the hazard comes from. Sections carrying less than "
                 + NEGLIGIBLE_PERCENT
                 + "% of the site's hazard in both solutions are left off, as are sections that no"
-                + " rupture reaching the level runs over.";
+                + " rupture reaching the level runs over. The difference map colours by the"
+                + " logarithm of the change, so that the sections either side of the one or two"
+                + " that dominate the site are still legible rather than washed out; green means a"
+                + " section moved by less than the "
+                + NEGLIGIBLE_PERCENT
+                + "% it had to carry to be drawn at all.";
     }
 
     /**

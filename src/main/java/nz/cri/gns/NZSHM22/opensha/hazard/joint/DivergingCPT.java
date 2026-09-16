@@ -11,20 +11,102 @@ import org.opensha.commons.util.cpt.CPTVal;
  *
  * <p>Rescaling a diverging palette onto a lopsided range would slide its neutral colour off zero,
  * which is the one thing a difference map has to get right. So the two halves are laid out
- * separately: the lower half of the palette is stretched over the negative side and the upper half
- * over the positive side.
+ * separately: the lower half of the palette over the negative side, the upper half over the
+ * positive side. Ramps are built through {@link #ramp}.
  *
- * <p>The cost is that a colour distance means a different amount on each side of the ramp. That is
- * a fair trade for a map where nearly everything moved one way — a scale symmetric enough to keep
- * the two sides comparable would spend half its width on changes that do not occur, and wash out
- * the ones that do. Both difference maps label their colour bars with real values, and the ramp
- * carries a tick interval that puts a label on each end and on zero (see {@link #tickInterval}), so
- * what a colour means stays legible.
+ * <h2>Scaling</h2>
  *
- * <p>Used by {@link HazardComparisonReport} for map ratios, where the range is in log space, and by
- * {@link SiteSourceDiffMapPlotter} for section rate changes, where it is linear.
+ * <p>How much of the palette each side gets is the {@link Scaling} choice. Under {@link
+ * Scaling#BALANCED}, the default, both sides are laid out at the same rate, set by whichever side
+ * is longer: on a ramp from -33% to 77%, -33% is exactly as strong a blue as +33% would be a red,
+ * and only +77% reaches the palette's full saturation. Equal changes then look equal wherever they
+ * fall, so a map read by eye is not biased towards the shorter side.
+ *
+ * <p>{@link Scaling#INDEPENDENT} stretches each side over its whole half of the palette instead, so
+ * that both ends saturate. That uses the palette's full contrast on both sides, which is worth
+ * having when the shorter side is so short that balanced scaling leaves it nearly colourless, but a
+ * reader judging by colour alone will read the shorter side as bigger than it is.
+ *
+ * <h2>The zero band</h2>
+ *
+ * <p>A ramp given a {@link Builder#zeroBand} treats changes smaller than it as none and draws that
+ * band, from {@code -width} to {@code +width}, in one flat colour: the palette's own neutral unless
+ * {@link Builder#zeroColor} gives it another. A distinct colour there says which cells did not
+ * really move rather than leaving them to fade into the palette. Outside the band the palette picks
+ * up from its neutral colour and runs to each end.
+ *
+ * <p>The width is an absolute value, not a fraction of the range, so it means the same thing on
+ * every map in a report and two maps can be compared by eye.
+ *
+ * <h2>Log spacing</h2>
+ *
+ * <p>A ramp given a {@link Builder#logFloor} spends its colour on the logarithm of the change
+ * rather than the change itself, in both directions out from zero. On a linear ramp a single large
+ * outlier washes the map out: if one node moved by 200% and the rest by a few percent, the rest all
+ * land in the first sliver of the palette and the map reads as flat. Log spacing gives each decade
+ * of change the same share of the palette, so the small changes that make up most of a map stay
+ * legible while the outlier still sits at the end of the ramp.
+ *
+ * <p>The logarithm has no bottom, so log spacing needs a zero band to bottom out at; {@link
+ * Builder#logFloor} sets both at once. A band is worth colouring on a log ramp in particular,
+ * because the band is a real and visible part of the map rather than an infinitesimal line.
+ *
+ * <h2>Bounds and ticks</h2>
+ *
+ * <p>Whatever the scaling and spacing, the ramp keeps the range it was given rather than padding
+ * out to a symmetric one, so no width is spent on changes that do not occur, and the colour bar is
+ * labelled with real values, so what a colour means stays legible.
+ *
+ * <p>A ramp whose bounds are round numbers, i.e. one fitted with {@link #niceCeiling}, is given a
+ * tick interval that puts a label on each end and on zero; see {@link #tickInterval}. A ramp fitted
+ * to raw data extremes has no such interval and is left on the plot's automatic ticks, which still
+ * label zero — zero is a multiple of every tick interval and the range straddles it — but not the
+ * ends. The colour bar's axis stays linear in the data either way: log spacing changes which colour
+ * a value gets, not where on the bar it sits.
+ *
+ * <p>Used by {@link HazardComparisonReport} for percentage changes in ground motion, fitted to the
+ * map's extremes, and by {@link SiteSourceDiffMapPlotter} for section rate changes, rounded with
+ * {@link #niceCeiling}.
  */
 public class DivergingCPT {
+
+    /** How the palette is shared out between the two sides of a ramp. */
+    public enum Scaling {
+        /**
+         * Both sides at the same rate, set by the longer side, so that equal changes either side of
+         * zero get equally strong colours. The shorter side stops short of the palette's full
+         * saturation, by the ratio of the two sides.
+         */
+        BALANCED,
+        /**
+         * Each side stretched over its own half of the palette, so that both ends saturate whatever
+         * their range. Uses the palette's full contrast on both sides, at the cost of the shorter
+         * side reading as bigger than it is.
+         */
+        INDEPENDENT
+    }
+
+    /** Whether the palette follows the change itself or its logarithm. */
+    public enum Spacing {
+        /** Colour in proportion to the change, so that colour distance is change distance. */
+        LINEAR,
+        /**
+         * Colour in proportion to the logarithm of the change, so that each decade gets the same
+         * share of the palette and one large outlier cannot flatten everything else. Needs a {@link
+         * Builder#zeroBand} to bottom out at.
+         */
+        LOG
+    }
+
+    /** The scaling used when none is given. */
+    public static final Scaling DEFAULT_SCALING = Scaling.BALANCED;
+
+    /**
+     * A green for the zero band of a log ramp, distinct from both ends of a red/blue diverging
+     * palette so that the cells which did not really move read as their own thing rather than as a
+     * weak change. Ramps do not use it unless a caller passes it to {@link Builder#zeroColor}.
+     */
+    public static final Color DEFAULT_ZERO_COLOR = new Color(60, 160, 90);
 
     /** Number of colour steps either side of zero. */
     public static final int DEFAULT_STEPS = 64;
@@ -49,40 +131,231 @@ public class DivergingCPT {
 
     private DivergingCPT() {}
 
-    /** {@link #centredOnZero(CPT, double, double, int)} with {@link #DEFAULT_STEPS}. */
-    public static CPT centredOnZero(CPT palette, double min, double max) {
-        return centredOnZero(palette, min, max, DEFAULT_STEPS);
-    }
-
     /**
-     * A ramp from {@code min} to {@code max} with the palette's middle colour at zero.
+     * A ramp from {@code min} to {@code max} with the palette's neutral colour at zero, {@link
+     * #DEFAULT_SCALING} scaling, {@link #DEFAULT_STEPS} colour steps and linear spacing. Set
+     * whatever else is wanted on the returned builder, then call {@link Builder#build()}.
      *
      * @param palette a diverging palette; it is rescaled internally, so pass an unscaled instance
      * @param min the bottom of the ramp, at most zero
      * @param max the top of the ramp, at least zero
-     * @param steps colour steps either side of zero
-     * @throws IllegalArgumentException if the range does not contain zero, or is empty
      */
-    public static CPT centredOnZero(CPT palette, double min, double max, int steps) {
-        Preconditions.checkArgument(
-                min <= 0 && max >= 0, "the ramp has to contain zero, got %s to %s", min, max);
-        Preconditions.checkArgument(min < 0 || max > 0, "the ramp cannot be empty");
-        Preconditions.checkArgument(steps > 0, "steps must be positive");
+    public static Builder ramp(CPT palette, double min, double max) {
+        return new Builder(palette, min, max);
+    }
 
-        CPT scaled = palette.rescale(-1d, 1d);
-        CPT cpt = new CPT();
-        // a side with no range at all is skipped, which leaves zero at that end of the ramp
-        if (min < 0) {
-            addSteps(cpt, scaled, min, 0d, -1d, 0d, steps);
+    /** A linear ramp with the defaults, i.e. {@code ramp(palette, min, max).build()}. */
+    public static CPT centredOnZero(CPT palette, double min, double max) {
+        return ramp(palette, min, max).build();
+    }
+
+    /** A linear ramp with the given scaling. */
+    public static CPT centredOnZero(CPT palette, double min, double max, Scaling scaling) {
+        return ramp(palette, min, max).scaling(scaling).build();
+    }
+
+    /** Collects the choices a ramp is built from. See {@link DivergingCPT#ramp}. */
+    public static class Builder {
+
+        protected final CPT palette;
+        protected final double min;
+        protected final double max;
+
+        protected int steps = DEFAULT_STEPS;
+        protected Scaling scaling = DEFAULT_SCALING;
+
+        /** Whether colour follows the change or its logarithm. */
+        protected Spacing spacing = Spacing.LINEAR;
+
+        /** Half-width of the flat no-change band, or zero for no band. */
+        protected double zeroBand = 0d;
+
+        /** The colour of the zero band, or null for the palette's own neutral colour. */
+        protected Color zeroColor;
+
+        protected Builder(CPT palette, double min, double max) {
+            this.palette = Preconditions.checkNotNull(palette, "need a palette");
+            this.min = min;
+            this.max = max;
         }
-        if (max > 0) {
-            addSteps(cpt, scaled, 0d, max, 0d, 1d, steps);
+
+        /** Colour steps either side of zero. Defaults to {@link DivergingCPT#DEFAULT_STEPS}. */
+        public Builder steps(int steps) {
+            this.steps = steps;
+            return this;
         }
-        double tick = tickInterval(min, max);
-        if (Double.isFinite(tick)) {
-            cpt.setPreferredTickInterval(tick);
+
+        /** How the palette is shared out between the two sides. See {@link Scaling}. */
+        public Builder scaling(Scaling scaling) {
+            this.scaling = scaling;
+            return this;
         }
-        return cpt;
+
+        /**
+         * Draws changes smaller than the given magnitude as no change, in one flat band running
+         * from {@code -half} to {@code +half}, coloured by {@link #zeroColor}. Outside the band the
+         * palette picks up from its neutral colour and runs to each end as {@link #spacing} says.
+         * Pass zero for no band, which is the default.
+         *
+         * <p>The width is in the units of the ramp, not a fraction of its range, so the same width
+         * means the same thing on every map it is used for.
+         *
+         * @throws IllegalArgumentException if the width is negative or not finite
+         */
+        public Builder zeroBand(double half) {
+            Preconditions.checkArgument(
+                    half >= 0 && Double.isFinite(half),
+                    "the zero band has to be zero or a positive number, got %s",
+                    half);
+            this.zeroBand = half;
+            return this;
+        }
+
+        /**
+         * Whether the palette follows the change itself or its logarithm. Defaults to {@link
+         * Spacing#LINEAR}; {@link Spacing#LOG} needs a {@link #zeroBand} to bottom out at.
+         */
+        public Builder spacing(Spacing spacing) {
+            this.spacing = spacing;
+            return this;
+        }
+
+        /**
+         * Log spacing bottoming out at the given magnitude, i.e. {@code
+         * spacing(Spacing.LOG).zeroBand(floor)}. The logarithm has no bottom of its own, so the two
+         * always go together.
+         */
+        public Builder logFloor(double floor) {
+            return spacing(Spacing.LOG).zeroBand(floor);
+        }
+
+        /**
+         * Draws the zero band in the given colour rather than the palette's neutral one, so that
+         * the cells which did not really move are obvious. Needs a {@link #zeroBand}, which is what
+         * gives the band its width. Pass null for the palette's neutral colour.
+         */
+        public Builder zeroColor(Color zeroColor) {
+            this.zeroColor = zeroColor;
+            return this;
+        }
+
+        /**
+         * Builds the ramp.
+         *
+         * @throws IllegalArgumentException if the range does not contain zero or is empty, if the
+         *     step count is not positive, or if a zero colour was given without a log floor
+         */
+        public CPT build() {
+            Preconditions.checkArgument(
+                    min <= 0 && max >= 0, "the ramp has to contain zero, got %s to %s", min, max);
+            Preconditions.checkArgument(min < 0 || max > 0, "the ramp cannot be empty");
+            Preconditions.checkArgument(steps > 0, "steps must be positive");
+            Preconditions.checkNotNull(scaling, "need a scaling");
+            Preconditions.checkNotNull(spacing, "need a spacing");
+            Preconditions.checkArgument(
+                    zeroColor == null || zeroBand > 0,
+                    "a zero colour needs a zero band to give it its width");
+            Preconditions.checkArgument(
+                    spacing == Spacing.LINEAR || zeroBand > 0,
+                    "log spacing needs a zero band to bottom out at: the logarithm has no bottom of"
+                            + " its own");
+
+            CPT scaled = palette.rescale(-1d, 1d);
+            CPT cpt = new CPT();
+            if (spacing == Spacing.LOG) {
+                addLogRamp(cpt, scaled);
+            } else {
+                addLinearRamp(cpt, scaled);
+            }
+            // CPT looks a value up in float and treats each entry as half-open, so a value sitting
+            // exactly on the ramp's top bound matches no entry and is not above the maximum either;
+            // it falls through to the gap colour, which is black by default. These ramps are
+            // contiguous from end to end, so that crack is the only way to reach the gap colour and
+            // the top of the ramp is the right thing to put there. Fitting a ramp to raw data
+            // extremes makes it reachable: the node holding the maximum sits exactly on the bound.
+            cpt.setGapColor(cpt.getMaxColor());
+            double tick = tickInterval(min, max);
+            if (Double.isFinite(tick)) {
+                cpt.setPreferredTickInterval(tick);
+            }
+            return cpt;
+        }
+
+        /**
+         * Lays the palette out linearly over each side, from the edge of the zero band out to the
+         * end. Entries are added from the bottom of the ramp upwards, because a CPT takes its first
+         * and last entry to be its ends.
+         */
+        protected void addLinearRamp(CPT cpt, CPT scaled) {
+            double extent = Math.max(-min, max);
+
+            // a side with no range outside the band is skipped, which leaves the band reaching
+            // that end of the ramp
+            if (-min > zeroBand) {
+                addSteps(cpt, scaled, min, -zeroBand, -palettePosition(-min, extent), 0d, steps);
+            }
+            addZeroBand(cpt, scaled);
+            if (max > zeroBand) {
+                addSteps(cpt, scaled, zeroBand, max, 0d, palettePosition(max, extent), steps);
+            }
+        }
+
+        /**
+         * The flat band across zero, if there is one. Without a band the two sides already meet at
+         * zero and nothing is added.
+         */
+        protected void addZeroBand(CPT cpt, CPT scaled) {
+            if (!(zeroBand > 0)) {
+                return;
+            }
+            Color bandColor = zeroColor != null ? zeroColor : scaled.getColorRaw(0f);
+            cpt.add(
+                    new CPTVal(
+                            Math.max(min, -zeroBand),
+                            bandColor,
+                            Math.min(max, zeroBand),
+                            bandColor));
+        }
+
+        /**
+         * Lays the palette out over the logarithm of each side, with a flat band across the floor.
+         * Entries are added from the bottom of the ramp upwards, because a CPT takes its first and
+         * last entry to be its ends.
+         */
+        protected void addLogRamp(CPT cpt, CPT scaled) {
+            double extent = Math.max(-min, max);
+
+            // a side shorter than the floor has no decade to show and is left to the zero band,
+            // which then reaches all the way to that end of the ramp
+            if (-min > zeroBand) {
+                addLogSteps(
+                        cpt, scaled, zeroBand, -min, true, -palettePosition(-min, extent), steps);
+            }
+            addZeroBand(cpt, scaled);
+            if (max > zeroBand) {
+                addLogSteps(cpt, scaled, zeroBand, max, false, palettePosition(max, extent), steps);
+            }
+        }
+
+        /**
+         * How far into its half of the palette, between zero and one, the far end of a side sits.
+         * Under {@link Scaling#BALANCED} that is its share of the longer side, measured out from
+         * the edge of the zero band, so that equal magnitudes either side of zero get equal
+         * colours; under {@link Scaling#INDEPENDENT} every side runs to the end of the palette.
+         *
+         * @param magnitude the far end of the side, greater than the zero band
+         * @param extent the far end of the longer side
+         */
+        protected double palettePosition(double magnitude, double extent) {
+            double reference = scaling == Scaling.BALANCED ? extent : magnitude;
+            if (reference <= zeroBand) {
+                return 0d;
+            }
+            if (spacing == Spacing.LOG) {
+                return Math.log10(magnitude / zeroBand) / Math.log10(reference / zeroBand);
+            }
+            return (magnitude - zeroBand) / (reference - zeroBand);
+        }
     }
 
     /**
@@ -135,7 +408,7 @@ public class DivergingCPT {
     }
 
     /**
-     * Lays one half of a diverging palette out over one half of a ramp.
+     * Lays one half of a diverging palette out over one half of a ramp, in even steps.
      *
      * @param from start of the ramp segment
      * @param to end of the ramp segment
@@ -161,6 +434,48 @@ public class DivergingCPT {
             cpt.add(new CPTVal(previous, previousColor, value, color));
             previous = value;
             previousColor = color;
+        }
+    }
+
+    /**
+     * Lays one half of a diverging palette out over one side of a log ramp, from the floor out to
+     * the far end. Steps are spaced geometrically, so that each covers the same slice of the
+     * palette and the same ratio of change.
+     *
+     * @param floor the magnitude the side starts at, where it meets the zero band
+     * @param end the magnitude at the far end of the side, greater than the floor
+     * @param decrease whether this is the side below zero, whose values are the negated magnitudes
+     * @param paletteEnd where in the palette, between -1 and 1, the far end sits
+     */
+    protected static void addLogSteps(
+            CPT cpt,
+            CPT palette,
+            double floor,
+            double end,
+            boolean decrease,
+            double paletteEnd,
+            int steps) {
+        double ratio = end / floor;
+        double[] magnitudes = new double[steps + 1];
+        Color[] colors = new Color[steps + 1];
+        for (int i = 0; i <= steps; i++) {
+            magnitudes[i] = floor * Math.pow(ratio, (double) i / steps);
+            colors[i] = palette.getColorRaw((float) (paletteEnd * i / steps));
+        }
+        // the ends are pinned rather than left to the rounding of the powers above, so that the
+        // ramp meets the zero band and reaches its bound exactly
+        magnitudes[0] = floor;
+        magnitudes[steps] = end;
+
+        for (int i = 1; i <= steps; i++) {
+            if (decrease) {
+                // the decrease side is walked from its far end inwards, so that entries are added
+                // in ascending order of value like every other side
+                int j = steps - i + 1;
+                cpt.add(new CPTVal(-magnitudes[j], colors[j], -magnitudes[j - 1], colors[j - 1]));
+            } else {
+                cpt.add(new CPTVal(magnitudes[i - 1], colors[i - 1], magnitudes[i], colors[i]));
+            }
         }
     }
 
