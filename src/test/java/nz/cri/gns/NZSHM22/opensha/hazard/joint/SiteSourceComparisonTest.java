@@ -197,6 +197,21 @@ public class SiteSourceComparisonTest {
         assertEquals(200d / 3d, percentages[2], 1e-9);
     }
 
+    /**
+     * A comparison solution that no longer reaches the level has a total of zero, and the share it
+     * gives each section must not come out NaN and take the reference's own share with it.
+     */
+    @Test
+    public void testMaxPercentagesWhenOneSolutionCarriesNothing() {
+        SiteSourceComparison comparison =
+                new SiteSourceComparison(contributions(1e-3, 2e-3), contributions(0d, 0d));
+        double[] percentages = comparison.getMaxPercentages();
+
+        // the reference's own shares, unaffected by the comparison's empty total
+        assertEquals(100d / 3d, percentages[0], 1e-9);
+        assertEquals(200d / 3d, percentages[2], 1e-9);
+    }
+
     /** Comparing rates of exceeding different levels would be meaningless, so it is rejected. */
     @Test
     public void testRejectsDifferentLevels() {

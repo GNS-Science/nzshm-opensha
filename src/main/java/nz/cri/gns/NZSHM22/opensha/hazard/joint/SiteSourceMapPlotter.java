@@ -289,6 +289,14 @@ public class SiteSourceMapPlotter {
     protected CPT logCPT(double logMin, double logMax) throws IOException {
         CPT scaled = getCPT().rescale(logMin, logMax);
         scaled.setLog10(true);
+        // CPT looks a value up in float and treats each entry as half-open, so a value sitting
+        // exactly on the ramp's top bound matches no entry and is not above the maximum either; it
+        // falls through to the gap colour, which is black by default. The largest contribution
+        // lands exactly on the bound whenever it is a whole decade, and a rate handed in by
+        // setMaxRate puts the neighbouring map on the same bound.
+        scaled.setGapColor(scaled.getMaxColor());
+        scaled.setAboveMaxColor(scaled.getMaxColor());
+        scaled.setBelowMinColor(scaled.getMinColor());
         return scaled;
     }
 

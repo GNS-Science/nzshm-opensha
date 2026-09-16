@@ -397,15 +397,26 @@ public class HazardComparisonReport {
                                 + " multi-fault rupture is drawn along its whole length. Click a"
                                 + " map for that site's own page.");
         List<String> skipped = new ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (Map.Entry<String, Location> site : sourceSites.entrySet()) {
             System.out.println("Mapping hazard sources at " + site.getKey());
-            SiteSourcePage.Result result =
-                    pages.write(
-                            outputDir,
-                            site.getKey(),
-                            site.getValue(),
-                            period,
-                            SOURCE_RETURN_PERIOD);
+            SiteSourcePage.Result result;
+            try {
+                result =
+                        pages.write(
+                                outputDir,
+                                site.getKey(),
+                                site.getValue(),
+                                period,
+                                SOURCE_RETURN_PERIOD);
+            } catch (Exception e) {
+                // both hazard map calculations are done by the time we get here, so one site that
+                // cannot be drawn must not take the whole report with it
+                System.out.println("  skipped: " + e);
+                e.printStackTrace();
+                failed.add(site.getKey());
+                continue;
+            }
             if (result == null) {
                 // a site whose fault hazard never reaches the return period has no level to
                 // disaggregate at; report it and carry on rather than losing the whole report
@@ -421,6 +432,9 @@ public class HazardComparisonReport {
         }
         if (!skipped.isEmpty()) {
             row.setTitle(row.title + " No fault hazard to disaggregate at " + join(skipped) + ".");
+        }
+        if (!failed.isEmpty()) {
+            row.setTitle(row.title + " Could not be drawn at " + join(failed) + ".");
         }
         section.add(row);
         return section;

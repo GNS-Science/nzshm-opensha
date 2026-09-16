@@ -203,10 +203,20 @@ public class SiteSourceComparison {
         for (int i = 0; i < percentages.length; i++) {
             percentages[i] =
                     Math.max(
-                            100 * referenceRates[i] / reference.getTotalRate(),
-                            100 * comparisonRates[i] / comparison.getTotalRate());
+                            share(referenceRates[i], reference.getTotalRate()),
+                            share(comparisonRates[i], comparison.getTotalRate()));
         }
         return percentages;
+    }
+
+    /**
+     * A rate as a percentage of a total, counting a solution that carries no hazard at all as
+     * contributing nothing. A solution that no longer reaches the reference level has a total of
+     * zero, and NaN from that division would propagate through {@link Math#max} and lose the other
+     * solution's perfectly well defined share as well.
+     */
+    protected static double share(double rate, double total) {
+        return total > 0 ? 100 * rate / total : 0;
     }
 
     /**
