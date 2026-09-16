@@ -64,14 +64,36 @@ public class HazardReportSource {
      * GMM. Its ruptures may span crustal and subduction sections.
      */
     public static HazardReportSource joint(String name, FaultSystemSolution solution) {
-        return new HazardReportSource(
-                name,
-                new JointHazardInput(solution).setGmmMode(JointHazardInput.GmmMode.JOINT_RUPTURE));
+        return new HazardReportSource(name, JointHazardInput.joint(solution));
     }
 
-    /** As {@link #joint(String, FaultSystemSolution)}, loading the solution from disk. */
-    public static HazardReportSource joint(String name, File solutionFile) throws IOException {
-        return joint(name, FaultSystemSolution.load(solutionFile));
+    /**
+     * As {@link #joint(String, FaultSystemSolution)}, but reading the solution from disk only when
+     * it is first needed, so that a report over many runs can load them one at a time. See {@link
+     * JointHazardInput#release()}.
+     */
+    public static HazardReportSource joint(String name, File solutionFile) {
+        Preconditions.checkArgument(
+                solutionFile.isFile(), "%s is not a file", solutionFile.getAbsolutePath());
+        return new HazardReportSource(
+                name,
+                new JointHazardInput(() -> load(solutionFile))
+                        .setGmmMode(JointHazardInput.GmmMode.JOINT_RUPTURE));
+    }
+
+    /**
+     * Loads and backfills a single solution, reporting progress.
+     *
+     * @throws IllegalStateException if the solution cannot be read
+     */
+    protected static FaultSystemSolution load(File solutionFile) {
+        System.out.println("Loading " + solutionFile.getAbsolutePath());
+        try {
+            return JointSolutions.backfill(FaultSystemSolution.load(solutionFile));
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Could not read solution " + solutionFile.getAbsolutePath(), e);
+        }
     }
 
     /**
@@ -106,6 +128,11 @@ public class HazardReportSource {
             solutions[i] = FaultSystemSolution.load(files.get(i));
         }
         return solutions;
+    }
+
+    /** Lets go of this source's solution once its results have been extracted. */
+    public void release() {
+        input.release();
     }
 
     public String getName() {

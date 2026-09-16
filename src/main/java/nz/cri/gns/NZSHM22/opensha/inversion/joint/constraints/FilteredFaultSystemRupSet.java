@@ -58,6 +58,9 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
      * SectSlipRates values from the original section. The SlipAlongRuptureModel is stateless and is
      * shared with the original rupture set.
      *
+     * <p>The modules are created with this rupture set as their parent so that adding them does not
+     * trigger a copy, which would fail because rupture and section counts differ.
+     *
      * @param original the rupture set that this rupture set was filtered from
      */
     protected void filterSlipModules(FaultSystemRupSet original) {

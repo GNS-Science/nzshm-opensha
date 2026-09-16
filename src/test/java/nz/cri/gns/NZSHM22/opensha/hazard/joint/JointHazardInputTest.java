@@ -185,13 +185,13 @@ public class JointHazardInputTest {
 
     /**
      * The defaults implement the requested specification: all of New Zealand at 0.1 degrees, PGA
-     * and SA(3.0), curves at the nzshm-common NZ locations. Return periods (2% and 10% in 50 years)
+     * and SA(1.0), curves at the nzshm-common NZ locations. Return periods (2% and 10% in 50 years)
      * come from {@link SolHazardMapCalc#MAP_RPS}.
      */
     @Test
     public void testDefaults() {
         assertEquals(0.1, JointHazardInput.DEFAULT_SPACING, 1e-9);
-        assertArrayEquals(new double[] {0d, 3d}, JointHazardInput.DEFAULT_PERIODS, 1e-9);
+        assertArrayEquals(new double[] {0d, 1d}, JointHazardInput.DEFAULT_PERIODS, 1e-9);
         assertEquals(NzshmCommonLocations.nzLocations(), JointHazardInput.defaultSites());
 
         assertEquals(
@@ -206,5 +206,91 @@ public class JointHazardInputTest {
                     "region should contain " + location,
                     region.contains(location) || region.distanceToLocation(location) < 20);
         }
+    }
+
+    /**
+     * PGV (-1) is rejected because the calculation applies an SA intensity measure level grid to
+     * every period; a PGV curve would saturate over that grid and produce a silently flat map.
+     */
+    @Test
+    public void testPeriodsRejectPGV() {
+        JointHazardInput input = new JointHazardInput(makeSolution());
+
+        try {
+            input.setPeriods(0d, -1d);
+            fail("expected PGV to be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("PGV"));
+        }
+
+        try {
+            input.setPeriods(-2d);
+            fail("expected a negative period to be rejected");
+        } catch (IllegalArgumentException expected) {
+            // as expected
+        }
+
+        try {
+            input.setPeriods();
+            fail("expected an empty period list to be rejected");
+        } catch (IllegalArgumentException expected) {
+            // as expected
+        }
+
+        // the rejected calls leave the periods untouched
+        assertArrayEquals(JointHazardInput.DEFAULT_PERIODS, input.getPeriods(), 1e-9);
+
+        assertArrayEquals(new double[] {0d, 1.5d}, input.setPeriods(0d, 1.5d).getPeriods(), 1e-9);
+    }
+
+    /**
+     * A single solution is backfilled on the way in, so that whatever {@link
+     * JointHazardInput#combined} can read the single-solution factories can read too.
+     */
+    @Test
+    public void testPerTectonicRegionBackfillsLegacySolutions() {
+        JointHazardInput input = JointHazardInput.perTectonicRegion(makeLegacyCrustalSolution());
+
+        assertEquals(GmmMode.PER_TECTONIC_REGION, input.getGmmMode());
+        assertFalse(JointSolutions.needsBackfill(input.getSolution().getRupSet()));
+    }
+
+    @Test
+    public void testJointBackfillsLegacySolutions() {
+        JointHazardInput input = JointHazardInput.joint(makeLegacySubductionSolution());
+
+        assertEquals(GmmMode.JOINT_RUPTURE, input.getGmmMode());
+        assertFalse(JointSolutions.needsBackfill(input.getSolution().getRupSet()));
+    }
+
+    /** A supplied solution is loaded once, on demand, and loaded again after a release. */
+    @Test
+    public void testSuppliedSolutionIsLoadedOnDemandAndReleasable() {
+        int[] loads = {0};
+        JointHazardInput input =
+                new JointHazardInput(
+                        () -> {
+                            loads[0]++;
+                            return makeSolution();
+                        });
+
+        assertEquals(0, loads[0]);
+        FaultSystemSolution solution = input.getSolution();
+        assertEquals(1, loads[0]);
+        assertSame(solution, input.getSolution());
+
+        assertTrue(input.release());
+        assertNotSame(solution, input.getSolution());
+        assertEquals(2, loads[0]);
+    }
+
+    /** A solution handed over directly cannot be released: there is no way of getting it back. */
+    @Test
+    public void testSolutionHeldDirectlyIsNotReleased() {
+        FaultSystemSolution solution = makeSolution();
+        JointHazardInput input = new JointHazardInput(solution);
+
+        assertFalse(input.release());
+        assertSame(solution, input.getSolution());
     }
 }

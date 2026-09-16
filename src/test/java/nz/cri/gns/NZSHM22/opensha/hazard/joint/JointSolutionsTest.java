@@ -197,4 +197,39 @@ public class JointSolutionsTest {
         assertNotNull(regimes);
         assertEquals(TectonicRegionType.SUBDUCTION_INTERFACE, regimes.get(JOINT_RUP));
     }
+
+    /**
+     * A rupture set that already carries region types disagreeing with its sections is rejected
+     * rather than calculated with the wrong GMM and the wrong distance cutoff.
+     */
+    @Test
+    public void testApplyTectonicRegimesRejectsDisagreeingModule() {
+        FaultSystemRupSet rupSet = makeMixedSolution().getRupSet();
+        rupSet.addModule(
+                RupSetTectonicRegimes.constant(rupSet, TectonicRegionType.SUBDUCTION_INTERFACE));
+
+        try {
+            JointSolutions.applyTectonicRegimes(rupSet);
+            fail("expected the disagreeing module to be rejected");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("disagree"));
+        }
+    }
+
+    /**
+     * The module a joint calculation leaves behind gives joint ruptures a region type, which a
+     * per-tectonic-region calculation must not accept: those ruptures have no single type.
+     */
+    @Test
+    public void testApplyTectonicRegimesRejectsReusedJointModule() {
+        FaultSystemRupSet rupSet = makeRupSet(0d);
+        JointSolutions.applyTectonicRegimes(rupSet, TectonicRegionType.SUBDUCTION_INTERFACE);
+
+        try {
+            JointSolutions.applyTectonicRegimes(rupSet, null);
+            fail("expected joint ruptures to be rejected");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("JOINT_RUPTURE"));
+        }
+    }
 }
