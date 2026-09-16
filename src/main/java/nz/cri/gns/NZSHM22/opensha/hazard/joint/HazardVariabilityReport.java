@@ -300,10 +300,10 @@ public class HazardVariabilityReport {
                         calc.plotMap(
                                 imageDir,
                                 prefix + "_mean",
-                                HazardComparisonReport.log10(mean),
+                                mean,
                                 HazardComparisonReport.sharedLogCPT(mean),
                                 "Mean of " + configs.size() + " runs",
-                                "Log10 " + periodLabel + " (" + units + "), " + rp.label),
+                                periodLabel + " (" + units + "), " + rp.label),
                         "Mean hazard",
                         HazardComparisonReport.mapStats(mean, units));
                 row.add(

@@ -80,6 +80,12 @@ public class JointHazardInput {
     public static final double[] DEFAULT_PERIODS = {0d, 1d};
 
     /**
+     * Default smallest rupture rate that reaches the hazard calculation, in events per year. See
+     * {@link #setMinRuptureRate}.
+     */
+    public static final double DEFAULT_MIN_RUPTURE_RATE = 1e-9;
+
+    /**
      * Sites that hazard curves are calculated for: the nzshm-common "NZ" locations. See {@link
      * NzshmCommonLocations}.
      */
@@ -103,8 +109,15 @@ public class JointHazardInput {
     private final boolean releasable;
 
     /**
-     * The solution, once loaded. Null before the first {@link #getSolution()} and after a {@link
-     * #release()}.
+     * The solution as the supplier produced it, before {@link #minRuptureRate} is applied. Null
+     * before the first {@link #getSolution()} and after a {@link #release()}.
+     */
+    private FaultSystemSolution rawSolution;
+
+    /**
+     * The solution the calculation uses, i.e. {@link #rawSolution} with its negligible rupture
+     * rates dropped. Null until it is derived, and discarded again whenever {@link
+     * #setMinRuptureRate} changes what would be dropped.
      */
     private FaultSystemSolution solution;
 
@@ -113,6 +126,7 @@ public class JointHazardInput {
     private double spacing = DEFAULT_SPACING;
     private double[] periods = DEFAULT_PERIODS;
     private int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+    private double minRuptureRate = DEFAULT_MIN_RUPTURE_RATE;
 
     private boolean locked = false;
 
@@ -122,7 +136,6 @@ public class JointHazardInput {
      */
     public JointHazardInput(FaultSystemSolution solution) {
         Preconditions.checkNotNull(solution, "need a solution");
-        this.solution = solution;
         this.solutionSupplier = () -> solution;
         this.releasable = false;
     }
@@ -181,17 +194,25 @@ public class JointHazardInput {
         return new JointHazardInput(JointSolutions.backfill(solution)).setGmmMode(gmmMode);
     }
 
-    /** The solution, loaded on first use if these inputs were given a supplier. */
+    /**
+     * The solution the calculation runs on: the one these inputs were built from, loaded on first
+     * use if they were given a supplier, with rupture rates below {@link #getMinRuptureRate()}
+     * dropped. See {@link JointSolutions#filterRates}.
+     */
     public FaultSystemSolution getSolution() {
         if (solution == null) {
-            solution = Preconditions.checkNotNull(solutionSupplier.get(), "no solution supplied");
+            if (rawSolution == null) {
+                rawSolution =
+                        Preconditions.checkNotNull(solutionSupplier.get(), "no solution supplied");
+            }
+            solution = JointSolutions.filterRates(rawSolution, minRuptureRate);
         }
         return solution;
     }
 
     /** Whether the solution is in memory, i.e. loaded and not released since. */
     public boolean isLoaded() {
-        return solution != null;
+        return rawSolution != null;
     }
 
     /**
@@ -207,6 +228,7 @@ public class JointHazardInput {
         if (!releasable) {
             return false;
         }
+        rawSolution = null;
         solution = null;
         return true;
     }
@@ -261,6 +283,33 @@ public class JointHazardInput {
         }
         this.periods = periods;
         return this;
+    }
+
+    /**
+     * Sets the smallest rupture rate, in events per year, that reaches the hazard calculation.
+     * Ruptures below it are dropped by {@link JointSolutions#filterRates} before the ERF is built.
+     * Defaults to {@link #DEFAULT_MIN_RUPTURE_RATE}.
+     *
+     * <p>An inversion solution typically has a long tail of ruptures whose rates are so low that
+     * they move no hazard curve anywhere, and each of them still costs a source in the ERF and a
+     * ground motion evaluation at every site. Dropping them is the cheapest way to speed a
+     * calculation up. Pass zero to keep every rupture.
+     *
+     * @throws IllegalArgumentException if the rate is negative
+     */
+    public JointHazardInput setMinRuptureRate(double minRuptureRate) {
+        checkNotLocked();
+        Preconditions.checkArgument(
+                minRuptureRate >= 0, "minRuptureRate cannot be negative, got %s", minRuptureRate);
+        this.minRuptureRate = minRuptureRate;
+        // the filtered solution was derived from the old rate, so let it be derived again
+        this.solution = null;
+        return this;
+    }
+
+    /** The smallest rupture rate that reaches the hazard calculation. */
+    public double getMinRuptureRate() {
+        return minRuptureRate;
     }
 
     public JointHazardInput setNumThreads(int numThreads) {

@@ -17,6 +17,38 @@ public class HazardLabels {
     private HazardLabels() {}
 
     /**
+     * What the per-section source maps colour: the hazard that reaches the site through a section.
+     * Shared by the single-solution map, the difference map and the report that lays them out, so
+     * that the legend, the figure heading and the prose all name the same quantity.
+     */
+    public static final String SECTION_HAZARD = "Hazard Through Section";
+
+    /**
+     * The number of years a set of rates is best reported over: the smallest power of ten that puts
+     * the largest of them at one or above.
+     *
+     * <p>Section contributions to a site's hazard are rates of the order of a thousandth per year,
+     * and a colour bar labelled in those comes out as a row of zeroes, because the axis is
+     * formatted to a few decimal places. Reporting the same numbers over a thousand or ten thousand
+     * years puts them in a range a legend can print without saying anything different.
+     *
+     * @param largestRate the largest rate to be shown, in 1/yr; sign is ignored
+     */
+    public static double rateUnitYears(double largestRate) {
+        if (!Double.isFinite(largestRate) || largestRate == 0) {
+            return 1d;
+        }
+        return Math.pow(10, Math.max(0, Math.ceil(-Math.log10(Math.abs(largestRate)))));
+    }
+
+    /** How a rate over the given number of years is named on a colour bar. */
+    public static String rateUnit(double unitYears) {
+        return unitYears == 1d
+                ? "1/yr"
+                : "per " + String.format("%,d", (long) unitYears) + " years";
+    }
+
+    /**
      * The display label of a calculation period, e.g. "PGA", "PGV" or "3s SA". Whole periods lose
      * their decimal point, so 3.0 is "3s SA" rather than "3.0s SA".
      *
