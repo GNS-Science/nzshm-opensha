@@ -212,16 +212,6 @@ public class SiteSourceDiffMapPlotterTest {
     }
 
     /** Bounds are rounded up to one, two or five times a power of ten so the legend reads well. */
-    @Test
-    public void testNiceCeiling() {
-        assertEquals(2e-3, DivergingCPT.niceCeiling(1.3e-3), 1e-15);
-        assertEquals(5e-3, DivergingCPT.niceCeiling(2.1e-3), 1e-15);
-        assertEquals(1e-2, DivergingCPT.niceCeiling(5.1e-3), 1e-15);
-        // a value that is already round is not pushed up a step
-        assertEquals(2e-3, DivergingCPT.niceCeiling(2e-3), 1e-15);
-        assertEquals(0d, DivergingCPT.niceCeiling(0d), 1e-15);
-    }
-
     /**
      * The changes are reported over enough years to land on numbers a colour bar can print: at a
      * thousandth per year, a bar labelled in 1/yr comes out as a row of zeroes.
@@ -233,22 +223,6 @@ public class SiteSourceDiffMapPlotterTest {
         assertEquals(1d, SiteSourceDiffMapPlotter.unitYears(new double[] {2.5, -1d}), 1e-9);
         // a map with no change at all still needs a unit
         assertEquals(1d, SiteSourceDiffMapPlotter.unitYears(new double[] {0d}), 1e-9);
-    }
-
-    /** Converting to that unit is a plain scaling of the rates. */
-    @Test
-    public void testPerUnit() {
-        double[] scaled = SiteSourceDiffMapPlotter.perUnit(new double[] {2e-3, -4e-4}, 1000d);
-        assertEquals(2d, scaled[0], 1e-12);
-        assertEquals(-0.4, scaled[1], 1e-12);
-    }
-
-    /** The colour bar says which unit it is in. */
-    @Test
-    public void testRateUnit() {
-        assertEquals("1/yr", HazardLabels.rateUnit(1d));
-        assertEquals("per 1,000 years", HazardLabels.rateUnit(1000d));
-        assertEquals("per 10,000 years", HazardLabels.rateUnit(10000d));
     }
 
     /** Plotting writes the map. */

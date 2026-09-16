@@ -10,7 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.gui.plot.GeographicMapMaker;
@@ -48,9 +47,6 @@ public class SiteSourcePage {
      * finding and is not one.
      */
     public static final double NEGLIGIBLE_PERCENT = 0.2;
-
-    /** Padding, in km, around the sections the maps are about. */
-    public static final double BUFFER_KM = 50d;
 
     /** How many sections the page tabulates. The CSV download carries the rest. */
     public static final int TABLE_ROWS = 20;
@@ -121,19 +117,12 @@ public class SiteSourcePage {
             double period,
             ReturnPeriods returnPeriod)
             throws IOException {
-        DiscretizedFunc referenceCurve = reference.siteCurve(location, period);
-        if (!SiteSourceExplorer.reaches(referenceCurve, returnPeriod)) {
+        // one disaggregation per solution, shared by all three maps and the table
+        SiteSourceComparison changes =
+                SiteSourceComparison.compare(reference, comparison, location, period, returnPeriod);
+        if (changes == null) {
             return null;
         }
-
-        // one disaggregation per solution, shared by all three maps and the table
-        double iml = SiteSourceExplorer.imlForReturnPeriod(referenceCurve, returnPeriod);
-        SiteSourceContributions referenceContributions =
-                reference.exploreAtIml(location, period, iml);
-        SiteSourceContributions comparisonContributions =
-                comparison.exploreAtImlOrZero(location, period, iml);
-        SiteSourceComparison changes =
-                new SiteSourceComparison(referenceContributions, comparisonContributions);
 
         String slug = HazardLabels.slug(siteName);
         File siteDir = new File(new File(reportDir, SOURCES_DIR), slug);
@@ -216,7 +205,7 @@ public class SiteSourcePage {
         double floor = negligibleRate(comparison);
         // one scale and one unit across both single solution maps, so that the same amount of
         // hazard is the same colour on each and the pair can be read against each other
-        double top = max(comparison.getMaxRates());
+        double top = SiteSourceMaps.maxAbs(comparison.getMaxRates());
         double years = HazardLabels.rateUnitYears(top);
 
         File diff =
@@ -284,7 +273,7 @@ public class SiteSourcePage {
             String solutionName)
             throws IOException {
         // the same test the plotter makes before it will draw anything
-        if (!(max(contributions.getSectionRates()) > floor)) {
+        if (!(SiteSourceMaps.maxAbs(contributions.getSectionRates()) > floor)) {
             undrawn.add(solutionName);
             return;
         }
@@ -327,14 +316,6 @@ public class SiteSourcePage {
         return NEGLIGIBLE_PERCENT / 100 * comparison.getReference().getTotalRate();
     }
 
-    protected static double max(double[] values) {
-        double max = 0;
-        for (double value : values) {
-            max = Math.max(max, value);
-        }
-        return max;
-    }
-
     /**
      * A buffer around the sections that clear {@link #NEGLIGIBLE_PERCENT} in either solution, so
      * that all three maps of a weighting are framed on the same area and on the part of it the maps
@@ -352,7 +333,8 @@ public class SiteSourcePage {
         }
         Preconditions.checkState(
                 !coloured.isEmpty(), "No section carries %s /yr of the hazard at this site", floor);
-        return GeographicMapMaker.buildBufferedRegion(coloured, BUFFER_KM, true);
+        return GeographicMapMaker.buildBufferedRegion(
+                coloured, SiteSourceMapPlotter.DEFAULT_BUFFER_KM, true);
     }
 
     /** The change in the site's total rate of exceedance, as one line. */

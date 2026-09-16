@@ -151,57 +151,15 @@ public class DivergingCPTTest {
         assertEquals(scaled.getColor(1f), cpt.getColor(77f));
     }
 
-    /** The default is balanced scaling. */
+    /** The ramp runs between exactly the bounds it was given. */
     @Test
-    public void testBalancedIsTheDefault() throws IOException {
-        assertEquals(DivergingCPT.Scaling.BALANCED, DivergingCPT.DEFAULT_SCALING);
-        assertEquals(
-                DivergingCPT.centredOnZero(palette(), -33d, 77d, DivergingCPT.Scaling.BALANCED)
-                        .getColor(-33f),
-                DivergingCPT.centredOnZero(palette(), -33d, 77d).getColor(-33f));
+    public void testRampKeepsItsBounds() throws IOException {
+        CPT cpt = DivergingCPT.centredOnZero(palette(), -33d, 77d);
+        assertEquals(-33d, cpt.getMinValue(), 1e-9);
+        assertEquals(77d, cpt.getMaxValue(), 1e-9);
     }
 
-    /** Independent scaling runs each side to the end of the palette, whatever its range. */
-    @Test
-    public void testIndependentScalingSaturatesBothEnds() throws IOException {
-        CPT scaled = palette().rescale(-1d, 1d);
-        CPT cpt =
-                DivergingCPT.centredOnZero(palette(), -33d, 77d, DivergingCPT.Scaling.INDEPENDENT);
-
-        assertEquals(scaled.getColor(-1f), cpt.getColor(-33f));
-        assertEquals(scaled.getColor(1f), cpt.getColor(77f));
-        // the shorter side is stretched, so the same value is a stronger colour than when balanced
-        assertNotEquals(
-                DivergingCPT.centredOnZero(palette(), -33d, 77d).getColor(-33f),
-                cpt.getColor(-33f));
-    }
-
-    /** A symmetric range is coloured the same either way, so the two scalings agree there. */
-    @Test
-    public void testScalingsAgreeOnASymmetricRange() throws IOException {
-        CPT balanced = DivergingCPT.centredOnZero(palette(), -2d, 2d);
-        CPT independent =
-                DivergingCPT.centredOnZero(palette(), -2d, 2d, DivergingCPT.Scaling.INDEPENDENT);
-
-        for (float value : new float[] {-2f, -1f, 0f, 1f, 2f}) {
-            assertEquals(
-                    "differ at " + value, balanced.getColor(value), independent.getColor(value));
-        }
-    }
-
-    /** Whichever scaling is used, the ramp still runs between the bounds it was given. */
-    @Test
-    public void testScalingDoesNotChangeTheBounds() throws IOException {
-        for (DivergingCPT.Scaling scaling : DivergingCPT.Scaling.values()) {
-            CPT cpt = DivergingCPT.centredOnZero(palette(), -33d, 77d, scaling);
-            assertEquals(scaling.toString(), -33d, cpt.getMinValue(), 1e-9);
-            assertEquals(scaling.toString(), 77d, cpt.getMaxValue(), 1e-9);
-        }
-    }
-
-    /**
-     * A one-sided ramp saturates at its far end under either scaling: it is its own longer side.
-     */
+    /** A one-sided ramp saturates at its far end: it is its own longer side. */
     @Test
     public void testOneSidedRampSaturates() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
@@ -376,18 +334,22 @@ public class DivergingCPTTest {
         assertNotEquals(green, cpt.getColor(50f));
     }
 
-    /** Under independent scaling both sides of a log ramp run to the end of the palette. */
+    /**
+     * Only the longer side of a log ramp saturates: the shorter one stops at its own share of the
+     * palette, measured in decades out from the floor, so equal changes look equal.
+     */
     @Test
-    public void testLogRampSaturatesBothEndsWhenIndependent() throws IOException {
+    public void testLogRampSaturatesOnlyTheLongerSide() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
-        CPT cpt =
-                DivergingCPT.ramp(palette(), -33d, 186d)
-                        .logFloor(1d)
-                        .scaling(DivergingCPT.Scaling.INDEPENDENT)
-                        .build();
+        CPT cpt = DivergingCPT.ramp(palette(), -33d, 186d).logFloor(1d).build();
 
-        assertEquals(scaled.getColor(-1f), cpt.getColor(-33f));
         assertEquals(scaled.getColor(1f), cpt.getColor(186f));
+        assertNotEquals(scaled.getColor(-1f), cpt.getColor(-33f));
+        // -33 is log10(33)/log10(186) of the way into its half of the palette
+        assertColorNear(
+                "at -33",
+                scaled.getColor((float) -(Math.log10(33d) / Math.log10(186d))),
+                cpt.getColor(-33f));
     }
 
     /** The ramp is built in ascending order, so its end colours are the saturated ones. */

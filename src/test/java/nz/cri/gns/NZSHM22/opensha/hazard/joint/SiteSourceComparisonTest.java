@@ -5,14 +5,18 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.opensha.commons.data.CSVFile;
 import org.opensha.commons.geo.Location;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 import org.opensha.sha.faultSurface.FaultSection;
 
 /**
@@ -45,6 +49,79 @@ public class SiteSourceComparisonTest {
         return sections.stream().map(FaultSection::getSectionName).collect(Collectors.toList());
     }
 
+    /** The per-section changes keyed by name, so a test does not depend on their ordering. */
+    static Map<String, SiteSourceComparison.SectionChange> changesByName(
+            SiteSourceComparison comparison) {
+        return comparison.topChanges(0).stream()
+                .collect(Collectors.toMap(change -> change.name, change -> change));
+    }
+
+    static final ReturnPeriods RETURN_PERIOD = ReturnPeriods.TEN_IN_50;
+
+    /** Rate given to every rupture of the test solution when a real disaggregation is wanted. */
+    static final double RATE = 1e-3;
+
+    /** A rate so low the site's hazard never reaches the return period. */
+    static final double NEGLIGIBLE_RATE = 1e-12;
+
+    /** An explorer over the shared test solution with every rupture at the given rate. */
+    static SiteSourceExplorer explorer(double rate) {
+        FaultSystemRupSet rupSet = makeRupSet(0d);
+        double[] rates = new double[rupSet.getNumRuptures()];
+        Arrays.fill(rates, rate);
+        return new SiteSourceExplorer(new FaultSystemSolution(rupSet, rates));
+    }
+
+    /**
+     * Comparing through {@link SiteSourceComparison#compare} puts both solutions at the one level
+     * the reference solution reaches at the return period, which is the only framing under which
+     * their section rates can be subtracted.
+     */
+    @Test
+    public void testCompare() {
+        SiteSourceComparison comparison =
+                SiteSourceComparison.compare(
+                        explorer(RATE), explorer(2 * RATE), SITE, 0d, RETURN_PERIOD);
+
+        assertNotNull(comparison);
+        assertEquals(SITE, comparison.getSite());
+        assertEquals(0d, comparison.getPeriod(), 0d);
+        // both sides were disaggregated at the same level, taken off the reference curve
+        assertEquals(comparison.getIml(), comparison.getReference().getIml(), 0d);
+        assertEquals(comparison.getIml(), comparison.getComparison().getIml(), 0d);
+        // the comparison solution ruptures twice as often, so more hazard reaches that level
+        assertTrue(
+                comparison.getComparison().getTotalRate()
+                        > comparison.getReference().getTotalRate());
+    }
+
+    /**
+     * A site whose reference hazard never reaches the return period has no level to compare at.
+     * That is an ordinary outcome for a quiet site, so it gives null rather than throwing, and a
+     * report covering many sites can carry on past it.
+     */
+    @Test
+    public void testCompareReturnsNullBelowTheReturnPeriod() {
+        assertNull(
+                SiteSourceComparison.compare(
+                        explorer(NEGLIGIBLE_RATE), explorer(RATE), SITE, 0d, RETURN_PERIOD));
+    }
+
+    /**
+     * Only the reference solution has to reach the level. A comparison solution whose hazard has
+     * collapsed contributes zero everywhere, which is the finding rather than an error.
+     */
+    @Test
+    public void testCompareAllowsAComparisonThatNoLongerReachesTheLevel() {
+        SiteSourceComparison comparison =
+                SiteSourceComparison.compare(
+                        explorer(RATE), explorer(NEGLIGIBLE_RATE), SITE, 0d, RETURN_PERIOD);
+
+        assertNotNull(comparison);
+        assertTrue(comparison.getReference().getTotalRate() > 0);
+        assertEquals(0d, comparison.getComparison().getTotalRate(), 0d);
+    }
+
     /** Both solutions route hazard through all four sections, so all four are compared. */
     @Test
     public void testSectionsAndRates() {
@@ -61,7 +138,11 @@ public class SiteSourceComparisonTest {
     /** The crustal sections double and the interface sections halve. */
     @Test
     public void testRatios() {
-        assertArrayEquals(new double[] {2d, 2d, 0.5d, 0.5d}, comparison().getRatios(), 1e-12);
+        Map<String, SiteSourceComparison.SectionChange> changes = changesByName(comparison());
+        assertEquals(2d, changes.get("Section 0").getRatio(), 1e-12);
+        assertEquals(2d, changes.get("Section 1").getRatio(), 1e-12);
+        assertEquals(0.5d, changes.get("Section 2").getRatio(), 1e-12);
+        assertEquals(0.5d, changes.get("Section 3").getRatio(), 1e-12);
     }
 
     /** A section that only one solution routes hazard through gives an unbounded ratio. */
@@ -74,10 +155,11 @@ public class SiteSourceComparisonTest {
         assertEquals(
                 List.of("Section 0", "Section 1", "Section 2", "Section 3"),
                 names(comparison.getSections()));
-        double[] ratios = comparison.getRatios();
-        assertEquals(1d, ratios[0], 1e-12);
-        assertTrue(Double.isInfinite(ratios[2]));
-        assertTrue(ratios[2] > 0);
+        Map<String, SiteSourceComparison.SectionChange> changes = changesByName(comparison);
+        assertEquals(1d, changes.get("Section 0").getRatio(), 1e-12);
+        double oneSided = changes.get("Section 2").getRatio();
+        assertTrue(Double.isInfinite(oneSided));
+        assertTrue(oneSided > 0);
     }
 
     /** Sections that neither solution routes hazard through are left out of the comparison. */

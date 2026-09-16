@@ -16,16 +16,10 @@ import org.opensha.commons.util.cpt.CPTVal;
  *
  * <h2>Scaling</h2>
  *
- * <p>How much of the palette each side gets is the {@link Scaling} choice. Under {@link
- * Scaling#BALANCED}, the default, both sides are laid out at the same rate, set by whichever side
- * is longer: on a ramp from -33% to 77%, -33% is exactly as strong a blue as +33% would be a red,
- * and only +77% reaches the palette's full saturation. Equal changes then look equal wherever they
- * fall, so a map read by eye is not biased towards the shorter side.
- *
- * <p>{@link Scaling#INDEPENDENT} stretches each side over its whole half of the palette instead, so
- * that both ends saturate. That uses the palette's full contrast on both sides, which is worth
- * having when the shorter side is so short that balanced scaling leaves it nearly colourless, but a
- * reader judging by colour alone will read the shorter side as bigger than it is.
+ * <p>Both sides are laid out at the same rate, set by whichever side is longer: on a ramp from -33%
+ * to 77%, -33% is exactly as strong a blue as +33% would be a red, and only +77% reaches the
+ * palette's full saturation. Equal changes then look equal wherever they fall, so a map read by eye
+ * is not biased towards the shorter side, and only the longer side saturates.
  *
  * <h2>The zero band</h2>
  *
@@ -53,9 +47,9 @@ import org.opensha.commons.util.cpt.CPTVal;
  *
  * <h2>Bounds and ticks</h2>
  *
- * <p>Whatever the scaling and spacing, the ramp keeps the range it was given rather than padding
- * out to a symmetric one, so no width is spent on changes that do not occur, and the colour bar is
- * labelled with real values, so what a colour means stays legible.
+ * <p>Whatever the spacing, the ramp keeps the range it was given rather than padding out to a
+ * symmetric one, so no width is spent on changes that do not occur, and the colour bar is labelled
+ * with real values, so what a colour means stays legible.
  *
  * <p>A ramp whose bounds are round numbers, i.e. one fitted with {@link #niceCeiling}, is given a
  * tick interval that puts a label on each end and on zero; see {@link #tickInterval}. A ramp fitted
@@ -70,22 +64,6 @@ import org.opensha.commons.util.cpt.CPTVal;
  */
 public class DivergingCPT {
 
-    /** How the palette is shared out between the two sides of a ramp. */
-    public enum Scaling {
-        /**
-         * Both sides at the same rate, set by the longer side, so that equal changes either side of
-         * zero get equally strong colours. The shorter side stops short of the palette's full
-         * saturation, by the ratio of the two sides.
-         */
-        BALANCED,
-        /**
-         * Each side stretched over its own half of the palette, so that both ends saturate whatever
-         * their range. Uses the palette's full contrast on both sides, at the cost of the shorter
-         * side reading as bigger than it is.
-         */
-        INDEPENDENT
-    }
-
     /** Whether the palette follows the change itself or its logarithm. */
     public enum Spacing {
         /** Colour in proportion to the change, so that colour distance is change distance. */
@@ -97,9 +75,6 @@ public class DivergingCPT {
          */
         LOG
     }
-
-    /** The scaling used when none is given. */
-    public static final Scaling DEFAULT_SCALING = Scaling.BALANCED;
 
     /**
      * A green for the zero band of a log ramp, distinct from both ends of a red/blue diverging
@@ -133,8 +108,8 @@ public class DivergingCPT {
 
     /**
      * A ramp from {@code min} to {@code max} with the palette's neutral colour at zero, {@link
-     * #DEFAULT_SCALING} scaling, {@link #DEFAULT_STEPS} colour steps and linear spacing. Set
-     * whatever else is wanted on the returned builder, then call {@link Builder#build()}.
+     * #DEFAULT_STEPS} colour steps and linear spacing. Set whatever else is wanted on the returned
+     * builder, then call {@link Builder#build()}.
      *
      * @param palette a diverging palette; it is rescaled internally, so pass an unscaled instance
      * @param min the bottom of the ramp, at most zero
@@ -149,11 +124,6 @@ public class DivergingCPT {
         return ramp(palette, min, max).build();
     }
 
-    /** A linear ramp with the given scaling. */
-    public static CPT centredOnZero(CPT palette, double min, double max, Scaling scaling) {
-        return ramp(palette, min, max).scaling(scaling).build();
-    }
-
     /** Collects the choices a ramp is built from. See {@link DivergingCPT#ramp}. */
     public static class Builder {
 
@@ -162,7 +132,6 @@ public class DivergingCPT {
         protected final double max;
 
         protected int steps = DEFAULT_STEPS;
-        protected Scaling scaling = DEFAULT_SCALING;
 
         /** Whether colour follows the change or its logarithm. */
         protected Spacing spacing = Spacing.LINEAR;
@@ -177,18 +146,6 @@ public class DivergingCPT {
             this.palette = Preconditions.checkNotNull(palette, "need a palette");
             this.min = min;
             this.max = max;
-        }
-
-        /** Colour steps either side of zero. Defaults to {@link DivergingCPT#DEFAULT_STEPS}. */
-        public Builder steps(int steps) {
-            this.steps = steps;
-            return this;
-        }
-
-        /** How the palette is shared out between the two sides. See {@link Scaling}. */
-        public Builder scaling(Scaling scaling) {
-            this.scaling = scaling;
-            return this;
         }
 
         /**
@@ -250,7 +207,6 @@ public class DivergingCPT {
                     min <= 0 && max >= 0, "the ramp has to contain zero, got %s to %s", min, max);
             Preconditions.checkArgument(min < 0 || max > 0, "the ramp cannot be empty");
             Preconditions.checkArgument(steps > 0, "steps must be positive");
-            Preconditions.checkNotNull(scaling, "need a scaling");
             Preconditions.checkNotNull(spacing, "need a spacing");
             Preconditions.checkArgument(
                     zeroColor == null || zeroBand > 0,
@@ -338,23 +294,21 @@ public class DivergingCPT {
         }
 
         /**
-         * How far into its half of the palette, between zero and one, the far end of a side sits.
-         * Under {@link Scaling#BALANCED} that is its share of the longer side, measured out from
-         * the edge of the zero band, so that equal magnitudes either side of zero get equal
-         * colours; under {@link Scaling#INDEPENDENT} every side runs to the end of the palette.
+         * How far into its half of the palette, between zero and one, the far end of a side sits:
+         * its share of the longer side, measured out from the edge of the zero band, so that equal
+         * magnitudes either side of zero get equal colours and only the longer side saturates.
          *
          * @param magnitude the far end of the side, greater than the zero band
          * @param extent the far end of the longer side
          */
         protected double palettePosition(double magnitude, double extent) {
-            double reference = scaling == Scaling.BALANCED ? extent : magnitude;
-            if (reference <= zeroBand) {
+            if (extent <= zeroBand) {
                 return 0d;
             }
             if (spacing == Spacing.LOG) {
-                return Math.log10(magnitude / zeroBand) / Math.log10(reference / zeroBand);
+                return Math.log10(magnitude / zeroBand) / Math.log10(extent / zeroBand);
             }
-            return (magnitude - zeroBand) / (reference - zeroBand);
+            return (magnitude - zeroBand) / (extent - zeroBand);
         }
     }
 

@@ -1,14 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 
 import com.google.common.base.Preconditions;
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.gui.plot.GeographicMapMaker;
-import org.opensha.commons.gui.plot.PlotSymbol;
 import org.opensha.commons.mapping.gmt.elements.GMT_CPT_Files;
 import org.opensha.commons.util.cpt.CPT;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -34,7 +32,7 @@ import org.opensha.sha.faultSurface.FaultSection;
  * hazard comes from.
  *
  * <p>Only the sections that matter are drawn. A section that no rupture reaching the site's
- * intensity level runs over is not a source for the site at all, and {@link #setOmitBelowPercent}
+ * intensity level runs over is not a source for the site at all, and {@link #setOmitBelowRate}
  * leaves out the ones that are a source but a negligible one. Both are left off rather than shaded,
  * because the map maker draws an outline for every section it is given and a rupture set that
  * reaches most of the country would otherwise bury the sections the map is about.
@@ -173,7 +171,7 @@ public class SiteSourceMapPlotter {
 
         FaultSystemRupSet rupSet = contributions.getRupSet();
         double[] rates = contributions.getSectionRates();
-        double largest = max(rates);
+        double largest = SiteSourceMaps.maxAbs(rates);
         Preconditions.checkState(
                 largest > 0, "No section contributes anything, so there is nothing to draw");
         Preconditions.checkState(
@@ -185,7 +183,7 @@ public class SiteSourceMapPlotter {
         // the rates are scaled to a round number of years before anything else, so that the
         // threshold, the scale and the legend are all in the one unit the caller asked for
         double years = Double.isNaN(unitYears) ? HazardLabels.rateUnitYears(largest) : unitYears;
-        double[] values = perUnit(rates, years);
+        double[] values = SiteSourceMaps.perUnit(rates, years);
         double omitBelow = omitBelowRate * years;
 
         // anchor the scale on the largest contribution, rounded up to a whole decade so that the
@@ -215,29 +213,10 @@ public class SiteSourceMapPlotter {
                         + HazardLabels.rateUnit(years)
                         + "; Sections Overlap)");
 
-        mapMaker.setScatterSymbol(
-                PlotSymbol.INV_TRIANGLE, 10f, PlotSymbol.INV_TRIANGLE, Color.BLACK);
-        mapMaker.plotScatters(List.of(contributions.getSite()), Color.WHITE);
+        SiteSourceMaps.markSite(mapMaker, contributions.getSite());
 
         mapMaker.plot(outputDir, prefix, title(contributions, siteName));
         return new File(outputDir, prefix + ".png");
-    }
-
-    /** The rates converted from 1/yr to per {@code unitYears} years. */
-    protected static double[] perUnit(double[] rates, double unitYears) {
-        double[] scaled = new double[rates.length];
-        for (int i = 0; i < rates.length; i++) {
-            scaled[i] = rates[i] * unitYears;
-        }
-        return scaled;
-    }
-
-    protected static double max(double[] values) {
-        double max = 0;
-        for (double value : values) {
-            max = Math.max(max, value);
-        }
-        return max;
     }
 
     /**
@@ -322,13 +301,8 @@ public class SiteSourceMapPlotter {
             List<FaultSection> drawn,
             FaultSystemRupSet rupSet,
             SiteSourceContributions contributions) {
-        if (region != null) {
-            return region;
-        }
-        Region sectRegion = GeographicMapMaker.buildBufferedRegion(drawn, bufferKm, true);
-        return sectRegion.contains(contributions.getSite())
-                ? sectRegion
-                : GeographicMapMaker.buildBufferedRegion(rupSet.getFaultSectionDataList());
+        return SiteSourceMaps.region(
+                region, drawn, bufferKm, contributions.getSite(), rupSet.getFaultSectionDataList());
     }
 
     protected static String title(SiteSourceContributions contributions, String siteName) {

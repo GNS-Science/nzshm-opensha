@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.gui.plot.GeographicMapMaker;
-import org.opensha.commons.gui.plot.PlotSymbol;
 import org.opensha.commons.mapping.gmt.elements.GMT_CPT_Files;
 import org.opensha.commons.util.cpt.CPT;
 import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.RupSetMapMaker;
@@ -166,7 +165,7 @@ public class SiteSourceDiffMapPlotter {
 
         double[] rates = differences(comparison, omitBelowRate);
         double unitYears = unitYears(rates);
-        double[] scalars = perUnit(rates, unitYears);
+        double[] scalars = SiteSourceMaps.perUnit(rates, unitYears);
 
         GeographicMapMaker mapMaker = new RupSetMapMaker(sections, region(sections, comparison));
         // the sections come from two independently numbered rupture sets, so section ids are
@@ -180,9 +179,7 @@ public class SiteSourceDiffMapPlotter {
                 differenceCPT(scalars, unitYears),
                 HazardLabels.SECTION_HAZARD + " Change (" + HazardLabels.rateUnit(unitYears) + ")");
 
-        mapMaker.setScatterSymbol(
-                PlotSymbol.INV_TRIANGLE, 10f, PlotSymbol.INV_TRIANGLE, Color.BLACK);
-        mapMaker.plotScatters(List.of(comparison.getSite()), Color.WHITE);
+        SiteSourceMaps.markSite(mapMaker, comparison.getSite());
 
         mapMaker.plot(outputDir, prefix, title(comparison, siteName));
         return new File(outputDir, prefix + ".png");
@@ -224,7 +221,7 @@ public class SiteSourceDiffMapPlotter {
     protected static double[] differences(SiteSourceComparison comparison, double omitBelowRate) {
         double[] all = comparison.getDifferences();
         double[] maxRates = comparison.getMaxRates();
-        double[] drawn = new double[sections(comparison, omitBelowRate).size()];
+        double[] drawn = new double[numDrawn(maxRates, omitBelowRate)];
         int next = 0;
         for (int i = 0; i < all.length; i++) {
             if (isDrawn(maxRates[i], omitBelowRate)) {
@@ -234,26 +231,22 @@ public class SiteSourceDiffMapPlotter {
         return drawn;
     }
 
+    /** How many sections the map draws. */
+    protected static int numDrawn(double[] maxRates, double omitBelowRate) {
+        int count = 0;
+        for (double maxRate : maxRates) {
+            if (isDrawn(maxRate, omitBelowRate)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /**
      * The number of years the changes are reported over. See {@link HazardLabels#rateUnitYears}.
      */
     protected static double unitYears(double[] rates) {
-        double largest = 0;
-        for (double rate : rates) {
-            if (Double.isFinite(rate)) {
-                largest = Math.max(largest, Math.abs(rate));
-            }
-        }
-        return HazardLabels.rateUnitYears(largest);
-    }
-
-    /** The rates converted from 1/yr to per {@code unitYears} years. */
-    protected static double[] perUnit(double[] rates, double unitYears) {
-        double[] scaled = new double[rates.length];
-        for (int i = 0; i < rates.length; i++) {
-            scaled[i] = rates[i] * unitYears;
-        }
-        return scaled;
+        return HazardLabels.rateUnitYears(SiteSourceMaps.maxAbs(rates));
     }
 
     /**
@@ -330,13 +323,8 @@ public class SiteSourceDiffMapPlotter {
 
     /** A buffer around the drawn sections, or the region that was set. */
     protected Region region(List<FaultSection> sections, SiteSourceComparison comparison) {
-        if (region != null) {
-            return region;
-        }
-        Region sectRegion = GeographicMapMaker.buildBufferedRegion(sections, bufferKm, true);
-        return sectRegion.contains(comparison.getSite())
-                ? sectRegion
-                : GeographicMapMaker.buildBufferedRegion(comparison.getSections());
+        return SiteSourceMaps.region(
+                region, sections, bufferKm, comparison.getSite(), comparison.getSections());
     }
 
     protected static String title(SiteSourceComparison comparison, String siteName) {

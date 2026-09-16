@@ -695,11 +695,10 @@ public class HazardComparisonReport {
      * fade into the palette. That floor is an absolute percentage, so a cell is the no-change
      * colour on the same terms on every map in the report.
      *
-     * <p>The two sides are coloured at the same rate, {@link DivergingCPT.Scaling#BALANCED}, so a
-     * decrease and an increase of the same size look equally strong and only the larger side
-     * reaches full saturation. A map where nearly everything moved one way still uses the ramp's
-     * whole width, because the range itself stays asymmetric; what it does not do is make the
-     * smaller side look bigger than it is.
+     * <p>The two sides are coloured at the same rate, so a decrease and an increase of the same
+     * size look equally strong and only the larger side reaches full saturation. A map where nearly
+     * everything moved one way still uses the ramp's whole width, because the range itself stays
+     * asymmetric; what it does not do is make the smaller side look bigger than it is.
      *
      * <p>Unrounded ends mean the colour bar's tick labels land on round numbers inside the range
      * rather than on the ends themselves. Zero is always one of them: the ticks are multiples of

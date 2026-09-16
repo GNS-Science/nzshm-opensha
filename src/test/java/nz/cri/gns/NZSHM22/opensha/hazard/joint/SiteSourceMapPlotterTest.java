@@ -36,9 +36,9 @@ public class SiteSourceMapPlotterTest {
      */
     @Test
     public void testValues() {
-        double[] values = SiteSourceMapPlotter.perUnit(contributions().getSectionRates(), 1000d);
+        double[] values = SiteSourceMaps.perUnit(contributions().getSectionRates(), 1000d);
         assertArrayEquals(new double[] {1d, 1d, 3d, 3d}, values, 1e-9);
-        assertEquals(3d, SiteSourceMapPlotter.max(values), 1e-9);
+        assertEquals(3d, SiteSourceMaps.maxAbs(values), 1e-9);
     }
 
     /**

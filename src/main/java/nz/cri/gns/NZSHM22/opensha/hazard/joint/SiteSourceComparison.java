@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.opensha.commons.data.CSVFile;
+import org.opensha.commons.data.function.DiscretizedFunc;
 import org.opensha.commons.geo.Location;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
@@ -82,11 +83,20 @@ public class SiteSourceComparison {
      * reference solution's hazard curve reaches at the given return period. A comparison solution
      * that nothing in reaches the level contributes zero everywhere.
      *
+     * <p>A site whose reference hazard never reaches the return period gives null rather than
+     * failing. There is no level to compare at, but that is an ordinary outcome for a site far from
+     * every fault, not an error, and a report covering many sites has to carry on past it. The
+     * reference curve is read once and used for both that test and the level, because it is a full
+     * hazard curve calculation and the disaggregations that follow are the only thing here that
+     * should cost more.
+     *
      * @param reference explorer for the baseline solution, which also sets the level
      * @param comparison explorer for the solution being compared against it
      * @param location the site
      * @param period the calculation period, 0 for PGA
      * @param returnPeriod the return period that sets the level, read off the reference curve
+     * @return the comparison, or null if the reference solution's hazard at the site never reaches
+     *     the return period
      */
     public static SiteSourceComparison compare(
             SiteSourceExplorer reference,
@@ -94,7 +104,11 @@ public class SiteSourceComparison {
             Location location,
             double period,
             ReturnPeriods returnPeriod) {
-        double iml = reference.imlForReturnPeriod(location, period, returnPeriod);
+        DiscretizedFunc curve = reference.siteCurve(location, period);
+        if (!SiteSourceExplorer.reaches(curve, returnPeriod)) {
+            return null;
+        }
+        double iml = SiteSourceExplorer.imlForReturnPeriod(curve, returnPeriod);
         return new SiteSourceComparison(
                 reference.exploreAtIml(location, period, iml),
                 comparison.exploreAtImlOrZero(location, period, iml));
@@ -144,30 +158,12 @@ public class SiteSourceComparison {
     }
 
     /**
-     * The ratio of comparison to reference contribution for each section: greater than one where
-     * the new solution routes more of the site's hazard through the section, less where it routes
-     * less.
-     *
-     * <p>A section that is a source in only one of the two gives zero or an infinite ratio. That is
-     * the honest answer — the change is unbounded — and it is up to the plotter to clamp it onto a
-     * scale.
-     */
-    public double[] getRatios() {
-        build();
-        double[] ratios = new double[sections.size()];
-        for (int i = 0; i < ratios.length; i++) {
-            ratios[i] = comparisonRates[i] / referenceRates[i];
-        }
-        return ratios;
-    }
-
-    /**
      * The change in each section's contribution, in 1/yr: how much more, or less, of the site's
      * rate of exceedance reaches it through that section in the comparison solution than in the
      * reference one. This is what {@link SiteSourceDiffMapPlotter} draws.
      *
-     * <p>Unlike {@link #getRatios()} this is always finite, including for a section that only one
-     * of the two solutions has, so a map of it never has to clamp anything.
+     * <p>Unlike {@link SectionChange#getRatio()} this is always finite, including for a section
+     * that only one of the two solutions has, so a map of it never has to clamp anything.
      */
     public double[] getDifferences() {
         build();

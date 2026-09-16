@@ -16,6 +16,28 @@ public class HazardLabelsTest {
         Locale.setDefault(defaultLocale);
     }
 
+    /**
+     * Rates are reported over enough years to land on numbers a colour bar can print: at a
+     * thousandth per year, a bar labelled in 1/yr comes out as a row of zeroes.
+     */
+    @Test
+    public void testRateUnitYears() {
+        assertEquals(1000d, HazardLabels.rateUnitYears(2e-3), 1e-9);
+        assertEquals(10000d, HazardLabels.rateUnitYears(4e-4), 1e-9);
+        assertEquals(1d, HazardLabels.rateUnitYears(2.5), 1e-9);
+        // sign is ignored, and a rate of zero still needs a unit
+        assertEquals(1000d, HazardLabels.rateUnitYears(-2e-3), 1e-9);
+        assertEquals(1d, HazardLabels.rateUnitYears(0d), 1e-9);
+    }
+
+    /** The colour bar says which unit it is in. */
+    @Test
+    public void testRateUnit() {
+        assertEquals("1/yr", HazardLabels.rateUnit(1d));
+        assertEquals("per 1,000 years", HazardLabels.rateUnit(1000d));
+        assertEquals("per 10,000 years", HazardLabels.rateUnit(10000d));
+    }
+
     @Test
     public void testPeriodLabel() {
         assertEquals("PGA", HazardLabels.periodLabel(0d));
