@@ -17,8 +17,9 @@ import org.opensha.commons.util.cpt.CPTVal;
  * <p>The cost is that a colour distance means a different amount on each side of the ramp. That is
  * a fair trade for a map where nearly everything moved one way — a scale symmetric enough to keep
  * the two sides comparable would spend half its width on changes that do not occur, and wash out
- * the ones that do. Both difference maps label their colour bars with real values, so what a colour
- * means stays legible.
+ * the ones that do. Both difference maps label their colour bars with real values, and the ramp
+ * carries a tick interval that puts a label on each end and on zero (see {@link #tickInterval}), so
+ * what a colour means stays legible.
  *
  * <p>Used by {@link HazardComparisonReport} for map ratios, where the range is in log space, and by
  * {@link SiteSourceDiffMapPlotter} for section rate changes, where it is linear.
@@ -30,6 +31,21 @@ public class DivergingCPT {
 
     /** Multipliers a bound is rounded up to, within its decade. See {@link #niceCeiling}. */
     protected static final double[] NICE_MULTIPLIERS = {1d, 2d, 5d, 10d};
+
+    /** Multipliers a tick interval may take, within its decade, largest first. */
+    protected static final double[] TICK_MULTIPLIERS = {5d, 2d, 1d};
+
+    /** The most tick intervals a colour bar is asked to carry. See {@link #tickInterval}. */
+    protected static final int MAX_TICK_INTERVALS = 20;
+
+    /** How far a bound may be off a multiple of the tick interval and still count as on it. */
+    protected static final double TICK_TOLERANCE = 1e-9;
+
+    /**
+     * How far tick intervals are shrunk to survive JFreeChart's rounding. See {@link
+     * #tickInterval}.
+     */
+    protected static final double TICK_NUDGE = 1e-9;
 
     private DivergingCPT() {}
 
@@ -62,7 +78,60 @@ public class DivergingCPT {
         if (max > 0) {
             addSteps(cpt, scaled, 0d, max, 0d, 1d, steps);
         }
+        double tick = tickInterval(min, max);
+        if (Double.isFinite(tick)) {
+            cpt.setPreferredTickInterval(tick);
+        }
         return cpt;
+    }
+
+    /**
+     * A tick interval that puts a labelled tick on both ends of the ramp and on zero, so that a
+     * reader can tell which way the map moved and by how much. Zero is a multiple of any interval,
+     * so what this looks for is the largest interval that both bounds are a multiple of.
+     *
+     * <p>Bounds from {@link #niceCeiling} always have such an interval. Bounds that are not round
+     * numbers, or that are so lopsided that a shared interval would crowd the bar with more than
+     * {@link #MAX_TICK_INTERVALS} ticks, have none worth using; those return NaN, which leaves the
+     * plot on automatic ticks.
+     *
+     * <p>The interval is returned a hair under the round value it was picked as. JFreeChart derives
+     * its first and last tick by dividing the bounds by the interval and rounding inwards, so a
+     * bound that is a multiple of the interval in decimal but a whisker over it in binary loses its
+     * tick — exactly the tick this method exists to guarantee. Shrinking the interval moves the
+     * rounding the safe way, by far less than a tick label's formatting can show.
+     *
+     * @param min the bottom of the ramp, at most zero
+     * @param max the top of the ramp, at least zero
+     * @return the tick interval, or NaN if no sensible one exists
+     */
+    public static double tickInterval(double min, double max) {
+        double span = max - min;
+        if (!(span > 0)) {
+            return Double.NaN;
+        }
+        double smallest = span / MAX_TICK_INTERVALS;
+        for (double decade = Math.pow(10, Math.floor(Math.log10(span)));
+                decade * TICK_MULTIPLIERS[0] >= smallest;
+                decade /= 10) {
+            for (double multiplier : TICK_MULTIPLIERS) {
+                double interval = multiplier * decade;
+                if (interval > span || interval < smallest) {
+                    continue;
+                }
+                if (isMultipleOf(-min, interval) && isMultipleOf(max, interval)) {
+                    return interval * (1 - TICK_NUDGE);
+                }
+            }
+        }
+        return Double.NaN;
+    }
+
+    /** Whether the value is a whole number of intervals, up to {@link #TICK_TOLERANCE}. */
+    protected static boolean isMultipleOf(double value, double interval) {
+        double intervals = value / interval;
+        return Math.abs(intervals - Math.rint(intervals))
+                <= TICK_TOLERANCE * Math.max(1d, Math.abs(intervals));
     }
 
     /**

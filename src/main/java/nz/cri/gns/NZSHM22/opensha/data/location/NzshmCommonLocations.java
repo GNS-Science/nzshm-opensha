@@ -19,7 +19,7 @@ import org.opensha.commons.geo.Location;
  * when nzshm-common changes.
  *
  * <p>A few sites that nzshm-common does not list are appended to the resource, currently "Franz
- * Josef(SRG 164)", the Seismic Risk Group's Franz Josef site.
+ * Josef(SRG 164)", the Seismic Risk Working Group's Franz Josef site.
  */
 public class NzshmCommonLocations {
 
