@@ -2,7 +2,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -11,72 +10,6 @@ import org.opensha.sha.magdist.IncrementalMagFreqDist;
 public class MFDManipulationTest {
 
     public static final int BINS = 40;
-
-    public static List<Double> fillToBin(int magBin) {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < BINS; i++) {
-            if (i < magBin) {
-                result.add(Math.PI);
-            } else {
-                result.add((double) i);
-            }
-        }
-        return result;
-    }
-
-    public static List<Double> fillAfterBin(int magBin) {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < BINS; i++) {
-            if (i > magBin) {
-                result.add(Math.PI);
-            } else {
-                result.add((double) i);
-            }
-        }
-        return result;
-    }
-
-    public static IncrementalMagFreqDist fillBelowDist(double minMag, double fill) {
-        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
-        for (int i = 0; i < BINS; i++) {
-            dist.set(i, i);
-        }
-        return MFDManipulation.fillBelowMag(dist, minMag, fill);
-    }
-
-    public static IncrementalMagFreqDist fillAboveDist(double maxMag, double fill) {
-        IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
-        for (int i = 0; i < BINS; i++) {
-            dist.set(i, i);
-        }
-        return MFDManipulation.fillAboveMag(dist, maxMag, fill);
-    }
-
-    public static List<Double> fillBelow(double minMag) {
-        return fillBelowDist(minMag, Math.PI).yValues();
-    }
-
-    public static List<Double> fillAbove(double maxMag) {
-        return fillAboveDist(maxMag, Math.PI).yValues();
-    }
-
-    @Test
-    public void testFillBelowMag() {
-        assertEquals(fillToBin(30), fillBelow(8.0));
-        assertEquals(fillToBin(25), fillBelow(7.51));
-        assertEquals(fillToBin(20), fillBelow(7.00));
-        assertEquals(fillToBin(10), fillBelow(6.0));
-        assertEquals(fillToBin(0), fillBelow(1.0));
-    }
-
-    @Test
-    public void testFillAboveMag() {
-        assertEquals(fillAfterBin(30), fillAbove(8.0));
-        assertEquals(fillAfterBin(25), fillAbove(7.51));
-        assertEquals(fillAfterBin(20), fillAbove(7.0));
-        assertEquals(fillAfterBin(10), fillAbove(6.0));
-        assertEquals(fillAfterBin(0), fillAbove(1.0));
-    }
 
     @Test
     public void TestAddMfdUncertainty() {
@@ -190,29 +123,6 @@ public class MFDManipulationTest {
 
         assertEquals(dist.xValues(), actual.xValues());
         assertEquals(dist.yValues(), actual.yValues());
-    }
-
-    @Test
-    public void combinedUncertaintyFillBelowTest() {
-        IncrementalMagFreqDist filled = fillBelowDist(8, 0);
-        UncertainIncrMagFreqDist actual =
-                MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5, 0.4);
-        int indexMinMag = filled.getClosestXIndex(7.0);
-
-        assertTrue(
-                "non-aligned minMag leads to NaN",
-                Double.isNaN(actual.getStdDevs().getY(indexMinMag)));
-
-        filled = fillBelowDist(7.0, 7);
-        actual = MFDManipulation.addMfdUncertainty(filled, 7.0, 20, 0.5, 0.4);
-
-        assertEquals(
-                "formula always comes out to 0.4*rate at minMag",
-                filled.getY(indexMinMag) * 0.4,
-                actual.getStdDevs().getY(indexMinMag),
-                0.00000001);
-        // assertTrue("formula comes out to >1 at minMag+1", actual.getStdDevs().getY(indexMinMag +
-        // 1) > 1);
     }
 
     @Test

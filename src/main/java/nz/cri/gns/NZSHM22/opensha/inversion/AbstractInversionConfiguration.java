@@ -175,18 +175,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         return unmodifiedSlipRateStdvs;
     }
 
-    @Deprecated
-    public double getMinimizationConstraintWt() {
-        return minimizationConstraintWt;
-    }
-
-    @Deprecated
-    public AbstractInversionConfiguration setMinimizationConstraintWt(
-            double relativeMinimizationConstraintWt) {
-        this.minimizationConstraintWt = relativeMinimizationConstraintWt;
-        return this;
-    }
-
     public double[] getInitialRupModel() {
         return initialRupModel;
     }
@@ -303,12 +291,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
                 runner.mfdUncertWtdConstraintWt,
                 runner.mfdTransitionMag,
                 mfdUncertaintyConstraints);
-
-        // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
-        // constraint
-        if (!runner.excludeRupturesBelowMinMag) {
-            setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
-        }
 
         // set up slip rate
 
