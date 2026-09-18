@@ -43,6 +43,8 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
  */
 public abstract class NZSHM22_AbstractInversionRunner {
 
+    public static final double DELTA_MAG = 0.1;
+
     protected long inversionSecs = 60;
     protected long selectionInterval = 10;
     protected Long selectionIterations = null;
@@ -110,6 +112,49 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected double minBufferSize = 0;
 
     protected transient Path matrixDumpPath;
+
+    /**
+     * Validates a magnitude range against the constraints of the NZSHM22 inversion.
+     *
+     * <p>The range must satisfy: {@code minMag >= 5}, {@code maxMag <= 10}, {@code maxMag >
+     * minMag}, and both bounds must lie on the {@link #DELTA_MAG} grid anchored at zero, i.e.
+     * {@code mag / DELTA_MAG} must be a whole number.
+     *
+     * @param minMag the inclusive lower bound of the magnitude range
+     * @param maxMag the upper bound of the magnitude range
+     * @throws IllegalArgumentException if the range violates any of the constraints above
+     */
+    public static void validateMagnitudeRange(double minMag, double maxMag) {
+        Preconditions.checkArgument(minMag >= 5, "minMag must be at least 5 but was %s.", minMag);
+        Preconditions.checkArgument(maxMag <= 10, "maxMag must be at most 10 but was %s.", maxMag);
+        Preconditions.checkArgument(
+                maxMag > minMag,
+                "maxMag must be greater than minMag but was %s <= %s.",
+                maxMag,
+                minMag);
+        Preconditions.checkArgument(
+                isOnMagGrid(minMag),
+                "minMag must be a multiple of %s but was %s.",
+                DELTA_MAG,
+                minMag);
+        Preconditions.checkArgument(
+                isOnMagGrid(maxMag),
+                "maxMag must be a multiple of %s but was %s.",
+                DELTA_MAG,
+                maxMag);
+    }
+
+    /**
+     * Determines whether a magnitude is reachable from zero in {@link #DELTA_MAG} steps, allowing
+     * for floating point representation error.
+     *
+     * @param mag the magnitude to test
+     * @return true if mag / DELTA_MAG is a whole number
+     */
+    protected static boolean isOnMagGrid(double mag) {
+        double steps = mag / DELTA_MAG;
+        return Math.abs(steps - Math.round(steps)) < 1e-6;
+    }
 
     /**
      * Sets the base path for dumping the A matrix and d vector to file. A and d will be written

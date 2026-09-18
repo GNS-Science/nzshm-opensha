@@ -68,6 +68,6 @@ All classes need to have a docstring. public methods and constructors need a doc
 
 Google Java Format, AOSP style. Run `./gradlew spotlessApply` before committing; CI runs `spotlessCheck` and fails on violations.
 
-Always create tests for new classes. Unit tests go in `src/test/java/`, integration tests in `src/integration/java/`. Use JUnit 5 and Mockito for mocking. Test class names should end with `Test` (e.g. `FaultSectionTest`).
+Always create tests for new classes. Unit tests go in `src/test/java/`, integration tests in `src/integration/java/`. Use JUnit 4 and Mockito for mocking. Test class names should end with `Test` (e.g. `FaultSectionTest`).
 
 Tests for ../opensha go into ../opensha/src/test/java/ (not here). test in ../opensha use suites.
