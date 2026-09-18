@@ -1,7 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -86,62 +85,10 @@ public class MFDManipulation {
                 new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);
-            // TODO remove (rate == 1e-20) condition when it's no longer needed
-            double stdDev =
-                    ((i < minMagBin) || (maxMagBin < i) || rate == 1e-20)
-                            ? 1e-20
-                            : firstWeightPower / Math.pow(rate, power - 1);
+            double stdDev = firstWeightPower / Math.pow(rate, power - 1);
             stdDevs.set(i, stdDev);
         }
         return new UncertainIncrMagFreqDist(mfd, stdDevs);
-    }
-
-    /**
-     * Returns a copy of source with value in all bins below the bin that minMag falls in.
-     *
-     * @param source
-     * @param minMag
-     * @param value
-     * @return
-     */
-    public static IncrementalMagFreqDist fillBelowMag(
-            IncrementalMagFreqDist source, double minMag, double value) {
-        IncrementalMagFreqDist result =
-                new IncrementalMagFreqDist(source.getMinX(), source.size(), source.getDelta());
-        int minMagBin = result.getClosestXIndex(minMag);
-        for (int i = 0; i < source.size(); i++) {
-            Point2D point = source.get(i);
-            if (i < minMagBin) {
-                result.set(i, value);
-            } else {
-                result.set(i, point.getY());
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Returns a copy of source with value in all bins above the bin that maxMag falls in.
-     *
-     * @param source
-     * @param maxMag
-     * @param value
-     * @return
-     */
-    public static IncrementalMagFreqDist fillAboveMag(
-            IncrementalMagFreqDist source, double maxMag, double value) {
-        IncrementalMagFreqDist result =
-                new IncrementalMagFreqDist(source.getMinX(), source.size(), source.getDelta());
-        int minMagBin = result.getClosestXIndex(maxMag);
-        for (int i = 0; i < source.size(); i++) {
-            Point2D point = source.get(i);
-            if (i > minMagBin) {
-                result.set(i, value);
-            } else {
-                result.set(i, point.getY());
-            }
-        }
-        return result;
     }
 
     public static IncrementalMagFreqDist swapZeros(IncrementalMagFreqDist source, double value) {

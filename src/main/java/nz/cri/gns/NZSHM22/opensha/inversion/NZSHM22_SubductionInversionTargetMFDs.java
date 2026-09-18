@@ -40,9 +40,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
     public static final int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
     public static final double DELTA_MAG = 0.1;
 
-    // CBC NEW
-    public static final double MINIMIZE_RATE_TARGET = 1.0e-20d;
-
     protected List<IncrementalMagFreqDist> mfdEqIneqConstraints = new ArrayList<>();
     protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints = new ArrayList<>();
     ;
@@ -79,12 +76,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             System.out.println(totalTargetGR.toString());
             System.out.println("");
         }
-
-        // Doctor the target, setting a small value instead of 0
-        totalTargetGR.setYofX(
-                (x, y) -> {
-                    return (x < mfdMinMag) ? MINIMIZE_RATE_TARGET : y;
-                });
 
         SummedMagFreqDist targetOnFaultSupraSeisMFD =
                 new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
