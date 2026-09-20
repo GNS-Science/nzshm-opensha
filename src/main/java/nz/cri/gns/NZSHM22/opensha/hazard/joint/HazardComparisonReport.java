@@ -267,17 +267,12 @@ public class HazardComparisonReport {
         return index;
     }
 
-    /** The line of prose below the title, explaining how to read the difference maps. */
     protected String intro() {
         return "Map differences are the percentage change from "
                 + first.getName()
                 + " to "
                 + second.getName()
-                + ", on a log scale that always covers the whole range of change, so red means "
-                + second.getName()
-                + " gives stronger shaking and green means a change of under "
-                + (int) NO_CHANGE_PERCENT
-                + "%. Captions report the same numbers.";
+                + ".";
     }
 
     protected JointHazardMapCalculator calculate(HazardReportSource config) {
@@ -391,11 +386,9 @@ public class HazardComparisonReport {
                                 + " at "
                                 + SOURCE_RETURN_PERIOD.label
                                 + ". Each fault section is coloured by how much the hazard reaching"
-                                + " the site through it changed: the annual rate at which ruptures"
-                                + " running over that section push the site over the level. A"
-                                + " rupture is credited to every section it breaks, so a long"
-                                + " multi-fault rupture is drawn along its whole length. Click a"
-                                + " map for that site's own page.");
+                                + " the site through it changed. A"
+                                + " rupture is credited to every section it breaks. Click a"
+                                + " map for details.");
         List<String> skipped = new ArrayList<>();
         List<String> failed = new ArrayList<>();
         for (Map.Entry<String, Location> site : sourceSites.entrySet()) {
@@ -654,7 +647,7 @@ public class HazardComparisonReport {
 
     /**
      * A colour ramp covering all the given maps, so that they are directly comparable. The ramp is
-     * logarithmic, rounded outwards to whole decades.
+     * logarithmic, rounded away from zero to whole decades.
      *
      * <p>The CPT's own values are the logarithms — that is what it is rescaled onto — but {@link
      * CPT#setLog10} tells it that, so it takes the linear ground motions handed to it, logs them

@@ -18,18 +18,17 @@ import org.opensha.sha.faultSurface.FaultSection;
 
 /**
  * The per-site page of a {@link HazardComparisonReport}: where one site's hazard comes from in two
- * solutions, and what changed. The report itself shows only the difference map of each site and
- * links here for the rest.
+ * solutions, and what changed. Intended to be linked from the main report which is meant to only
+ * show the difference map for each site.
  *
  * <p>From one disaggregation of each solution at one intensity measure level: the difference map,
  * {@link SiteSourceDiffMapPlotter}, each solution's own map, {@link SiteSourceMapPlotter}, and
  * {@link #TABLE_ROWS} rows of the sections that changed most.
  *
- * <p>The three maps share one region and one threshold, so that the two solutions and their
- * difference can be read against each other rather than each being framed on its own sources. The
- * region is a buffer around the sections that clear the threshold in either solution — the sections
- * the maps are actually about — because the sections that are a source for a site at all reach most
- * of the country once long multi-fault ruptures are involved.
+ * <p>The three maps share one region and one threshold. The region is a buffer around the sections
+ * that clear the threshold in either solution — the sections the maps are actually about — because
+ * the sections that are a source for a site at all reach most of the country once long multi-fault
+ * ruptures are involved.
  */
 public class SiteSourcePage {
 
@@ -355,23 +354,14 @@ public class SiteSourcePage {
                 + referenceName
                 + " reaches at "
                 + returnPeriod.label
-                + ". Both solutions are disaggregated at that one level, so their rates can be"
-                + " compared. The maps colour each fault section by the hazard that reaches the"
-                + " site through it: the annual rate at which ruptures running over that section"
-                + " push the site over the level. Hazard is calculated per rupture, not per"
-                + " section, so a rupture that breaks ten sections is counted in all ten — the"
+                + ". The maps colour each fault section by the hazard that reaches the"
+                + " site through it. Hazard is calculated per rupture, not per"
+                + " section, so a rupture that contains ten sections is counted in all ten — the"
                 + " shares overlap and do not add up to the site's total, and one section can carry"
-                + " more than 100% of it. That is deliberate: a long multi-fault rupture reaches"
-                + " the site through every section it runs over, and colouring the whole footprint"
-                + " is what shows which ruptures the hazard comes from. Sections carrying less than "
+                + " more than 100% of it. Sections carrying less than "
                 + NEGLIGIBLE_PERCENT
                 + "% of the site's hazard in both solutions are left off, as are sections that no"
-                + " rupture reaching the level runs over. The difference map colours by the"
-                + " logarithm of the change, so that the sections either side of the one or two"
-                + " that dominate the site are still legible rather than washed out; green means a"
-                + " section moved by less than the "
-                + NEGLIGIBLE_PERCENT
-                + "% it had to carry to be drawn at all.";
+                + " rupture reaching the level runs over.";
     }
 
     /**

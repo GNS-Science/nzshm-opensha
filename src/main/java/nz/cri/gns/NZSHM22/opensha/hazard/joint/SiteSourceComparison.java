@@ -21,16 +21,10 @@ import org.opensha.sha.faultSurface.FaultSection;
  * SiteSourceDiffMapPlotter}.
  *
  * <p>Both sides are calculated at <em>one</em> intensity measure level, taken from the reference
- * solution's own hazard curve at a return period. That is the only framing under which the two sets
- * of section rates can be subtracted: a rate of exceeding 0.6g and a rate of exceeding 0.3g are not
- * comparable quantities. It also means the comparison answers "how does the hazard at this level
- * change, and which faults carry the change", not "how does the design level change" — the second
- * question is answered by the two totals, which the comparison also carries.
+ * solution's own hazard curve at a return period.
  *
- * <p>Sections are matched by name, because two solutions built from the same fault model number
- * their sections differently as soon as their rupture sets differ. A section present in only one
- * solution is treated as contributing zero in the other, which is what a fault that a new solution
- * adds or drops should look like.
+ * <p>Sections are matched by name, to allow small changes in rupture sets. A section present in
+ * only one solution is treated as contributing zero in the other.
  */
 public class SiteSourceComparison {
 
@@ -80,8 +74,7 @@ public class SiteSourceComparison {
 
     /**
      * Explores two solutions at one site and compares them, at the intensity measure level the
-     * reference solution's hazard curve reaches at the given return period. A comparison solution
-     * that nothing in reaches the level contributes zero everywhere.
+     * reference solution's hazard curve reaches at the given return period.
      *
      * <p>A site whose reference hazard never reaches the return period gives null rather than
      * failing. There is no level to compare at, but that is an ordinary outcome for a site far from
