@@ -153,7 +153,7 @@ public class SiteSourcePage {
         File diff = addMaps(section, imageDir, slug, changes, siteName);
         section.add(
                 new ReportPage.DataTable(
-                        "The " + TABLE_ROWS + " sections whose hazard changed most",
+                        "The " + TABLE_ROWS + " sections whose hazard contribution changed most",
                         changeTable(changes)));
 
         ReportPage page =
@@ -354,8 +354,8 @@ public class SiteSourcePage {
                 + referenceName
                 + " reaches at "
                 + returnPeriod.label
-                + ". The maps colour each fault section by the hazard that reaches the"
-                + " site through it. Hazard is calculated per rupture, not per"
+                + ". The maps colour each fault section by the contribution to hazard from that fault section."
+                + "  Hazard is calculated per rupture, not per"
                 + " section, so a rupture that contains ten sections is counted in all ten — the"
                 + " shares overlap and do not add up to the site's total, and one section can carry"
                 + " more than 100% of it. Sections carrying less than "

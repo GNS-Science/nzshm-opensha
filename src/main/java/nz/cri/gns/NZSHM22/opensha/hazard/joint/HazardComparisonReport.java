@@ -385,9 +385,8 @@ public class HazardComparisonReport {
                                 + HazardLabels.periodLabel(period)
                                 + " at "
                                 + SOURCE_RETURN_PERIOD.label
-                                + ". Each fault section is coloured by how much the hazard reaching"
-                                + " the site through it changed. A"
-                                + " rupture is credited to every section it breaks. Click a"
+                                + "Each fault section is coloured by the change in hazard rate attributed to that section (i.e. the disaggregation by subsection)."
+                                + " A rupture is credited to every section it breaks. Click a"
                                 + " map for details.");
         List<String> skipped = new ArrayList<>();
         List<String> failed = new ArrayList<>();
