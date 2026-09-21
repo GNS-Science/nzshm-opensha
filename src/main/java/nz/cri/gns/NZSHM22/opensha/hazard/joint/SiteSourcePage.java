@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 
 import com.google.common.base.Preconditions;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,6 +74,9 @@ public class SiteSourcePage {
     protected final String referenceName;
     protected final String comparisonName;
 
+    /** The colour of the no-change band on the difference map. See {@link #setNoChangeColor}. */
+    protected Color noChangeColor = DivergingCPT.DEFAULT_ZERO_COLOR;
+
     /**
      * @param reference explorer for the baseline solution, which also sets the intensity measure
      *     level the two are compared at
@@ -89,6 +93,19 @@ public class SiteSourcePage {
         this.comparison = comparison;
         this.referenceName = referenceName;
         this.comparisonName = comparisonName;
+    }
+
+    /**
+     * Sets the colour the difference map draws its no-change band in, so that the sections which
+     * did not really move read as their own thing rather than as a weak change. Defaults to {@link
+     * DivergingCPT#DEFAULT_ZERO_COLOR}.
+     *
+     * @param noChangeColor the colour, or null to leave the band in the palette's own neutral
+     *     colour
+     */
+    public SiteSourcePage setNoChangeColor(Color noChangeColor) {
+        this.noChangeColor = noChangeColor;
+        return this;
     }
 
     /**
@@ -210,6 +227,7 @@ public class SiteSourcePage {
         File diff =
                 new SiteSourceDiffMapPlotter()
                         .setOmitBelowRate(floor)
+                        .setZeroColor(noChangeColor)
                         .setRegion(region)
                         .plot(imageDir, slug + "_diff", comparison, siteName);
         ReportPage.Row row = new ReportPage.Row(HazardLabels.SECTION_HAZARD);

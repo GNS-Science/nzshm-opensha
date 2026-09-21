@@ -46,8 +46,9 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * decreases and increases at the same rate, so a change of a given size looks the same whichever
  * way it went. Colour follows the logarithm of the change in both directions, so an outlier
  * somewhere does not flatten the rest of the map, and changes under {@link #NO_CHANGE_PERCENT}
- * count as none and are drawn in green. See {@link #percentDiffCPT}. Figure captions report the
- * same numbers. Clicking any figure opens it full size.
+ * count as none and are drawn in the no-change colour of {@link #setNoChangeColor}. See {@link
+ * #percentDiffCPT}. Figure captions report the same numbers. Clicking any figure opens it full
+ * size.
  *
  * <p>Both configs must be calculated over the same region and the same periods, otherwise the maps
  * cannot be differenced. Use {@link #setRegion} or {@link #setSpacing} to set them together.
@@ -107,14 +108,17 @@ public class HazardComparisonReport {
 
     /**
      * Percentage change below which the difference maps call it no change: the floor of their log
-     * colour ramp, and the half-width of the band drawn in {@link #NO_CHANGE_COLOR}. An absolute
-     * figure rather than a share of the map's range, so that it means the same thing on every map
-     * in the report. See {@link #percentDiffCPT}.
+     * colour ramp, and the half-width of the band drawn in the no-change colour. An absolute figure
+     * rather than a share of the map's range, so that it means the same thing on every map in the
+     * report. See {@link #percentDiffCPT}.
      */
     protected static final double NO_CHANGE_PERCENT = 1d;
 
-    /** The colour of the no-change band on the difference maps. See {@link #NO_CHANGE_PERCENT}. */
-    protected static final Color NO_CHANGE_COLOR = DivergingCPT.DEFAULT_ZERO_COLOR;
+    /**
+     * The colour the no-change band is drawn in unless {@link #setNoChangeColor} says otherwise.
+     * See {@link #NO_CHANGE_PERCENT}.
+     */
+    public static final Color DEFAULT_NO_CHANGE_COLOR = DivergingCPT.DEFAULT_ZERO_COLOR;
 
     /**
      * Annual exceedance probability below which curve values are ignored when comparing. Curves get
@@ -131,6 +135,7 @@ public class HazardComparisonReport {
 
     protected Map<String, Location> sites = defaultSites();
     protected Map<String, Location> sourceSites = defaultSourceSites();
+    protected Color noChangeColor = DEFAULT_NO_CHANGE_COLOR;
     protected File imageDir;
 
     /**
@@ -192,6 +197,20 @@ public class HazardComparisonReport {
         Preconditions.checkArgument(
                 sourceSites != null && !sourceSites.isEmpty(), "need at least one source site");
         this.sourceSites = sourceSites;
+        return this;
+    }
+
+    /**
+     * Sets the colour that every difference map in the report draws its no-change band in, both the
+     * hazard maps and the per-site source maps, so that the cells and sections which did not really
+     * move read as their own thing rather than as a weak change. Defaults to {@link
+     * #DEFAULT_NO_CHANGE_COLOR}.
+     *
+     * @param noChangeColor the colour, or null to leave the band in the palette's own neutral
+     *     colour
+     */
+    public HazardComparisonReport setNoChangeColor(Color noChangeColor) {
+        this.noChangeColor = noChangeColor;
         return this;
     }
 
@@ -346,7 +365,7 @@ public class HazardComparisonReport {
                                         imageDir,
                                         prefix + "_diff",
                                         diffMap,
-                                        percentDiffCPT(diffMap),
+                                        percentDiffCPT(diffMap, noChangeColor),
                                         differenceLabel(),
                                         "% change, " + periodLabel + ", " + rp.label),
                         "Difference",
@@ -377,6 +396,7 @@ public class HazardComparisonReport {
                         new SiteSourceExplorer(secondCalc.getSetup()),
                         first.getName(),
                         second.getName());
+        pages.setNoChangeColor(noChangeColor);
 
         ReportPage.Row row =
                 new ReportPage.Row(
@@ -696,10 +716,10 @@ public class HazardComparisonReport {
      * <p>Colour is spent on the logarithm of the change, out from zero in both directions, so that
      * one node that moved by a couple of hundred percent does not push every ordinary change into
      * the first sliver of the palette and leave the map looking flat. The ramp bottoms out at
-     * {@link #NO_CHANGE_PERCENT}: smaller changes count as none and are drawn in {@link
-     * #NO_CHANGE_COLOR}, which says which cells did not really move rather than leaving them to
-     * fade into the palette. That floor is an absolute percentage, so a cell is the no-change
-     * colour on the same terms on every map in the report.
+     * {@link #NO_CHANGE_PERCENT}: smaller changes count as none and are drawn in {@code
+     * noChangeColor}, which says which cells did not really move rather than leaving them to fade
+     * into the palette. That floor is an absolute percentage, so a cell is the no-change colour on
+     * the same terms on every map in the report.
      *
      * <p>The two sides are coloured at the same rate, so a decrease and an increase of the same
      * size look equally strong and only the larger side reaches full saturation. A map where nearly
@@ -714,8 +734,13 @@ public class HazardComparisonReport {
      *
      * <p>Nodes where the first config has no hazard are NaN, have no percentage change to show, and
      * are drawn in grey. See {@link #percentDiff}.
+     *
+     * @param percentMap the percentage change map the ramp is fitted to
+     * @param noChangeColor the colour of the no-change band, or null for the palette's own neutral
+     *     colour. See {@link #setNoChangeColor}.
      */
-    protected static CPT percentDiffCPT(GriddedGeoDataSet percentMap) throws IOException {
+    protected static CPT percentDiffCPT(GriddedGeoDataSet percentMap, Color noChangeColor)
+            throws IOException {
         double[] values = finiteValues(percentMap);
         // finiteValues sorts, so the extremes are the ends; clamped so that a map that moved only
         // one way still has zero at the end of the ramp rather than inside it
@@ -729,7 +754,7 @@ public class HazardComparisonReport {
         CPT cpt =
                 DivergingCPT.ramp(GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), min, max)
                         .logFloor(NO_CHANGE_PERCENT)
-                        .zeroColor(NO_CHANGE_COLOR)
+                        .zeroColor(noChangeColor)
                         .build();
         cpt.setNanColor(Color.LIGHT_GRAY);
         cpt.setBelowMinColor(cpt.getMinColor());

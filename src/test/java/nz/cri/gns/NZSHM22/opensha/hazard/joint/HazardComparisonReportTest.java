@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 import static nz.cri.gns.NZSHM22.opensha.hazard.joint.JointTestSolutions.*;
 import static org.junit.Assert.*;
 
+import java.awt.Color;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -270,21 +271,52 @@ public class HazardComparisonReportTest {
         }
         diff.set(0, Double.NaN);
 
-        CPT cpt = HazardComparisonReport.percentDiffCPT(diff);
+        CPT cpt =
+                HazardComparisonReport.percentDiffCPT(
+                        diff, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
 
-        assertEquals(java.awt.Color.LIGHT_GRAY, cpt.getNanColor());
+        assertEquals(Color.LIGHT_GRAY, cpt.getNanColor());
         // NaN nodes are ignored when the ramp is fitted
         assertEquals(20d, cpt.getMaxValue(), 1e-9);
     }
 
+    /**
+     * The no-change band is drawn in whatever colour the report was given rather than always in the
+     * default green.
+     */
+    @Test
+    public void testPercentDiffCPTTakesTheNoChangeColour() throws Exception {
+        CPT green = percentDiffCPT(-33d, 186d);
+        assertEquals(HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR, green.getColor(0f));
+
+        CPT white = percentDiffCPT(-33d, 186d, Color.WHITE);
+        assertEquals(Color.WHITE, white.getColor(0f));
+        // only the band changes: the ends of the ramp are the palette's
+        assertEquals(green.getMinColor(), white.getMinColor());
+        assertEquals(green.getMaxColor(), white.getMaxColor());
+    }
+
+    /** Passing no colour at all leaves the band in the palette's own neutral colour. */
+    @Test
+    public void testPercentDiffCPTAllowsThePaletteNeutral() throws Exception {
+        CPT cpt = percentDiffCPT(-33d, 186d, null);
+        assertNotEquals(HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR, cpt.getColor(0f));
+    }
+
     /** The ramp a difference map gets when its percentage changes run from min to max. */
     private static CPT percentDiffCPT(double min, double max) throws Exception {
+        return percentDiffCPT(min, max, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
+    }
+
+    /** As above, with the colour the no-change band is drawn in. */
+    private static CPT percentDiffCPT(double min, double max, Color noChangeColor)
+            throws Exception {
         GriddedRegion region = mapRegion();
         GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
         for (int i = 0; i < region.getNodeCount(); i++) {
             diff.set(i, min + (max - min) * i / (double) (region.getNodeCount() - 1));
         }
-        return HazardComparisonReport.percentDiffCPT(diff);
+        return HazardComparisonReport.percentDiffCPT(diff, noChangeColor);
     }
 
     /** The curve ratio ignores the tail where the two curves are just noise. */
