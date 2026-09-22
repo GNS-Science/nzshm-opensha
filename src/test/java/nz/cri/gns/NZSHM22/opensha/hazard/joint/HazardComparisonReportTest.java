@@ -122,7 +122,7 @@ public class HazardComparisonReportTest {
         assertTrue(html.contains(HazardLabels.SECTION_HAZARD));
         assertTrue(
                 "expected the table of the sections that changed most",
-                html.contains("sections whose hazard changed most"));
+                html.contains("sections whose hazard contribution changed most"));
 
         // the difference and one map per solution
         List<String> images = imagesIn(html);
