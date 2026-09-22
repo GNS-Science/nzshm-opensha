@@ -22,6 +22,7 @@ import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
+import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 
 /** Tests for {@link HazardVariabilityReport}: the hazard variability across repeat runs. */
 public class HazardVariabilityReportTest {
@@ -146,8 +147,8 @@ public class HazardVariabilityReportTest {
     @Test
     public void testCurveStats() {
         String stats = HazardVariabilityReport.curveStats(List.of(curve(2d), curve(1d)));
-        assertTrue(stats, stats.contains("2% in 50 year"));
-        assertTrue(stats, stats.contains("10% in 50 year"));
+        assertTrue(stats, stats.contains(ReturnPeriods.TWO_IN_50.label));
+        assertTrue(stats, stats.contains(ReturnPeriods.TEN_IN_50.label));
         assertTrue(stats, stats.contains("% cov"));
         assertTrue(stats, stats.contains("% spread"));
     }

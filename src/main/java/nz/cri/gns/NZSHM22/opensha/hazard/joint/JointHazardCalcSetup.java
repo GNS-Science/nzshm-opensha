@@ -174,13 +174,13 @@ public class JointHazardCalcSetup {
      * The underlying map calculator, built on first use. Fault sources only; the joint rupture
      * solutions do not carry a grid source provider.
      *
-     * <p>In {@link JointHazardInput.GmmMode#JOINT_RUPTURE} the ERF's per-thread distance cache
-     * wrapper is switched off. That wrapper replaces every rupture surface with a {@code
-     * CustomCacheWrappedSurface}, and {@link JointRuptureExperimentalIMR} only splits a rupture
-     * into its crustal and interface parts when it sees a {@code CompoundSurface} carrying section
-     * data. With the wrapper in place every rupture reaches the GMM as an opaque surface and is
-     * classified by magnitude alone, so the maps would silently not be joint calculations at all.
-     * The cost is more distance cache collisions between threads.
+     * <p>The ERF's per-thread distance cache wrapper is left on in every mode. It used to have to
+     * be switched off for {@link JointHazardInput.GmmMode#JOINT_RUPTURE}, because it replaced every
+     * rupture surface with an opaque {@code CustomCacheWrappedSurface} and {@link
+     * JointRuptureExperimentalIMR} only splits a rupture into its crustal and interface parts when
+     * it sees a {@code CompoundSurface} carrying section data. {@code DistCachedERFWrapper} now
+     * leaves a compound surface compound, with its section list intact, so the split still happens
+     * and the cache can be kept.
      */
     public SolHazardMapCalc getCalc() {
         if (calc == null) {
@@ -192,9 +192,6 @@ public class JointHazardCalcSetup {
                             IncludeBackgroundOption.EXCLUDE,
                             input.getPeriods());
             calc.setXVals(mapXVals());
-            if (input.getGmmMode() == JointHazardInput.GmmMode.JOINT_RUPTURE) {
-                calc.setDistCacheWrapper(false);
-            }
         }
         return calc;
     }

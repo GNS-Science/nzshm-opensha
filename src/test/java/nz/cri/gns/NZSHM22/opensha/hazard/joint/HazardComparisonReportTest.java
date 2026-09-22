@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 import static nz.cri.gns.NZSHM22.opensha.hazard.joint.JointTestSolutions.*;
 import static org.junit.Assert.*;
 
+import java.awt.Color;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,6 +22,7 @@ import org.opensha.commons.data.xyz.GriddedGeoDataSet;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
+import org.opensha.commons.util.cpt.CPT;
 
 /** Tests for {@link HazardComparisonReport}: the side by side hazard comparison report. */
 public class HazardComparisonReportTest {
@@ -55,13 +57,28 @@ public class HazardComparisonReportTest {
         assertTrue(html.contains("Test Site"));
         assertTrue("expected a hazard map section", html.contains("id=\"maps\""));
         assertTrue("expected a hazard curve section", html.contains("id=\"curves\""));
+        assertTrue("expected a hazard source section", html.contains("id=\"sources\""));
         // clicking a figure opens the image, both with and without javascript
-        assertTrue(html.contains("<a href=\"" + HazardComparisonReport.IMAGE_DIR + "/"));
+        assertTrue(
+                html.contains(
+                        "<a class=\"zoom\" href=\"" + HazardComparisonReport.IMAGE_DIR + "/"));
         assertTrue(html.contains("id=\"lightbox\""));
+        // the anchor closes before the caption, so the caption is not part of the link
+        assertTrue(
+                "the figure caption should not be inside the link",
+                html.contains("></a>\n<figcaption>"));
+        // the source figures link to the site page instead of opening in place
+        assertTrue(
+                html.contains(
+                        "<a href=\""
+                                + SiteSourcePage.SOURCES_DIR
+                                + "/test_site/"
+                                + ReportPage.INDEX_FILE));
 
         List<String> images = imagesIn(html);
-        // two return periods and one site, each with two configs and a difference
-        assertEquals(9, images.size());
+        // two return periods and one site, each with two configs and a difference, plus the one
+        // source difference map
+        assertEquals(10, images.size());
         for (String image : images) {
             File file = new File(outputDir, image);
             assertTrue(image + " should exist", file.exists());
@@ -70,6 +87,71 @@ public class HazardComparisonReportTest {
         // the difference figures are the point of the report
         assertTrue(images.stream().anyMatch(i -> i.contains("map_pga_two_in_50_diff")));
         assertTrue(images.stream().anyMatch(i -> i.contains("curve_test_site_pga_diff")));
+        assertTrue(images.stream().anyMatch(i -> i.contains("test_site_diff")));
+    }
+
+    /**
+     * The source sites all exist, and the spread deliberately covers the Alpine Fault and the Taupo
+     * Volcanic Zone.
+     */
+    @Test
+    public void testDefaultSourceSites() {
+        Map<String, Location> sites = HazardComparisonReport.defaultSourceSites();
+        assertEquals(
+                HazardComparisonReport.DEFAULT_SOURCE_SITE_NAMES, new ArrayList<>(sites.keySet()));
+        assertNotNull("expected a site on the Alpine Fault", sites.get("Franz Josef(SRG 164)"));
+        assertNotNull("expected a site in the TVZ", sites.get("Taupo"));
+    }
+
+    /**
+     * Each source site gets its own page holding what the report itself does not show: each
+     * solution's own map beside the difference, and the sections that changed most.
+     */
+    @Test
+    public void testSourceSitePage() throws Exception {
+        File outputDir = tempFolder.newFolder("site-page");
+        report(outputDir).generate();
+
+        File siteDir = new File(new File(outputDir, SiteSourcePage.SOURCES_DIR), "test_site");
+        File page = new File(siteDir, ReportPage.INDEX_FILE);
+        assertTrue(page.exists());
+
+        String html = Files.readString(page.toPath(), StandardCharsets.UTF_8);
+        assertTrue(html.contains("Test Site hazard sources"));
+        assertTrue("expected a link back to the report", html.contains("../../index.html"));
+        assertTrue(html.contains(HazardLabels.SECTION_HAZARD));
+        assertTrue(
+                "expected the table of the sections that changed most",
+                html.contains("sections whose hazard contribution changed most"));
+
+        // the difference and one map per solution
+        List<String> images = imagesIn(html);
+        assertEquals(3, images.size());
+        for (String image : images) {
+            assertTrue(image + " should exist", new File(siteDir, image).exists());
+        }
+        assertTrue(new File(siteDir, "test_site_sections.csv").exists());
+    }
+
+    /**
+     * A source site with no fault hazard at the return period is named as skipped, and leaves no
+     * files behind, while the other sites are still mapped.
+     */
+    @Test
+    public void testSkipsSourceSiteWithoutHazard() throws Exception {
+        File outputDir = tempFolder.newFolder("skipped");
+        File index =
+                report(outputDir)
+                        .setSourceSites(
+                                // beyond every tectonic region's source distance cutoff
+                                Map.of("Test Site", SITE, "Far Site", new Location(-20d, 150d)))
+                        .generate();
+
+        String html = Files.readString(index.toPath(), StandardCharsets.UTF_8);
+        assertTrue(html.contains("No fault hazard to disaggregate at Far Site."));
+        File sourcesDir = new File(outputDir, SiteSourcePage.SOURCES_DIR);
+        assertTrue(new File(sourcesDir, "test_site").exists());
+        assertFalse(new File(sourcesDir, "far_site").exists());
     }
 
     /** Maps of different regions cannot be differenced, so this is caught before calculating. */
@@ -120,26 +202,121 @@ public class HazardComparisonReportTest {
     }
 
     /**
-     * The difference colour ramp follows the data: small differences are not flattened, large ones
-     * do not saturate the whole map.
+     * The difference colour ramp is fitted to the extremes of the map, so nothing is clipped and a
+     * map of small differences does not come out flat.
      */
     @Test
     public void testPercentDiffCPTScalesToTheData() throws Exception {
-        assertEquals(10d, percentDiffScale(3d), 1e-9);
-        assertEquals(50d, percentDiffScale(40d), 1e-9);
-        assertEquals(100d, percentDiffScale(80d), 1e-9);
+        assertEquals(5d, percentDiffCPT(-33d, 5d).getMaxValue(), 1e-9);
+        assertEquals(-33d, percentDiffCPT(-33d, 5d).getMinValue(), 1e-9);
+        // the extremes are used as they are, not rounded outwards to a nicer number
+        assertEquals(186.43, percentDiffCPT(-33.28, 186.43).getMaxValue(), 1e-9);
+        assertEquals(-33.28, percentDiffCPT(-33.28, 186.43).getMinValue(), 1e-9);
     }
 
     /**
-     * The scale the difference ramp picks for a map where every node changed by the same amount.
+     * Each side of the ramp is fitted separately, so a map where everything moved the same way uses
+     * the whole ramp instead of spending half of it on changes that do not occur.
      */
-    private static double percentDiffScale(double change) throws Exception {
+    @Test
+    public void testPercentDiffCPTFitsEachSide() throws Exception {
+        CPT increases = percentDiffCPT(10d, 80d);
+        assertEquals(80d, increases.getMaxValue(), 1e-9);
+        assertEquals(
+                "nothing decreased, so the ramp starts at no change",
+                0d,
+                increases.getMinValue(),
+                1e-9);
+
+        CPT decreases = percentDiffCPT(-80d, -10d);
+        assertEquals(-80d, decreases.getMinValue(), 1e-9);
+        assertEquals(
+                "nothing increased, so the ramp stops at no change",
+                0d,
+                decreases.getMaxValue(),
+                1e-9);
+    }
+
+    /** No change keeps the palette's neutral colour however lopsided the two sides are. */
+    @Test
+    public void testPercentDiffCPTPinsNoChange() throws Exception {
+        CPT lopsided = percentDiffCPT(-33d, 186d);
+        CPT even = percentDiffCPT(-100d, 100d);
+        assertEquals(even.getColor(0f), lopsided.getColor(0f));
+    }
+
+    /** The ramp is linear in percent, not a log ratio scale, so its labels read as percentages. */
+    @Test
+    public void testPercentDiffCPTIsLinear() throws Exception {
+        assertFalse(percentDiffCPT(-33d, 186d).isLog10());
+    }
+
+    /** A map with no change anywhere still gets a ramp rather than an empty one. */
+    @Test
+    public void testPercentDiffCPTHandlesNoChange() throws Exception {
+        CPT cpt = percentDiffCPT(0d, 0d);
+        assertTrue(cpt.getMaxValue() > cpt.getMinValue());
+        assertEquals(0d, cpt.getMinValue(), 1e-9);
+    }
+
+    /**
+     * Nodes with no percentage change to show, i.e. NaN, are drawn in grey rather than left out.
+     */
+    @Test
+    public void testPercentDiffCPTColoursMissingNodes() throws Exception {
         GriddedRegion region = mapRegion();
         GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
         for (int i = 0; i < region.getNodeCount(); i++) {
-            diff.set(i, change);
+            diff.set(i, 20d);
         }
-        return HazardComparisonReport.percentDiffCPT(diff).getMaxValue();
+        diff.set(0, Double.NaN);
+
+        CPT cpt =
+                HazardComparisonReport.percentDiffCPT(
+                        diff, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
+
+        assertEquals(Color.LIGHT_GRAY, cpt.getNanColor());
+        // NaN nodes are ignored when the ramp is fitted
+        assertEquals(20d, cpt.getMaxValue(), 1e-9);
+    }
+
+    /**
+     * The no-change band is drawn in whatever colour the report was given rather than always in the
+     * default green.
+     */
+    @Test
+    public void testPercentDiffCPTTakesTheNoChangeColour() throws Exception {
+        CPT green = percentDiffCPT(-33d, 186d);
+        assertEquals(HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR, green.getColor(0f));
+
+        CPT white = percentDiffCPT(-33d, 186d, Color.WHITE);
+        assertEquals(Color.WHITE, white.getColor(0f));
+        // only the band changes: the ends of the ramp are the palette's
+        assertEquals(green.getMinColor(), white.getMinColor());
+        assertEquals(green.getMaxColor(), white.getMaxColor());
+    }
+
+    /** Passing no colour at all leaves the band in the palette's own neutral colour. */
+    @Test
+    public void testPercentDiffCPTAllowsThePaletteNeutral() throws Exception {
+        CPT cpt = percentDiffCPT(-33d, 186d, null);
+        assertNotEquals(HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR, cpt.getColor(0f));
+    }
+
+    /** The ramp a difference map gets when its percentage changes run from min to max. */
+    private static CPT percentDiffCPT(double min, double max) throws Exception {
+        return percentDiffCPT(min, max, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
+    }
+
+    /** As above, with the colour the no-change band is drawn in. */
+    private static CPT percentDiffCPT(double min, double max, Color noChangeColor)
+            throws Exception {
+        GriddedRegion region = mapRegion();
+        GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
+        for (int i = 0; i < region.getNodeCount(); i++) {
+            diff.set(i, min + (max - min) * i / (double) (region.getNodeCount() - 1));
+        }
+        return HazardComparisonReport.percentDiffCPT(diff, noChangeColor);
     }
 
     /** The curve ratio ignores the tail where the two curves are just noise. */
@@ -206,7 +383,8 @@ public class HazardComparisonReportTest {
         return new HazardComparisonReport(classic, joint, outputDir)
                 .setRegion(mapRegion())
                 .setPeriods(0d)
-                .setSites(Map.of("Test Site", SITE));
+                .setSites(Map.of("Test Site", SITE))
+                .setSourceSites(Map.of("Test Site", SITE));
     }
 
     /** Big enough to plot a map: a single row or column of nodes cannot be drawn. */

@@ -293,4 +293,76 @@ public class JointHazardInputTest {
         assertFalse(input.release());
         assertSame(solution, input.getSolution());
     }
+
+    /** The solution the calculation sees has had its negligible rupture rates dropped. */
+    @Test
+    public void testMinRuptureRateFiltersTheSolution() {
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+
+        JointHazardInput input = new JointHazardInput(solution).setMinRuptureRate(1e-9);
+
+        assertEquals(0d, input.getSolution().getRateForRup(0), 0d);
+        assertEquals("the original is left alone", 1e-12, solution.getRateForRup(0), 0d);
+    }
+
+    /** The default cutoff drops rates below one event per billion years. */
+    @Test
+    public void testMinRuptureRateDefault() {
+        assertEquals(1e-9, JointHazardInput.DEFAULT_MIN_RUPTURE_RATE, 0d);
+
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+        solution.getRateForAllRups()[1] = 1e-6;
+
+        JointHazardInput input = new JointHazardInput(solution);
+        assertEquals(1e-9, input.getMinRuptureRate(), 0d);
+        assertEquals(0d, input.getSolution().getRateForRup(0), 0d);
+        assertEquals(1e-6, input.getSolution().getRateForRup(1), 0d);
+    }
+
+    /** A cutoff of zero keeps every rupture. */
+    @Test
+    public void testMinRuptureRateOfZeroKeepsEverything() {
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+
+        JointHazardInput input = new JointHazardInput(solution).setMinRuptureRate(0d);
+
+        assertSame(solution, input.getSolution());
+        assertEquals(1e-12, input.getSolution().getRateForRup(0), 0d);
+    }
+
+    /** Changing the cutoff after the solution has been used re-derives it from the raw rates. */
+    @Test
+    public void testMinRuptureRateCanBeChangedAfterUse() {
+        FaultSystemSolution solution = makeSolution();
+        solution.getRateForAllRups()[0] = 1e-12;
+
+        JointHazardInput input = new JointHazardInput(solution);
+        assertEquals(0d, input.getSolution().getRateForRup(0), 0d);
+
+        input.setMinRuptureRate(0d);
+        assertEquals(1e-12, input.getSolution().getRateForRup(0), 0d);
+    }
+
+    /** A negative cutoff is rejected, and the cutoff cannot be changed once the input is locked. */
+    @Test
+    public void testMinRuptureRateIsValidatedAndLocked() {
+        JointHazardInput input = new JointHazardInput(makeSolution());
+        try {
+            input.setMinRuptureRate(-1d);
+            fail("expected a negative rate to be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("minRuptureRate"));
+        }
+
+        input.lock();
+        try {
+            input.setMinRuptureRate(1e-8);
+            fail("expected a locked input to reject the setter");
+        } catch (IllegalStateException expected) {
+            // already set up
+        }
+    }
 }
