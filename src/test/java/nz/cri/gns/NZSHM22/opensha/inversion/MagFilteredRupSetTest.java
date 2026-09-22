@@ -10,10 +10,12 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import org.dom4j.DocumentException;
 import org.junit.Before;
 import org.junit.Test;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.RuptureSubSetMappings;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.util.SectionDistanceAzimuthCalculator;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 /** Tests filtering a rupture set by magnitude. */
@@ -152,5 +154,37 @@ public class MagFilteredRupSetTest {
         assertTrue(
                 assertRejected(IllegalStateException.class, mags[3] + 1, mags[3] + 2)
                         .contains("No rupture"));
+    }
+
+    @Test
+    public void carriesOverRuptureCountAgnosticModules() {
+        double[] mags = originalMags();
+        SectionDistanceAzimuthCalculator distAzCalc =
+                new SectionDistanceAzimuthCalculator(original.getFaultSectionDataList());
+        original.addModule(distAzCalc);
+
+        MagFilteredRupSet rupSet = new MagFilteredRupSet(original, mags[1], mags[2]);
+
+        assertSame(distAzCalc, rupSet.getModule(SectionDistanceAzimuthCalculator.class));
+        assertFalse(rupSet.getDroppedModules().contains("SectionDistanceAzimuthCalculator"));
+    }
+
+    @Test
+    public void reportsDroppedModules() {
+        double[] mags = originalMags();
+        original.addModule(new UnfilterableModule());
+
+        MagFilteredRupSet rupSet = new MagFilteredRupSet(original, mags[1], mags[2]);
+
+        assertNull(rupSet.getModule(UnfilterableModule.class));
+        assertTrue(rupSet.getDroppedModules().contains("MagFilteredRupSetTest.UnfilterableModule"));
+    }
+
+    /** A module that can neither be filtered nor carried over. */
+    public static class UnfilterableModule implements OpenSHA_Module {
+        @Override
+        public String getName() {
+            return "Unfilterable Module";
+        }
     }
 }

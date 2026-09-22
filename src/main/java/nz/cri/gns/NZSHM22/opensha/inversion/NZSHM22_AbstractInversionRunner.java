@@ -45,6 +45,12 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     public static final double DELTA_MAG = 0.1;
 
+    /** The smallest magnitude that the inversion supports. */
+    public static final double MIN_MAG = 5;
+
+    /** The largest magnitude that the inversion supports. */
+    public static final double MAX_MAG = 10;
+
     protected long inversionSecs = 60;
     protected long selectionInterval = 10;
     protected Long selectionIterations = null;
@@ -113,20 +119,63 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     protected transient Path matrixDumpPath;
 
+    protected double rupSetMinMag = MIN_MAG;
+    protected double rupSetMaxMag = MAX_MAG;
+
+    /**
+     * Restricts the rupture set to ruptures with a magnitude within [minMag, maxMag]. The range
+     * defaults to [{@link #MIN_MAG}, {@link #MAX_MAG}]. The filter is applied after magnitudes have
+     * been recalculated, so the bounds apply to the magnitudes that the inversion will actually
+     * use. All rupture based modules of the rupture set are filtered along with it, see {@link
+     * MagFilteredRupSet}.
+     *
+     * @param minMag the inclusive lower magnitude bound
+     * @param maxMag the inclusive upper magnitude bound
+     * @return this runner
+     * @throws IllegalArgumentException if the range is invalid, see {@link
+     *     #validateMagnitudeRange(double, double)}
+     */
+    public NZSHM22_AbstractInversionRunner setRupSetMagRange(double minMag, double maxMag) {
+        validateMagnitudeRange(minMag, maxMag);
+        this.rupSetMinMag = minMag;
+        this.rupSetMaxMag = maxMag;
+        return this;
+    }
+
+    /**
+     * Returns the inclusive lower magnitude bound that the rupture set is filtered with.
+     *
+     * @return the minimum magnitude
+     */
+    public double getRupSetMinMag() {
+        return rupSetMinMag;
+    }
+
+    /**
+     * Returns the inclusive upper magnitude bound that the rupture set is filtered with.
+     *
+     * @return the maximum magnitude
+     */
+    public double getRupSetMaxMag() {
+        return rupSetMaxMag;
+    }
+
     /**
      * Validates a magnitude range against the constraints of the NZSHM22 inversion.
      *
-     * <p>The range must satisfy: {@code minMag >= 5}, {@code maxMag <= 10}, {@code maxMag >
-     * minMag}, and both bounds must lie on the {@link #DELTA_MAG} grid anchored at zero, i.e.
-     * {@code mag / DELTA_MAG} must be a whole number.
+     * <p>The range must satisfy: {@code minMag >= MIN_MAG}, {@code maxMag <= MAX_MAG}, {@code
+     * maxMag > minMag}, and both bounds must lie on the {@link #DELTA_MAG} grid anchored at zero,
+     * i.e. {@code mag / DELTA_MAG} must be a whole number.
      *
      * @param minMag the inclusive lower bound of the magnitude range
      * @param maxMag the upper bound of the magnitude range
      * @throws IllegalArgumentException if the range violates any of the constraints above
      */
     public static void validateMagnitudeRange(double minMag, double maxMag) {
-        Preconditions.checkArgument(minMag >= 5, "minMag must be at least 5 but was %s.", minMag);
-        Preconditions.checkArgument(maxMag <= 10, "maxMag must be at most 10 but was %s.", maxMag);
+        Preconditions.checkArgument(
+                minMag >= MIN_MAG, "minMag must be at least %s but was %s.", MIN_MAG, minMag);
+        Preconditions.checkArgument(
+                maxMag <= MAX_MAG, "maxMag must be at most %s but was %s.", MAX_MAG, maxMag);
         Preconditions.checkArgument(
                 maxMag > minMag,
                 "maxMag must be greater than minMag but was %s <= %s.",

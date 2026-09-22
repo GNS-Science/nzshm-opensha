@@ -24,7 +24,11 @@ public class NZSHM22_CrustalInversionConfigurationTest {
                                 // TVZ rupture
                                 List.of(5, 6, 7)));
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
-        return NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
+        return NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(
+                rupSet,
+                branch,
+                NZSHM22_AbstractInversionRunner.MIN_MAG,
+                NZSHM22_AbstractInversionRunner.MAX_MAG);
     }
 
     //    Regions are disabled at the moment

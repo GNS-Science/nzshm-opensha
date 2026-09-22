@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import static nz.cri.gns.NZSHM22.util.TestHelpers.createRupSet;
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.modules.RuptureSubSetMappings;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class NZSHM22_InversionRunner_IntegrationTest {
@@ -54,6 +56,56 @@ public class NZSHM22_InversionRunner_IntegrationTest {
         }
     }
 
+    /** A rupture set of two ruptures with clearly different magnitudes. */
+    public ArchiveInput magRangeRuptureSet() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet =
+                createRupSet(
+                        NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
+                        ScalingRelationships.SHAW_2009_MOD,
+                        List.of(List.of(0), List.of(0, 1, 2, 3)));
+        return TestHelpers.archiveInput(rupSet);
+    }
+
+    /**
+     * Runs an inversion on a rupture set that has been filtered by magnitude, which ensures that
+     * all modules that the inversion needs survive the filtering.
+     */
+    @Test
+    public void testRunWithMagRange() throws DocumentException, IOException {
+        double[] mags =
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                                magRangeRuptureSet(),
+                                NZSHM22_LogicTreeBranch.crustalInversion(),
+                                NZSHM22_AbstractInversionRunner.MIN_MAG,
+                                NZSHM22_AbstractInversionRunner.MAX_MAG)
+                        .getMagForAllRups();
+        double small = Math.min(mags[0], mags[1]);
+        double large = Math.max(mags[0], mags[1]);
+        // the smallest magnitude on the magnitude grid that excludes the smaller rupture
+        double minMag =
+                Math.round(Math.ceil(small / NZSHM22_AbstractInversionRunner.DELTA_MAG))
+                        * NZSHM22_AbstractInversionRunner.DELTA_MAG;
+        assertTrue("the two ruptures must be in different magnitude bins", minMag <= large);
+
+        NZSHM22_AbstractInversionRunner runner =
+                buildRunner()
+                        .setRuptureSetArchiveInput(magRangeRuptureSet())
+                        .setRupSetMagRange(minMag, NZSHM22_AbstractInversionRunner.MAX_MAG);
+        FaultSystemSolution solution = runner.runInversion();
+
+        assertEquals(1, solution.getRupSet().getNumRuptures());
+        assertEquals(large, solution.getRupSet().getMagForRup(0), 0.00000001);
+        assertEquals(1, solution.getRateForAllRups().length);
+
+        // the solution can be written and read back, and records which ruptures it kept
+        File file = File.createTempFile("filteredSolution", ".zip");
+        solution.write(file);
+        FaultSystemSolution reloaded = FaultSystemSolution.load(file);
+        assertEquals(1, reloaded.getRupSet().getNumRuptures());
+        assertEquals(
+                1, reloaded.getRupSet().requireModule(RuptureSubSetMappings.class).getOrigRupID(0));
+    }
+
     /**
      * Test showing how we create a new NZSHM22_InversionFaultSystemRuptSet from an existing rupture
      * set
@@ -66,7 +118,10 @@ public class NZSHM22_InversionRunner_IntegrationTest {
     public void testLoadRuptureSetForInversion() throws IOException, DocumentException {
         NZSHM22_InversionFaultSystemRuptSet ruptureSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                        ruptureSet(), NZSHM22_LogicTreeBranch.crustalInversion());
+                        ruptureSet(),
+                        NZSHM22_LogicTreeBranch.crustalInversion(),
+                        NZSHM22_AbstractInversionRunner.MIN_MAG,
+                        NZSHM22_AbstractInversionRunner.MAX_MAG);
         assertEquals(2, ruptureSet.getModule(ClusterRuptures.class).getAll().size());
     }
 

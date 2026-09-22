@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.util.TestHelpers;
 import org.dom4j.DocumentException;
@@ -45,7 +46,12 @@ public class NZSHM22_LogicTreeBranchTest {
                 branch.getValue(NZSHM22_ScalingRelationshipNode.class);
         FaultSystemRupSet rupSet =
                 TestHelpers.makeRupSet(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL, scalingNode);
-        rupSet = NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(rupSet, branch);
+        rupSet =
+                NZSHM22_InversionFaultSystemRuptSet.fromExistingCrustalSet(
+                        rupSet,
+                        branch,
+                        NZSHM22_AbstractInversionRunner.MIN_MAG,
+                        NZSHM22_AbstractInversionRunner.MAX_MAG);
         ArchiveOutput.InMemoryZipOutput output = new ArchiveOutput.InMemoryZipOutput(true);
         rupSet.getArchive().write(output);
         return FaultSystemRupSet.load(output.getCompletedInput());

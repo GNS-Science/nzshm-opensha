@@ -64,4 +64,25 @@ public class NZSHM22_AbstractInversionRunnerTest {
         assertFalse(NZSHM22_AbstractInversionRunner.isOnMagGrid(5.05));
         assertFalse(NZSHM22_AbstractInversionRunner.isOnMagGrid(5.01));
     }
+
+    @Test
+    public void testSetRupSetMagRange() {
+        NZSHM22_CrustalInversionRunner runner = new NZSHM22_CrustalInversionRunner();
+        // the full magnitude range is the default
+        assertEquals(NZSHM22_AbstractInversionRunner.MIN_MAG, runner.getRupSetMinMag(), 0.00000001);
+        assertEquals(NZSHM22_AbstractInversionRunner.MAX_MAG, runner.getRupSetMaxMag(), 0.00000001);
+
+        runner.setRupSetMagRange(6.5, 9.0);
+        assertEquals(6.5, runner.getRupSetMinMag(), 0.00000001);
+        assertEquals(9.0, runner.getRupSetMaxMag(), 0.00000001);
+
+        try {
+            runner.setRupSetMagRange(6.55, 9.0);
+            fail("expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("minMag must be a multiple of"));
+        }
+        // the invalid range has not been applied
+        assertEquals(6.5, runner.getRupSetMinMag(), 0.00000001);
+    }
 }

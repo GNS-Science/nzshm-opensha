@@ -27,7 +27,11 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
                         ScalingRelationships.TMG_SUB_2017,
                         List.of(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9), List.of(4, 5, 6, 10, 11, 12)));
         NZSHM22_LogicTreeBranch ltb = NZSHM22_LogicTreeBranch.subductionInversion();
-        return NZSHM22_InversionFaultSystemRuptSet.fromExistingSubductionRuptureSet(rupSet, ltb);
+        return NZSHM22_InversionFaultSystemRuptSet.fromExistingSubductionRuptureSet(
+                rupSet,
+                ltb,
+                NZSHM22_AbstractInversionRunner.MIN_MAG,
+                NZSHM22_AbstractInversionRunner.MAX_MAG);
     }
 
     public static List<Double> getPoints(EvenlyDiscretizedFunc func) {

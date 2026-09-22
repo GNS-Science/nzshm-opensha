@@ -13,6 +13,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_ScalingRelationshipNode;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculator;
 import nz.cri.gns.NZSHM22.opensha.hazard.NZSHM22_HazardCalculatorBuilder;
+import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_AbstractInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_InversionFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_CoulombRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
@@ -113,7 +114,11 @@ public class SmokeTest {
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
         NZSHM22_InversionFaultSystemRuptSet loadedRupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(ruptureSetFile, branch);
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                        ruptureSetFile,
+                        branch,
+                        NZSHM22_AbstractInversionRunner.MIN_MAG,
+                        NZSHM22_AbstractInversionRunner.MAX_MAG);
 
         sanityCheckCoulombRuptureSet(rupSet);
         sanityCheckCoulombRuptureSet(loadedRupSet);
@@ -164,7 +169,11 @@ public class SmokeTest {
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.subductionInversion();
         branch.clearValue(NZSHM22_ScalingRelationshipNode.class); // don't recalculate mags
         NZSHM22_InversionFaultSystemRuptSet loadedRupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(rupturesFile, branch);
+                NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(
+                        rupturesFile,
+                        branch,
+                        NZSHM22_AbstractInversionRunner.MIN_MAG,
+                        NZSHM22_AbstractInversionRunner.MAX_MAG);
 
         sanityCheckSubductionRuptureSet(rupSet);
         sanityCheckSubductionRuptureSet(loadedRupSet);
