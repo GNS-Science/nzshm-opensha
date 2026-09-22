@@ -72,45 +72,6 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "rupture set RmlsZTozMDMuMEJCOVVY",
             "slip_deficit_rates_with_prior_D90_RmlsZTozMDMuMEJCOVVY_offshore_swap.dat"),
 
-    SBD_0_2_HKR_LR_30_CTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED.csv"),
-    SBD_0_2_HKR_LR_30_CTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
-    SBD_0_2_HKR_LR_30_CTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
-    SBD_0_2_HKR_LR_30_CTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
-
-    SBD_0_2_HKR_LR_30_LTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED.csv"),
-    SBD_0_2_HKR_LR_30_LTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
-    SBD_0_2_HKR_LR_30_LTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
-    SBD_0_2_HKR_LR_30_LTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
-
-    SBD_0_2_HKR_LR_30(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv"),
-
     SBD_0_2A_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
@@ -121,44 +82,6 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv"),
 
-    SBD_0_4_HKR_LR_30(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_tile_parameters_highkermsliprate_v2.csv"),
-
-    SBD_0_2A_HKR_LR_30_CTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
-            "FaultModel SBD_0_2A_HKR_LR_30",
-            "dm_hk_eastcapesmoothed_PERTURBATION1.csv"),
-    SBD_0_2A_HKR_LR_30_CTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
-            "FaultModel SBD_0_2A_HKR_LR_30",
-            "dm_hk_eastcapesmoothed_PERTURBATION2.csv"),
-    SBD_0_2A_HKR_LR_30_CTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
-            "FaultModel SBD_0_2A_HKR_LR_30",
-            "dm_hk_eastcapesmoothed_PERTURBATION3.csv"),
-    SBD_0_2A_HKR_LR_30_CTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
-            "FaultModel SBD_0_2A_HKR_LR_30",
-            "dm_hk_eastcapesmoothed_PERTURBATION4.csv"),
-
-    SBD_0_3_HKR_LR_30_LTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_PERTURBATION1.csv"),
-    SBD_0_3_HKR_LR_30_LTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_PERTURBATION2.csv"),
-    SBD_0_3_HKR_LR_30_LTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_PERTURBATION3.csv"),
-    SBD_0_3_HKR_LR_30_LTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_PERTURBATION4.csv"),
 
     SBD_0_1_PUY_30_0PT4(
             "Puysegur 0.4",
@@ -173,334 +96,420 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "aust-pacific convergence, 1.0 coupling",
             "dm_puysegur_tiles_30km_maxd60km_austpaci_1pt0coupled_notrand.csv"),
 
-    SBD_0_2A_HKR_LR_30_M8(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
-            "dm_hk_trenchcreeping_M7to8momentcorrected_notperturbed.csv"),
-    SBD_0_2A_HKR_LR_30_M8_CTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed1",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
-            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation1.csv"),
-    SBD_0_2A_HKR_LR_30_M8_CTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed2",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
-            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation2.csv"),
-    SBD_0_2A_HKR_LR_30_M8_CTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed3",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
-            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation3.csv"),
-    SBD_0_2A_HKR_LR_30_M8_CTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed4",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
-            "dm_hk_trenchcreeping_M7to8momentcorrected_perturbation4.csv"),
-
-    SBD_0_3_HKR_LR_30_M8(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_M7to8momentcorrected_notperturbed.csv"),
-    SBD_0_3_HKR_LR_30_M8_LTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed1",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation1.csv"),
-    SBD_0_3_HKR_LR_30_M8_LTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed2",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation2.csv"),
-    SBD_0_3_HKR_LR_30_M8_LTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed3",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation3.csv"),
-    SBD_0_3_HKR_LR_30_M8_LTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed4",
-            "FaultModel SBD_0_3_HKR_LR_30",
-            "dm_hk_trenchlocked_M7to8momentcorrected_perturbation4.csv"),
-
-    SBD_0_2A_HKR_LR_30_EXP_CTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed1",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchcreeping_exp_perturbation1.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_CTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed2",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchcreeping_exp_perturbation2.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_CTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed3",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchcreeping_exp_perturbation3.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_CTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed4",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchcreeping_exp_perturbation4.csv"),
-    SBD_0_2A_HKR_LR_30_EXP_CTP5(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed5",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchcreeping_exp_perturbation5.csv"),
-
-    SBD_0_3_HKR_LR_30_EXP_LTP1(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed1",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchlocked_exp_perturbation1.csv"),
-    SBD_0_3_HKR_LR_30_EXP_LTP2(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed2",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchlocked_exp_perturbation2.csv"),
-    SBD_0_3_HKR_LR_30_EXP_LTP3(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed3",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchlocked_exp_perturbation3.csv"),
-    SBD_0_3_HKR_LR_30_EXP_LTP4(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed4",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchlocked_exp_perturbation4.csv"),
-    SBD_0_3_HKR_LR_30_EXP_LTP5(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed5",
-            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_trenchlocked_exp_perturbation5.csv"),
-
+    
+    // 2022 slip-rate-perturbed models for Hikurangi-Kermadec (to prevent small ruptures from having weird spatial distributions)
+    // Note: I am not sure whether the "hk" ones or the "xhk" ones were what was used in 2022.
+    // I think one set may have the M7-7.5 moment contribution accounted for and the other might not.
+    
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation1a.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation1b.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation2a.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation2b.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation3a.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation3b.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation4a.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation4b.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation5a.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_CTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_creepingtrench_Mmin7pt5_exp_perturbation5b.csv"),
+            "sliprateperturbations/dm_hk_creepingtrench_Mmin7pt5_exp_perturbation5b.csv"),
 
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, Mmin 7pt5, trench locked, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation1a.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation1b.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation2a.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation2b.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation3a.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation3b.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation4a.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation4b.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation5a.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_LR_30_MMIN7PT5_EXP_LTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_hk_lockedtrench_Mmin7pt5_exp_perturbation5b.csv"),
+            "sliprateperturbations/dm_hk_lockedtrench_Mmin7pt5_exp_perturbation5b.csv"),
 
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation1a.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation1b.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation2a.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation2b.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation3a.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation3b.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation4a.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation4b.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation5a.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_CTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 7pt5, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation5b.csv"),
+            "sliprateperturbations/dm_xhk_creepingtrench_Mmin7pt5_exp_perturbation5b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation1a.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation1b.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation2a.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation2b.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation3a.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation3b.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation4a.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation4b.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation5a.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_MMIN7PT5_EXP_LTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 7pt5, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation5b.csv"),
+            "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation5b.csv"),
+
+    
+    // Deprecated
+    SBD_0_4_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_highkermsliprate_v2.csv"),
+
+    SBD_0_2A_HKR_LR_30_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "old/dm_hk_eastcapesmoothed_PERTURBATION1.csv"),
+    SBD_0_2A_HKR_LR_30_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "old/dm_hk_eastcapesmoothed_PERTURBATION2.csv"),
+    SBD_0_2A_HKR_LR_30_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "old/dm_hk_eastcapesmoothed_PERTURBATION3.csv"),
+    SBD_0_2A_HKR_LR_30_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
+            "FaultModel SBD_0_2A_HKR_LR_30",
+            "old/dm_hk_eastcapesmoothed_PERTURBATION4.csv"),
+
+    SBD_0_3_HKR_LR_30_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_PERTURBATION1.csv"),
+    SBD_0_3_HKR_LR_30_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_PERTURBATION2.csv"),
+    SBD_0_3_HKR_LR_30_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_PERTURBATION3.csv"),
+    SBD_0_3_HKR_LR_30_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_PERTURBATION4.csv"),
 
     SBD_0_2A_HKR_MMIN8_EXP_CTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation1a.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation1b.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation2a.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation2b.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation3a.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation3b.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation4a.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation4b.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation5a.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_CTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench creeping, Mmin 8, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_creepingtrench_Mmin8_exp_perturbation5b.csv"),
+            "old/dm_xhk_creepingtrench_Mmin8_exp_perturbation5b.csv"),
 
     SBD_0_2A_HKR_MMIN8_EXP_LTP1A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 1a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation1a.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation1a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP1B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 1b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation1b.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation1b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP2A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 2a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation2a.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation2a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP2B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 2b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation2b.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation2b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP3A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 3a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation3a.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation3a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP3B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 3b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation3b.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation3b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP4A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 4a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation4a.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation4a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP4B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 4b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation4b.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation4b.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP5A(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 5a",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation5a.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation5a.csv"),
     SBD_0_2A_HKR_MMIN8_EXP_LTP5B(
             "Hikurangi, Kermadec to Louisville ridge, 30km, trench locked, Mmin 8, exponential perturbation 5b",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
-            "dm_xhk_lockedtrench_Mmin8_exp_perturbation5b.csv"),
+            "old/dm_xhk_lockedtrench_Mmin8_exp_perturbation5b.csv"),
+
+    SBD_0_2_HKR_LR_30_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED.csv"),
+    SBD_0_2_HKR_LR_30_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
+    SBD_0_2_HKR_LR_30_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
+    SBD_0_2_HKR_LR_30_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Creeping Trench Perturbed v4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
+
+    SBD_0_2_HKR_LR_30_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED.csv"),
+    SBD_0_2_HKR_LR_30_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_2.csv"),
+    SBD_0_2_HKR_LR_30_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_3.csv"),
+    SBD_0_2_HKR_LR_30_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - Locked Trench Perturbed v4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_PERTURBED_4.csv"),
+
+    SBD_0_2_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv"),
+    
+    SBD_0_2A_HKR_LR_30_M8(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "old/dm_hk_trenchcreeping_M7to8momentcorrected_notperturbed.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "old/dm_hk_trenchcreeping_M7to8momentcorrected_perturbation1.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "old/dm_hk_trenchcreeping_M7to8momentcorrected_perturbation2.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "old/dm_hk_trenchcreeping_M7to8momentcorrected_perturbation3.csv"),
+    SBD_0_2A_HKR_LR_30_M8_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones, min mag 8",
+            "old/dm_hk_trenchcreeping_M7to8momentcorrected_perturbation4.csv"),
+
+    SBD_0_3_HKR_LR_30_M8(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_M7to8momentcorrected_notperturbed.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed1",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_M7to8momentcorrected_perturbation1.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed2",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_M7to8momentcorrected_perturbation2.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed3",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_M7to8momentcorrected_perturbation3.csv"),
+    SBD_0_3_HKR_LR_30_M8_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - M7 to M8 corrected with slip deficit smoothed near east cape and locked near trench perturbed4",
+            "FaultModel SBD_0_3_HKR_LR_30",
+            "old/dm_hk_trenchlocked_M7to8momentcorrected_perturbation4.csv"),
+
+    SBD_0_2A_HKR_LR_30_EXP_CTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchcreeping_exp_perturbation1.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchcreeping_exp_perturbation2.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchcreeping_exp_perturbation3.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchcreeping_exp_perturbation4.csv"),
+    SBD_0_2A_HKR_LR_30_EXP_CTP5(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise perturbed5",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchcreeping_exp_perturbation5.csv"),
+
+    SBD_0_3_HKR_LR_30_EXP_LTP1(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed1",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchlocked_exp_perturbation1.csv"),
+    SBD_0_3_HKR_LR_30_EXP_LTP2(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed2",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchlocked_exp_perturbation2.csv"),
+    SBD_0_3_HKR_LR_30_EXP_LTP3(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed3",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchlocked_exp_perturbation3.csv"),
+    SBD_0_3_HKR_LR_30_EXP_LTP4(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed4",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchlocked_exp_perturbation4.csv"),
+    SBD_0_3_HKR_LR_30_EXP_LTP5(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - correlated noise and locked near trench perturbed5",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "old/dm_hk_trenchlocked_exp_perturbation5.csv"),
+
     ;
 
     String description;
