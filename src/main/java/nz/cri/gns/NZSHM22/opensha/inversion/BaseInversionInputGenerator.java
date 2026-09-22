@@ -8,7 +8,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGener
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
-import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.RupRateMinimizationConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
 
 public class BaseInversionInputGenerator extends InversionInputGenerator {
@@ -57,8 +56,6 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
                     "config.getSlipRateConstraintWt_unnormalized(): "
                             + config.getSlipRateConstraintWt_unnormalized());
         }
-        System.out.println(
-                "config.getMinimizationConstraintWt(): " + config.getMinimizationConstraintWt());
         System.out.println(
                 "config.getMagnitudeEqualityConstraintWt(): "
                         + config.getMagnitudeEqualityConstraintWt());
@@ -109,21 +106,6 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
                                 ConstraintWeightingType.UNNORMALIZED,
                                 rupSet));
             }
-        }
-
-        // Rupture rate minimization constraint
-        // Minimize the rates of ruptures below SectMinMag (strongly so that they have
-        // zero rates)
-        if (config.getMinimizationConstraintWt() > 0.0) {
-            List<Integer> belowMinIndexes = new ArrayList<>();
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                if (rupSet.isRuptureBelowSectMinMag(r)) {
-                    belowMinIndexes.add(r);
-                }
-            }
-            constraints.add(
-                    new RupRateMinimizationConstraint(
-                            config.getMinimizationConstraintWt(), belowMinIndexes));
         }
 
         // Constrain Solution MFD to equal the Target MFD

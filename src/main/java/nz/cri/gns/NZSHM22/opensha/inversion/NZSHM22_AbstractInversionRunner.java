@@ -14,7 +14,6 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
-import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
@@ -43,6 +42,14 @@ import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
  * @author chrisbc
  */
 public abstract class NZSHM22_AbstractInversionRunner {
+
+    public static final double DELTA_MAG = 0.1;
+
+    /** The smallest magnitude that the inversion supports. */
+    public static final double MIN_MAG = 5;
+
+    /** The largest magnitude that the inversion supports. */
+    public static final double MAX_MAG = 10;
 
     protected long inversionSecs = 60;
     protected long selectionInterval = 10;
@@ -111,6 +118,92 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected double minBufferSize = 0;
 
     protected transient Path matrixDumpPath;
+
+    protected double rupSetMinMag = MIN_MAG;
+    protected double rupSetMaxMag = MAX_MAG;
+
+    /**
+     * Restricts the rupture set to ruptures with a magnitude within [minMag, maxMag]. The range
+     * defaults to [{@link #MIN_MAG}, {@link #MAX_MAG}]. The filter is applied after magnitudes have
+     * been recalculated, so the bounds apply to the magnitudes that the inversion will actually
+     * use. All rupture based modules of the rupture set are filtered along with it, see {@link
+     * MagFilteredRupSet}.
+     *
+     * @param minMag the inclusive lower magnitude bound
+     * @param maxMag the inclusive upper magnitude bound
+     * @return this runner
+     * @throws IllegalArgumentException if the range is invalid, see {@link
+     *     #validateMagnitudeRange(double, double)}
+     */
+    public NZSHM22_AbstractInversionRunner setRupSetMagRange(double minMag, double maxMag) {
+        validateMagnitudeRange(minMag, maxMag);
+        this.rupSetMinMag = minMag;
+        this.rupSetMaxMag = maxMag;
+        return this;
+    }
+
+    /**
+     * Returns the inclusive lower magnitude bound that the rupture set is filtered with.
+     *
+     * @return the minimum magnitude
+     */
+    public double getRupSetMinMag() {
+        return rupSetMinMag;
+    }
+
+    /**
+     * Returns the inclusive upper magnitude bound that the rupture set is filtered with.
+     *
+     * @return the maximum magnitude
+     */
+    public double getRupSetMaxMag() {
+        return rupSetMaxMag;
+    }
+
+    /**
+     * Validates a magnitude range against the constraints of the NZSHM22 inversion.
+     *
+     * <p>The range must satisfy: {@code minMag >= MIN_MAG}, {@code maxMag <= MAX_MAG}, {@code
+     * maxMag > minMag}, and both bounds must lie on the {@link #DELTA_MAG} grid anchored at zero,
+     * i.e. {@code mag / DELTA_MAG} must be a whole number.
+     *
+     * @param minMag the inclusive lower bound of the magnitude range
+     * @param maxMag the upper bound of the magnitude range
+     * @throws IllegalArgumentException if the range violates any of the constraints above
+     */
+    public static void validateMagnitudeRange(double minMag, double maxMag) {
+        Preconditions.checkArgument(
+                minMag >= MIN_MAG, "minMag must be at least %s but was %s.", MIN_MAG, minMag);
+        Preconditions.checkArgument(
+                maxMag <= MAX_MAG, "maxMag must be at most %s but was %s.", MAX_MAG, maxMag);
+        Preconditions.checkArgument(
+                maxMag > minMag,
+                "maxMag must be greater than minMag but was %s <= %s.",
+                maxMag,
+                minMag);
+        Preconditions.checkArgument(
+                isOnMagGrid(minMag),
+                "minMag must be a multiple of %s but was %s.",
+                DELTA_MAG,
+                minMag);
+        Preconditions.checkArgument(
+                isOnMagGrid(maxMag),
+                "maxMag must be a multiple of %s but was %s.",
+                DELTA_MAG,
+                maxMag);
+    }
+
+    /**
+     * Determines whether a magnitude is reachable from zero in {@link #DELTA_MAG} steps, allowing
+     * for floating point representation error.
+     *
+     * @param mag the magnitude to test
+     * @return true if mag / DELTA_MAG is a whole number
+     */
+    protected static boolean isOnMagGrid(double mag) {
+        double steps = mag / DELTA_MAG;
+        return Math.abs(steps - Math.round(steps)) < 1e-6;
+    }
 
     /**
      * Sets the base path for dumping the A matrix and d vector to file. A and d will be written
@@ -402,18 +495,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
     }
 
     /**
-     * Exclude ruptures that are below MinMag. false by default.
-     *
-     * @param excludeRupturesBelowMinMag
-     * @return
-     */
-    public NZSHM22_AbstractInversionRunner setExcludeRupturesBelowMinMag(
-            boolean excludeRupturesBelowMinMag) {
-        this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
-        return this;
-    }
-
-    /**
      * Sets whether slip rate stddevs should be normalised for the SlipRateInversionConstraint
      *
      * @param unmodifiedSlipRateStdvs
@@ -695,18 +776,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
                 "Regime of rupture set and scaling relationship do not match.");
     }
 
-    protected Set<Integer> createSamplerExclusions() {
-        Set<Integer> exclusions = new HashSet<>();
-        if (excludeRupturesBelowMinMag) {
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                if (rupSet.isRuptureBelowSectMinMag(r)) {
-                    exclusions.add(r);
-                }
-            }
-        }
-        return exclusions;
-    }
-
     protected void printRuptureExclusionStats(Set<Integer> exclusions, String prefix) {
 
         if (false) {
@@ -770,19 +839,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
                             + excludedParents.size()
                             + " faults: "
                             + excludedParents);
-        }
-    }
-
-    protected IntegerSampler createSampler() {
-        Set<Integer> exclusions = createSamplerExclusions();
-        if (!exclusions.isEmpty()) {
-            System.out.println(
-                    "Excluding " + exclusions.size() + " ruptures that are below section minMag.");
-            printRuptureExclusionStats(exclusions, "sampler_");
-            return new IntegerSampler.ExclusionIntegerSampler(
-                    0, rupSet.getNumRuptures(), exclusions);
-        } else {
-            return null;
         }
     }
 
@@ -949,11 +1005,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
         tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
         if (!(this.coolingSchedule == null)) tsa.setCoolingFunc(this.coolingSchedule);
-
-        IntegerSampler sampler = createSampler();
-        if (sampler != null) {
-            tsa.setRuptureSampler(sampler);
-        }
 
         // From CLI metadata Analysis
         initialState = Arrays.copyOf(initialState, initialState.length);

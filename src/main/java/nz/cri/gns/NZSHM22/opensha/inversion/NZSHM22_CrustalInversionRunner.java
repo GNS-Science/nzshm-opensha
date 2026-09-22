@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.*;
 import nz.cri.gns.NZSHM22.opensha.polygonise.NZSHM22_PolygonisedDistributedModelBuilder;
@@ -44,7 +43,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     private double tvzSlipRateFactor = -1;
 
     private boolean enableTvzMFDs = false;
-    private boolean enableMinMaxSampler = false;
 
     private transient NZSHM22_PolygonisedDistributedModelBuilder polygoniser = null;
 
@@ -112,11 +110,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         this.maxMagType = NZSHM22_MagBounds.MaxMagType.valueOf(maxMagType);
         this.maxMagSans = maxMagSans;
         this.maxMagTVZ = maxMagTVZ;
-        return this;
-    }
-
-    public NZSHM22_CrustalInversionRunner setEnableMinMaxSampler(boolean enable) {
-        this.enableMinMaxSampler = enable;
         return this;
     }
 
@@ -203,23 +196,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
     }
 
     @Override
-    protected Set<Integer> createSamplerExclusions() {
-        Set<Integer> exclusions = super.createSamplerExclusions();
-        if (enableMinMaxSampler) {
-            TvzDomainSections tvzSections = rupSet.getModule(TvzDomainSections.class);
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                double mag = rupSet.getMagForRup(r);
-                boolean inTvz = tvzSections.isInRegion(rupSet.getSectionsIndicesForRup(r));
-                if ((inTvz && (mag < minMag_TVZ || mag > maxMagTVZ))
-                        || (!inTvz && (mag < minMag_Sans || mag > maxMagSans))) {
-                    exclusions.add(r);
-                }
-            }
-        }
-        return exclusions;
-    }
-
-    @Override
     protected NZSHM22_CrustalInversionRunner configure() throws DocumentException, IOException {
 
         NZSHM22_LogicTreeBranch branch = NZSHM22_LogicTreeBranch.crustalInversion();
@@ -238,7 +214,8 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         }
 
         rupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                        getRupSetInput(), branch, rupSetMinMag, rupSetMaxMag);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {

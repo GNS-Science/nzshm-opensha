@@ -35,7 +35,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
      * @param bValue
      * @param mfdTransitionMag magnitude to switch from MFD equality to MFD inequality TODO: how to
      *     validate this number for NZ? (ref Morgan Page in USGS/UCERF3) [KKS, CBC]
-     * @param mfdMinMag magnitude of minimum magnitude in MFD target, rate set to 1e-20 below [CDC]
+     * @param mfdMinMag magnitude of minimum magnitude in MFD target
      * @return
      */
     public NZSHM22_SubductionInversionRunner setGutenbergRichterMFD(
@@ -62,7 +62,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
         setupLTB(branch);
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(
-                        getRupSetInput(), branch);
+                        getRupSetInput(), branch, rupSetMinMag, rupSetMaxMag);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {
