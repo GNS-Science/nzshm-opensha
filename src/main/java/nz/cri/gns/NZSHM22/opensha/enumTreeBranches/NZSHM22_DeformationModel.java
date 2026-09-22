@@ -72,17 +72,44 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             "rupture set RmlsZTozMDMuMEJCOVVY",
             "slip_deficit_rates_with_prior_D90_RmlsZTozMDMuMEJCOVVY_offshore_swap.dat"),
 
+    // HIKURANGI-KERMADEC
+    // Trench-creeping model used in 2022 
     SBD_0_2A_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv"),
 
+    // 2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
+    SBD_HKR_TC_30_TRIM(
+            "2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_creeping_trench_slip_deficit_v2a_30_trimmed.csv"),
+
+    // Trench-creeping with 15x15km patches, trimmed at 25.5 S - Sept 2026
+    SBD_HKR_TC_15_TRIM(
+            "Trench-creeping with 15x15km patches, trimmed at 25.5 S - Sept 2026",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_1557_patch_creeping_trench_nearest_boundary.csv"),
+    
+    // Trench-locked model used in 2022
     SBD_0_3_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
             "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
             "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv"),
 
+    // 2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
+    SBD_HKR_TC_30_TRIM(
+            "2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_tile_parameters_locked_trench_slip_deficit_v2_30_trimmed.csv"),
+    
+    // Trench-locked with 15x15km patches, trimmed at 25.5 S - Sept 2026
+    SBD_HKR_TL_15_TRIM(
+            "Trench-locked with 15x15km patches, trimmed at 25.5 S - Sept 2026",
+            "FaultModel SBD_0_2_HKR_LR_30 and the next three deprecated ones",
+            "dm_hk_1557_patch_locked_trench_nearest_boundary.csv"),
 
+    // PUYSEGUR
     SBD_0_1_PUY_30_0PT4(
             "Puysegur 0.4",
             "aust-pacific convergence, 0.4 coupling",
