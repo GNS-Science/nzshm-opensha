@@ -66,7 +66,10 @@ public class NZSHM22_InversionRunner_IntegrationTest {
     public void testLoadRuptureSetForInversion() throws IOException, DocumentException {
         NZSHM22_InversionFaultSystemRuptSet ruptureSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                        ruptureSet(), NZSHM22_LogicTreeBranch.crustalInversion());
+                        ruptureSet(),
+                        NZSHM22_LogicTreeBranch.crustalInversion(),
+                        0,
+                        MagFilteredRupSet.NO_MAX_MAG);
         assertEquals(2, ruptureSet.getModule(ClusterRuptures.class).getAll().size());
     }
 

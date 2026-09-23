@@ -69,16 +69,15 @@ public class NZSHM22_SubductionInversionRunnerTest {
 
     @Test
     public void testFilterRupturesBelowMinMag() throws DocumentException, IOException {
+        // the default mfdMinMag is below every rupture of this rupture set
         NZSHM22_SubductionInversionRunner unfiltered = makeRunner();
         unfiltered.configure();
-
         double maxMag = unfiltered.rupSet.getMaxMag();
 
         NZSHM22_SubductionInversionRunner filtered = makeRunner();
         // a min mag just below the largest rupture leaves only the largest ruptures
         filtered.setGutenbergRichterMFD(
                 filtered.totalRateM5, filtered.bValue, filtered.mfdTransitionMag, maxMag - 0.01);
-        filtered.setFilterRupturesBelowMinMag(true);
         filtered.configure();
 
         assertTrue(filtered.rupSet.getNumRuptures() > 0);

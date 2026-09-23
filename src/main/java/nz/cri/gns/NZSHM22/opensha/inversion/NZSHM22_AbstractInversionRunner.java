@@ -103,7 +103,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected double[] variablePerturbationBasis;
     protected boolean varPertBasisAsInititalSolution;
     protected boolean excludeRupturesBelowMinMag = false;
-    protected boolean filterRupturesBelowMinMag = false;
     protected boolean unmodifiedSlipRateStdvs = false;
 
     protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
@@ -411,20 +410,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
     public NZSHM22_AbstractInversionRunner setExcludeRupturesBelowMinMag(
             boolean excludeRupturesBelowMinMag) {
         this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
-        return this;
-    }
-
-    /**
-     * Remove ruptures that are below section minimum magnitude from the rupture set before the
-     * inversion is set up. Unlike setExcludeRupturesBelowMinMag(), which only keeps those ruptures
-     * out of the sampler, this drops them from the rupture set entirely. false by default.
-     *
-     * @param filterRupturesBelowMinMag whether to filter the input rupture set
-     * @return this runner
-     */
-    public NZSHM22_AbstractInversionRunner setFilterRupturesBelowMinMag(
-            boolean filterRupturesBelowMinMag) {
-        this.filterRupturesBelowMinMag = filterRupturesBelowMinMag;
         return this;
     }
 

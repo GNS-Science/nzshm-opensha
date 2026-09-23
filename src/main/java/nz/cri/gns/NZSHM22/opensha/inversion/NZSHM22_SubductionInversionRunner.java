@@ -62,7 +62,7 @@ public class NZSHM22_SubductionInversionRunner extends NZSHM22_AbstractInversion
         setupLTB(branch);
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadSubductionRuptureSet(
-                        getRupSetInput(), branch, filterRupturesBelowMinMag ? mfdMinMag : null);
+                        getRupSetInput(), branch, mfdMinMag, MagFilteredRupSet.NO_MAX_MAG);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {

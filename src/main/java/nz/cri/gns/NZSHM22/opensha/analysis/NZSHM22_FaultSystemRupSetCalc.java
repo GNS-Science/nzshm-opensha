@@ -381,26 +381,71 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
      */
     public static boolean isRuptureBelowSectMinMag(
             FaultSystemRupSet fltSystRupSet, int rupIndex, ModSectMinMags modMinMags) {
-        // We want to use binning that works for crustal and subduction
-        Preconditions.checkState(
-                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
-                        == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
-        Preconditions.checkState(DELTA_MAG == NZSHM22_SubductionInversionTargetMFDs.DELTA_MAG);
-        IncrementalMagFreqDist bins =
-                new IncrementalMagFreqDist(
-                        NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
-                        Math.max(
-                                NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS,
-                                NZSHM22_SubductionInversionTargetMFDs.NUM_MAG),
-                        DELTA_MAG);
-        int rupBin = bins.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
+        int rupBin = MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
 
         for (int s : fltSystRupSet.getSectionsIndicesForRup(rupIndex)) {
-            int sectionBin = bins.getClosestXIndex(modMinMags.getMinMagForSection(s));
+            int sectionBin = MAG_BINS.getClosestXIndex(modMinMags.getMinMagForSection(s));
             if (rupBin < sectionBin) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * The magnitude bins that rupture magnitudes and magnitude bounds are compared in. The bin
+     * centres line up with the NZSHM22 MFD bins, which is the same discretisation for crustal and
+     * subduction, but the range spans every sensible minimum and maximum magnitude. Anything below
+     * or above it is therefore safely outside any bound that can be configured.
+     *
+     * <p>Do not modify.
+     */
+    public static final IncrementalMagFreqDist MAG_BINS =
+            new IncrementalMagFreqDist(0.05, 201, DELTA_MAG);
+
+    static {
+        // the bins have to work for crustal and subduction, and line up with their MFD bins
+        Preconditions.checkState(DELTA_MAG == NZSHM22_SubductionInversionTargetMFDs.DELTA_MAG);
+        Preconditions.checkState(
+                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
+                        == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
+        double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
+        Preconditions.checkState(
+                Math.abs(MAG_BINS.getX(MAG_BINS.getClosestXIndex(mfdMinMag)) - mfdMinMag) < 1e-9,
+                "the magnitude bins do not line up with the MFD bins");
+    }
+
+    /**
+     * This computes whether the rupture at rupIndex has a magnitude above the maximum magnitude. To
+     * be precise, the magnitude must fall into a higher bin than maxMag, so the whole bin of maxMag
+     * is still within bounds.
+     *
+     * @param fltSystRupSet the rupture set
+     * @param rupIndex the rupture to test
+     * @param maxMag the maximum magnitude
+     * @return true if the rupture is above the bin of maxMag
+     */
+    public static boolean isRuptureAboveMaxMag(
+            FaultSystemRupSet fltSystRupSet, int rupIndex, double maxMag) {
+        return MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex))
+                > MAG_BINS.getClosestXIndex(maxMag);
+    }
+
+    /**
+     * This computes whether each rupture has a magnitude above the maximum magnitude. To be
+     * precise, the magnitude must fall into a higher bin than maxMag, so the whole bin of maxMag is
+     * still within bounds.
+     *
+     * @param fltSystRupSet the rupture set
+     * @param maxMag the maximum magnitude
+     * @return an array with one entry per rupture
+     */
+    public static boolean[] computeWhichRupsAreAboveMaxMag(
+            FaultSystemRupSet fltSystRupSet, double maxMag) {
+        boolean[] rupAboveMaxMag = new boolean[fltSystRupSet.getNumRuptures()];
+        for (int r = 0; r < rupAboveMaxMag.length; r++) {
+            rupAboveMaxMag[r] = isRuptureAboveMaxMag(fltSystRupSet, r, maxMag);
+        }
+        return rupAboveMaxMag;
     }
 }

@@ -113,30 +113,52 @@ public class NZSHM22_CrustalInversionRunnerTest {
         runner.runInversion();
     }
 
+    /**
+     * A rupture set where section 1 on its own is an M6.3 rupture and all other ruptures are above
+     * M7.
+     */
+    protected FaultSystemRupSet magFilterRupSet() throws DocumentException, IOException {
+        return TestHelpers.createRupSet(
+                NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
+                ScalingRelationships.SHAW_2009_MOD,
+                List.of(
+                        List.of(1),
+                        List.of(1, 2, 3, 4),
+                        List.of(5, 6, 7, 8),
+                        List.of(9, 10, 11, 12)));
+    }
+
     @Test
     public void testFilterRupturesBelowMinMag() throws DocumentException, IOException {
-        // section 1 on its own is an M6.3 rupture, all other ruptures are above M7
-        FaultSystemRupSet rupSet =
-                TestHelpers.createRupSet(
-                        NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
-                        ScalingRelationships.SHAW_2009_MOD,
-                        List.of(
-                                List.of(1),
-                                List.of(1, 2, 3, 4),
-                                List.of(5, 6, 7, 8),
-                                List.of(9, 10, 11, 12)));
+        FaultSystemRupSet rupSet = magFilterRupSet();
+        assertEquals(4, rupSet.getNumRuptures());
 
-        NZSHM22_CrustalInversionRunner unfiltered = makeRunner(rupSet);
-        unfiltered.setMinMags(6.95, 6.95);
-        unfiltered.configure();
-        assertEquals(4, unfiltered.rupSet.getNumRuptures());
+        NZSHM22_CrustalInversionRunner runner = makeRunner(rupSet);
+        runner.setMinMags(6.95, 6.95);
+        runner.configure();
 
-        NZSHM22_CrustalInversionRunner filtered = makeRunner(rupSet);
-        filtered.setMinMags(6.95, 6.95);
-        filtered.setFilterRupturesBelowMinMag(true);
-        filtered.configure();
+        // the M6.3 rupture is below the minimum magnitude
+        assertEquals(3, runner.rupSet.getNumRuptures());
+        assertTrue(runner.rupSet.getMinMag() >= 6.9);
+    }
 
-        assertEquals(3, filtered.rupSet.getNumRuptures());
-        assertTrue(filtered.rupSet.getMinMag() >= 6.9);
+    @Test
+    public void testFilterRupturesAboveMaxMag() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = magFilterRupSet();
+
+        // the default maxMagSans of 20 is in the highest magnitude bin and drops nothing
+        NZSHM22_CrustalInversionRunner minOnly = makeRunner(rupSet);
+        minOnly.setMinMags(6.95, 6.95);
+        minOnly.configure();
+        double maxMag = minOnly.rupSet.getMaxMag();
+
+        NZSHM22_CrustalInversionRunner runner = makeRunner(rupSet);
+        runner.setMinMags(6.95, 6.95);
+        // maxMagSans one bin below the largest rupture drops that rupture
+        runner.setMaxMags("MANIPULATE_MFD", maxMag - 0.1, maxMag - 0.1);
+        runner.configure();
+
+        assertEquals(minOnly.rupSet.getNumRuptures() - 1, runner.rupSet.getNumRuptures());
+        assertTrue(runner.rupSet.getMaxMag() < maxMag);
     }
 }

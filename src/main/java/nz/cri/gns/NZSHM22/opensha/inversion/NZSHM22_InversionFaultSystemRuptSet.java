@@ -38,49 +38,23 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Loads a subduction RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
-     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB.
-     *
-     * @param ruptureSetFile
-     * @param branch
-     * @return
-     * @throws IOException
-     */
-    public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
-            File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return loadSubductionRuptureSet(ruptureSetFile, branch, null);
-    }
-
-    /**
-     * Loads a subduction RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
      * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
      * optionally drops ruptures below section minimum magnitude.
      *
      * @param ruptureSetFile the rupture set file
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      * @throws IOException if the file cannot be read
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
-            File ruptureSetFile, NZSHM22_LogicTreeBranch branch, Double filterMinMag)
+            File ruptureSetFile,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag)
             throws IOException {
         FaultSystemRupSet rupSet = safeLoad(ruptureSetFile);
-        return fromExistingSubductionRuptureSet(rupSet, branch, filterMinMag);
-    }
-
-    /**
-     * Loads a subduction RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
-     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB.
-     *
-     * @param ruptureSetInput
-     * @param branch
-     * @return
-     * @throws IOException
-     */
-    public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
-            ArchiveInput ruptureSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return loadSubductionRuptureSet(ruptureSetInput, branch, null);
+        return fromExistingSubductionRuptureSet(rupSet, branch, filterMinMag, filterMaxMag);
     }
 
     /**
@@ -90,21 +64,18 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      *
      * @param ruptureSetInput the rupture set archive
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      * @throws IOException if the archive cannot be read
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadSubductionRuptureSet(
-            ArchiveInput ruptureSetInput, NZSHM22_LogicTreeBranch branch, Double filterMinMag)
+            ArchiveInput ruptureSetInput,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag)
             throws IOException {
         FaultSystemRupSet rupSet = safeLoad(ruptureSetInput);
-        return fromExistingSubductionRuptureSet(rupSet, branch, filterMinMag);
-    }
-
-    public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(
-            FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) {
-        return fromExistingSubductionRuptureSet(rupSet, branch, null);
+        return fromExistingSubductionRuptureSet(rupSet, branch, filterMinMag, filterMaxMag);
     }
 
     /**
@@ -114,14 +85,16 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      *
      * @param rupSet the original rupture set
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      */
     public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(
-            FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch, Double filterMinMag) {
+            FaultSystemRupSet rupSet,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag) {
         rupSet = recalcMags(rupSet, branch);
-        rupSet = filterBelowMinMag(rupSet, filterMinMag);
+        rupSet = filterByMagnitude(rupSet, filterMinMag, filterMaxMag);
         return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
     }
 
@@ -140,49 +113,23 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
     }
 
     /**
-     * Loads a RuptureSet from file. Strips the RuptureSet of stray U3 modules that are added when
-     * loading pre-modular files. Recalculates magnitudes if specified by the LTB.
-     *
-     * @param ruptureSetFile
-     * @param branch
-     * @return
-     * @throws IOException
-     */
-    public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
-            File ruptureSetFile, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return loadCrustalRuptureSet(ruptureSetFile, branch, null);
-    }
-
-    /**
      * Loads a crustal RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
      * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
      * optionally drops ruptures below section minimum magnitude.
      *
      * @param ruptureSetFile the rupture set file
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      * @throws IOException if the file cannot be read
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
-            File ruptureSetFile, NZSHM22_LogicTreeBranch branch, Double filterMinMag)
+            File ruptureSetFile,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag)
             throws IOException {
-        return fromExistingCrustalSet(safeLoad(ruptureSetFile), branch, filterMinMag);
-    }
-
-    /**
-     * Loads a RuptureSet from file. Strips the RuptureSet of stray U3 modules that are added when
-     * loading pre-modular files. Recalculates magnitudes if specified by the LTB.
-     *
-     * @param rupSetInput
-     * @param branch
-     * @return
-     * @throws IOException
-     */
-    public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
-            ArchiveInput rupSetInput, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return loadCrustalRuptureSet(rupSetInput, branch, null);
+        return fromExistingCrustalSet(safeLoad(ruptureSetFile), branch, filterMinMag, filterMaxMag);
     }
 
     /**
@@ -192,20 +139,17 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      *
      * @param rupSetInput the rupture set archive
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      * @throws IOException if the archive cannot be read
      */
     public static NZSHM22_InversionFaultSystemRuptSet loadCrustalRuptureSet(
-            ArchiveInput rupSetInput, NZSHM22_LogicTreeBranch branch, Double filterMinMag)
+            ArchiveInput rupSetInput,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag)
             throws IOException {
-        return fromExistingCrustalSet(safeLoad(rupSetInput), branch, filterMinMag);
-    }
-
-    public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(
-            FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch) throws IOException {
-        return fromExistingCrustalSet(rupSet, branch, null);
+        return fromExistingCrustalSet(safeLoad(rupSetInput), branch, filterMinMag, filterMaxMag);
     }
 
     /**
@@ -215,13 +159,15 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      *
      * @param rupSet the original rupture set
      * @param branch the logic tree branch
-     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by, or null
-     *     for no filtering
+     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
      * @return the rupture set
      * @throws IOException if the rupture set cannot be read
      */
     public static NZSHM22_InversionFaultSystemRuptSet fromExistingCrustalSet(
-            FaultSystemRupSet rupSet, NZSHM22_LogicTreeBranch branch, Double filterMinMag)
+            FaultSystemRupSet rupSet,
+            NZSHM22_LogicTreeBranch branch,
+            double filterMinMag,
+            double filterMaxMag)
             throws IOException {
         ClusterRuptures ruptures = rupSet.getModule(ClusterRuptures.class);
         if (ruptures == null) {
@@ -229,29 +175,28 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             rupSet.addModule(ruptures);
         }
         rupSet = recalcMags(rupSet, branch);
-        rupSet = filterBelowMinMag(rupSet, filterMinMag);
+        rupSet = filterByMagnitude(rupSet, filterMinMag, filterMaxMag);
         return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
     }
 
     /**
-     * Drops all ruptures that fall below the minimum magnitude of any of the sections they use. The
-     * section minimum magnitudes are derived from the rupture set itself, with systemWideMinMag as
-     * a lower bound, so this must be called after magnitudes have been recalculated and before any
-     * other modification is applied to the rupture set.
+     * Drops all ruptures that fall below the minimum magnitude of any of the sections they use, and
+     * those in a magnitude bin above the bin of maxMag. The section minimum magnitudes are derived
+     * from the rupture set itself, with minMag as a lower bound, so this must be called after
+     * magnitudes have been recalculated and before any other modification is applied to the rupture
+     * set.
      *
      * @param rupSet the rupture set to filter
-     * @param systemWideMinMag the system wide minimum magnitude, or null for no filtering
-     * @return the filtered rupture set, or the original if systemWideMinMag is null
+     * @param minMag the system wide minimum magnitude
+     * @param maxMag the maximum magnitude. Use {@link MagFilteredRupSet#NO_MAX_MAG} for no upper
+     *     bound.
+     * @return the filtered rupture set
      */
-    public static FaultSystemRupSet filterBelowMinMag(
-            FaultSystemRupSet rupSet, Double systemWideMinMag) {
-        if (systemWideMinMag == null) {
-            return rupSet;
-        }
+    public static FaultSystemRupSet filterByMagnitude(
+            FaultSystemRupSet rupSet, double minMag, double maxMag) {
         double[] minMags =
-                NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(
-                        rupSet, systemWideMinMag);
-        return MagFilteredRupSet.filter(rupSet, ModSectMinMags.instance(rupSet, minMags));
+                NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(rupSet, minMag);
+        return MagFilteredRupSet.filter(rupSet, ModSectMinMags.instance(rupSet, minMags), maxMag);
     }
 
     protected static void applySlipRateFactor(

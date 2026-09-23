@@ -238,11 +238,11 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         }
 
         // TVZ is hard-coded to always be empty (see
-        // NZSHM22_CrustalInversionConfiguration.setRegionalData()), so minMag_Sans applies to all
-        // sections.
+        // NZSHM22_CrustalInversionConfiguration.setRegionalData()), so the sans TVZ bounds apply to
+        // all sections.
         rupSet =
                 NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
-                        getRupSetInput(), branch, filterRupturesBelowMinMag ? minMag_Sans : null);
+                        getRupSetInput(), branch, minMag_Sans, maxMagSans);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {
