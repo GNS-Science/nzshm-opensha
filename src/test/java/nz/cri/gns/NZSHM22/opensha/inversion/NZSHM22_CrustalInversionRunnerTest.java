@@ -25,10 +25,15 @@ public class NZSHM22_CrustalInversionRunnerTest {
     // returns a runner that can quickly create a solution
     public static NZSHM22_CrustalInversionRunner makeRunner()
             throws DocumentException, IOException {
-        FaultSystemRupSet rupSet =
+        return makeRunner(
                 TestHelpers.makeRupSet(
                         NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
-                        ScalingRelationships.SHAW_2009_MOD);
+                        ScalingRelationships.SHAW_2009_MOD));
+    }
+
+    // returns a runner for the given rupture set that can quickly create a solution
+    public static NZSHM22_CrustalInversionRunner makeRunner(FaultSystemRupSet rupSet)
+            throws DocumentException, IOException {
         ArchiveOutput archiveOutput = new ArchiveOutput.InMemoryZipOutput(true);
         rupSet.getArchive().write(archiveOutput);
 
@@ -106,5 +111,32 @@ public class NZSHM22_CrustalInversionRunnerTest {
         exceptionRule.expect(IllegalStateException.class);
         exceptionRule.expectMessage(new StringStartsWith("Paleo rate location double-up"));
         runner.runInversion();
+    }
+
+    @Test
+    public void testFilterRupturesBelowMinMag() throws DocumentException, IOException {
+        // section 1 on its own is an M6.3 rupture, all other ruptures are above M7
+        FaultSystemRupSet rupSet =
+                TestHelpers.createRupSet(
+                        NZSHM22_FaultModels.CFM_1_0A_DOM_SANSTVZ,
+                        ScalingRelationships.SHAW_2009_MOD,
+                        List.of(
+                                List.of(1),
+                                List.of(1, 2, 3, 4),
+                                List.of(5, 6, 7, 8),
+                                List.of(9, 10, 11, 12)));
+
+        NZSHM22_CrustalInversionRunner unfiltered = makeRunner(rupSet);
+        unfiltered.setMinMags(6.95, 6.95);
+        unfiltered.configure();
+        assertEquals(4, unfiltered.rupSet.getNumRuptures());
+
+        NZSHM22_CrustalInversionRunner filtered = makeRunner(rupSet);
+        filtered.setMinMags(6.95, 6.95);
+        filtered.setFilterRupturesBelowMinMag(true);
+        filtered.configure();
+
+        assertEquals(3, filtered.rupSet.getNumRuptures());
+        assertTrue(filtered.rupSet.getMinMag() >= 6.9);
     }
 }

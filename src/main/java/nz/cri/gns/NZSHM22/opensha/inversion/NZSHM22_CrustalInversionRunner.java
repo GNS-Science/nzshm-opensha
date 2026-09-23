@@ -237,8 +237,12 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
 
+        // TVZ is hard-coded to always be empty (see
+        // NZSHM22_CrustalInversionConfiguration.setRegionalData()), so minMag_Sans applies to all
+        // sections.
         rupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                        getRupSetInput(), branch, filterRupturesBelowMinMag ? minMag_Sans : null);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {

@@ -121,4 +121,44 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
 
         assertArrayEquals(expected, actual, 0);
     }
+
+    /** A rupture set filtered by section minimum magnitude. */
+    protected FaultSystemRupSet magFilterFixture() throws DocumentException, IOException {
+        return TestHelpers.createRupSet(
+                NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
+                ScalingRelationships.SHAW_2009_MOD,
+                List.of(List.of(0), List.of(0, 1), List.of(0, 1, 2), List.of(0, 1, 2, 3)));
+    }
+
+    @Test
+    public void testFilterBelowMinMagWithoutMinMagIsNoOp() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = magFilterFixture();
+        assertSame(rupSet, NZSHM22_InversionFaultSystemRuptSet.filterBelowMinMag(rupSet, null));
+    }
+
+    @Test
+    public void testFilterBelowMinMagDropsRuptures() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = magFilterFixture();
+        double maxMag = rupSet.getMaxMag();
+
+        FaultSystemRupSet filtered =
+                NZSHM22_InversionFaultSystemRuptSet.filterBelowMinMag(rupSet, maxMag);
+
+        assertTrue(filtered.getNumRuptures() > 0);
+        assertTrue(filtered.getNumRuptures() < rupSet.getNumRuptures());
+        for (int r = 0; r < filtered.getNumRuptures(); r++) {
+            assertTrue(filtered.getMagForRup(r) >= maxMag);
+        }
+    }
+
+    @Test
+    public void testFilterBelowMinMagRejectsEmptyResult() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = magFilterFixture();
+        try {
+            NZSHM22_InversionFaultSystemRuptSet.filterBelowMinMag(rupSet, rupSet.getMaxMag() + 1);
+            fail("expected IllegalStateException");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("below section minimum magnitude"));
+        }
+    }
 }
