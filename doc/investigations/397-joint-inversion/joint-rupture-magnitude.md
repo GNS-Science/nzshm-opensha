@@ -48,3 +48,5 @@ $M_w^p = \frac{1}{1.5}\log \frac{A_p}{A} + \log(A_c C_c + A_s C_s)$
 
 which does not give us the same result as using $M_w^p = \log(A_p C_p)$ unless either $A_c$ or $A_s$ is $0$.
 
+## Conclusion
+When calculating the magnitude of the entire rupture from the area (the only quantity we know for a rupture set) use the magnitude-area scaling relationship (equation 3). When calculating the magnitude for each partition, calculate the seismic moment using equation 1 and the moment magnitude using equation 2. This will always be consistant with whatever assumptions we make (scaling relationship, slip apportioning, etc.). To ensure consistency in the face of future changes to joint rupture assumptions, do not use the final equation as this is only provided as proof for the current case.
