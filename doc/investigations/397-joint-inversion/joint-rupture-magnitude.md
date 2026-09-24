@@ -20,6 +20,7 @@ It's important that we calculate the magnitudes for each partition in a consiste
 
 ### NZ-NSHM Model Assumptions
 (3) $M_w = \log(A_c C_c + A_s C_s) = \log A^*$
+
 Here we introduce $A^*$ purly for compactness of notation.
 
 (4) $D_c = D_s$: slip is the same for the crustal and interface portions of the rupture (NB: this could change in the future)
