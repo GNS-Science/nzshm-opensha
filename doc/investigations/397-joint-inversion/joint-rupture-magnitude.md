@@ -19,7 +19,7 @@ It's important that we calculate the magnitudes for each partition in a consiste
 (2) $M_w = (\log(M_o) - 9.05)/1.5$ (where $\log$ is taken to be $\log_{10}$)
 
 ### NZ-NSHM Model Assumptions
-(3) $M_w = \log(A_c C_c + A_s C_s) = \log A^*$
+(3) $M_w = \log(A_c C_c + A_s C_s) = \log A^{*}$
 
 Here we introduce $A^*$ purly for compactness of notation.
 
