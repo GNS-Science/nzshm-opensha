@@ -38,12 +38,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Loads a subduction RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
-     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
-     * optionally drops ruptures below section minimum magnitude.
+     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB, then
+     * drops the ruptures that are outside the magnitude bounds.
      *
      * @param ruptureSetFile the rupture set file
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      * @throws IOException if the file cannot be read
      */
@@ -59,12 +61,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Loads a subduction RuptureSet from an archive. Strips the RuptureSet of stray U3 modules that
-     * are added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
-     * optionally drops ruptures below section minimum magnitude.
+     * are added when loading pre-modular files. Recalculates magnitudes if specified by the LTB,
+     * then drops the ruptures that are outside the magnitude bounds.
      *
      * @param ruptureSetInput the rupture set archive
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      * @throws IOException if the archive cannot be read
      */
@@ -80,12 +84,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Creates a subduction NZSHM22_InversionFaultSystemRuptSet from an existing rupture set.
-     * Magnitudes are recalculated first, then the rupture set is optionally filtered by section
-     * minimum magnitude, before any other modification is applied.
+     * Magnitudes are recalculated first, then the rupture set is filtered by magnitude, before any
+     * other modification is applied.
      *
      * @param rupSet the original rupture set
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      */
     public static NZSHM22_InversionFaultSystemRuptSet fromExistingSubductionRuptureSet(
@@ -114,12 +120,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Loads a crustal RuptureSet from file. Strips the RuptureSet of stray U3 modules that are
-     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
-     * optionally drops ruptures below section minimum magnitude.
+     * added when loading pre-modular files. Recalculates magnitudes if specified by the LTB, then
+     * drops the ruptures that are outside the magnitude bounds.
      *
      * @param ruptureSetFile the rupture set file
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      * @throws IOException if the file cannot be read
      */
@@ -134,12 +142,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Loads a crustal RuptureSet from an archive. Strips the RuptureSet of stray U3 modules that
-     * are added when loading pre-modular files. Recalculates magnitudes if specified by the LTB and
-     * optionally drops ruptures below section minimum magnitude.
+     * are added when loading pre-modular files. Recalculates magnitudes if specified by the LTB,
+     * then drops the ruptures that are outside the magnitude bounds.
      *
      * @param rupSetInput the rupture set archive
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      * @throws IOException if the archive cannot be read
      */
@@ -154,12 +164,14 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
 
     /**
      * Creates a crustal NZSHM22_InversionFaultSystemRuptSet from an existing rupture set.
-     * Magnitudes are recalculated first, then the rupture set is optionally filtered by section
-     * minimum magnitude, before any other modification is applied.
+     * Magnitudes are recalculated first, then the rupture set is filtered by magnitude, before any
+     * other modification is applied.
      *
      * @param rupSet the original rupture set
      * @param branch the logic tree branch
-     * @param magFilter the magnitude bounds to filter the rupture set by, or null for no filtering
+     * @param filterMinMag the system wide minimum magnitude to filter the rupture set by
+     * @param filterMaxMag the maximum magnitude to filter the rupture set by. Use {@link
+     *     MagFilteredRupSet#NO_MAX_MAG} for no upper bound.
      * @return the rupture set
      * @throws IOException if the rupture set cannot be read
      */
@@ -186,8 +198,12 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
      * magnitudes have been recalculated and before any other modification is applied to the rupture
      * set.
      *
+     * <p>Note that minMag only raises those section minimum magnitudes, it does not switch the
+     * filtering off: a section whose smallest rupture is above minMag keeps its own value, so
+     * ruptures are dropped even when minMag is 0.
+     *
      * @param rupSet the rupture set to filter
-     * @param minMag the system wide minimum magnitude
+     * @param minMag the lower bound for the section minimum magnitudes
      * @param maxMag the maximum magnitude. Use {@link MagFilteredRupSet#NO_MAX_MAG} for no upper
      *     bound.
      * @return the filtered rupture set

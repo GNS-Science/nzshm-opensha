@@ -7,6 +7,7 @@ import java.util.Set;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
+import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
@@ -32,7 +33,8 @@ public class MagFilteredRupSet {
                     BuildInfoModule.class,
                     TvzDomainSections.class,
                     CustomFaultModel.class,
-                    CustomDeformationModel.class);
+                    CustomDeformationModel.class,
+                    NZSHM22_RuptureSetBuilderModule.class);
 
     /**
      * A maximum magnitude that is above the highest magnitude bin and therefore does not exclude

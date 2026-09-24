@@ -75,6 +75,32 @@ public class SmokeTest {
         assertTrue(builderClass.isInstance(module.getBuilder()));
     }
 
+    /**
+     * The rupture set read back from the archive must match the one we built. Loading a rupture set
+     * for inversion filters it by magnitude, so the comparison is against the same filter applied
+     * to the set we built in memory.
+     *
+     * @param built the rupture set that was written to the archive
+     * @param loaded the rupture set that was read back from the archive
+     * @param builderClass the builder that produced the rupture set
+     */
+    public void sanityCheckRoundTrip(
+            FaultSystemRupSet built, FaultSystemRupSet loaded, Class<?> builderClass) {
+        sanityCheckBuilderModule(loaded, builderClass);
+
+        FaultSystemRupSet expected =
+                NZSHM22_InversionFaultSystemRuptSet.filterByMagnitude(
+                        built, 0, MagFilteredRupSet.NO_MAX_MAG);
+        assertEquals(expected.getNumRuptures(), loaded.getNumRuptures());
+        assertEquals(built.getNumSections(), loaded.getNumSections());
+        assertEquals(
+                built.getSlipRateForAllSections().length,
+                loaded.getSlipRateForAllSections().length);
+        for (int r = 0; r < expected.getNumRuptures(); r++) {
+            assertEquals(expected.getMagForRup(r), loaded.getMagForRup(r), 0.0000000001);
+        }
+    }
+
     public void sanityCheckCoulombRuptureSet(FaultSystemRupSet rupSet) {
         sanityCheckBuilderModule(rupSet, NZSHM22_CoulombRuptureSetBuilder.class);
         assertEquals(2335, rupSet.getNumRuptures());
@@ -118,7 +144,7 @@ public class SmokeTest {
                         ruptureSetFile, branch, 0, MagFilteredRupSet.NO_MAX_MAG);
 
         sanityCheckCoulombRuptureSet(rupSet);
-        sanityCheckCoulombRuptureSet(loadedRupSet);
+        sanityCheckRoundTrip(rupSet, loadedRupSet, NZSHM22_CoulombRuptureSetBuilder.class);
     }
 
     public void sanityCheckSubductionRuptureSet(FaultSystemRupSet rupSet) {
@@ -170,7 +196,7 @@ public class SmokeTest {
                         rupturesFile, branch, 0, MagFilteredRupSet.NO_MAX_MAG);
 
         sanityCheckSubductionRuptureSet(rupSet);
-        sanityCheckSubductionRuptureSet(loadedRupSet);
+        sanityCheckRoundTrip(rupSet, loadedRupSet, NZSHM22_SubductionRuptureSetBuilder.class);
     }
 
     public void testCrustalInversionRunner(File ruptureSetFile, File solutionFile)
