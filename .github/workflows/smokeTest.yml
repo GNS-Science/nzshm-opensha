@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: GNS-Science/opensha
-          ref: fix/rup-normalization-2024
+          ref: fix/getForRuptureSubSet
           path: opensha
 
       - name: Clone opensha

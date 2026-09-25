@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.griddedSeismicity.GriddedSeisUtils;
 
 public class NZSHM22_FaultSystemRupSetCalcTest {
@@ -142,5 +143,36 @@ public class NZSHM22_FaultSystemRupSetCalcTest {
         // sections 2 and 3 have a parent with a minMag greater than the partition minMag
         assertEquals(0.5, actual[2], 0.0001);
         assertEquals(0.5, actual[3], 0.0001);
+    }
+
+    /** The bins line up with the NZSHM22 MFD bins. */
+    @Test
+    public void magBinsLineUpWithTheMfdBins() {
+        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
+        double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
+        assertEquals(mfdMinMag, bins.getX(bins.getClosestXIndex(mfdMinMag)), 1e-9);
+    }
+
+    /** The bins span every magnitude bound that can be configured. */
+    @Test
+    public void magBinsSpanEverySensibleMagnitude() {
+        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
+        assertTrue(bins.getMinX() < 0.1);
+        assertTrue(bins.getMaxX() >= 20);
+    }
+
+    /**
+     * Magnitudes outside the bins get the outermost bin, which is below or above any bound that can
+     * be configured. The magnitude comparisons rely on this.
+     */
+    @Test
+    public void magBinsPlaceMagnitudesOutsideThemAtTheEnds() {
+        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
+
+        assertEquals(0, bins.getClosestXIndex(bins.getMinX() - bins.getDelta()));
+        assertEquals(0, bins.getClosestXIndex(-100));
+
+        assertEquals(bins.size() - 1, bins.getClosestXIndex(bins.getMaxX() + bins.getDelta()));
+        assertEquals(bins.size() - 1, bins.getClosestXIndex(100));
     }
 }

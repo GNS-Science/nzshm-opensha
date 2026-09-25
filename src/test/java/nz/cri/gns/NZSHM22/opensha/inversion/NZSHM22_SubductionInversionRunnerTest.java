@@ -66,4 +66,22 @@ public class NZSHM22_SubductionInversionRunnerTest {
                 NZSHM22_SubductionInversionRunner.fromJson(runner.toJson());
         assertEquals(runner.toJson(), fromJson.toJson());
     }
+
+    @Test
+    public void testFilterRupturesBelowMinMag() throws DocumentException, IOException {
+        // the default mfdMinMag is below every rupture of this rupture set
+        NZSHM22_SubductionInversionRunner unfiltered = makeRunner();
+        unfiltered.configure();
+        double maxMag = unfiltered.rupSet.getMaxMag();
+
+        NZSHM22_SubductionInversionRunner filtered = makeRunner();
+        // a min mag just below the largest rupture leaves only the largest ruptures
+        filtered.setGutenbergRichterMFD(
+                filtered.totalRateM5, filtered.bValue, filtered.mfdTransitionMag, maxMag - 0.01);
+        filtered.configure();
+
+        assertTrue(filtered.rupSet.getNumRuptures() > 0);
+        assertTrue(filtered.rupSet.getNumRuptures() < unfiltered.rupSet.getNumRuptures());
+        assertTrue(filtered.rupSet.getMinMag() >= maxMag - 0.1);
+    }
 }

@@ -8,6 +8,7 @@ one. Add your entries to `## TBD`; see [Releases](README.md#releases) for the re
 ## TBD
 
 - Upgraded to Java 21
+- - ⚠️`[behaviour change inversion]` Ruptures are now filtered by min and max mag before calculating target MFDs and inversion. 
 
 ## [2.0.0] - 2026-08-14
 

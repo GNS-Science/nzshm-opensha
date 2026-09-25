@@ -237,8 +237,14 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
             branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
 
+        // NZSHM22_CrustalInversionConfiguration.setRegionalData() hard-codes the TVZ
+        // RegionalRupSetData to an empty region, so every section takes its minimum magnitude from
+        // sans TVZ. Note that this is not the same as the TvzDomainSections module, which
+        // createSamplerExclusions() uses and which is not empty, so the TVZ bounds of setMinMags()
+        // and setMaxMags() are not applied here.
         rupSet =
-                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(getRupSetInput(), branch);
+                NZSHM22_InversionFaultSystemRuptSet.loadCrustalRuptureSet(
+                        getRupSetInput(), branch, minMag_Sans, maxMagSans);
 
         if (varPertBasisAsInititalSolution) {
             if (variablePerturbationBasis == null) {
