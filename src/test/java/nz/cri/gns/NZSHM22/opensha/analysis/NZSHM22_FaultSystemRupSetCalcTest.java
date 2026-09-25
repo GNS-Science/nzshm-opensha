@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.analysis;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -174,5 +175,33 @@ public class NZSHM22_FaultSystemRupSetCalcTest {
 
         assertEquals(bins.size() - 1, bins.getClosestXIndex(bins.getMaxX() + bins.getDelta()));
         assertEquals(bins.size() - 1, bins.getClosestXIndex(100));
+    }
+
+    /** A rupture is above the section maximum magnitudes if any of its sections bounds it. */
+    @Test
+    public void testComputeWhichRupsAreAboveSectionMaxMags() {
+        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getNumRuptures()).thenReturn(3);
+        when(rupSet.getMagForRup(0)).thenReturn(6.85);
+        when(rupSet.getMagForRup(1)).thenReturn(7.85);
+        when(rupSet.getMagForRup(2)).thenReturn(8.85);
+        // rupture 2 is the only joint rupture, using sections of both partitions
+        when(rupSet.getSectionsIndicesForRup(0)).thenReturn(List.of(0));
+        when(rupSet.getSectionsIndicesForRup(1)).thenReturn(List.of(1));
+        when(rupSet.getSectionsIndicesForRup(2)).thenReturn(List.of(0, 1));
+
+        // section 0 is bounded, section 1 is not
+        double[] maxMags = {7.95, bins.getMaxX()};
+
+        boolean[] actual =
+                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsAreAboveSectionMaxMags(
+                        rupSet, maxMags);
+
+        assertFalse(actual[0]);
+        // rupture 1 does not use the bounded section
+        assertFalse(actual[1]);
+        // the joint rupture is above the bound of section 0
+        assertTrue(actual[2]);
     }
 }

@@ -16,7 +16,6 @@ import nz.cri.gns.NZSHM22.opensha.util.ParameterRunner;
 import nz.cri.gns.NZSHM22.opensha.util.Parameters;
 import nz.cri.gns.NZSHM22.util.TestHelpers;
 import org.dom4j.DocumentException;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -42,10 +41,6 @@ public class InversionRunnerComparisonIntegrationTest {
         assertRunnersEquals(inversionRunner, crustalRunner);
     }
 
-    // The classic subduction runner filters its input rupture set by magnitude, the joint runner
-    // does not, so the two no longer see the same ruptures. Re-enable this test once rupture
-    // filtering is implemented for the joint runner.
-    @Ignore
     @Test
     public void testInversionRunnerGeneratesIdenticalRatesToSubductionRunner() throws Exception {
         InversionRunner inversionRunner =
