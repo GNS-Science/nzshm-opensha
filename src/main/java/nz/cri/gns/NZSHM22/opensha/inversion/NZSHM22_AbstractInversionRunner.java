@@ -492,8 +492,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
      * @throws IOException
      */
     public NZSHM22_AbstractInversionRunner setInitialSolution(String path) throws IOException {
-        initialSolution = loadRates(path);
-        return this;
+        // TODO: how does this work with rupture filtering?
+        throw new RuntimeException("Not currently supported due to rupture filtering");
+        //        initialSolution = loadRates(path);
+        //        return this;
     }
 
     /**
@@ -505,8 +507,10 @@ public abstract class NZSHM22_AbstractInversionRunner {
      * @return
      */
     public NZSHM22_AbstractInversionRunner setVarPertBasisAsInititalSolution(boolean value) {
-        varPertBasisAsInititalSolution = value;
-        return this;
+        // TODO: how does this work with rupture filtering?
+        throw new RuntimeException("Not currently supported due to rupture filtering");
+        //        varPertBasisAsInititalSolution = value;
+        //        return this;
     }
 
     /**
