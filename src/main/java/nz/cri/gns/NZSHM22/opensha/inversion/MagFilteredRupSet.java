@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,11 +17,12 @@ import org.opensha.sha.earthquake.faultSysSolution.modules.SplittableRuptureModu
 
 /**
  * Filters a rupture set by magnitude, dropping the ruptures that fall below the minimum magnitude
- * of any of the sections they use, and those above a maximum magnitude. See {@link
+ * of any of the sections they use, and those above the maximum magnitude of any of the sections
+ * they use. See {@link
  * NZSHM22_FaultSystemRupSetCalc#computeWhichRupsFallBelowSectionMinMags(FaultSystemRupSet,
  * ModSectMinMags)} and {@link
- * NZSHM22_FaultSystemRupSetCalc#computeWhichRupsAreAboveMaxMag(FaultSystemRupSet, double)} for the
- * exact tests.
+ * NZSHM22_FaultSystemRupSetCalc#computeWhichRupsAreAboveSectionMaxMags(FaultSystemRupSet,
+ * double[])} for the exact tests.
  */
 public class MagFilteredRupSet {
 
@@ -57,14 +59,41 @@ public class MagFilteredRupSet {
      */
     public static FaultSystemRupSet filter(
             FaultSystemRupSet original, ModSectMinMags minMags, double maxMag) {
+        double[] maxMagForSection = new double[original.getNumSections()];
+        Arrays.fill(maxMagForSection, maxMag);
+        return filter(original, minMags, maxMagForSection);
+    }
+
+    /**
+     * Creates a rupture set that only contains those ruptures of the original that are neither
+     * below the minimum magnitude of any of the sections they use, nor in a magnitude bin above the
+     * bin of the maximum magnitude of any of the sections they use. The whole bin of a maximum
+     * magnitude is retained. This is the joint inversion case, where each partition has its own
+     * magnitude bounds and a rupture has to satisfy the bounds of every partition it belongs to.
+     *
+     * @param original the rupture set to filter
+     * @param minMags the section minimum magnitudes to test the ruptures against
+     * @param maxMagForSection the maximum magnitude of each section. Use {@link #NO_MAX_MAG} for no
+     *     upper bound.
+     * @return the filtered rupture set
+     * @throws IllegalStateException if all ruptures are outside the magnitude bounds
+     */
+    public static FaultSystemRupSet filter(
+            FaultSystemRupSet original, ModSectMinMags minMags, double[] maxMagForSection) {
         Preconditions.checkArgument(
-                Double.isFinite(maxMag),
-                "maxMag must be finite, use NO_MAX_MAG for no upper bound");
+                maxMagForSection.length == original.getNumSections(),
+                "maxMagForSection must have one entry per fault section");
+        for (double maxMag : maxMagForSection) {
+            Preconditions.checkArgument(
+                    Double.isFinite(maxMag),
+                    "maxMag must be finite, use NO_MAX_MAG for no upper bound");
+        }
         boolean[] isBelowMinMag =
                 NZSHM22_FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(
                         original, minMags);
         boolean[] isAboveMaxMag =
-                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsAreAboveMaxMag(original, maxMag);
+                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsAreAboveSectionMaxMags(
+                        original, maxMagForSection);
 
         Set<Integer> retainedRuptureIds = new LinkedHashSet<>();
         for (int ruptureId = 0; ruptureId < original.getNumRuptures(); ruptureId++) {

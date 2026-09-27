@@ -265,4 +265,74 @@ public class MagFilteredRupSetTest {
             assertTrue(e.getMessage().contains("outside the magnitude bounds"));
         }
     }
+
+    /**
+     * Section maximum magnitudes that only constrain one section. All other sections get no upper
+     * bound.
+     */
+    protected double[] sectMaxMags(int section, double maxMag) {
+        double[] maxMags = new double[original.getNumSections()];
+        Arrays.fill(maxMags, MagFilteredRupSet.NO_MAX_MAG);
+        maxMags[section] = maxMag;
+        return maxMags;
+    }
+
+    /** A rupture is only tested against the maximum magnitudes of the sections it uses. */
+    @Test
+    public void dropsRupturesAboveSectionMaxMag() {
+        double[] mags = originalMags();
+
+        // section 0 is used by all ruptures
+        FaultSystemRupSet rupSet =
+                MagFilteredRupSet.filter(original, noMinMags(), sectMaxMags(0, mags[1]));
+        assertEquals(2, rupSet.getNumRuptures());
+        assertEquals(mags[0], rupSet.getMagForRup(0), DELTA);
+        assertEquals(mags[1], rupSet.getMagForRup(1), DELTA);
+
+        // section 3 is only used by the largest rupture
+        rupSet = MagFilteredRupSet.filter(original, noMinMags(), sectMaxMags(3, mags[1]));
+        assertEquals(3, rupSet.getNumRuptures());
+        assertEquals(mags[2], rupSet.getMagForRup(2), DELTA);
+    }
+
+    /**
+     * A rupture that spans sections with different maximum magnitudes, as joint ruptures do, has to
+     * satisfy the lowest of them.
+     */
+    @Test
+    public void appliesTheStrictestSectionMaxMag() {
+        double[] mags = originalMags();
+        double[] maxMags = sectMaxMags(2, mags[1]);
+        // section 1 allows every rupture, section 2 only allows the two smallest ones
+        maxMags[1] = MagFilteredRupSet.NO_MAX_MAG;
+
+        FaultSystemRupSet rupSet = MagFilteredRupSet.filter(original, noMinMags(), maxMags);
+
+        // ruptures 2 and 3 use section 2 and are above its maximum magnitude
+        assertEquals(2, rupSet.getNumRuptures());
+        assertEquals(mags[0], rupSet.getMagForRup(0), DELTA);
+        assertEquals(mags[1], rupSet.getMagForRup(1), DELTA);
+    }
+
+    /** The scalar maximum magnitude is the same as the same bound on every section. */
+    @Test
+    public void scalarMaxMagBoundsEverySection() {
+        double[] mags = originalMags();
+        double[] maxMags = new double[original.getNumSections()];
+        Arrays.fill(maxMags, mags[1]);
+
+        assertEquals(
+                MagFilteredRupSet.filter(original, noMinMags(), mags[1]).getNumRuptures(),
+                MagFilteredRupSet.filter(original, noMinMags(), maxMags).getNumRuptures());
+    }
+
+    @Test
+    public void rejectsMaxMagsThatDoNotCoverEverySection() {
+        try {
+            MagFilteredRupSet.filter(original, noMinMags(), new double[] {10, 10});
+            fail("expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("one entry per fault section"));
+        }
+    }
 }
