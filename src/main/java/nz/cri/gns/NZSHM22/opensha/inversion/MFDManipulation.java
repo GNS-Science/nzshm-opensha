@@ -17,10 +17,7 @@ public class MFDManipulation {
         return Math.abs(nearest - magnitude) < 0.000001;
     }
 
-    /**
-     * This method returns the input MFD constraint restricted between minMag and maxMag.
-     *
-     */
+    /** This method returns the input MFD constraint restricted between minMag and maxMag. */
     public static IncrementalMagFreqDist trimMFD(
             IncrementalMagFreqDist originalMFD, double minMag, double maxMag) {
 
@@ -65,9 +62,7 @@ public class MFDManipulation {
     }
 
     public static UncertainIncrMagFreqDist addMfdUncertainty(
-            IncrementalMagFreqDist mfd,
-            double power,
-            double uncertaintyScalar) {
+            IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
         int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
