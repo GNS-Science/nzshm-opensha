@@ -258,8 +258,6 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,
-                            minMag,
-                            maxMag,
                             uncertaintyPower,
                             uncertaintyScalar);
 

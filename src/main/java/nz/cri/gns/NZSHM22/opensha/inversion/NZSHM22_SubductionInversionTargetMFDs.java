@@ -1,6 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
-import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -78,13 +77,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             System.out.println("");
         }
 
-        // Doctor the target, setting a small value instead of 0
-        totalTargetGR.setYofX(
-                (x, y) -> {
-                    Preconditions.checkState(x >= mfdMinMag);
-                    return y;
-                });
-
         SummedMagFreqDist targetOnFaultSupraSeisMFD =
                 new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
@@ -95,21 +87,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             System.out.println("");
         }
 
-        //		// compute coupling coefficients
-        //		impliedOnFaultCouplingCoeff = (targetOnFaultSupraSeisMFD.getTotalMomentRate()
-        //				+ totalSubSeismoOnFaultMFD.getTotalMomentRate()) / origOnFltDefModMoRate;
-        //		impliedTotalCouplingCoeff = totalTargetGR.getTotalMomentRate() / (origOnFltDefModMoRate
-        // + offFltDefModMoRate);
-
-        // Build the MFD Constraints for regions
-        //		List<MFD_InversionConstraint> mfdUncertaintyConstraints = new ArrayList<>();
-
         if (mfdUncertaintyWeightedConstraintWt > 0.0) {
             mfdUncertaintyConstraints.add(
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFD,
-                            mfdMinMag,
-                            20,
                             mfdUncertaintyWeightedConstraintPower,
                             mfdUncertaintyWeightedConstraintScalar));
         }
@@ -126,13 +107,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         setParent(invRupSet);
         this.totalTargetGR = totalTargetGR;
         this.targetOnFaultSupraSeisMFD = targetOnFaultSupraSeisMFD;
-        //		this.mfdConstraints = mfdConstraints;
         this.mfdConstraintComponents = mfdConstraintComponents;
-
-        //		return new InversionTargetMFDs.Precomputed( invRupSet,
-        //				totalTargetGR, targetOnFaultSupraSeisMFD, null,
-        //				null, mfdConstraints, null);
-
     }
 
     public List<IncrementalMagFreqDist> getMfdEqIneqConstraints() {

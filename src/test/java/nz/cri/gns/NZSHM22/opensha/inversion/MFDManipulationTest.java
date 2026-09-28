@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
+import org.opensha.commons.geo.Location;
+import org.opensha.commons.geo.Region;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 
 public class MFDManipulationTest {
@@ -215,40 +217,98 @@ public class MFDManipulationTest {
         // 1) > 1);
     }
 
-    @Test
-    public void testRestrictMFDConstraintMagRange() {
+    public static IncrementalMagFreqDist trimTestDist() {
         IncrementalMagFreqDist dist = new IncrementalMagFreqDist(5.05, BINS, 0.1);
         for (int i = 0; i < BINS; i++) {
             dist.set(i, i);
         }
+        return dist;
+    }
+
+    public static void assertTrimRejected(double minMag, double maxMag) {
+        try {
+            MFDManipulation.trimMFD(trimTestDist(), minMag, maxMag);
+            fail("expected IllegalArgumentException for " + minMag + ", " + maxMag);
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void testTrimMFD() {
+        IncrementalMagFreqDist dist = trimTestDist();
 
         IncrementalMagFreqDist actual =
-                MFDManipulation.restrictMFDConstraintMagRange(dist, dist.getMinX(), dist.getMaxX());
+                MFDManipulation.trimMFD(dist, dist.getMinX(), dist.getMaxX());
         assertEquals(dist.yValues(), actual.yValues());
 
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, dist.getMaxX());
+        actual = MFDManipulation.trimMFD(dist, 7.05, dist.getMaxX());
         assertEquals(
                 List.of(
                         20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0,
                         32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0),
                 actual.yValues());
 
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 8, dist.getMaxX());
+        actual = MFDManipulation.trimMFD(dist, 8.05, dist.getMaxX());
         assertEquals(
                 List.of(30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0),
                 actual.yValues());
 
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, dist.getMinX(), 7);
+        actual = MFDManipulation.trimMFD(dist, dist.getMinX(), 7.05);
         assertEquals(
                 List.of(
                         0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0,
                         14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0),
                 actual.yValues());
 
-        actual = MFDManipulation.restrictMFDConstraintMagRange(dist, 7, 8);
+        actual = MFDManipulation.trimMFD(dist, 7.05, 8.05);
         assertEquals(
                 List.of(20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0),
                 actual.yValues());
+
+        // single bin
+        actual = MFDManipulation.trimMFD(dist, 7.05, 7.05);
+        assertEquals(List.of(20.0), actual.yValues());
+    }
+
+    @Test
+    public void testTrimMFDShape() {
+        IncrementalMagFreqDist dist = trimTestDist();
+        IncrementalMagFreqDist actual = MFDManipulation.trimMFD(dist, 7.05, 8.05);
+
+        assertEquals(11, actual.size());
+        assertEquals(7.05, actual.getMinX(), 1e-9);
+        assertEquals(8.05, actual.getMaxX(), 1e-9);
+        assertEquals(dist.getDelta(), actual.getDelta(), 1e-9);
+        for (int i = 0; i < actual.size(); i++) {
+            assertEquals(dist.getX(i + 20), actual.getX(i), 1e-9);
+        }
+    }
+
+    @Test
+    public void testTrimMFDCopiesMetadata() {
+        IncrementalMagFreqDist dist = trimTestDist();
+        Region region = new Region(new Location(-40, 170), new Location(-35, 175));
+        dist.setName("test MFD");
+        dist.setTolerance(0.01);
+        dist.setRegion(region);
+
+        IncrementalMagFreqDist actual = MFDManipulation.trimMFD(dist, 7.05, 8.05);
+
+        assertEquals("test MFD", actual.getName());
+        assertEquals(0.01, actual.getTolerance(), 1e-12);
+        assertEquals(region, actual.getRegion());
+    }
+
+    @Test
+    public void testTrimMFDPreconditions() {
+        // below min / above max
+        assertTrimRejected(4.95, 7.05);
+        assertTrimRejected(7.05, 9.05);
+        // not bin centres
+        assertTrimRejected(7.0, 8.05);
+        assertTrimRejected(7.05, 8.0);
+        assertTrimRejected(7.07, 8.05);
     }
 
     @Test

@@ -12,32 +12,34 @@ public class MFDManipulation {
 
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
+    public static boolean isBinCenter(IncrementalMagFreqDist mfd, double magnitude) {
+        double nearest = mfd.getX(mfd.getClosestXIndex(magnitude));
+        return Math.abs(nearest - magnitude) < 0.000001;
+    }
+
     /**
-     * This method returns the input MFD constraint restricted between minMag and maxMag. WARNING!
-     * This doesn't interpolate. For best results, set minMag & maxMag to points along original MFD
-     * constraint (i.e. 7.05, 7.15, etc)
+     * This method returns the input MFD constraint restricted between minMag and maxMag.
      *
-     * <p>Can handle UncertainIncrMagFreqDist objects.
      */
-    public static IncrementalMagFreqDist restrictMFDConstraintMagRange(
+    public static IncrementalMagFreqDist trimMFD(
             IncrementalMagFreqDist originalMFD, double minMag, double maxMag) {
 
         Preconditions.checkArgument(originalMFD.getMinX() <= minMag);
         Preconditions.checkArgument(maxMag <= originalMFD.getMaxX());
+        Preconditions.checkArgument(isBinCenter(originalMFD, minMag));
+        Preconditions.checkArgument(isBinCenter(originalMFD, maxMag));
 
         double delta = originalMFD.getDelta();
         int num = (int) Math.round((maxMag - minMag) / delta + 1.0);
 
         IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag, num);
-        newMFD.setTolerance(delta / 2.0);
+        newMFD.setName(originalMFD.getName());
+        newMFD.setTolerance(originalMFD.getTolerance());
         newMFD.setRegion(originalMFD.getRegion());
 
+        int startBin = originalMFD.getClosestXIndex(minMag);
         for (int i = 0; i < num; i++) {
-
-            double m = minMag + delta * i;
-            // WARNING! This doesn't interpolate. For best results, set minMag & maxMag to
-            // points along original MFD constraint (i.e. 7.05, 7.15, etc)
-            newMFD.set(m, originalMFD.getClosestYtoX(m));
+            newMFD.set(i, originalMFD.getY(i + startBin));
         }
         return newMFD;
     }
@@ -47,38 +49,26 @@ public class MFDManipulation {
      * between minMag and maxMag. WARNING! This doesn't interpolate. For best results, set minMag &
      * maxMag to points along original MFD constraint (i.e. 7.05, 7.15, etc)
      *
-     * <p>Can handle UncertainIncrMagFreqDist objects.
-     *
      * @param mfdConstraints
      * @param minMag
      * @param maxMag
      * @return newMFDConstraints
      */
-    public static List<IncrementalMagFreqDist> restrictMFDConstraintMagRange(
+    public static List<IncrementalMagFreqDist> trimMFDs(
             List<IncrementalMagFreqDist> mfdConstraints, double minMag, double maxMag) {
 
         List<IncrementalMagFreqDist> newMFDConstraints = new ArrayList<>();
         for (IncrementalMagFreqDist originalMFD : mfdConstraints) {
-            newMFDConstraints.add(restrictMFDConstraintMagRange(originalMFD, minMag, maxMag));
+            newMFDConstraints.add(trimMFD(originalMFD, minMag, maxMag));
         }
         return newMFDConstraints;
     }
 
     public static UncertainIncrMagFreqDist addMfdUncertainty(
             IncrementalMagFreqDist mfd,
-            double minimize_below_mag,
-            double minimizeAboveMag,
             double power,
             double uncertaintyScalar) {
-        int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
-        int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
         int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
-        Preconditions.checkArgument(
-                minMagBin <= firstWeightPowerBin,
-                "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
-        Preconditions.checkArgument(
-                firstWeightPowerBin <= maxMagBin,
-                "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
                         * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);

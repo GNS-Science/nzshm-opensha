@@ -175,8 +175,6 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,
-                            config.minMag,
-                            config.maxMag,
                             config.mfdUncertaintyPower,
                             config.mfdUncertaintyScalar);
 
