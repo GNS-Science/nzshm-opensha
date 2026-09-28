@@ -170,14 +170,7 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillBelowMag(
-                            tempTargetOnFaultSupraSeisMFD, config.minMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillAboveMag(
-                            targetOnFaultSupraSeisMFDs, config.maxMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.swapZeros(targetOnFaultSupraSeisMFDs, 1.0e-20);
+            targetOnFaultSupraSeisMFDs = new IncrementalMagFreqDist(tempTargetOnFaultSupraSeisMFD);
             //  targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(

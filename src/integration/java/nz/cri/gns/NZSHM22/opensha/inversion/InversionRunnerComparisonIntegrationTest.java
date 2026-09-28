@@ -7,6 +7,7 @@ import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.*;
@@ -31,6 +32,12 @@ public class InversionRunnerComparisonIntegrationTest {
 
     public static final double DELTA = 1e-10;
 
+    /** Minimum magnitude used by the magnitude filtering comparison test. */
+    public static final double FILTER_MIN_MAG = 7.05;
+
+    /** Maximum magnitude used by the magnitude filtering comparison test. */
+    public static final double FILTER_MAX_MAG = 8.05;
+
     @Test
     public void testInversionRunnerGeneratesIdenticalRatesToCrustalRunner() throws Exception {
         InversionRunner inversionRunner =
@@ -39,6 +46,33 @@ public class InversionRunnerComparisonIntegrationTest {
                 configureCrustalRunner(createCrustalTestRupSet());
 
         assertRunnersEquals(inversionRunner, crustalRunner);
+    }
+
+    /**
+     * Both runners filter their input rupture set to the same magnitude range, so they must still
+     * see the same ruptures and produce the same rates. This verifies that the joint runner's
+     * minimum and maximum magnitude filtering matches the classic crustal runner's.
+     */
+    @Test
+    public void testInversionRunnerGeneratesIdenticalRatesToCrustalRunnerWithMagBounds()
+            throws Exception {
+        InversionRunner inversionRunner =
+                configureInversionRunnerForCrustal(createMagBoundsTestRupSet());
+        PartitionConfig crustalPartition = inversionRunner.getConfig().partitions.get(0);
+        crustalPartition.minMag = FILTER_MIN_MAG;
+        crustalPartition.maxMag = FILTER_MAX_MAG;
+
+        NZSHM22_CrustalInversionRunner crustalRunner =
+                configureCrustalRunner(createMagBoundsTestRupSet());
+        crustalRunner.setMinMags(FILTER_MIN_MAG, FILTER_MIN_MAG);
+        crustalRunner.setMaxMags(
+                crustalPartition.maxMagType.name(), FILTER_MAX_MAG, FILTER_MAX_MAG);
+
+        assertRunnersEquals(inversionRunner, crustalRunner);
+
+        // both bounds have to have dropped a rupture, otherwise the test would not exercise the
+        // filtering. See createMagBoundsTestRupSet() for the magnitudes involved.
+        assertEquals(3, inversionRunner.getConfig().ruptureSet.getNumRuptures());
     }
 
     @Test
@@ -212,6 +246,31 @@ public class InversionRunnerComparisonIntegrationTest {
         return rupSet;
     }
 
+    /**
+     * Creates a crustal rupture set whose magnitudes straddle {@link #FILTER_MIN_MAG} and {@link
+     * #FILTER_MAX_MAG}, so that filtering by those bounds drops ruptures at both ends. The
+     * recalculated magnitudes are, in rupture order, 6.16, 7.40, 7.17, 7.91, and 8.70, so the first
+     * rupture is below the minimum magnitude and the last one is above the bin of the maximum
+     * magnitude.
+     *
+     * @return the unfiltered rupture set
+     */
+    private FaultSystemRupSet createMagBoundsTestRupSet() throws DocumentException, IOException {
+        List<Integer> allSections = new ArrayList<>();
+        for (int section = 0; section < 30; section++) {
+            allSections.add(section);
+        }
+        return createRupSet(
+                NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
+                ScalingRelationships.SHAW_2009_MOD,
+                List.of(
+                        List.of(5),
+                        List.of(0, 1),
+                        List.of(5, 6, 7, 8, 9),
+                        List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                        allSections));
+    }
+
     private FaultSystemRupSet createSubductionTestRupSet() throws DocumentException, IOException {
         FaultSystemRupSet rupSet =
                 createRupSet(
@@ -250,7 +309,7 @@ public class InversionRunnerComparisonIntegrationTest {
         return new InversionRunner(config);
     }
 
-    private NZSHM22_AbstractInversionRunner configureCrustalRunner(FaultSystemRupSet testRupSet)
+    private NZSHM22_CrustalInversionRunner configureCrustalRunner(FaultSystemRupSet testRupSet)
             throws IOException {
         ArchiveInput archiveInput = TestHelpers.archiveInput(testRupSet);
 
