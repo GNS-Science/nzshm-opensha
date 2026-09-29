@@ -77,10 +77,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
                             mfdUncertaintyWeightedConstraintScalar));
         }
 
-        // original for Eq/InEq constraints
-        //			List<MFD_InversionConstraint> mfdEqIneqConstraints = new ArrayList<>();
-        mfdEqIneqConstraints.add(targetOnFaultSupraSeisMFD);
-
         setParent(invRupSet);
 
         // trim all MFDs to the magnitude range of interest
@@ -94,14 +90,13 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         this.totalTargetGR = MFDManipulation.trimMFD(totalTargetGR, mfdMinMag, maxMag);
         this.targetOnFaultSupraSeisMFD =
                 MFDManipulation.trimMFD(targetOnFaultSupraSeisMFD, mfdMinMag, maxMag);
-        this.mfdEqIneqConstraints =
-                MFDManipulation.trimMFDs(mfdEqIneqConstraints, mfdMinMag, maxMag);
+        this.mfdEqIneqConstraints.add(this.targetOnFaultSupraSeisMFD);
         List<UncertainIncrMagFreqDist> trimmedUncertaintyConstraints = new ArrayList<>();
         for (UncertainIncrMagFreqDist mfd : mfdUncertaintyConstraints) {
             trimmedUncertaintyConstraints.add(MFDManipulation.trimMFD(mfd, mfdMinMag, maxMag));
         }
         this.mfdUncertaintyConstraints = trimmedUncertaintyConstraints;
-        this.mfdConstraintComponents = List.of(targetOnFaultSupraSeisMFD);
+        this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
     }
 
     public List<IncrementalMagFreqDist> getMfdEqIneqConstraints() {
