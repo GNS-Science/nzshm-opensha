@@ -3,6 +3,9 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+
+import nz.earthsciences.jupyterlogger.CSVCell;
+import nz.earthsciences.jupyterlogger.JupyterLogger;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
@@ -97,6 +100,17 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         }
         this.mfdUncertaintyConstraints = trimmedUncertaintyConstraints;
         this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
+
+        JupyterLogger.logger().addMarkDown("## Subduction MFDs");
+        CSVCell csvCell =
+                JupyterLogger.logger()
+                        .addCSV("NZSHM22_SubductionInversionTargetMFDs_init", "magnitude")
+                        .showTable(false);
+        csvCell.setIndex(totalTargetGR.xValues());
+        csvCell.addColumn("totalTargetGR.all", totalTargetGR.yValues());
+        JupyterLogger.logger()
+                .addLinePlot("NZSHM22_SubductionInversionTargetMFDs_init", csvCell)
+                .setYLog();
     }
 
     public List<IncrementalMagFreqDist> getMfdEqIneqConstraints() {
