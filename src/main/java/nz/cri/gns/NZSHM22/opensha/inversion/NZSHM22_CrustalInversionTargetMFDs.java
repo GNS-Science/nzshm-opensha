@@ -253,7 +253,7 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
-            targetOnFaultSupraSeisMFDs = new IncrementalMagFreqDist(tempTargetOnFaultSupraSeisMFD);
+            targetOnFaultSupraSeisMFDs = MFDManipulation.trimMFD(new IncrementalMagFreqDist(tempTargetOnFaultSupraSeisMFD), minMag, maxMag);
             targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
