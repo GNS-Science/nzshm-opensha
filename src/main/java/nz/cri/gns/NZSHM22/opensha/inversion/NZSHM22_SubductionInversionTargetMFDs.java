@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
-
 import nz.earthsciences.jupyterlogger.CSVCell;
 import nz.earthsciences.jupyterlogger.JupyterLogger;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -72,14 +71,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
         targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
 
-        if (mfdUncertaintyWeightedConstraintWt > 0.0) {
-            mfdUncertaintyConstraints.add(
-                    MFDManipulation.addMfdUncertainty(
-                            targetOnFaultSupraSeisMFD,
-                            mfdUncertaintyWeightedConstraintPower,
-                            mfdUncertaintyWeightedConstraintScalar));
-        }
-
         setParent(invRupSet);
 
         // trim all MFDs to the magnitude range of interest
@@ -94,12 +85,14 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         this.targetOnFaultSupraSeisMFD =
                 MFDManipulation.trimMFD(targetOnFaultSupraSeisMFD, mfdMinMag, maxMag);
         this.mfdEqIneqConstraints.add(this.targetOnFaultSupraSeisMFD);
-        List<UncertainIncrMagFreqDist> trimmedUncertaintyConstraints = new ArrayList<>();
-        for (UncertainIncrMagFreqDist mfd : mfdUncertaintyConstraints) {
-            trimmedUncertaintyConstraints.add(MFDManipulation.trimMFD(mfd, mfdMinMag, maxMag));
-        }
-        this.mfdUncertaintyConstraints = trimmedUncertaintyConstraints;
         this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
+        if (mfdUncertaintyWeightedConstraintWt > 0.0) {
+            mfdUncertaintyConstraints.add(
+                    MFDManipulation.addMfdUncertainty2(
+                            this.targetOnFaultSupraSeisMFD,
+                            mfdUncertaintyWeightedConstraintPower,
+                            mfdUncertaintyWeightedConstraintScalar));
+        }
 
         JupyterLogger.logger().addMarkDown("## Subduction MFDs");
         CSVCell csvCell =

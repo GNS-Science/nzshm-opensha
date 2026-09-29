@@ -175,7 +175,9 @@ public class MFDManipulation {
 
     public static UncertainIncrMagFreqDist addMfdUncertainty(
             IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
-        int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
+        int firstWeightPowerBin = mfd.getXIndex(FIRST_WEIGHT_POWER_MAG);
+        Preconditions.checkArgument(
+                firstWeightPowerBin >= 0, "MFD must contain magnitude " + FIRST_WEIGHT_POWER_MAG);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
                         * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
@@ -211,6 +213,24 @@ public class MFDManipulation {
             }
         }
         return result;
+    }
+
+    public static UncertainIncrMagFreqDist addMfdUncertainty2(
+            IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
+        int firstWeightPowerBin = mfd.getXIndex(FIRST_WEIGHT_POWER_MAG);
+        Preconditions.checkArgument(
+                firstWeightPowerBin >= 0, "MFD must contain magnitude " + FIRST_WEIGHT_POWER_MAG);
+        double firstWeightPower =
+                Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
+                        * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
+        EvenlyDiscretizedFunc stdDevs =
+                new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
+        for (int i = 0; i < stdDevs.size(); i++) {
+            double rate = mfd.getY(i);
+            double stdDev = firstWeightPower / Math.pow(rate, power - 1);
+            stdDevs.set(i, stdDev);
+        }
+        return new UncertainIncrMagFreqDist(mfd, stdDevs);
     }
 
     /**
