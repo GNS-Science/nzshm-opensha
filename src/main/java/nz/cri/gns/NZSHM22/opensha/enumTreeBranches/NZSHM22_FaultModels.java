@@ -20,6 +20,7 @@ import scratch.UCERF3.enumTreeBranches.FaultModels;
 public enum NZSHM22_FaultModels implements LogicTreeNode {
     CUSTOM("The fault model is specified in a file outside the logic tree", null, "4"),
 
+    // CRUSTAL/UPPER-PLATE
     // CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults,
     // with depths scaled from Dfc and CFM Domains
     // depth filtering: nothing shallower than 3.9
@@ -39,100 +40,52 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
             "cfm_1_0_domain_no_tvz.xml",
             "4"),
 
-    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults,
-    // with shallower TVZ depths
-    CFM_0_9D_ALL_D90(
-            "CFM 0.9revD all NZ faults, depth 90, with shallower TVZ depths",
-            "cfm_0_9d_d90_all.xml"),
-    CFM_0_9D_SANSTVZ_D90(
-            "CFM 0.9revD sans TVZ, depth 90, with shallower TVZ depths", "cfm_0_9d_d90_no_tvz.xml"),
-
-    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
-    CFM_0_9C_ALL_D90("CFM 0.9revC all NZ faults, depth 90", "cfm_0_9c_d90_all.xml"),
-    CFM_0_9C_SANSTVZ_D90("CFM 0.9revC sans TVZ, depth 90", "cfm_0_9c_d90_no_tvz.xml"),
-
-    CFM_0_9C_ALL_2010(
-            "CFM 0.9revC all NZ faults, 2010 Stirling depth",
-            "cfm_0_9c_d90_all_stirling_depths.xml"),
-    CFM_0_9C_SANSTVZ_2010(
-            "CFM 0.9revC sans TVZ, 2010 Stirling depth", "cfm_0_9c_d90_no_tvz_stirling_depths.xml"),
-
-    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
-    @Deprecated
-    CFM_0_9B_ALL_D90("CFM 0.9revB all NZ faults, depth 90", "cfm_0_9b_d90_all.xml"),
-    @Deprecated
-    CFM_0_9B_SANSTVZ_D90("CFM 0.9revB sans TVZ, depth 90", "cfm_0_9b_d90_no_tvz.xml"),
-    @Deprecated
-    CFM_0_9B_ALL_2010(
-            "CFM 0.9revB all NZ faults, 2010 Stirling depth",
-            "cfm_0_9b_d90_all_stirling_depths.xml"),
-    @Deprecated
-    CFM_0_9B_SANSTVZ_2010(
-            "CFM 0.9revB sans TVZ, 2010 Stirling depth", "cfm_0_9b_d90_no_tvz_stirling_depths.xml"),
-
-    // These for deprecated models have their rake 180 degrees off
-    @Deprecated
-    CFM_0_9A_ALL_D90("CFM 0.9revA all NZ faults, depth 90", "cfm_0_9a_d90_all.xml"),
-    @Deprecated
-    CFM_0_9A_SANSTVZ_D90("CFM 0.9revA sans TVZ, depth 90", "cfm_0_9a_d90_no_tvz.xml"),
-    @Deprecated
-    CFM_0_9_ALL_2010(
-            "CFM 0.9 all NZ faults, 2010 Stirling depth", "cfm_0_9_d90_all_stirling_depths.xml"),
-    @Deprecated
-    CFM_0_9_SANSTVZ_2010(
-            "CFM 0.9 sans TVZ, 2010 Stirling depth", "cfm_0_9_d90_no_tvz_stirling_depths.xml"),
-
-    CFM_0_9_ALL_D90("CFM 0.9 all NZ faults, depth 90", "cfm_0_9_d90_all.xml"),
-    CFM_0_9_SANSTVZ_D90("CFM 0.9 sans TVZ, depth 90", "cfm_0_9_d90_no_tvz.xml"),
-
-    CFM_0_3_SANSTVZ("CFM 0.3 sans TVZ", "SANSTVZ2_crustal_opensha.xml"),
-
-    // these two are missing the slip_deficit (mm/yr) column
-    //    SBD_0_1_HKR_30("Hikurangi 30km", "subduction_tile_parameters_30.csv", 10000),
-    //    SBD_0_1_HKR_10("Hikurangi 10km", "subduction_tile_parameters.csv", 10000),
-    SBD_0_1_HKR_KRM_10(
-            "Hikurangi,Kermadec 10km",
-            "hk_tile_parameters_10.csv",
-            10000,
-            PartitionPredicate.HIKURANGI),
-    SBD_0_1_HKR_KRM_30(
-            "Hikurangi,Kermadec 30km",
-            "hk_tile_parameters_30.csv",
+    
+    // HIKURANGI-KERMADEC
+    // Trench-creeping model used in 2022    
+    SBD_0_2A_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape, creeping at trench",
+            "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
 
-    SBD_0_1_HKR_LR_10(
-            "Hikurangi, Kermadec to Louisville ridge, 10km",
-            "hk_tile_parameters_10-short.csv",
-            10000,
-            PartitionPredicate.HIKURANGI),
-    SBD_0_1_HKR_LR_30(
-            "Hikurangi, Kermadec to Louisville ridge, 30km",
-            "hk_tile_parameters_30-short.csv",
+    // 2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
+    SBD_HKR_TC_30_TRIM(
+            "2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
+            "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30_trimmed.csv",
             10000,
             PartitionPredicate.HIKURANGI),
 
-    SBD_0_1_HKR_LR_10_FEC(
-            "Hikurangi, Kermadec to Louisville ridge, 10km - with slip deficit smoothed near east cape",
-            "hk_tile_parameters_10-short-flat-eastcape.csv",
+    // Trench-creeping with 15x15km patches, trimmed at 25.5 S - Sept 2026
+    SBD_HKR_TC_15_TRIM(
+            "Trench-creeping with 15x15km patches, trimmed at 25.5 S - Sept 2026",
+            "hk_1557_patch_creeping_trench_nearest_boundary.csv",
             10000,
-            PartitionPredicate.HIKURANGI),
-    SBD_0_1_HKR_LR_30_FEC(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "hk_tile_parameters_30-short-flat-eastcape.csv",
-            10000,
-            PartitionPredicate.HIKURANGI),
-
-    SBD_0_2_HKR_LR_30(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv",
+            PartitionPredicate.HIKURANGI),    
+    
+    // Trench-locked model used in 2022
+    SBD_0_3_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
+            "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
 
-    // this model is mislabled 30km, it has 15km tiles
-    SBD_0_1_PUY_30(
-            "Puysegur, 30km, 50% coupling",
-            "puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000, PartitionPredicate.PUYSEGUR),
+    // 2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
+    SBD_HKR_TL_30_TRIM(
+            "2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
+            "hk_tile_parameters_locked_trench_slip_deficit_v2_30_trimmed.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    
+    // Trench-locked with 15x15km patches, trimmed at 25.5 S - Sept 2026
+    SBD_HKR_TL_15_TRIM(
+            "Trench-locked with 15x15km patches, trimmed at 25.5 S - Sept 2026",
+            "hk_1557_patch_locked_trench_nearest_boundary.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    
+
+    // PUYSEGUR
     // dip direction for SBD_01_PUY_30 was to the west, causing the fault tiles to be "louvered" off
     // the sudcution interface surface
     // SBD_0_2_PUY_15 corrects the dip direction (right-hand rule) and indicates the correct tile
@@ -143,26 +96,109 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
             10000,
             PartitionPredicate.PUYSEGUR),
 
-    // the following three FaultModels have been replaced by DeformationModels
+    
+    // Deprecated files in folder old
+    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults,
+    // with shallower TVZ depths
+    CFM_0_9D_ALL_D90(
+            "CFM 0.9revD all NZ faults, depth 90, with shallower TVZ depths",
+            "old/cfm_0_9d_d90_all.xml"),
+    CFM_0_9D_SANSTVZ_D90(
+            "CFM 0.9revD sans TVZ, depth 90, with shallower TVZ depths", "old/cfm_0_9d_d90_no_tvz.xml"),
 
+    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
+    CFM_0_9C_ALL_D90("CFM 0.9revC all NZ faults, depth 90", "old/cfm_0_9c_d90_all.xml"),
+    CFM_0_9C_SANSTVZ_D90("CFM 0.9revC sans TVZ, depth 90", "old/cfm_0_9c_d90_no_tvz.xml"),
+
+    CFM_0_9C_ALL_2010(
+            "CFM 0.9revC all NZ faults, 2010 Stirling depth",
+            "old/cfm_0_9c_d90_all_stirling_depths.xml"),
+    CFM_0_9C_SANSTVZ_2010(
+            "CFM 0.9revC sans TVZ, 2010 Stirling depth", "old/cfm_0_9c_d90_no_tvz_stirling_depths.xml"),
+
+    // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
     @Deprecated
-    SBD_0_2A_HKR_LR_30(
+    CFM_0_9B_ALL_D90("CFM 0.9revB all NZ faults, depth 90", "old/cfm_0_9b_d90_all.xml"),
+    @Deprecated
+    CFM_0_9B_SANSTVZ_D90("CFM 0.9revB sans TVZ, depth 90", "old/cfm_0_9b_d90_no_tvz.xml"),
+    @Deprecated
+    CFM_0_9B_ALL_2010(
+            "CFM 0.9revB all NZ faults, 2010 Stirling depth",
+            "old/cfm_0_9b_d90_all_stirling_depths.xml"),
+    @Deprecated
+    CFM_0_9B_SANSTVZ_2010(
+            "CFM 0.9revB sans TVZ, 2010 Stirling depth", "old/cfm_0_9b_d90_no_tvz_stirling_depths.xml"),
+
+    // These for deprecated models have their rake 180 degrees off
+    @Deprecated
+    CFM_0_9A_ALL_D90("CFM 0.9revA all NZ faults, depth 90", "old/cfm_0_9a_d90_all.xml"),
+    @Deprecated
+    CFM_0_9A_SANSTVZ_D90("CFM 0.9revA sans TVZ, depth 90", "old/cfm_0_9a_d90_no_tvz.xml"),
+    @Deprecated
+    CFM_0_9_ALL_2010(
+            "CFM 0.9 all NZ faults, 2010 Stirling depth", "old/cfm_0_9_d90_all_stirling_depths.xml"),
+    @Deprecated
+    CFM_0_9_SANSTVZ_2010(
+            "CFM 0.9 sans TVZ, 2010 Stirling depth", "old/cfm_0_9_d90_no_tvz_stirling_depths.xml"),
+
+    CFM_0_9_ALL_D90("CFM 0.9 all NZ faults, depth 90", "old/cfm_0_9_d90_all.xml"),
+    CFM_0_9_SANSTVZ_D90("CFM 0.9 sans TVZ, depth 90", "old/cfm_0_9_d90_no_tvz.xml"),
+
+    CFM_0_3_SANSTVZ("CFM 0.3 sans TVZ", "old/SANSTVZ2_crustal_opensha.xml"),
+
+    // these two are missing the slip_deficit (mm/yr) column
+    //    SBD_0_1_HKR_30("Hikurangi 30km", "subduction_tile_parameters_30.csv", 10000),
+    //    SBD_0_1_HKR_10("Hikurangi 10km", "subduction_tile_parameters.csv", 10000),
+    SBD_0_1_HKR_KRM_10(
+            "Hikurangi,Kermadec 10km",
+            "old/hk_tile_parameters_10.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    SBD_0_1_HKR_KRM_30(
+            "Hikurangi,Kermadec 30km",
+            "old/hk_tile_parameters_30.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+
+    SBD_0_1_HKR_LR_10(
+            "Hikurangi, Kermadec to Louisville ridge, 10km",
+            "old/hk_tile_parameters_10-short.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    SBD_0_1_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km",
+            "old/hk_tile_parameters_30-short.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+
+    SBD_0_1_HKR_LR_10_FEC(
+            "Hikurangi, Kermadec to Louisville ridge, 10km - with slip deficit smoothed near east cape",
+            "old/hk_tile_parameters_10-short-flat-eastcape.csv",
+            10000,
+            PartitionPredicate.HIKURANGI),
+    SBD_0_1_HKR_LR_30_FEC(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv",
+            "old/hk_tile_parameters_30-short-flat-eastcape.csv",
             10000,
             PartitionPredicate.HIKURANGI),
-    @Deprecated
-    SBD_0_3_HKR_LR_30(
-            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
-            "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv",
+
+    SBD_0_2_HKR_LR_30(
+            "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
+            "old/hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
-    @Deprecated
-    SBD_0_4_HKR_LR_30(
+
+ SBD_0_4_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
-            "hk_tile_parameters_highkermsliprate_v2.csv",
+            "old/hk_tile_parameters_highkermsliprate_v2.csv",
             10000,
             PartitionPredicate.HIKURANGI);
+    
+    // this model is mislabled 30km, it has 15km tiles
+    SBD_0_1_PUY_30(
+            "Puysegur, 30km, 50% coupling",
+            "old/puysegur_tiles_30km_maxd60km_halfcoupled.csv", 10000, PartitionPredicate.PUYSEGUR),
+
 
     private static final String RESOURCE_PATH = "/faultModels/";
 
