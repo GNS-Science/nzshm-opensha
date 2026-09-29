@@ -5,10 +5,13 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
+import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
+import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import org.opensha.sha.magdist.SummedMagFreqDist;
 
 public class MFDManipulationTest {
 
@@ -214,6 +217,69 @@ public class MFDManipulationTest {
     }
 
     @Test
+    public void testTrimUncertainMFD() {
+        IncrementalMagFreqDist dist = trimTestDist();
+        dist.setName("uncertain");
+        EvenlyDiscretizedFunc stdDevs =
+                new EvenlyDiscretizedFunc(dist.getMinX(), dist.size(), dist.getDelta());
+        for (int i = 0; i < BINS; i++) {
+            stdDevs.set(i, i * 10);
+        }
+        UncertainIncrMagFreqDist uncertain = new UncertainIncrMagFreqDist(dist, stdDevs);
+        uncertain.setName(dist.getName());
+
+        UncertainIncrMagFreqDist actual = MFDManipulation.trimMFD(uncertain, 7.0, 7.39);
+
+        assertEquals("uncertain", actual.getName());
+        assertEquals(7.05, actual.getMinX(), 1e-9);
+        assertEquals(7.35, actual.getMaxX(), 1e-9);
+        assertEquals(List.of(20.0, 21.0, 22.0, 23.0), actual.yValues());
+        assertEquals(7.05, actual.getStdDevs().getMinX(), 1e-9);
+        assertEquals(List.of(200.0, 210.0, 220.0, 230.0), actual.getStdDevs().yValues());
+    }
+
+    @Test
+    public void testTrimGRMFD() {
+        GutenbergRichterMagFreqDist gr = new GutenbergRichterMagFreqDist(5.05, BINS, 0.1);
+        gr.setAllButTotMoRate(5.05, 8.05, 1.0, 1.0);
+
+        GutenbergRichterMagFreqDist actual = MFDManipulation.trimMFD(gr, 7.0, 8.55);
+
+        assertEquals(7.05, actual.getMinX(), 1e-9);
+        assertEquals(8.55, actual.getMaxX(), 1e-9);
+        assertEquals(7.05, actual.getMagLower(), 1e-9);
+        assertEquals(8.05, actual.getMagUpper(), 1e-9);
+        assertEquals(1.0, actual.get_bValue(), 1e-9);
+        for (int i = 0; i < actual.size(); i++) {
+            assertEquals(gr.getY(actual.getX(i)), actual.getY(i), 0);
+        }
+        assertEquals(gr.getCumRate(7.05), actual.getTotCumRate(), 1e-12);
+    }
+
+    @Test
+    public void testTrimGRMFDOutsideNonZeroRange() {
+        GutenbergRichterMagFreqDist gr = new GutenbergRichterMagFreqDist(5.05, BINS, 0.1);
+        gr.setAllButTotMoRate(5.05, 6.05, 1.0, 1.0);
+
+        GutenbergRichterMagFreqDist actual = MFDManipulation.trimMFD(gr, 7.05, 7.35);
+
+        assertEquals(List.of(0.0, 0.0, 0.0, 0.0), actual.yValues());
+    }
+
+    @Test
+    public void testTrimSummedMFD() {
+        SummedMagFreqDist summed = new SummedMagFreqDist(5.05, BINS, 0.1);
+        summed.addIncrementalMagFreqDist(trimTestDist());
+        summed.setName("summed");
+
+        SummedMagFreqDist actual = MFDManipulation.trimMFD(summed, 7.0, 7.39);
+
+        assertEquals("summed", actual.getName());
+        assertEquals(7.05, actual.getMinX(), 1e-9);
+        assertEquals(List.of(20.0, 21.0, 22.0, 23.0), actual.yValues());
+    }
+
+    @Test
     public void testTrimMFDShape() {
         IncrementalMagFreqDist dist = trimTestDist();
         IncrementalMagFreqDist actual = MFDManipulation.trimMFD(dist, 7.05, 8.05);
@@ -247,10 +313,27 @@ public class MFDManipulationTest {
         // below min / above max
         assertTrimRejected(4.95, 7.05);
         assertTrimRejected(7.05, 9.05);
-        // not bin centres
-        assertTrimRejected(7.0, 8.05);
-        assertTrimRejected(7.05, 8.0);
-        assertTrimRejected(7.07, 8.05);
+        // min above max
+        assertTrimRejected(8.05, 7.05);
+    }
+
+    @Test
+    public void testTrimMFDSnapsToBinCentres() {
+        IncrementalMagFreqDist dist = trimTestDist();
+
+        // bin edges belong to the upper bin
+        IncrementalMagFreqDist actual = MFDManipulation.trimMFD(dist, 7.0, 7.3);
+        assertEquals(7.05, actual.getMinX(), 1e-9);
+        assertEquals(7.35, actual.getMaxX(), 1e-9);
+        assertEquals(List.of(20.0, 21.0, 22.0, 23.0), actual.yValues());
+
+        // values inside a bin
+        actual = MFDManipulation.trimMFD(dist, 7.07, 7.29);
+        assertEquals(List.of(20.0, 21.0, 22.0), actual.yValues());
+
+        // the full range of the MFD
+        actual = MFDManipulation.trimMFD(dist, 5.0, 8.99);
+        assertEquals(dist.yValues(), actual.yValues());
     }
 
     @Test

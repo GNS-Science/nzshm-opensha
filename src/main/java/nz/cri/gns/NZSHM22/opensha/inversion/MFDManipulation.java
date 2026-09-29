@@ -6,38 +6,150 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
+import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
+import org.opensha.sha.magdist.SummedMagFreqDist;
 
 public class MFDManipulation {
 
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
-    public static boolean isBinCenter(IncrementalMagFreqDist mfd, double magnitude) {
-        double nearest = mfd.getX(mfd.getClosestXIndex(magnitude));
-        return Math.abs(nearest - magnitude) < 0.000001;
-    }
-
-    /** This method returns the input MFD constraint restricted between minMag and maxMag. */
+    /**
+     * Returns the input MFD restricted between minMag and maxMag. minMag and maxMag are snapped to
+     * the centres of the bins that contain them.
+     *
+     * @param originalMFD the MFD to trim
+     * @param minMag the new minimum magnitude
+     * @param maxMag the new maximum magnitude
+     * @return the trimmed MFD
+     */
     public static IncrementalMagFreqDist trimMFD(
             IncrementalMagFreqDist originalMFD, double minMag, double maxMag) {
+        int[] bins = trimBins(originalMFD, minMag, maxMag);
+        int startBin = bins[0];
+        int endBin = bins[1];
 
-        Preconditions.checkArgument(originalMFD.getMinX() <= minMag);
-        Preconditions.checkArgument(maxMag <= originalMFD.getMaxX());
-        Preconditions.checkArgument(isBinCenter(originalMFD, minMag));
-        Preconditions.checkArgument(isBinCenter(originalMFD, maxMag));
+        int num = endBin - startBin + 1;
+        IncrementalMagFreqDist newMFD =
+                new IncrementalMagFreqDist(
+                        originalMFD.getX(startBin), originalMFD.getX(endBin), num);
+        copyMetadata(originalMFD, newMFD);
 
-        double delta = originalMFD.getDelta();
-        int num = (int) Math.round((maxMag - minMag) / delta + 1.0);
-
-        IncrementalMagFreqDist newMFD = new IncrementalMagFreqDist(minMag, maxMag, num);
-        newMFD.setName(originalMFD.getName());
-        newMFD.setTolerance(originalMFD.getTolerance());
-        newMFD.setRegion(originalMFD.getRegion());
-
-        int startBin = originalMFD.getClosestXIndex(minMag);
         for (int i = 0; i < num; i++) {
             newMFD.set(i, originalMFD.getY(i + startBin));
         }
+        return newMFD;
+    }
+
+    /**
+     * Returns the first and last bin index of the range between minMag and maxMag. minMag and
+     * maxMag are snapped to the centres of the bins that contain them.
+     *
+     * @param originalMFD the MFD to trim
+     * @param minMag the new minimum magnitude
+     * @param maxMag the new maximum magnitude
+     * @return an array of the start bin and end bin, both inclusive
+     */
+    protected static int[] trimBins(
+            IncrementalMagFreqDist originalMFD, double minMag, double maxMag) {
+        double halfDelta = originalMFD.getDelta() / 2;
+        Preconditions.checkArgument(
+                minMag >= originalMFD.getMinX() - halfDelta, "minMag %s is below the MFD", minMag);
+        Preconditions.checkArgument(
+                maxMag < originalMFD.getMaxX() + halfDelta, "maxMag %s is above the MFD", maxMag);
+        int startBin = originalMFD.getClosestXIndex(minMag);
+        int endBin = originalMFD.getClosestXIndex(maxMag);
+        Preconditions.checkArgument(
+                startBin <= endBin, "minMag %s is above maxMag %s", minMag, maxMag);
+        return new int[] {startBin, endBin};
+    }
+
+    /** Copies name, tolerance and region from one MFD to another. */
+    protected static void copyMetadata(IncrementalMagFreqDist from, IncrementalMagFreqDist to) {
+        to.setName(from.getName());
+        to.setTolerance(from.getTolerance());
+        to.setRegion(from.getRegion());
+    }
+
+    /**
+     * Returns the input GR MFD restricted between minMag and maxMag. minMag and maxMag are snapped
+     * to the centres of the bins that contain them. magLower and magUpper are clipped to the new
+     * range. If the GR's non-zero range lies outside the new range, all rates are zero.
+     *
+     * @param originalMFD the MFD to trim
+     * @param minMag the new minimum magnitude
+     * @param maxMag the new maximum magnitude
+     * @return the trimmed MFD
+     */
+    public static GutenbergRichterMagFreqDist trimMFD(
+            GutenbergRichterMagFreqDist originalMFD, double minMag, double maxMag) {
+        int[] bins = trimBins(originalMFD, minMag, maxMag);
+        int startBin = bins[0];
+        int num = bins[1] - startBin + 1;
+        GutenbergRichterMagFreqDist newMFD =
+                new GutenbergRichterMagFreqDist(
+                        originalMFD.getX(startBin), num, originalMFD.getDelta());
+        copyMetadata(originalMFD, newMFD);
+
+        double magLower = Math.max(originalMFD.getMagLower(), newMFD.getMinX());
+        double magUpper = Math.min(originalMFD.getMagUpper(), newMFD.getMaxX());
+        if (magLower <= magUpper) {
+            double totCumRate = 0;
+            for (int i = 0; i < num; i++) {
+                totCumRate += originalMFD.getY(i + startBin);
+            }
+            newMFD.setAllButTotMoRate(magLower, magUpper, totCumRate, originalMFD.get_bValue());
+            // copy exact rates to avoid rounding differences
+            for (int i = 0; i < num; i++) {
+                newMFD.set(i, originalMFD.getY(i + startBin));
+            }
+        }
+        return newMFD;
+    }
+
+    /**
+     * Returns the input summed MFD restricted between minMag and maxMag. minMag and maxMag are
+     * snapped to the centres of the bins that contain them. The result contains a single summed
+     * component with the trimmed rates.
+     *
+     * @param originalMFD the MFD to trim
+     * @param minMag the new minimum magnitude
+     * @param maxMag the new maximum magnitude
+     * @return the trimmed MFD
+     */
+    public static SummedMagFreqDist trimMFD(
+            SummedMagFreqDist originalMFD, double minMag, double maxMag) {
+        IncrementalMagFreqDist trimmed =
+                trimMFD((IncrementalMagFreqDist) originalMFD, minMag, maxMag);
+        SummedMagFreqDist newMFD =
+                new SummedMagFreqDist(trimmed.getMinX(), trimmed.size(), trimmed.getDelta());
+        newMFD.addIncrementalMagFreqDist(trimmed);
+        copyMetadata(originalMFD, newMFD);
+        return newMFD;
+    }
+
+    /**
+     * Returns the input uncertain MFD restricted between minMag and maxMag, including its standard
+     * deviations. minMag and maxMag are snapped to the centres of the bins that contain them.
+     *
+     * @param originalMFD the MFD to trim
+     * @param minMag the new minimum magnitude
+     * @param maxMag the new maximum magnitude
+     * @return the trimmed MFD
+     */
+    public static UncertainIncrMagFreqDist trimMFD(
+            UncertainIncrMagFreqDist originalMFD, double minMag, double maxMag) {
+        IncrementalMagFreqDist trimmed =
+                trimMFD((IncrementalMagFreqDist) originalMFD, minMag, maxMag);
+        EvenlyDiscretizedFunc originalStdDevs = originalMFD.getStdDevs();
+        EvenlyDiscretizedFunc stdDevs =
+                new EvenlyDiscretizedFunc(trimmed.getMinX(), trimmed.size(), trimmed.getDelta());
+        int startBin = originalMFD.getClosestXIndex(trimmed.getMinX());
+        for (int i = 0; i < stdDevs.size(); i++) {
+            stdDevs.set(i, originalStdDevs.getY(i + startBin));
+        }
+        UncertainIncrMagFreqDist newMFD = new UncertainIncrMagFreqDist(trimmed, stdDevs);
+        copyMetadata(trimmed, newMFD);
         return newMFD;
     }
 
