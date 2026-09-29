@@ -106,8 +106,8 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
                 JupyterLogger.logger()
                         .addCSV("NZSHM22_SubductionInversionTargetMFDs_init", "magnitude")
                         .showTable(false);
-        csvCell.setIndex(totalTargetGR.xValues());
-        csvCell.addColumn("totalTargetGR.all", totalTargetGR.yValues());
+        csvCell.setIndex(this.totalTargetGR.xValues());
+        csvCell.addColumn("totalTargetGR.all", this.totalTargetGR.yValues());
         JupyterLogger.logger()
                 .addLinePlot("NZSHM22_SubductionInversionTargetMFDs_init", csvCell)
                 .setYLog();
