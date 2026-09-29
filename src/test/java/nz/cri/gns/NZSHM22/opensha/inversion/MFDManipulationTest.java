@@ -90,7 +90,7 @@ public class MFDManipulationTest {
             dist.set(i, i);
         }
 
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(dist, 0.5, 0.9);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty2(dist, 0.5, 0.9);
 
         assertEquals(
                 List.of(
@@ -143,7 +143,7 @@ public class MFDManipulationTest {
     @Test
     public void combinedUncertaintyFillBelowTest() {
         IncrementalMagFreqDist filled = fillBelowDist(8, 0);
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, 0.5, 0.4);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty2(filled, 0.5, 0.4);
         int indexMinMag = filled.getClosestXIndex(MFDManipulation.FIRST_WEIGHT_POWER_MAG);
 
         assertTrue(
@@ -151,7 +151,7 @@ public class MFDManipulationTest {
                 Double.isNaN(actual.getStdDevs().getY(indexMinMag)));
 
         filled = fillBelowDist(7.0, 7);
-        actual = MFDManipulation.addMfdUncertainty(filled, 0.5, 0.4);
+        actual = MFDManipulation.addMfdUncertainty2(filled, 0.5, 0.4);
 
         assertEquals(
                 "formula always comes out to 0.4*rate at FIRST_WEIGHT_POWER_MAG",

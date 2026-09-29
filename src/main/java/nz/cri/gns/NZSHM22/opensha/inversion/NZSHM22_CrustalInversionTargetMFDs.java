@@ -262,7 +262,11 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
-                            targetOnFaultSupraSeisMFDs, uncertaintyPower, uncertaintyScalar);
+                            targetOnFaultSupraSeisMFDs,
+                            minMag,
+                            maxMag,
+                            uncertaintyPower,
+                            uncertaintyScalar);
 
             JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
 

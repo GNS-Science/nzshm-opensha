@@ -15,6 +15,19 @@ public class MFDManipulation {
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
     /**
+     * Return true iff the MFD covers the specified magnitude.
+     *
+     * @param mfd an EvenlyDiscretizedFunc
+     * @param magnitude a magnitude
+     * @return whether the magnitude has a bin in the mfd
+     */
+    public static boolean containsMag(EvenlyDiscretizedFunc mfd, double magnitude) {
+        int bin = mfd.getClosestXIndex(magnitude);
+        double checkMag = mfd.getX(bin);
+        return Math.abs(magnitude - checkMag) < (mfd.getDelta() * 0.5);
+    }
+
+    /**
      * Returns the input MFD restricted between minMag and maxMag. minMag and maxMag are snapped to
      * the centres of the bins that contain them.
      *
@@ -174,10 +187,20 @@ public class MFDManipulation {
     }
 
     public static UncertainIncrMagFreqDist addMfdUncertainty(
-            IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
-        int firstWeightPowerBin = mfd.getXIndex(FIRST_WEIGHT_POWER_MAG);
+            IncrementalMagFreqDist mfd,
+            double minimize_below_mag,
+            double minimizeAboveMag,
+            double power,
+            double uncertaintyScalar) {
+        int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
+        int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
+        int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
         Preconditions.checkArgument(
-                firstWeightPowerBin >= 0, "MFD must contain magnitude " + FIRST_WEIGHT_POWER_MAG);
+                minMagBin <= firstWeightPowerBin,
+                "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
+        Preconditions.checkArgument(
+                firstWeightPowerBin <= maxMagBin,
+                "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
                         * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
@@ -185,7 +208,11 @@ public class MFDManipulation {
                 new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
         for (int i = 0; i < stdDevs.size(); i++) {
             double rate = mfd.getY(i);
-            double stdDev = firstWeightPower / Math.pow(rate, power - 1);
+            // TODO remove (rate == 1e-20) condition when it's no longer needed
+            double stdDev =
+                    ((i < minMagBin) || (maxMagBin < i) || rate == 1e-20)
+                            ? 1e-20
+                            : firstWeightPower / Math.pow(rate, power - 1);
             stdDevs.set(i, stdDev);
         }
         return new UncertainIncrMagFreqDist(mfd, stdDevs);
@@ -215,11 +242,15 @@ public class MFDManipulation {
         return result;
     }
 
+    // TODO: this replaces addMfdUncertainty once crustal is migrated
     public static UncertainIncrMagFreqDist addMfdUncertainty2(
             IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
-        int firstWeightPowerBin = mfd.getXIndex(FIRST_WEIGHT_POWER_MAG);
+
         Preconditions.checkArgument(
-                firstWeightPowerBin >= 0, "MFD must contain magnitude " + FIRST_WEIGHT_POWER_MAG);
+                containsMag(mfd, FIRST_WEIGHT_POWER_MAG),
+                "MFD must contain magnitude " + FIRST_WEIGHT_POWER_MAG);
+
+        int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
         double firstWeightPower =
                 Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
                         * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
