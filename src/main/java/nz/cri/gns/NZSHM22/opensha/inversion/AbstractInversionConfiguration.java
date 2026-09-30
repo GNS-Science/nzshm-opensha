@@ -344,10 +344,10 @@ public class AbstractInversionConfiguration implements XMLSaveable {
             // we have both MFD constraints, apply a transition mag from equality to
             // inequality
             List<IncrementalMagFreqDist> mfdEqualityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
+                    MFDManipulation.trimMFDs(
                             mfdConstraints, mfdConstraints.get(0).getMinX(), mfdTransitionMag);
             List<IncrementalMagFreqDist> mfdInequalityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
+                    MFDManipulation.trimMFDs(
                             mfdConstraints, mfdTransitionMag, mfdConstraints.get(0).getMaxX());
 
             setMagnitudeEqualityConstraintWt(mfdEqualityConstraintWt);

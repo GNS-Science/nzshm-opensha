@@ -68,12 +68,12 @@ public class SharedConstraintGenerator {
             // we have both MFD constraints, apply a transition mag from equality to
             // inequality
             mfdEqualityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
+                    MFDManipulation.trimMFDs(
                             config.mfdConstraints,
                             config.mfdConstraints.get(0).getMinX(),
                             config.mfdTransitionMag);
             mfdInequalityConstraints =
-                    MFDManipulation.restrictMFDConstraintMagRange(
+                    MFDManipulation.trimMFDs(
                             config.mfdConstraints,
                             config.mfdTransitionMag,
                             config.mfdConstraints.get(0).getMaxX());

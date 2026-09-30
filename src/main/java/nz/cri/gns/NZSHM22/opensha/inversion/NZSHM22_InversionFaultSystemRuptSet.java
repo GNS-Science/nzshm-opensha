@@ -419,7 +419,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             System.err.println(
                     "The rupture set does not yet use the modular format which is required for this inversion.");
             System.err.println(
-                    "Please run FaultSectionProperties.main() with the appropriate parameters to convert the rupture set to the modular format and try again.");
+                    "Please run RupSetPropertyBackfill.main() with the appropriate parameters to convert the rupture set to the modular format and try again.");
             throw new IOException("Rupture set not in modular format");
         }
         return rupSet;

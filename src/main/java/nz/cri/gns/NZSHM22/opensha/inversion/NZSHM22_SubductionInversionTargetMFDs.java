@@ -1,7 +1,10 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import nz.earthsciences.jupyterlogger.CSVCell;
+import nz.earthsciences.jupyterlogger.JupyterLogger;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
@@ -32,20 +35,14 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
  */
 public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs {
 
-    static boolean MFD_STATS = true; // print some curves for analytics
-
-    //	// discretization parameters for MFDs
+    // discretization parameters for MFDs
     public static final double MIN_MAG = 5.05; //
     public static final double MAX_MAG = 9.75;
     public static final int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
     public static final double DELTA_MAG = 0.1;
 
-    // CBC NEW
-    public static final double MINIMIZE_RATE_TARGET = 1.0e-20d;
-
     protected List<IncrementalMagFreqDist> mfdEqIneqConstraints = new ArrayList<>();
     protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints = new ArrayList<>();
-    ;
 
     protected List<IncrementalMagFreqDist> mfdConstraintComponents;
 
@@ -62,11 +59,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         // make the total target GR MFD
         GutenbergRichterMagFreqDist totalTargetGR =
                 new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
-        if (MFD_STATS) {
-            System.out.println("totalTargetGR");
-            System.out.println(totalTargetGR.toString());
-            System.out.println("");
-        }
 
         // sorting out scaling
         double roundedMmaxOnFault =
@@ -74,66 +66,44 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         totalTargetGR.setAllButTotMoRate(
                 MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue); // TODO: revisit
 
-        if (MFD_STATS) {
-            System.out.println("totalTargetGR after setAllButTotMoRate");
-            System.out.println(totalTargetGR.toString());
-            System.out.println("");
-        }
-
-        // Doctor the target, setting a small value instead of 0
-        totalTargetGR.setYofX(
-                (x, y) -> {
-                    return (x < mfdMinMag) ? MINIMIZE_RATE_TARGET : y;
-                });
-
         SummedMagFreqDist targetOnFaultSupraSeisMFD =
                 new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
+        targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
 
-        if (MFD_STATS) {
-            System.out.println("targetOnFaultSupraSeisMFD (SummedMagFreqDist)");
-            System.out.println(targetOnFaultSupraSeisMFD.toString());
-            System.out.println("");
-        }
+        setParent(invRupSet);
 
-        //		// compute coupling coefficients
-        //		impliedOnFaultCouplingCoeff = (targetOnFaultSupraSeisMFD.getTotalMomentRate()
-        //				+ totalSubSeismoOnFaultMFD.getTotalMomentRate()) / origOnFltDefModMoRate;
-        //		impliedTotalCouplingCoeff = totalTargetGR.getTotalMomentRate() / (origOnFltDefModMoRate
-        // + offFltDefModMoRate);
-
-        // Build the MFD Constraints for regions
-        //		List<MFD_InversionConstraint> mfdUncertaintyConstraints = new ArrayList<>();
-
+        // trim all MFDs to the magnitude range of interest
+        Preconditions.checkState(
+                mfdMinMag <= invRupSet.getMaxMag(),
+                "mfdMinMag %s is above the rupture set max mag %s",
+                mfdMinMag,
+                invRupSet.getMaxMag());
+        // keep the upper bin of the existing MFDs
+        double maxMag = totalTargetGR.getMaxX();
+        this.totalTargetGR = MFDManipulation.trimMFD(totalTargetGR, mfdMinMag, maxMag);
+        this.targetOnFaultSupraSeisMFD =
+                MFDManipulation.trimMFD(targetOnFaultSupraSeisMFD, mfdMinMag, maxMag);
+        this.mfdEqIneqConstraints.add(this.targetOnFaultSupraSeisMFD);
+        this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
         if (mfdUncertaintyWeightedConstraintWt > 0.0) {
             mfdUncertaintyConstraints.add(
-                    MFDManipulation.addMfdUncertainty(
-                            targetOnFaultSupraSeisMFD,
-                            mfdMinMag,
-                            20,
+                    MFDManipulation.addMfdUncertainty2(
+                            this.targetOnFaultSupraSeisMFD,
                             mfdUncertaintyWeightedConstraintPower,
                             mfdUncertaintyWeightedConstraintScalar));
         }
 
-        // original for Eq/InEq constraints
-        //			List<MFD_InversionConstraint> mfdEqIneqConstraints = new ArrayList<>();
-        mfdEqIneqConstraints.add(targetOnFaultSupraSeisMFD);
-
-        // Now collect the target MFDS we might want for plots
-        targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
-        List<IncrementalMagFreqDist> mfdConstraintComponents = new ArrayList<>();
-        mfdConstraintComponents.add(targetOnFaultSupraSeisMFD);
-
-        setParent(invRupSet);
-        this.totalTargetGR = totalTargetGR;
-        this.targetOnFaultSupraSeisMFD = targetOnFaultSupraSeisMFD;
-        //		this.mfdConstraints = mfdConstraints;
-        this.mfdConstraintComponents = mfdConstraintComponents;
-
-        //		return new InversionTargetMFDs.Precomputed( invRupSet,
-        //				totalTargetGR, targetOnFaultSupraSeisMFD, null,
-        //				null, mfdConstraints, null);
-
+        JupyterLogger.logger().addMarkDown("## Subduction MFDs");
+        CSVCell csvCell =
+                JupyterLogger.logger()
+                        .addCSV("NZSHM22_SubductionInversionTargetMFDs_init", "magnitude")
+                        .showTable(false);
+        csvCell.setIndex(this.totalTargetGR.xValues());
+        csvCell.addColumn("totalTargetGR.all", this.totalTargetGR.yValues());
+        JupyterLogger.logger()
+                .addLinePlot("NZSHM22_SubductionInversionTargetMFDs_init", csvCell)
+                .setYLog();
     }
 
     public List<IncrementalMagFreqDist> getMfdEqIneqConstraints() {
@@ -150,10 +120,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         mfdConstraints.addAll(getMfdEqIneqConstraints());
         mfdConstraints.addAll(getMfdUncertaintyConstraints());
         return mfdConstraints;
-    }
-
-    public List<IncrementalMagFreqDist> getMFDConstraintComponents() {
-        return mfdConstraintComponents;
     }
 
     @Override
