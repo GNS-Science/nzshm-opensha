@@ -90,7 +90,7 @@ public class MFDManipulationTest {
             dist.set(i, i);
         }
 
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty2(dist, 0.5, 0.9);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(dist, 0.5, 0.9);
 
         assertEquals(
                 List.of(
@@ -143,7 +143,7 @@ public class MFDManipulationTest {
     @Test
     public void combinedUncertaintyFillBelowTest() {
         IncrementalMagFreqDist filled = fillBelowDist(8, 0);
-        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty2(filled, 0.5, 0.4);
+        UncertainIncrMagFreqDist actual = MFDManipulation.addMfdUncertainty(filled, 0.5, 0.4);
         int indexMinMag = filled.getClosestXIndex(MFDManipulation.FIRST_WEIGHT_POWER_MAG);
 
         assertTrue(
@@ -151,7 +151,7 @@ public class MFDManipulationTest {
                 Double.isNaN(actual.getStdDevs().getY(indexMinMag)));
 
         filled = fillBelowDist(7.0, 7);
-        actual = MFDManipulation.addMfdUncertainty2(filled, 0.5, 0.4);
+        actual = MFDManipulation.addMfdUncertainty(filled, 0.5, 0.4);
 
         assertEquals(
                 "formula always comes out to 0.4*rate at FIRST_WEIGHT_POWER_MAG",
@@ -310,11 +310,38 @@ public class MFDManipulationTest {
 
     @Test
     public void testTrimMFDPreconditions() {
-        // below min / above max
+        // below min
         assertTrimRejected(4.95, 7.05);
-        assertTrimRejected(7.05, 9.05);
         // min above max
         assertTrimRejected(8.05, 7.05);
+    }
+
+    @Test
+    public void testAlignYValues() {
+        IncrementalMagFreqDist dist = trimTestDist();
+        IncrementalMagFreqDist trimmed = MFDManipulation.trimMFD(dist, 5.25, 5.35);
+        List<Double> actual = MFDManipulation.alignYValues(trimmed, dist);
+
+        assertEquals(dist.size(), actual.size());
+        for (int i = 0; i < actual.size(); i++) {
+            if (i == 2 || i == 3) {
+                assertEquals(dist.getY(i), actual.get(i), 1e-9);
+            } else {
+                assertTrue(Double.isNaN(actual.get(i)));
+            }
+        }
+    }
+
+    @Test
+    public void testTrimMFDClampsMaxMag() {
+        IncrementalMagFreqDist dist = trimTestDist();
+        IncrementalMagFreqDist actual = MFDManipulation.trimMFD(dist, 7.05, 10.0);
+        assertEquals(dist.getMaxX(), actual.getMaxX(), 1e-9);
+        assertEquals(
+                List.of(
+                        20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0,
+                        32.0, 33.0, 34.0, 35.0, 36.0, 37.0, 38.0, 39.0),
+                actual.yValues());
     }
 
     @Test

@@ -171,19 +171,12 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
 
             targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillBelowMag(
-                            tempTargetOnFaultSupraSeisMFD, config.minMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillAboveMag(
-                            targetOnFaultSupraSeisMFDs, config.maxMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.swapZeros(targetOnFaultSupraSeisMFDs, 1.0e-20);
+                    MFDManipulation.trimMFD(
+                            tempTargetOnFaultSupraSeisMFD, config.minMag, config.maxMag);
             //  targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,
-                            config.minMag,
-                            config.maxMag,
                             config.mfdUncertaintyPower,
                             config.mfdUncertaintyScalar);
 
@@ -197,7 +190,9 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             csvCell.addColumn("totalTargetGR_", totalTargetGR.yValues());
             csvCell.addColumn("trulyOffFaultMFD_", trulyOffFaultMFD.yValues());
             csvCell.addColumn("totalSubSeismoOnFaultMFD_", totalSubSeismoOnFaultMFD.yValues());
-            csvCell.addColumn("targetOnFaultSupraSeisMFD_", targetOnFaultSupraSeisMFDs.yValues());
+            csvCell.addColumn(
+                    "targetOnFaultSupraSeisMFD_",
+                    MFDManipulation.alignYValues(targetOnFaultSupraSeisMFDs, totalTargetGR));
 
             JupyterLogger.logger().addLinePlot("RegionalTargetMFDs", csvCell).setYLog();
 

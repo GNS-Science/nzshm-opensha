@@ -88,7 +88,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
         if (mfdUncertaintyWeightedConstraintWt > 0.0) {
             mfdUncertaintyConstraints.add(
-                    MFDManipulation.addMfdUncertainty2(
+                    MFDManipulation.addMfdUncertainty(
                             this.targetOnFaultSupraSeisMFD,
                             mfdUncertaintyWeightedConstraintPower,
                             mfdUncertaintyWeightedConstraintScalar));

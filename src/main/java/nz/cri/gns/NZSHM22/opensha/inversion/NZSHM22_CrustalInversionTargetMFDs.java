@@ -1,5 +1,6 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -252,21 +253,13 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             tempTargetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
-
             targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillBelowMag(tempTargetOnFaultSupraSeisMFD, minMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.fillAboveMag(targetOnFaultSupraSeisMFDs, maxMag, 1.0e-20);
-            targetOnFaultSupraSeisMFDs =
-                    MFDManipulation.swapZeros(targetOnFaultSupraSeisMFDs, 1.0e-20);
+                    MFDManipulation.trimMFD(tempTargetOnFaultSupraSeisMFD, minMag, maxMag);
             targetOnFaultSupraSeisMFDs.setRegion(region);
+
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
-                            targetOnFaultSupraSeisMFDs,
-                            minMag,
-                            maxMag,
-                            uncertaintyPower,
-                            uncertaintyScalar);
+                            targetOnFaultSupraSeisMFDs, uncertaintyPower, uncertaintyScalar);
 
             JupyterLogger.logger().addMarkDown("## Regional MFDs for " + suffix);
 
@@ -280,7 +273,8 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             csvCell.addColumn(
                     "totalSubSeismoOnFaultMFD_" + suffix, totalSubSeismoOnFaultMFD.yValues());
             csvCell.addColumn(
-                    "targetOnFaultSupraSeisMFD_" + suffix, targetOnFaultSupraSeisMFDs.yValues());
+                    "targetOnFaultSupraSeisMFD_" + suffix,
+                    MFDManipulation.alignYValues(targetOnFaultSupraSeisMFDs, totalTargetGR));
 
             JupyterLogger.logger().addLinePlot("RegionalTargetMFDs", csvCell).setYLog();
 
@@ -317,6 +311,10 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             double uncertaintyScalar) {
 
         setParent(invRupSet);
+
+        // We'd need code to handle the combination of MFDs with different min and max bounds
+        Preconditions.checkArgument(
+                invRupSet.getTvzRegionalData().isEmpty(), "TVZ MFDs are not currently supported");
 
         tvz =
                 new RegionalTargetMFDs(
@@ -374,32 +372,47 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
          *  - totalSubSeismoOnFaultMFD
          */
 
-        SummedMagFreqDist tempTargetGR = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        SummedMagFreqDist tempTargetGR =
+                new SummedMagFreqDist(
+                        sansTvz.totalTargetGR.getMinX(), sansTvz.totalTargetGR.size(), DELTA_MAG);
         tempTargetGR.addIncrementalMagFreqDist(sansTvz.totalTargetGR);
         if (!tvz.isEmpty) {
             tempTargetGR.addIncrementalMagFreqDist(tvz.totalTargetGR);
         }
 
-        totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        totalTargetGR =
+                new GutenbergRichterMagFreqDist(
+                        sansTvz.totalTargetGR.getMinX(), sansTvz.totalTargetGR.size(), DELTA_MAG);
         for (Point2D p : tempTargetGR) {
             totalTargetGR.set(p);
         }
 
         SummedMagFreqDist tempTrulyOffFaultMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+                new SummedMagFreqDist(
+                        sansTvz.trulyOffFaultMFD.getMinX(),
+                        sansTvz.trulyOffFaultMFD.size(),
+                        DELTA_MAG);
         tempTrulyOffFaultMFD.addIncrementalMagFreqDist(sansTvz.trulyOffFaultMFD);
         if (!tvz.isEmpty) {
             tempTrulyOffFaultMFD.addIncrementalMagFreqDist(tvz.trulyOffFaultMFD);
         }
 
-        trulyOffFaultMFD = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        trulyOffFaultMFD =
+                new IncrementalMagFreqDist(
+                        sansTvz.trulyOffFaultMFD.getMinX(),
+                        sansTvz.trulyOffFaultMFD.size(),
+                        DELTA_MAG);
         for (Point2D p : tempTrulyOffFaultMFD) {
             trulyOffFaultMFD.set(p);
         }
 
         // TODO: review this (if really needed) should add the SansTVZ and TVZ
         // CHECK: New MFD addition approach....
-        totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        totalSubSeismoOnFaultMFD =
+                new SummedMagFreqDist(
+                        sansTvz.totalSubSeismoOnFaultMFD.getMinX(),
+                        sansTvz.totalSubSeismoOnFaultMFD.size(),
+                        DELTA_MAG);
         totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(sansTvz.totalSubSeismoOnFaultMFD);
         if (!tvz.isEmpty) {
             totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(tvz.totalSubSeismoOnFaultMFD);
@@ -413,7 +426,11 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         }
         subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
-        targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        targetOnFaultSupraSeisMFD =
+                new SummedMagFreqDist(
+                        sansTvz.targetOnFaultSupraSeisMFDs.getMinX(),
+                        sansTvz.targetOnFaultSupraSeisMFDs.size(),
+                        DELTA_MAG);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
         if (!tvz.isEmpty) {
             targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(tvz.targetOnFaultSupraSeisMFDs);
@@ -432,7 +449,12 @@ public class NZSHM22_CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         csvCell.setIndex(trulyOffFaultMFD.xValues());
         csvCell.addColumn("trulyOffFaultMFD.all", trulyOffFaultMFD.yValues());
         csvCell.addColumn("totalTargetGR.all", totalTargetGR.yValues());
-        csvCell.addColumn("totalSubSeismoOnFaultMFD.all", totalSubSeismoOnFaultMFD.yValues());
+        csvCell.addColumn(
+                "totalSubSeismoOnFaultMFD.all",
+                MFDManipulation.alignYValues(totalSubSeismoOnFaultMFD, trulyOffFaultMFD));
+        csvCell.addColumn(
+                "targetOnFaultSupraSeisMFD.all",
+                MFDManipulation.alignYValues(targetOnFaultSupraSeisMFD, trulyOffFaultMFD));
 
         JupyterLogger.logger()
                 .addLinePlot("NZSHM22_CrustalInversionTargetMFDs_init", csvCell)
