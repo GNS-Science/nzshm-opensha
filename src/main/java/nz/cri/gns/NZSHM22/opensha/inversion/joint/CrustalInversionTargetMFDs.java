@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonWriter;
-import java.awt.geom.Point2D;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -245,34 +244,23 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
          *  - totalSubSeismoOnFaultMFD
          */
 
-        SummedMagFreqDist tempTargetGR = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        tempTargetGR.addIncrementalMagFreqDist(sansTvz.totalTargetGR);
-
-        totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        for (Point2D p : tempTargetGR) {
-            totalTargetGR.set(p);
-        }
-
-        SummedMagFreqDist tempTrulyOffFaultMFD =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        tempTrulyOffFaultMFD.addIncrementalMagFreqDist(sansTvz.trulyOffFaultMFD);
-
-        trulyOffFaultMFD = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        for (Point2D p : tempTrulyOffFaultMFD) {
-            trulyOffFaultMFD.set(p);
-        }
+        totalTargetGR = sansTvz.totalTargetGR;
+        trulyOffFaultMFD = sansTvz.trulyOffFaultMFD;
 
         // TODO: review this (if really needed) should add the SansTVZ and TVZ
         // CHECK: New MFD addition approach....
-        totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
-        totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(sansTvz.totalSubSeismoOnFaultMFD);
+        totalSubSeismoOnFaultMFD = sansTvz.totalSubSeismoOnFaultMFD;
 
         // TODO is this correct? It's just a guess by Oakley (and now Chris)
-        ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List = new ArrayList<>();
-        subSeismoOnFaultMFD_List.addAll(sansTvz.subSeismoOnFaultMFD_List);
+        ArrayList<GutenbergRichterMagFreqDist> subSeismoOnFaultMFD_List =
+                new ArrayList<>(sansTvz.subSeismoOnFaultMFD_List);
         subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
-        targetOnFaultSupraSeisMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        targetOnFaultSupraSeisMFD =
+                new SummedMagFreqDist(
+                        sansTvz.targetOnFaultSupraSeisMFDs.getMinX(),
+                        sansTvz.targetOnFaultSupraSeisMFDs.size(),
+                        DELTA_MAG);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
 
         totalTargetGR.setName("totalTargetGR.all");
