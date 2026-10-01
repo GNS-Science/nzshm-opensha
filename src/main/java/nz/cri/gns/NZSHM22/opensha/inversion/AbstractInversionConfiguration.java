@@ -19,11 +19,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         NORMALIZED_BY_UNCERTAINTY
     }
 
-    // weight of rupture-rate minimization constraint weights relative to slip-rate
-    // constraint (recommended: 10,000)
-    // (currently used to minimization rates of rups below sectMinMag)
-    static double MINIMIZATION_CONSTRAINT_WT_DEFAULT = 10000;
-
     private InversionTargetMFDs inversionTargetMfds;
     private double magnitudeEqualityConstraintWt;
     private double magnitudeInequalityConstraintWt;
@@ -48,7 +43,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     //	private double mfdSmoothnessConstraintWt;
 
     //	private double rupRateSmoothingConstraintWt;
-    private double minimizationConstraintWt;
     //	private double momentConstraintWt;
     //	private double parkfieldConstraintWt;
     //	private double[] aPrioriRupConstraint;
@@ -175,18 +169,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         return unmodifiedSlipRateStdvs;
     }
 
-    @Deprecated
-    public double getMinimizationConstraintWt() {
-        return minimizationConstraintWt;
-    }
-
-    @Deprecated
-    public AbstractInversionConfiguration setMinimizationConstraintWt(
-            double relativeMinimizationConstraintWt) {
-        this.minimizationConstraintWt = relativeMinimizationConstraintWt;
-        return this;
-    }
-
     public double[] getInitialRupModel() {
         return initialRupModel;
     }
@@ -304,12 +286,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
                 runner.mfdTransitionMag,
                 mfdUncertaintyConstraints);
 
-        // ExcludeMinMag is handled in the runner. if that's used, do not use old-fashioned
-        // constraint
-        if (!runner.excludeRupturesBelowMinMag) {
-            setMinimizationConstraintWt(MINIMIZATION_CONSTRAINT_WT_DEFAULT);
-        }
-
         // set up slip rate
 
         setSlipRateWeightingType(runner.slipRateWeightingType);
@@ -394,7 +370,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
         //		el.addAttribute("mfdSmoothnessConstraintWtForPaleoParents",
         // mfdSmoothnessConstraintWtForPaleoParents+"");
         //		el.addAttribute("rupRateSmoothingConstraintWt", rupRateSmoothingConstraintWt+"");
-        el.addAttribute("minimizationConstraintWt", minimizationConstraintWt + "");
         //		el.addAttribute("momentConstraintWt", momentConstraintWt+"");
         //		el.addAttribute("parkfieldConstraintWt", parkfieldConstraintWt+"");
         //		el.addAttribute("MFDTransitionMag", MFDTransitionMag+"");

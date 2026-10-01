@@ -14,7 +14,6 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import nz.cri.gns.NZSHM22.opensha.util.SimpleGeoJsonBuilder;
 import org.dom4j.DocumentException;
 import org.opensha.commons.data.CSVFile;
-import org.opensha.commons.data.IntegerSampler;
 import org.opensha.commons.geo.json.FeatureProperties;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.modules.helpers.CSV_BackedModule;
@@ -699,18 +698,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
                 "Regime of rupture set and scaling relationship do not match.");
     }
 
-    protected Set<Integer> createSamplerExclusions() {
-        Set<Integer> exclusions = new HashSet<>();
-        if (excludeRupturesBelowMinMag) {
-            for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-                if (rupSet.isRuptureBelowSectMinMag(r)) {
-                    exclusions.add(r);
-                }
-            }
-        }
-        return exclusions;
-    }
-
     protected void printRuptureExclusionStats(Set<Integer> exclusions, String prefix) {
 
         if (false) {
@@ -774,19 +761,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
                             + excludedParents.size()
                             + " faults: "
                             + excludedParents);
-        }
-    }
-
-    protected IntegerSampler createSampler() {
-        Set<Integer> exclusions = createSamplerExclusions();
-        if (!exclusions.isEmpty()) {
-            System.out.println(
-                    "Excluding " + exclusions.size() + " ruptures that are below section minMag.");
-            printRuptureExclusionStats(exclusions, "sampler_");
-            return new IntegerSampler.ExclusionIntegerSampler(
-                    0, rupSet.getNumRuptures(), exclusions);
-        } else {
-            return null;
         }
     }
 
@@ -953,11 +927,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
         tsa.setNonnegativeityConstraintAlgorithm(nonNegAlgorithm);
         if (!(this.coolingSchedule == null)) tsa.setCoolingFunc(this.coolingSchedule);
-
-        IntegerSampler sampler = createSampler();
-        if (sampler != null) {
-            tsa.setRuptureSampler(sampler);
-        }
 
         // From CLI metadata Analysis
         initialState = Arrays.copyOf(initialState, initialState.length);
