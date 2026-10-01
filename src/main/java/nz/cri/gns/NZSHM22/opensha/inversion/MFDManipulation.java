@@ -28,6 +28,24 @@ public class MFDManipulation {
     }
 
     /**
+     * Returns the y values of mfd aligned to the x values of reference. Bins of reference that are
+     * not in mfd are NaN. Useful for logging trimmed MFDs alongside full-range MFDs.
+     *
+     * @param mfd the MFD to take y values from
+     * @param reference the function providing the x values
+     * @return one y value per x value of reference
+     */
+    public static List<Double> alignYValues(
+            EvenlyDiscretizedFunc mfd, EvenlyDiscretizedFunc reference) {
+        List<Double> result = new ArrayList<>();
+        for (int i = 0; i < reference.size(); i++) {
+            double x = reference.getX(i);
+            result.add(containsMag(mfd, x) ? mfd.getY(mfd.getClosestXIndex(x)) : Double.NaN);
+        }
+        return result;
+    }
+
+    /**
      * Returns the input MFD restricted between minMag and maxMag. minMag and maxMag are snapped to
      * the centres of the bins that contain them.
      *
@@ -56,7 +74,8 @@ public class MFDManipulation {
 
     /**
      * Returns the first and last bin index of the range between minMag and maxMag. minMag and
-     * maxMag are snapped to the centres of the bins that contain them.
+     * maxMag are snapped to the centres of the bins that contain them. A maxMag above the MFD is
+     * clamped to the last bin.
      *
      * @param originalMFD the MFD to trim
      * @param minMag the new minimum magnitude
@@ -68,8 +87,7 @@ public class MFDManipulation {
         double halfDelta = originalMFD.getDelta() / 2;
         Preconditions.checkArgument(
                 minMag >= originalMFD.getMinX() - halfDelta, "minMag %s is below the MFD", minMag);
-        Preconditions.checkArgument(
-                maxMag < originalMFD.getMaxX() + halfDelta, "maxMag %s is above the MFD", maxMag);
+        maxMag = Math.min(maxMag, originalMFD.getMaxX());
         int startBin = originalMFD.getClosestXIndex(minMag);
         int endBin = originalMFD.getClosestXIndex(maxMag);
         Preconditions.checkArgument(
@@ -107,11 +125,9 @@ public class MFDManipulation {
         double magLower = Math.max(originalMFD.getMagLower(), newMFD.getMinX());
         double magUpper = Math.min(originalMFD.getMagUpper(), newMFD.getMaxX());
         if (magLower <= magUpper) {
-            double totCumRate = 0;
-            for (int i = 0; i < num; i++) {
-                totCumRate += originalMFD.getY(i + startBin);
-            }
-            newMFD.setAllButTotMoRate(magLower, magUpper, totCumRate, originalMFD.get_bValue());
+            // Setting magLower, magUpper, and b.
+            // The rates will be overwritten in the next step
+            newMFD.setAllButTotMoRate(magLower, magUpper, 1, originalMFD.get_bValue());
             // copy exact rates to avoid rounding differences
             for (int i = 0; i < num; i++) {
                 newMFD.set(i, originalMFD.getY(i + startBin));
@@ -186,38 +202,6 @@ public class MFDManipulation {
         return newMFDConstraints;
     }
 
-    public static UncertainIncrMagFreqDist addMfdUncertainty(
-            IncrementalMagFreqDist mfd,
-            double minimize_below_mag,
-            double minimizeAboveMag,
-            double power,
-            double uncertaintyScalar) {
-        int minMagBin = mfd.getClosestXIndex(minimize_below_mag);
-        int maxMagBin = mfd.getClosestXIndex(minimizeAboveMag);
-        int firstWeightPowerBin = mfd.getClosestXIndex(FIRST_WEIGHT_POWER_MAG);
-        Preconditions.checkArgument(
-                minMagBin <= firstWeightPowerBin,
-                "minMag may not be above the bin of " + FIRST_WEIGHT_POWER_MAG);
-        Preconditions.checkArgument(
-                firstWeightPowerBin <= maxMagBin,
-                "maxMag may not be below the bin of " + FIRST_WEIGHT_POWER_MAG);
-        double firstWeightPower =
-                Math.pow(mfd.getY(firstWeightPowerBin), power - 1)
-                        * (mfd.getY(firstWeightPowerBin) * uncertaintyScalar);
-        EvenlyDiscretizedFunc stdDevs =
-                new EvenlyDiscretizedFunc(mfd.getMinX(), mfd.getMaxX(), mfd.size());
-        for (int i = 0; i < stdDevs.size(); i++) {
-            double rate = mfd.getY(i);
-            // TODO remove (rate == 1e-20) condition when it's no longer needed
-            double stdDev =
-                    ((i < minMagBin) || (maxMagBin < i) || rate == 1e-20)
-                            ? 1e-20
-                            : firstWeightPower / Math.pow(rate, power - 1);
-            stdDevs.set(i, stdDev);
-        }
-        return new UncertainIncrMagFreqDist(mfd, stdDevs);
-    }
-
     /**
      * Returns a copy of source with value in all bins below the bin that minMag falls in.
      *
@@ -242,8 +226,7 @@ public class MFDManipulation {
         return result;
     }
 
-    // TODO: this replaces addMfdUncertainty once crustal is migrated
-    public static UncertainIncrMagFreqDist addMfdUncertainty2(
+    public static UncertainIncrMagFreqDist addMfdUncertainty(
             IncrementalMagFreqDist mfd, double power, double uncertaintyScalar) {
 
         Preconditions.checkArgument(
