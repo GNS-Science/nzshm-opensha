@@ -14,14 +14,15 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SplittableRuptureModule;
 
 /**
- * Filters a rupture set by magnitude, dropping the ruptures that fall below the minimum magnitude
- * of any of the sections they use, and those above the maximum magnitude, with each partition of a
- * joint rupture tested separately. See {@link #filter(FaultSystemRupSet, ModSectMinMags, List,
- * double[])}.
+ * Filters a rupture set by magnitude, dropping the ruptures that fall outside the minimum and
+ * maximum magnitude bounds. Joint rupture sets are filtered with {@link #filter(FaultSystemRupSet,
+ * Config)}, which tests each partition of a rupture against that partition's bounds. Other rupture
+ * sets can be filtered with {@link #filter(FaultSystemRupSet, double, double)}. Magnitudes are
+ * compared by magnitude bin, see {@link NZSHM22_FaultSystemRupSetCalc#isWithinBounds(double,
+ * double, double)}.
  */
 public class MagFilteredRupSet {
 
@@ -45,6 +46,18 @@ public class MagFilteredRupSet {
 
     protected MagFilteredRupSet() {}
 
+    /**
+     * Returns true if the part of the rupture that is inside the partition is within the
+     * partition's magnitude bounds. The magnitude of that part is calculated with {@link
+     * JointScalingRelationship#partitionMagnitude(double, double, double)}. A rupture that does not
+     * use any section of the partition is always within bounds, and a rupture that is entirely
+     * inside the partition is tested with its own magnitude.
+     *
+     * @param rupSet the rupture set
+     * @param partitionConfig the partition with its minimum and maximum magnitude
+     * @param ruptureIndex the rupture to test
+     * @return true if the rupture is within the partition's magnitude bounds
+     */
     protected static boolean isWithinMagBounds(
             FaultSystemRupSet rupSet, PartitionConfig partitionConfig, int ruptureIndex) {
         double partitionArea =
@@ -68,10 +81,12 @@ public class MagFilteredRupSet {
 
     /**
      * Creates a rupture set that only contains those ruptures of the original that are within the
-     * magnitude bounds of every partition they belong to.
+     * magnitude bounds of every partition they belong to, see {@link
+     * #isWithinMagBounds(FaultSystemRupSet, PartitionConfig, int)}.
      *
      * @param original the rupture set to filter
-     * @param config the joint inversion config
+     * @param config the joint inversion config. The partition configs must have been initialised so
+     *     that they can test which sections they cover.
      * @return the filtered rupture set
      * @throws IllegalStateException if all ruptures are outside the magnitude bounds
      */
@@ -88,12 +103,15 @@ public class MagFilteredRupSet {
     }
 
     /**
-     * Legacy filter, not to be used with joint rupture sets.
+     * Legacy filter, not to be used with joint rupture sets. Creates a rupture set that only
+     * contains those ruptures of the original whose magnitude is within the bounds.
      *
-     * @param original
-     * @param minMag
-     * @param maxMag
-     * @return
+     * @param original the rupture set to filter
+     * @param minMag the minimum magnitude. The whole bin of minMag is retained.
+     * @param maxMag the maximum magnitude. The whole bin of maxMag is retained. Use {@link
+     *     #NO_MAX_MAG} for no upper bound.
+     * @return the filtered rupture set
+     * @throws IllegalStateException if all ruptures are outside the magnitude bounds
      */
     public static FaultSystemRupSet filter(
             FaultSystemRupSet original, double minMag, double maxMag) {
