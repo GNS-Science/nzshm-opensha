@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -139,6 +140,19 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
                 FaultSystemRupSet.builder(faultSections, ruptures)
                         .forScalingRelationship(scalingRelationship)
                         .build();
+
+        // ruptures that lost sections get the partition magnitude of the original rupture
+        double[] mags = filteredRuptureSet.getMagForAllRups();
+        for (int r = 0; r < mags.length; r++) {
+            int oldId = newToOldRuptures.get(r);
+            if (ruptures.get(r).size() != rupSet.getSectionsIndicesForRup(oldId).size()) {
+                mags[r] =
+                        JointScalingRelationship.partitionMagnitude(
+                                filteredRuptureSet.getAreaForRup(r),
+                                rupSet.getAreaForRup(oldId),
+                                rupSet.getMagForRup(oldId));
+            }
+        }
 
         FilteredFaultSystemRupSet result =
                 new FilteredFaultSystemRupSet(

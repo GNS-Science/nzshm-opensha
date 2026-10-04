@@ -6,9 +6,11 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint.FilteredFaultSystemRupSetTest;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
@@ -154,35 +156,53 @@ public class RuptureSetSetupTest {
                 filteredRuptureIds(makeJointConfig()));
     }
 
-    /** A joint rupture has to satisfy the maxMag of the crustal partition it belongs to. */
-    @Test
-    public void jointRuptureSatisfiesTheCrustalMaxMagTest() throws DocumentException, IOException {
-        Config config = makeJointConfig();
-        // the crustal rupture is smaller than the joint rupture
-        config.partitions.get(0).maxMag = config.ruptureSet.getMagForRup(CRUSTAL_RUP);
+    static final int SUB_SECTION = 1;
 
-        assertEquals(List.of(CRUSTAL_RUP, SUBDUCTION_RUP), filteredRuptureIds(config));
+    static final double BIN = NZSHM22_FaultSystemRupSetCalc.MAG_BINS.getDelta();
+
+    /** The magnitude of the part of the joint rupture that is on the specified section. */
+    static double jointPartitionMag(Config config, int section) {
+        FaultSystemRupSet rupSet = config.ruptureSet;
+        return JointScalingRelationship.partitionMagnitude(
+                rupSet.getAreaForSection(section),
+                rupSet.getAreaForRup(JOINT_RUP),
+                rupSet.getMagForRup(JOINT_RUP));
     }
 
-    /** A joint rupture has to satisfy the maxMag of the subduction partition it belongs to. */
+    /** The subduction maxMag applies to the subduction part of a joint rupture. */
     @Test
-    public void jointRuptureSatisfiesTheSubductionMaxMagTest()
+    public void subductionMaxMagAppliesToSubductionPartOfJointRuptureTest()
             throws DocumentException, IOException {
         Config config = makeJointConfig();
-        // the subduction rupture is smaller than the joint rupture
-        config.partitions.get(1).maxMag = config.ruptureSet.getMagForRup(SUBDUCTION_RUP);
+        double partMag = jointPartitionMag(config, SUB_SECTION);
+        // the whole joint rupture is well above its subduction part
+        assertTrue(config.ruptureSet.getMagForRup(JOINT_RUP) > partMag + BIN);
+        config.partitions.get(1).maxMag = partMag;
 
-        assertEquals(List.of(CRUSTAL_RUP, SUBDUCTION_RUP), filteredRuptureIds(config));
+        assertTrue(filteredRuptureIds(config).contains(JOINT_RUP));
+
+        config = makeJointConfig();
+        config.partitions.get(1).maxMag = partMag - BIN;
+
+        assertFalse(filteredRuptureIds(config).contains(JOINT_RUP));
     }
 
-    /** Each partition applies its own minMag to the sections it covers. */
+    /** The subduction minMag applies to the subduction part of a joint rupture. */
     @Test
-    public void eachPartitionAppliesItsOwnMinMagTest() throws DocumentException, IOException {
+    public void subductionMinMagAppliesToSubductionPartOfJointRuptureTest()
+            throws DocumentException, IOException {
         Config config = makeJointConfig();
-        // above the subduction rupture, but below the joint rupture
-        config.partitions.get(1).minMag = config.ruptureSet.getMagForRup(CRUSTAL_RUP);
+        double partMag = jointPartitionMag(config, SUB_SECTION);
+        config.partitions.get(1).minMag = partMag;
 
-        assertEquals(List.of(CRUSTAL_RUP, JOINT_RUP), filteredRuptureIds(config));
+        assertTrue(filteredRuptureIds(config).contains(JOINT_RUP));
+
+        // above the subduction part, but below the whole joint rupture
+        config = makeJointConfig();
+        config.partitions.get(1).minMag = partMag + BIN;
+        assertTrue(config.ruptureSet.getMagForRup(JOINT_RUP) > partMag + BIN);
+
+        assertEquals(List.of(CRUSTAL_RUP), filteredRuptureIds(config));
     }
 
     /**
@@ -193,12 +213,12 @@ public class RuptureSetSetupTest {
     public void setupFiltersBeforeBuildingPartitionRuptureSetsTest()
             throws DocumentException, IOException {
         Config config = makeJointConfig();
-        config.partitions.get(0).maxMag = config.ruptureSet.getMagForRup(CRUSTAL_RUP);
+        config.partitions.get(1).maxMag = jointPartitionMag(config, SUB_SECTION) - BIN;
 
         config.init();
         RuptureSetSetup.setup(config);
 
-        // the joint rupture is above the crustal maxMag and is gone
+        // the joint rupture is above the subduction maxMag and is gone
         assertEquals(2, config.ruptureSet.getNumRuptures());
         assertNotNull(config.ruptureSet.getModule(ModSectMinMags.class));
         // each partition is left with its own rupture only

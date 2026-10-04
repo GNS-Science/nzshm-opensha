@@ -2,6 +2,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
@@ -212,7 +213,11 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             FaultSystemRupSet rupSet, double minMag, double maxMag) {
         double[] minMags =
                 NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(rupSet, minMag);
-        return MagFilteredRupSet.filter(rupSet, ModSectMinMags.instance(rupSet, minMags), maxMag);
+        return MagFilteredRupSet.filter(
+                rupSet,
+                ModSectMinMags.instance(rupSet, minMags),
+                List.of(s -> true),
+                new double[] {maxMag});
     }
 
     protected static void applySlipRateFactor(

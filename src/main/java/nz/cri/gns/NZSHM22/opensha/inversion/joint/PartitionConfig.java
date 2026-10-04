@@ -7,6 +7,7 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
+import nz.cri.gns.NZSHM22.opensha.inversion.MagFilteredRupSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.faultSurface.FaultSection;
@@ -37,7 +38,7 @@ public class PartitionConfig {
     public double bValue;
     public double minMag;
     // only required for crustal
-    public double maxMag;
+    public double maxMag = MagFilteredRupSet.NO_MAX_MAG;
     // only required for crustal
     public NZSHM22_MagBounds.MaxMagType maxMagType = NZSHM22_MagBounds.MaxMagType.NONE;
     public double mfdTransitionMag;
@@ -60,6 +61,11 @@ public class PartitionConfig {
 
     public PartitionConfig(PartitionPredicate partition) {
         this.partition = partition;
+    }
+
+    /** Used by Gson so that field defaults apply to values missing from the JSON config. */
+    protected PartitionConfig() {
+        this(null);
     }
 
     public void init(Config config) {

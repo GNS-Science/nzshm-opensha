@@ -1,8 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.List;
 import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
@@ -88,11 +89,9 @@ public class RuptureSetSetup {
     }
 
     /**
-     * Drops all ruptures that are outside the magnitude bounds of any partition they belong to: a
-     * rupture is dropped if it falls below the minimum magnitude of any of its sections (see {@link
-     * #createModSectMinMags(Config)}), or if it is in a magnitude bin above the bin of the maximum
-     * magnitude of any of its sections. A partition without a maximum magnitude does not bound its
-     * sections.
+     * Drops all ruptures that are outside the magnitude bounds of any partition they belong to, see
+     * {@link MagFilteredRupSet#filter(FaultSystemRupSet, ModSectMinMags, List, double[])}. The
+     * section minimum magnitudes come from {@link #createModSectMinMags(Config)}.
      *
      * <p>Must be called after the magnitudes and the {@link ModSectMinMags} of the joint rupture
      * set have been set up, and before the partition rupture sets and the constraints are built
@@ -101,21 +100,14 @@ public class RuptureSetSetup {
      * @param config the config whose rupture set is replaced with the filtered one
      */
     protected static void filterByMagnitude(Config config) {
-        double[] maxMags = new double[config.ruptureSet.getNumSections()];
-        Arrays.fill(maxMags, MagFilteredRupSet.NO_MAX_MAG);
-        for (PartitionConfig partition : config.partitions) {
-            if (partition.maxMag > 0) {
-                for (int sectionId : partition.getSectionIds()) {
-                    maxMags[sectionId] = partition.maxMag;
-                }
-            }
-        }
-
         config.ruptureSet =
                 MagFilteredRupSet.filter(
                         config.ruptureSet,
                         config.ruptureSet.requireModule(ModSectMinMags.class),
-                        maxMags);
+                        config.partitions.stream()
+                                .map(p -> p.partitionPredicate)
+                                .collect(Collectors.toList()),
+                        config.partitions.stream().mapToDouble(p -> p.maxMag).toArray());
 
         // the filtered rupture set has the same sections, but the partitions hold on to the
         // rupture set they were initialised with, so they are re-initialised here.

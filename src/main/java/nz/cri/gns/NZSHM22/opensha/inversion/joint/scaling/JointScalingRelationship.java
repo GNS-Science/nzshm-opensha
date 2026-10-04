@@ -39,6 +39,19 @@ public interface JointScalingRelationship {
         return new OldSchoolScaling(this, isCrustal);
     }
 
+    /**
+     * Calculates moment magnitude for a partition of a joint rupture if the slip is the same for
+     * the joint rupture and its partition ruptures.
+     *
+     * @param partitionArea the area of the partition
+     * @param area the area of the joint rupture
+     * @param magnitude the magnitude of the joint rupture
+     * @return moment magnitude of the partition rupture
+     */
+    static double partitionMagnitude(double partitionArea, double area, double magnitude) {
+        return Math.log10(partitionArea / area) / 1.5 + magnitude;
+    }
+
     public static class OldSchoolScaling implements RupSetScalingRelationship {
 
         JointScalingRelationship original;
