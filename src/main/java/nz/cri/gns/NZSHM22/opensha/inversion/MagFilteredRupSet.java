@@ -15,6 +15,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
+import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SplittableRuptureModule;
 
 /**
@@ -155,7 +156,14 @@ public class MagFilteredRupSet {
                 "All %s ruptures of the rupture set are outside the magnitude bounds.",
                 original.getNumRuptures());
 
+        ClusterRuptures clusterRuptures = original.getModule(ClusterRuptures.class);
+        if(clusterRuptures != null){
+            original.removeModule(clusterRuptures);
+        }
         FaultSystemRupSet filtered = original.getForRuptureSubSet(retainedRuptureIds);
+        if(clusterRuptures != null){
+            original.addModule(clusterRuptures);
+        }
 
         for (Class<? extends OpenSHA_Module> type : RUPTURE_COUNT_AGNOSTIC_MODULES) {
             OpenSHA_Module module = original.getModule(type);
