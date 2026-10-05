@@ -219,6 +219,22 @@ public class MagFilteredRupSetTest {
                         original, partition(firstSections, mags[3], mags[3]), 2));
     }
 
+    /**
+     * A rupture that is entirely inside a partition is tested with its own magnitude even if its
+     * area is not the sum of its section areas.
+     */
+    @Test
+    public void testsWholeRuptureWithItsOwnMagnitudeIfAreasDiffer() {
+        original.getAreaForAllRups()[2] *= 4;
+        IntPredicate firstSections = s -> s < 3;
+        // the partition magnitude would be in a lower bin
+        assertTrue(bin(partitionMag(2, firstSections)) < bin(mags[2]));
+
+        assertTrue(
+                MagFilteredRupSet.isWithinMagBounds(
+                        original, partition(firstSections, mags[2], mags[2]), 2));
+    }
+
     /** A rupture must be within the bounds of every partition it uses. */
     @Test
     public void requiresAllPartitionsToBeWithinBounds() {

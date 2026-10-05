@@ -7,12 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
@@ -224,39 +222,6 @@ public class NZSHM22_ReportPageGen {
         }
 
         return rupSet;
-    }
-
-    /**
-     * Print stats on the types of joint ruptures
-     *
-     * @param solution
-     */
-    public static void jointStats(FaultSystemSolution solution) {
-        if (!solution.getRupSet().hasModule(PartitionMfds.class)) {
-            return;
-        }
-        Map<String, Integer> stats = new HashMap<>();
-        IntPredicate crustal = PartitionPredicate.CRUSTAL.getPredicate(solution.getRupSet());
-        IntPredicate hikurangi = PartitionPredicate.HIKURANGI.getPredicate(solution.getRupSet());
-        IntPredicate puysegur = PartitionPredicate.PUYSEGUR.getPredicate(solution.getRupSet());
-        for (List<Integer> sections : solution.getRupSet().getSectionIndicesForAllRups()) {
-            if (sections.stream().mapToInt(s -> s).allMatch(crustal)) {
-                stats.compute("CRUSTAL", (k, v) -> v == null ? 1 : v + 1);
-                continue;
-            }
-            if (sections.stream().mapToInt(s -> s).allMatch(hikurangi)) {
-                stats.compute("HIKURANGI", (k, v) -> v == null ? 1 : v + 1);
-                continue;
-            }
-            if (sections.stream().mapToInt(s -> s).allMatch(puysegur)) {
-                stats.compute("PUYSEGUR", (k, v) -> v == null ? 1 : v + 1);
-                continue;
-            }
-            stats.compute("JOINT", (k, v) -> v == null ? 1 : v + 1);
-        }
-        for (String key : stats.keySet()) {
-            System.out.println(key + " : " + stats.get(key));
-        }
     }
 
     /**

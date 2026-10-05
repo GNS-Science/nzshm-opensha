@@ -416,27 +416,11 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
     }
 
     /**
-     * This computes whether the rupture at rupIndex has a magnitude above the maximum magnitude. To
-     * be precise, the magnitude must fall into a higher bin than maxMag, so the whole bin of maxMag
-     * is still within bounds.
-     *
-     * @param fltSystRupSet the rupture set
-     * @param rupIndex the rupture to test
-     * @param maxMag the maximum magnitude
-     * @return true if the rupture is above the bin of maxMag
-     */
-    public static boolean isRuptureAboveMaxMag(
-            FaultSystemRupSet fltSystRupSet, int rupIndex, double maxMag) {
-        return MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex))
-                > MAG_BINS.getClosestXIndex(maxMag);
-    }
-
-    /**
      * Returns true if the specified magnitude is at least the same bin as minMag and at most the
      * same bin as maxMag.
      */
     public static boolean isWithinBounds(double minMag, double maxMag, double mag) {
-        double bin = MAG_BINS.getClosestXIndex(mag);
+        int bin = MAG_BINS.getClosestXIndex(mag);
         return (bin >= MAG_BINS.getClosestXIndex(minMag)
                 && bin <= MAG_BINS.getClosestXIndex(maxMag));
     }

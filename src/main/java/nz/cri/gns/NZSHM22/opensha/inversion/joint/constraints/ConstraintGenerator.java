@@ -134,7 +134,8 @@ public class ConstraintGenerator {
     /**
      * Generate all constraints
      *
-     * @param config the config
+     * @param config the config. {@link RuptureSetSetup#setup(Config)} must have been run so that
+     *     the partition rupture sets exist.
      * @return a list of all constraints, ready to be turned into a matrix
      * @throws FileNotFoundException
      */
@@ -145,12 +146,12 @@ public class ConstraintGenerator {
 
         for (PartitionConfig partitionConfig : config.partitions) {
 
+            // target MFDs are derived from the partition rupture set so that they use the
+            // partition magnitudes of joint ruptures, like the MFD constraints do
             if (partitionConfig.partition.isSubduction()) {
                 NZSHM22_SubductionInversionTargetMFDs targetMFDs =
                         new NZSHM22_SubductionInversionTargetMFDs(
-                                // TODO join: ruptureset might have to return partition-specific
-                                // maxMag
-                                config.ruptureSet,
+                                partitionConfig.partitionRuptureSet,
                                 partitionConfig.totalRateM5,
                                 partitionConfig.bValue,
                                 partitionConfig.mfdTransitionMag,
@@ -167,7 +168,8 @@ public class ConstraintGenerator {
 
             } else {
                 CrustalInversionTargetMFDs targetMFDs =
-                        new CrustalInversionTargetMFDs(config.ruptureSet, partitionConfig);
+                        new CrustalInversionTargetMFDs(
+                                partitionConfig.partitionRuptureSet, partitionConfig);
                 partitionConfig.mfdConstraints = targetMFDs.getMFD_Constraints();
                 partitionConfig.mfdUncertaintyWeightedConstraints =
                         targetMFDs.getMfdUncertaintyConstraints();

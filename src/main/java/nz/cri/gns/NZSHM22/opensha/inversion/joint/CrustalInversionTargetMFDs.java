@@ -69,6 +69,13 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         return mfdUncertaintyConstraints;
     }
 
+    /**
+     * Creates the target MFDs for a crustal partition.
+     *
+     * @param rupSet the partition rupture set, see {@link PartitionConfig#partitionRuptureSet}. It
+     *     must only contain crustal sections, and joint ruptures must have partition magnitudes.
+     * @param config the crustal partition config
+     */
     public CrustalInversionTargetMFDs(FaultSystemRupSet rupSet, PartitionConfig config) {
         init(rupSet, config);
     }
@@ -221,7 +228,8 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
                 new RegionalRupSetData(
                         rupSet,
                         NewZealandRegions.NZ,
-                        PartitionPredicate.CRUSTAL.getPredicate(rupSet),
+                        // the partition rupture set only contains crustal sections
+                        sectionId -> true,
                         config.spatialSeisPDF,
                         config.minMag,
                         config.polygonBufferSize,

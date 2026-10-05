@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
@@ -60,15 +61,24 @@ public class MagFilteredRupSet {
      */
     protected static boolean isWithinMagBounds(
             FaultSystemRupSet rupSet, PartitionConfig partitionConfig, int ruptureIndex) {
-        double partitionArea =
-                rupSet.getSectionsIndicesForRup(ruptureIndex).stream()
-                        .filter(partitionConfig::covers)
-                        .mapToDouble(rupSet::getAreaForSection)
-                        .sum();
-        if (partitionArea == 0) {
+        List<Integer> sections = rupSet.getSectionsIndicesForRup(ruptureIndex);
+        List<Integer> partitionSections =
+                sections.stream().filter(partitionConfig::covers).collect(Collectors.toList());
+        if (partitionSections.isEmpty()) {
             return true;
         }
 
+        // same as FilteredFaultSystemRupSet: a rupture entirely inside the partition keeps its
+        // magnitude, independent of whether the section areas add up to the rupture area
+        if (partitionSections.size() == sections.size()) {
+            return NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+                    partitionConfig.minMag,
+                    partitionConfig.maxMag,
+                    rupSet.getMagForRup(ruptureIndex));
+        }
+
+        double partitionArea =
+                partitionSections.stream().mapToDouble(rupSet::getAreaForSection).sum();
         double partitionMag =
                 JointScalingRelationship.partitionMagnitude(
                         partitionArea,
