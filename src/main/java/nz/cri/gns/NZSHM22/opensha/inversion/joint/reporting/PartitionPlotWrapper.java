@@ -28,7 +28,8 @@ import org.opensha.sha.earthquake.faultSysSolution.reports.SolidFillPlot;
  * reuse existing plotting code to create partition-specific plots without having to add
  * partitioning logic to the plots themselves.
  *
- * <p>Acts as a simple pass-through if the rupture set doesn't have a PartitionMfds module.
+ * <p>Acts as a simple pass-through if the rupture set doesn't have a PartitionMfds module, or if
+ * there is no solution.
  *
  * <p>All configuration that {@link
  * org.opensha.sha.earthquake.faultSysSolution.reports.ReportPageGen} applies to a plot (plot level,
@@ -87,13 +88,16 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot implements SolidFil
     /**
      * Creates a solution for a single partition by filtering the rupture set and solution down to
      * the sections of that partition, and adding the partition's target MFDs if they are available.
+     * Ruptures that are only partially in the partition get the partition magnitude, see {@link
+     * FilteredFaultSystemRupSet#forIntPredicate(FaultSystemRupSet, IntPredicate,
+     * RupSetScalingRelationship)}. Can be used to set up partition reports manually.
      *
-     * @param sol the full joint solution
+     * @param sol the full joint solution, must have a {@link ConfigModule}
      * @param partitionPredicate the partition to filter for
      * @param partitionMfds the target MFDs per partition, may be null
      * @return a solution containing only the sections and ruptures of the partition
      */
-    public FaultSystemSolution partitionSolution(
+    public static FaultSystemSolution partitionSolution(
             FaultSystemSolution sol,
             PartitionPredicate partitionPredicate,
             PartitionMfds partitionMfds) {
@@ -134,7 +138,9 @@ public class PartitionPlotWrapper extends AbstractRupSetPlot implements SolidFil
 
         PartitionMfds partitionMfds = rupSet.getModule(PartitionMfds.class);
 
-        if (partitionMfds == null || innerResult == null) {
+        // partitions can only be split off a solution, as the scaling relationship is in the
+        // solution's ConfigModule
+        if (partitionMfds == null || innerResult == null || sol == null) {
             return innerResult;
         }
 

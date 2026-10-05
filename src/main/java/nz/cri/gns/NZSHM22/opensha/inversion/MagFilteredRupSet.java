@@ -1,28 +1,29 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_RuptureSetBuilderModule;
 import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SplittableRuptureModule;
 
 /**
- * Filters a rupture set by magnitude, dropping the ruptures that fall below the minimum magnitude
- * of any of the sections they use, and those above the maximum magnitude of any of the sections
- * they use. See {@link
- * NZSHM22_FaultSystemRupSetCalc#computeWhichRupsFallBelowSectionMinMags(FaultSystemRupSet,
- * ModSectMinMags)} and {@link
- * NZSHM22_FaultSystemRupSetCalc#computeWhichRupsAreAboveSectionMaxMags(FaultSystemRupSet,
- * double[])} for the exact tests.
+ * Filters a rupture set by magnitude, dropping the ruptures that fall outside the minimum and
+ * maximum magnitude bounds. Joint rupture sets are filtered with {@link #filter(FaultSystemRupSet,
+ * Config)}, which tests each partition of a rupture against that partition's bounds. Other rupture
+ * sets can be filtered with {@link #filter(FaultSystemRupSet, double, double)}. Magnitudes are
+ * compared by magnitude bin, see {@link NZSHM22_FaultSystemRupSetCalc#isWithinBounds(double,
+ * double, double)}.
  */
 public class MagFilteredRupSet {
 
@@ -47,57 +48,105 @@ public class MagFilteredRupSet {
     protected MagFilteredRupSet() {}
 
     /**
-     * Creates a rupture set that only contains those ruptures of the original that are neither
-     * below the minimum magnitude of any of the sections they use, nor in a magnitude bin above the
-     * bin of maxMag. The whole bin of maxMag is retained.
+     * Returns true if the part of the rupture that is inside the partition is within the
+     * partition's magnitude bounds. The magnitude of that part is calculated with {@link
+     * JointScalingRelationship#partitionMagnitude(double, double, double)}. A rupture that does not
+     * use any section of the partition is always within bounds, and a rupture that is entirely
+     * inside the partition is tested with its own magnitude.
      *
-     * @param original the rupture set to filter
-     * @param minMags the section minimum magnitudes to test the ruptures against
-     * @param maxMag the maximum magnitude. Use {@link #NO_MAX_MAG} for no upper bound.
-     * @return the filtered rupture set
-     * @throws IllegalStateException if all ruptures are outside the magnitude bounds
+     * @param rupSet the rupture set
+     * @param partitionConfig the partition with its minimum and maximum magnitude
+     * @param ruptureIndex the rupture to test
+     * @return true if the rupture is within the partition's magnitude bounds
      */
-    public static FaultSystemRupSet filter(
-            FaultSystemRupSet original, ModSectMinMags minMags, double maxMag) {
-        double[] maxMagForSection = new double[original.getNumSections()];
-        Arrays.fill(maxMagForSection, maxMag);
-        return filter(original, minMags, maxMagForSection);
+    protected static boolean isWithinMagBounds(
+            FaultSystemRupSet rupSet, PartitionConfig partitionConfig, int ruptureIndex) {
+        List<Integer> sections = rupSet.getSectionsIndicesForRup(ruptureIndex);
+        List<Integer> partitionSections =
+                sections.stream().filter(partitionConfig::covers).collect(Collectors.toList());
+        if (partitionSections.isEmpty()) {
+            return true;
+        }
+
+        // same as FilteredFaultSystemRupSet: a rupture entirely inside the partition keeps its
+        // magnitude, independent of whether the section areas add up to the rupture area
+        if (partitionSections.size() == sections.size()) {
+            return NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+                    partitionConfig.minMag,
+                    partitionConfig.maxMag,
+                    rupSet.getMagForRup(ruptureIndex));
+        }
+
+        double partitionArea =
+                partitionSections.stream().mapToDouble(rupSet::getAreaForSection).sum();
+        double partitionMag =
+                JointScalingRelationship.partitionMagnitude(
+                        partitionArea,
+                        rupSet.getAreaForRup(ruptureIndex),
+                        rupSet.getMagForRup(ruptureIndex));
+
+        return NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+                partitionConfig.minMag, partitionConfig.maxMag, partitionMag);
     }
 
     /**
-     * Creates a rupture set that only contains those ruptures of the original that are neither
-     * below the minimum magnitude of any of the sections they use, nor in a magnitude bin above the
-     * bin of the maximum magnitude of any of the sections they use. The whole bin of a maximum
-     * magnitude is retained. This is the joint inversion case, where each partition has its own
-     * magnitude bounds and a rupture has to satisfy the bounds of every partition it belongs to.
+     * Creates a rupture set that only contains those ruptures of the original that are within the
+     * magnitude bounds of every partition they belong to, see {@link
+     * #isWithinMagBounds(FaultSystemRupSet, PartitionConfig, int)}.
      *
      * @param original the rupture set to filter
-     * @param minMags the section minimum magnitudes to test the ruptures against
-     * @param maxMagForSection the maximum magnitude of each section. Use {@link #NO_MAX_MAG} for no
-     *     upper bound.
+     * @param config the joint inversion config. The partition configs must have been initialised so
+     *     that they can test which sections they cover.
+     * @return the filtered rupture set
+     * @throws IllegalStateException if all ruptures are outside the magnitude bounds
+     */
+    public static FaultSystemRupSet filter(FaultSystemRupSet original, Config config) {
+        boolean[] drop = new boolean[original.getNumRuptures()];
+        for (int r = 0; r < drop.length; r++) {
+            for (PartitionConfig partitionConfig : config.partitions) {
+                if (!isWithinMagBounds(original, partitionConfig, r)) {
+                    drop[r] = true;
+                }
+            }
+        }
+        return filter(original, drop);
+    }
+
+    /**
+     * Legacy filter, not to be used with joint rupture sets. Creates a rupture set that only
+     * contains those ruptures of the original whose magnitude is within the bounds.
+     *
+     * @param original the rupture set to filter
+     * @param minMag the minimum magnitude. The whole bin of minMag is retained.
+     * @param maxMag the maximum magnitude. The whole bin of maxMag is retained. Use {@link
+     *     #NO_MAX_MAG} for no upper bound.
      * @return the filtered rupture set
      * @throws IllegalStateException if all ruptures are outside the magnitude bounds
      */
     public static FaultSystemRupSet filter(
-            FaultSystemRupSet original, ModSectMinMags minMags, double[] maxMagForSection) {
-        Preconditions.checkArgument(
-                maxMagForSection.length == original.getNumSections(),
-                "maxMagForSection must have one entry per fault section");
-        for (double maxMag : maxMagForSection) {
-            Preconditions.checkArgument(
-                    Double.isFinite(maxMag),
-                    "maxMag must be finite, use NO_MAX_MAG for no upper bound");
+            FaultSystemRupSet original, double minMag, double maxMag) {
+        boolean[] drop = new boolean[original.getNumRuptures()];
+        for (int r = 0; r < drop.length; r++) {
+            drop[r] =
+                    !NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+                            minMag, maxMag, original.getMagForRup(r));
         }
-        boolean[] isBelowMinMag =
-                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(
-                        original, minMags);
-        boolean[] isAboveMaxMag =
-                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsAreAboveSectionMaxMags(
-                        original, maxMagForSection);
+        return filter(original, drop);
+    }
 
+    /**
+     * Creates a rupture set that only contains those ruptures of the original that are not marked
+     * to be dropped.
+     *
+     * @param original the rupture set to filter
+     * @param drop one entry per rupture, true if the rupture is to be dropped
+     * @return the filtered rupture set
+     * @throws IllegalStateException if all ruptures are dropped
+     */
+    protected static FaultSystemRupSet filter(FaultSystemRupSet original, boolean[] drop) {
         Set<Integer> retainedRuptureIds = new LinkedHashSet<>();
-        for (int ruptureId = 0; ruptureId < original.getNumRuptures(); ruptureId++) {
-            if (!isBelowMinMag[ruptureId] && !isAboveMaxMag[ruptureId]) {
+        for (int ruptureId = 0; ruptureId < drop.length; ruptureId++) {
+            if (!drop[ruptureId]) {
                 retainedRuptureIds.add(ruptureId);
             }
         }

@@ -100,7 +100,7 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             double filterMinMag,
             double filterMaxMag) {
         rupSet = recalcMags(rupSet, branch);
-        rupSet = filterByMagnitude(rupSet, filterMinMag, filterMaxMag);
+        rupSet = MagFilteredRupSet.filter(rupSet, filterMinMag, filterMaxMag);
         return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
     }
 
@@ -179,40 +179,15 @@ public class NZSHM22_InversionFaultSystemRuptSet extends InversionFaultSystemRup
             FaultSystemRupSet rupSet,
             NZSHM22_LogicTreeBranch branch,
             double filterMinMag,
-            double filterMaxMag)
-            throws IOException {
+            double filterMaxMag) {
         ClusterRuptures ruptures = rupSet.getModule(ClusterRuptures.class);
         if (ruptures == null) {
             ruptures = ClusterRuptures.singleStranded(rupSet);
             rupSet.addModule(ruptures);
         }
         rupSet = recalcMags(rupSet, branch);
-        rupSet = filterByMagnitude(rupSet, filterMinMag, filterMaxMag);
+        rupSet = MagFilteredRupSet.filter(rupSet, filterMinMag, filterMaxMag);
         return new NZSHM22_InversionFaultSystemRuptSet(rupSet, branch);
-    }
-
-    /**
-     * Drops all ruptures that fall below the minimum magnitude of any of the sections they use, and
-     * those in a magnitude bin above the bin of maxMag. The section minimum magnitudes are derived
-     * from the rupture set itself, with minMag as a lower bound, so this must be called after
-     * magnitudes have been recalculated and before any other modification is applied to the rupture
-     * set.
-     *
-     * <p>Note that minMag only raises those section minimum magnitudes, it does not switch the
-     * filtering off: a section whose smallest rupture is above minMag keeps its own value, so
-     * ruptures are dropped even when minMag is 0.
-     *
-     * @param rupSet the rupture set to filter
-     * @param minMag the lower bound for the section minimum magnitudes
-     * @param maxMag the maximum magnitude. Use {@link MagFilteredRupSet#NO_MAX_MAG} for no upper
-     *     bound.
-     * @return the filtered rupture set
-     */
-    public static FaultSystemRupSet filterByMagnitude(
-            FaultSystemRupSet rupSet, double minMag, double maxMag) {
-        double[] minMags =
-                NZSHM22_FaultSystemRupSetCalc.computeMinSeismoMagForSections(rupSet, minMag);
-        return MagFilteredRupSet.filter(rupSet, ModSectMinMags.instance(rupSet, minMags), maxMag);
     }
 
     protected static void applySlipRateFactor(

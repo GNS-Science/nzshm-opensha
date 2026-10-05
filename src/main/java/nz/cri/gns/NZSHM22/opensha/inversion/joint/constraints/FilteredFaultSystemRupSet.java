@@ -3,6 +3,7 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints;
 import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
@@ -85,11 +86,15 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
     }
 
     /**
-     * Filters a rupture set based on fault section ids.
+     * Filters a rupture set based on fault section ids. Ruptures that are fully within the filtered
+     * sections keep their original magnitude. Ruptures that lost sections get the partition
+     * magnitude of the original rupture, see {@link
+     * JointScalingRelationship#partitionMagnitude(double, double, double)}.
      *
      * @param rupSet the input rupture set
      * @param sectionIdPredicate a predicate to filter fault sections
-     * @param scalingRelationship the scaling relationship to calculate magnitudes with
+     * @param scalingRelationship the scaling relationship to build the filtered rupture set with.
+     *     Magnitudes are not taken from it.
      * @return a filtered rupture set
      */
     public static FilteredFaultSystemRupSet forIntPredicate(
@@ -140,6 +145,22 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
                         .forScalingRelationship(scalingRelationship)
                         .build();
 
+        // ruptures that are fully within the filter keep the magnitude of the original rupture,
+        // ruptures that lost sections get the partition magnitude of the original rupture
+        double[] mags = filteredRuptureSet.getMagForAllRups();
+        for (int r = 0; r < mags.length; r++) {
+            int oldId = newToOldRuptures.get(r);
+            if (ruptures.get(r).size() == rupSet.getSectionsIndicesForRup(oldId).size()) {
+                mags[r] = rupSet.getMagForRup(oldId);
+            } else {
+                mags[r] =
+                        JointScalingRelationship.partitionMagnitude(
+                                filteredRuptureSet.getAreaForRup(r),
+                                rupSet.getAreaForRup(oldId),
+                                rupSet.getMagForRup(oldId));
+            }
+        }
+
         FilteredFaultSystemRupSet result =
                 new FilteredFaultSystemRupSet(
                         filteredRuptureSet,
@@ -158,9 +179,9 @@ public class FilteredFaultSystemRupSet extends FaultSystemRupSet {
      *
      * @param solution the original solution to be filtered
      * @param predicate the predicate to filter the ruptures
-     * @param scalingRelationship the scaling relationship to calculate magnitudes with
-     * @return a new FaultSystemSolution that is filtered based on the provided predicate and
-     *     scaling relationship
+     * @param scalingRelationship the scaling relationship to build the filtered rupture set with,
+     *     see {@link #forIntPredicate(FaultSystemRupSet, IntPredicate, RupSetScalingRelationship)}
+     * @return a new FaultSystemSolution that is filtered based on the provided predicate
      */
     public static FaultSystemSolution forIntPredicate(
             FaultSystemSolution solution,

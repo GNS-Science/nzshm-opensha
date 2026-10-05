@@ -89,8 +89,7 @@ public class SmokeTest {
         sanityCheckBuilderModule(loaded, builderClass);
 
         FaultSystemRupSet expected =
-                NZSHM22_InversionFaultSystemRuptSet.filterByMagnitude(
-                        built, 0, MagFilteredRupSet.NO_MAX_MAG);
+                MagFilteredRupSet.filter(built, 0, MagFilteredRupSet.NO_MAX_MAG);
         assertEquals(expected.getNumRuptures(), loaded.getNumRuptures());
         assertEquals(built.getNumSections(), loaded.getNumSections());
         assertEquals(

@@ -8,6 +8,7 @@ import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
 import org.junit.Test;
@@ -78,12 +79,46 @@ public class FilteredFaultSystemRupSetTest {
                         PartitionPredicate.CRUSTAL.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
 
-        // magnitudes are only calculated for crustal parts of ruptures
+        // unchanged ruptures keep their magnitude
         assertEquals(original.getMagForRup(0), rupSet.getMagForRup(0), DELTA);
-        assertEquals(original.getMagForRup(0), rupSet.getMagForRup(1), DELTA);
+        // reduced ruptures get the partition magnitude of the original rupture
+        assertEquals(
+                JointScalingRelationship.partitionMagnitude(
+                        rupSet.getAreaForRup(1),
+                        original.getAreaForRup(2),
+                        original.getMagForRup(2)),
+                rupSet.getMagForRup(1),
+                DELTA);
 
         // minMag ignores zero magnitudes
         assertEquals(original.getMagForRup(0), rupSet.getMinMag(), DELTA);
+    }
+
+    /**
+     * Ruptures fully within the filter keep their original magnitude even if the scaling
+     * relationship would calculate a different one.
+     */
+    @Test
+    public void unchangedRupturesKeepOriginalMagTest() throws DocumentException, IOException {
+        FaultSystemRupSet original = makeRupSet();
+        // a magnitude that the scaling relationship would not produce
+        original.getMagForAllRups()[0] = 9.5;
+        original.getMagForAllRups()[2] = 9.7;
+
+        FaultSystemRupSet rupSet =
+                FilteredFaultSystemRupSet.forIntPredicate(
+                        original,
+                        PartitionPredicate.CRUSTAL.getPredicate(original),
+                        ScalingRelationships.SHAW_2009_MOD);
+
+        assertEquals(9.5, rupSet.getMagForRup(0), DELTA);
+        assertEquals(
+                JointScalingRelationship.partitionMagnitude(
+                        rupSet.getAreaForRup(1),
+                        original.getAreaForRup(2),
+                        original.getMagForRup(2)),
+                rupSet.getMagForRup(1),
+                DELTA);
     }
 
     public static int[] toArray(List<Integer> values) {

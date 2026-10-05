@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
@@ -20,7 +19,6 @@ import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SectSlipRates;
 import org.opensha.sha.faultSurface.FaultSection;
-import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class NZSHM22_InversionFaultSystemRuptSetTest {
@@ -134,50 +132,5 @@ public class NZSHM22_InversionFaultSystemRuptSetTest {
                 NZSHM22_FaultModels.CFM_1_0A_DOM_ALL,
                 ScalingRelationships.SHAW_2009_MOD,
                 List.of(List.of(0), List.of(0, 1), List.of(0, 1, 2), List.of(0, 1, 2, 3)));
-    }
-
-    @Test
-    public void testFilterByMagnitudeDropsSmallRuptures() throws DocumentException, IOException {
-        FaultSystemRupSet rupSet = magFilterFixture();
-        double maxMag = rupSet.getMaxMag();
-
-        FaultSystemRupSet filtered =
-                NZSHM22_InversionFaultSystemRuptSet.filterByMagnitude(
-                        rupSet, maxMag, MagFilteredRupSet.NO_MAX_MAG);
-
-        assertTrue(filtered.getNumRuptures() > 0);
-        assertTrue(filtered.getNumRuptures() < rupSet.getNumRuptures());
-        for (int r = 0; r < filtered.getNumRuptures(); r++) {
-            assertTrue(filtered.getMagForRup(r) >= maxMag);
-        }
-    }
-
-    @Test
-    public void testFilterByMagnitudeDropsLargeRuptures() throws DocumentException, IOException {
-        FaultSystemRupSet rupSet = magFilterFixture();
-        double minMag = rupSet.getMinMag();
-
-        FaultSystemRupSet filtered =
-                NZSHM22_InversionFaultSystemRuptSet.filterByMagnitude(rupSet, 0, minMag);
-
-        assertTrue(filtered.getNumRuptures() > 0);
-        assertTrue(filtered.getNumRuptures() < rupSet.getNumRuptures());
-        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
-        int maxBin = bins.getClosestXIndex(minMag);
-        for (int r = 0; r < filtered.getNumRuptures(); r++) {
-            assertTrue(bins.getClosestXIndex(filtered.getMagForRup(r)) <= maxBin);
-        }
-    }
-
-    @Test
-    public void testFilterByMagnitudeRejectsEmptyResult() throws DocumentException, IOException {
-        FaultSystemRupSet rupSet = magFilterFixture();
-        try {
-            NZSHM22_InversionFaultSystemRuptSet.filterByMagnitude(
-                    rupSet, rupSet.getMaxMag() + 1, MagFilteredRupSet.NO_MAX_MAG);
-            fail("expected IllegalStateException");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("outside the magnitude bounds"));
-        }
     }
 }

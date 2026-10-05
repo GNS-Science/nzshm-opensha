@@ -416,76 +416,12 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
     }
 
     /**
-     * This computes whether the rupture at rupIndex has a magnitude above the maximum magnitude. To
-     * be precise, the magnitude must fall into a higher bin than maxMag, so the whole bin of maxMag
-     * is still within bounds.
-     *
-     * @param fltSystRupSet the rupture set
-     * @param rupIndex the rupture to test
-     * @param maxMag the maximum magnitude
-     * @return true if the rupture is above the bin of maxMag
+     * Returns true if the specified magnitude is at least the same bin as minMag and at most the
+     * same bin as maxMag.
      */
-    public static boolean isRuptureAboveMaxMag(
-            FaultSystemRupSet fltSystRupSet, int rupIndex, double maxMag) {
-        return MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex))
-                > MAG_BINS.getClosestXIndex(maxMag);
-    }
-
-    /**
-     * This computes whether each rupture has a magnitude above the maximum magnitude. To be
-     * precise, the magnitude must fall into a higher bin than maxMag, so the whole bin of maxMag is
-     * still within bounds.
-     *
-     * @param fltSystRupSet the rupture set
-     * @param maxMag the maximum magnitude
-     * @return an array with one entry per rupture
-     */
-    public static boolean[] computeWhichRupsAreAboveMaxMag(
-            FaultSystemRupSet fltSystRupSet, double maxMag) {
-        boolean[] rupAboveMaxMag = new boolean[fltSystRupSet.getNumRuptures()];
-        for (int r = 0; r < rupAboveMaxMag.length; r++) {
-            rupAboveMaxMag[r] = isRuptureAboveMaxMag(fltSystRupSet, r, maxMag);
-        }
-        return rupAboveMaxMag;
-    }
-
-    /**
-     * This computes whether the rupture at rupIndex has a magnitude above the maximum magnitude of
-     * any of the sections it utilizes. To be precise, the magnitude must fall into a higher bin
-     * than the lowest maximum magnitude of those sections, so the whole bin of that maximum
-     * magnitude is still within bounds.
-     *
-     * @param fltSystRupSet the rupture set
-     * @param rupIndex the rupture to test
-     * @param maxMagForSect the maximum magnitude of each section
-     * @return true if the rupture is above the maximum magnitude of any of its sections
-     */
-    public static boolean isRuptureAboveSectionMaxMags(
-            FaultSystemRupSet fltSystRupSet, int rupIndex, double[] maxMagForSect) {
-        int rupBin = MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
-        for (int s : fltSystRupSet.getSectionsIndicesForRup(rupIndex)) {
-            if (rupBin > MAG_BINS.getClosestXIndex(maxMagForSect[s])) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * This computes whether each rupture has a magnitude above the maximum magnitude of any of the
-     * sections it utilizes. See {@link #isRuptureAboveSectionMaxMags(FaultSystemRupSet, int,
-     * double[])} for the exact test.
-     *
-     * @param fltSystRupSet the rupture set
-     * @param maxMagForSect the maximum magnitude of each section
-     * @return an array with one entry per rupture
-     */
-    public static boolean[] computeWhichRupsAreAboveSectionMaxMags(
-            FaultSystemRupSet fltSystRupSet, double[] maxMagForSect) {
-        boolean[] rupAboveSectMaxMag = new boolean[fltSystRupSet.getNumRuptures()];
-        for (int r = 0; r < rupAboveSectMaxMag.length; r++) {
-            rupAboveSectMaxMag[r] = isRuptureAboveSectionMaxMags(fltSystRupSet, r, maxMagForSect);
-        }
-        return rupAboveSectMaxMag;
+    public static boolean isWithinBounds(double minMag, double maxMag, double mag) {
+        int bin = MAG_BINS.getClosestXIndex(mag);
+        return (bin >= MAG_BINS.getClosestXIndex(minMag)
+                && bin <= MAG_BINS.getClosestXIndex(maxMag));
     }
 }

@@ -112,6 +112,8 @@ This is how joint inversions work currently.
   subduction bins. This is the normal behaviour of `FilteredInversionConstraint`.
 - Note that since magnitude is re-calculated for the filtered rupture sets, crustal and subduction bins are likely
   different for a joint rupture.
+- Magnitude on a partial joint rupture is calculated as $$\frac{1}{1.5}\log\frac{A^p}{A} + M$$, assuming that slip is  
+  the same for all crustal and subduction partitions.  See [joint-rupture-magnitude.md](investigations/397-joint-inversion/joint-rupture-magnitude.md)
 
 ### Global Constraints
 

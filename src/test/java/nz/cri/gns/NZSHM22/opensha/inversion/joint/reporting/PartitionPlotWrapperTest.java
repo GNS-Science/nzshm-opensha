@@ -88,6 +88,22 @@ public class PartitionPlotWrapperTest {
                         rupSet, null, (ReportMetadata) null, new File("."), "resources", "top"));
     }
 
+    /** Partitions can only be split off a solution, so rupture set reports are not split. */
+    @Test
+    public void testPassesThroughWithoutSolution() throws IOException {
+        RecordingPlot inner = new RecordingPlot();
+        PartitionPlotWrapper wrapper = new PartitionPlotWrapper(inner);
+
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getModule(PartitionMfds.class)).thenReturn(new PartitionMfds());
+
+        List<String> result =
+                wrapper.plot(
+                        rupSet, null, (ReportMetadata) null, new File("."), "resources", "top");
+
+        assertEquals(List.of("inner plot output"), result);
+    }
+
     @Test
     public void testForwardsConfigurationToInner() {
         RecordingPlot inner = new RecordingPlot();
