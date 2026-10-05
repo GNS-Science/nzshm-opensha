@@ -7,12 +7,10 @@ import static org.opensha.commons.util.modules.helpers.FileBackedModule.initEntr
 import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ArchivableModule;
@@ -69,29 +67,29 @@ public class PartitionMfds implements ArchivableModule {
         return base;
     }
 
+    /**
+     * Creates target MFDs for the whole joint rupture set by summing the total regional, on-fault
+     * supra-seismogenic, on-fault sub-seismogenic and truly off-fault MFDs of all partitions. The
+     * result has no MFD constraints, as those only apply to their own partition. Use {@link
+     * nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper} to plot them
+     * against the partition's rupture set. The partition MFDs are not modified.
+     *
+     * @param rupSet the joint rupture set that the target MFDs are for
+     * @return the summed target MFDs
+     */
     public InversionTargetMFDs synthesize(FaultSystemRupSet rupSet) {
         SummedMagFreqDist totalRegionalMFD = null;
         SummedMagFreqDist onFaultSupraSeisMFD = null;
         SummedMagFreqDist onFaultSubSeisMFD = null;
         SummedMagFreqDist trulyOffFaultMFD = null;
-        List<IncrementalMagFreqDist> mfdConstraints = new ArrayList<>();
-        //         SubSeismoOnFaultMFDs subSeisOnFaultMFDs= null;
-        //         ImmutableList<? extends IncrementalMagFreqDist> supraSeisOnFaultNuclMFDs= null;
 
-        for (PartitionPredicate partition : mfds.keySet()) {
-            NewZealandRegions.PartitionRegion region =
-                    new NewZealandRegions.PartitionRegion(partition);
-            InversionTargetMFDs partitionMFDs = mfds.get(partition);
+        for (InversionTargetMFDs partitionMFDs : mfds.values()) {
             totalRegionalMFD = safeAdd(totalRegionalMFD, partitionMFDs.getTotalRegionalMFD());
             onFaultSupraSeisMFD =
                     safeAdd(onFaultSupraSeisMFD, partitionMFDs.getTotalOnFaultSupraSeisMFD());
             onFaultSubSeisMFD =
                     safeAdd(onFaultSubSeisMFD, partitionMFDs.getTotalOnFaultSubSeisMFD());
             trulyOffFaultMFD = safeAdd(trulyOffFaultMFD, partitionMFDs.getTrulyOffFaultMFD());
-            for (IncrementalMagFreqDist constraint : partitionMFDs.getMFD_Constraints()) {
-                constraint.setRegion(region);
-                mfdConstraints.add(constraint);
-            }
         }
         return new InversionTargetMFDs.Precomputed(
                 rupSet,
@@ -99,7 +97,7 @@ public class PartitionMfds implements ArchivableModule {
                 onFaultSupraSeisMFD,
                 onFaultSubSeisMFD,
                 trulyOffFaultMFD,
-                mfdConstraints,
+                List.of(),
                 null,
                 null);
     }

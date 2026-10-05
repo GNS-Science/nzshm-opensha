@@ -43,6 +43,12 @@ public interface JointScalingRelationship {
      * Calculates moment magnitude for a partition of a joint rupture if the slip is the same for
      * the joint rupture and its partition ruptures.
      *
+     * <p>With equal slip, moment is proportional to area, so the partition moment is {@code
+     * partitionArea / area} of the joint moment. Since {@code Mw = 2/3 log10(M0) + c}, the
+     * partition magnitude is {@code magnitude + 2/3 log10(partitionArea / area)}. A partition that
+     * covers the whole rupture has the rupture's magnitude, and the partition magnitude approaches
+     * it as the partition's share of the area approaches 1.
+     *
      * @param partitionArea the area of the partition
      * @param area the area of the joint rupture
      * @param magnitude the magnitude of the joint rupture

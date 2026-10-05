@@ -13,7 +13,6 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.ReportFaultSystemRuptSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
@@ -21,6 +20,7 @@ import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
+import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.earthquake.faultSysSolution.modules.NamedFaults;
 import org.opensha.sha.earthquake.faultSysSolution.reports.*;
 import org.opensha.sha.earthquake.faultSysSolution.reports.plots.SlipRatePlots;
@@ -259,19 +259,19 @@ public class NZSHM22_ReportPageGen {
         }
     }
 
-    /** wrap ruptureset so that it can use partition regions */
-    public FaultSystemSolution setUpJointMFDs(FaultSystemSolution solution) throws IOException {
-        if (!solution.getRupSet().hasModule(PartitionMfds.class)) {
-            return solution;
+    /**
+     * Adds target MFDs for the whole joint rupture set so that combined MFD plots show targets. The
+     * targets are the sum of the partition targets, see {@link PartitionMfds#synthesize}. Does
+     * nothing if the rupture set has no {@link PartitionMfds} or already has target MFDs.
+     *
+     * @param rupSet the rupture set to add the targets to
+     */
+    protected static void addSynthesizedTargets(FaultSystemRupSet rupSet) {
+        PartitionMfds partitionMfds = rupSet.getModule(PartitionMfds.class);
+        if (partitionMfds == null || rupSet.hasModule(InversionTargetMFDs.class)) {
+            return;
         }
-
-        ReportFaultSystemRuptSet rupset = new ReportFaultSystemRuptSet(solution.getRupSet());
-        solution = FaultSystemSolution.load(new File(solutionPath), rupset);
-        PartitionMfds mfds = solution.getRupSet().getModule(PartitionMfds.class);
-        rupset.addModule(mfds.synthesize(rupSet));
-
-        jointStats(solution);
-        return solution;
+        rupSet.addModule(partitionMfds.synthesize(rupSet));
     }
 
     /**
@@ -321,10 +321,12 @@ public class NZSHM22_ReportPageGen {
             }
         }
         addNamedFaults(solution.getRupSet());
+        addSynthesizedTargets(solution.getRupSet());
         RupSetMetadata solMeta = new RupSetMetadata(name, solution);
 
         ReportMetadata meta = null;
         if (compSolution != null) {
+            addSynthesizedTargets(compSolution.getRupSet());
             RupSetMetadata compMeta =
                     new RupSetMetadata(comparisonName, compSolution.getRupSet(), compSolution);
             meta = new ReportMetadata(solMeta, compMeta);
@@ -372,6 +374,7 @@ public class NZSHM22_ReportPageGen {
             }
         }
         addNamedFaults(rupSet);
+        addSynthesizedTargets(rupSet);
 
         List<AbstractRupSetPlot> reportPlots = new ArrayList<>();
         reportPlots.addAll(firstPlots);
@@ -392,6 +395,7 @@ public class NZSHM22_ReportPageGen {
         RupSetMetadata rupSetMetadata = new RupSetMetadata(name, rupSet);
         ReportMetadata meta = null;
         if (compSolution != null) {
+            addSynthesizedTargets(compSolution.getRupSet());
             RupSetMetadata compMeta =
                     new RupSetMetadata(
                             "ComparisonSolution", compSolution.getRupSet(), compSolution);
