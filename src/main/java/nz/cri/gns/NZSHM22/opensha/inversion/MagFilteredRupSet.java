@@ -157,11 +157,11 @@ public class MagFilteredRupSet {
                 original.getNumRuptures());
 
         ClusterRuptures clusterRuptures = original.getModule(ClusterRuptures.class);
-        if(clusterRuptures != null){
+        if (clusterRuptures != null) {
             original.removeModule(clusterRuptures);
         }
         FaultSystemRupSet filtered = original.getForRuptureSubSet(retainedRuptureIds);
-        if(clusterRuptures != null){
+        if (clusterRuptures != null) {
             original.addModule(clusterRuptures);
         }
 
