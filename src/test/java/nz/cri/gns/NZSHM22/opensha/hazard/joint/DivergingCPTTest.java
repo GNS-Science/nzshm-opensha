@@ -21,7 +21,7 @@ public class DivergingCPTTest {
 
     @Test
     public void testCentredOnZeroCoversTheRange() throws IOException {
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -0.3, 0.7);
+        CPT cpt = DivergingCPT.ramp(palette(), -0.3, 0.7).build();
         assertEquals(-0.3, cpt.getMinValue(), 1e-9);
         assertEquals(0.7, cpt.getMaxValue(), 1e-9);
     }
@@ -29,7 +29,7 @@ public class DivergingCPTTest {
     @Test
     public void testNeutralColourSitsOnZero() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -0.1, 2d);
+        CPT cpt = DivergingCPT.ramp(palette(), -0.1, 2d).build();
         assertEquals(scaled.getColor(0f), cpt.getColor(0f));
         // and not somewhere in the middle of the range
         assertNotEquals(scaled.getColor(0f), cpt.getColor(0.95f));
@@ -37,7 +37,7 @@ public class DivergingCPTTest {
 
     @Test
     public void testEmptySideLeavesZeroAtTheEnd() throws IOException {
-        CPT cpt = DivergingCPT.centredOnZero(palette(), 0d, 1d);
+        CPT cpt = DivergingCPT.ramp(palette(), 0d, 1d).build();
         assertEquals(0d, cpt.getMinValue(), 1e-9);
         assertEquals(1d, cpt.getMaxValue(), 1e-9);
     }
@@ -45,12 +45,12 @@ public class DivergingCPTTest {
     @Test
     public void testRejectsRangesWithoutZero() throws IOException {
         try {
-            DivergingCPT.centredOnZero(palette(), 0.5, 1d);
+            DivergingCPT.ramp(palette(), 0.5, 1d).build();
             fail("expected a range that does not contain zero to be rejected");
         } catch (IllegalArgumentException expected) {
         }
         try {
-            DivergingCPT.centredOnZero(palette(), 0d, 0d);
+            DivergingCPT.ramp(palette(), 0d, 0d).build();
             fail("expected an empty range to be rejected");
         } catch (IllegalArgumentException expected) {
         }
@@ -83,10 +83,10 @@ public class DivergingCPTTest {
 
     @Test
     public void testCentredOnZeroCarriesTheTickInterval() throws IOException {
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -0.3, 0.7);
+        CPT cpt = DivergingCPT.ramp(palette(), -0.3, 0.7).build();
         assertEquals(0.1, cpt.getPreferredTickInterval(), 1e-7);
 
-        CPT awkward = DivergingCPT.centredOnZero(palette(), -0.37, 1.13);
+        CPT awkward = DivergingCPT.ramp(palette(), -0.37, 1.13).build();
         assertTrue(Double.isNaN(awkward.getPreferredTickInterval()));
     }
 
@@ -136,7 +136,7 @@ public class DivergingCPTTest {
     @Test
     public void testBalancedScalingColoursBothSidesAtTheSameRate() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -33d, 77d);
+        CPT cpt = DivergingCPT.ramp(palette(), -33d, 77d).build();
 
         // the shorter side reaches 33/77 of the way into its half of the palette, no further
         assertEquals(scaled.getColor((float) (-33d / 77d)), cpt.getColor(-33f));
@@ -154,7 +154,7 @@ public class DivergingCPTTest {
     /** The ramp runs between exactly the bounds it was given. */
     @Test
     public void testRampKeepsItsBounds() throws IOException {
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -33d, 77d);
+        CPT cpt = DivergingCPT.ramp(palette(), -33d, 77d).build();
         assertEquals(-33d, cpt.getMinValue(), 1e-9);
         assertEquals(77d, cpt.getMaxValue(), 1e-9);
     }
@@ -164,9 +164,9 @@ public class DivergingCPTTest {
     public void testOneSidedRampSaturates() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
         assertEquals(
-                scaled.getColor(1f), DivergingCPT.centredOnZero(palette(), 0d, 5d).getColor(5f));
+                scaled.getColor(1f), DivergingCPT.ramp(palette(), 0d, 5d).build().getColor(5f));
         assertEquals(
-                scaled.getColor(-1f), DivergingCPT.centredOnZero(palette(), -5d, 0d).getColor(-5f));
+                scaled.getColor(-1f), DivergingCPT.ramp(palette(), -5d, 0d).build().getColor(-5f));
     }
 
     /**
@@ -224,7 +224,7 @@ public class DivergingCPTTest {
     public void testLogRampDoesNotWashOutSmallChanges() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
         CPT log = DivergingCPT.ramp(palette(), -33d, 186d).logFloor(1d).build();
-        CPT linear = DivergingCPT.centredOnZero(palette(), -33d, 186d);
+        CPT linear = DivergingCPT.ramp(palette(), -33d, 186d).build();
 
         // on the linear ramp a 10% change is 10/186 of the way along, all but colourless
         assertColorNear("linear", scaled.getColor((float) (10d / 186d)), linear.getColor(10f));
@@ -305,7 +305,7 @@ public class DivergingCPTTest {
     @Test
     public void testLinearRampWithoutABandIsUnchanged() throws IOException {
         CPT scaled = palette().rescale(-1d, 1d);
-        CPT cpt = DivergingCPT.centredOnZero(palette(), -40d, 100d);
+        CPT cpt = DivergingCPT.ramp(palette(), -40d, 100d).build();
         assertEquals(scaled.getColor(0f), cpt.getColor(0f));
         assertColorNear("at +50", scaled.getColor(0.5f), cpt.getColor(50f));
         assertColorNear("at -20", scaled.getColor(-0.2f), cpt.getColor(-20f));

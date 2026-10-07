@@ -64,21 +64,16 @@ public class HazardReportSource {
      * GMM. Its ruptures may span crustal and subduction sections.
      */
     public static HazardReportSource joint(String name, FaultSystemSolution solution) {
-        return new HazardReportSource(name, JointHazardInput.joint(solution));
+        return new HazardReportSource(
+                name,
+                JointHazardInput.forSolution(solution, JointHazardInput.GmmMode.JOINT_RUPTURE));
     }
 
-    /**
-     * As {@link #joint(String, FaultSystemSolution)}, but reading the solution from disk only when
-     * it is first needed, so that a report over many runs can load them one at a time. See {@link
-     * JointHazardInput#release()}.
-     */
+    /** As {@link #joint(String, FaultSystemSolution)}, loading the solution from disk. */
     public static HazardReportSource joint(String name, File solutionFile) {
         Preconditions.checkArgument(
                 solutionFile.isFile(), "%s is not a file", solutionFile.getAbsolutePath());
-        return new HazardReportSource(
-                name,
-                new JointHazardInput(() -> load(solutionFile))
-                        .setGmmMode(JointHazardInput.GmmMode.JOINT_RUPTURE));
+        return joint(name, load(solutionFile));
     }
 
     /**
@@ -130,9 +125,19 @@ public class HazardReportSource {
         return solutions;
     }
 
-    /** Lets go of this source's solution once its results have been extracted. */
-    public void release() {
-        input.release();
+    /**
+     * Sets up the hazard calculation and calculates the map curves, taking any the solution carries
+     * in a {@link HazardMapCurves} module.
+     */
+    public JointHazardMapCalculator calculate() {
+        System.out.println(
+                "Calculating hazard for "
+                        + name
+                        + " at "
+                        + input.getRegion().getNodeCount()
+                        + " sites using "
+                        + input.getGmmMode());
+        return new JointHazardMapCalculator(input).calcHazardCurves();
     }
 
     public String getName() {

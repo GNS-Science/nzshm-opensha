@@ -52,14 +52,8 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * the others, plus the spread of the ground motion at the map return periods.
  *
  * <p>All configs must be calculated over the same region and the same periods. Use {@link
- * #setRegion} or {@link #setSpacing} to set them together. Runs are calculated one after the other
- * and each solution is released once its maps and curves have been extracted, so the report's
- * memory use does not grow with the number of runs. That only works for a config that can reload
- * its solution, i.e. one built from a file; see {@link JointHazardInput#release()}. The first run
- * is the exception, see {@link #calculate}.
- *
- * <p>A run is validated just before it is calculated rather than all of them up front, because
- * validating a run means holding its solution.
+ * #setRegion} or {@link #setSpacing} to set them together. Runs are validated and calculated one
+ * after the other.
  */
 public class HazardVariabilityReport {
 
@@ -224,12 +218,8 @@ public class HazardVariabilityReport {
     }
 
     /**
-     * The maps and curves of every run, plus what the summary says about it. Runs are validated and
-     * calculated one at a time and only their results are kept, so that a set of large solutions
-     * does not all have to be in memory at once.
-     *
-     * <p>The first run is the exception: plotting a map goes through a calculator and a calculator
-     * holds its solution, so the first one stays in memory for the whole report.
+     * The maps and curves of every run, plus what the summary says about it. The first run's
+     * calculator is kept for plotting.
      *
      * @throws IllegalStateException if a solution fails {@link JointHazardInput#validate()}
      */
@@ -242,15 +232,7 @@ public class HazardVariabilityReport {
                             config.getName(),
                             HazardComparisonReport.sectionCount(config),
                             HazardComparisonReport.ruptureCount(config)));
-            System.out.println(
-                    "Calculating hazard for "
-                            + config.getName()
-                            + " at "
-                            + config.getInput().getRegion().getNodeCount()
-                            + " sites using "
-                            + config.getInput().getGmmMode());
-            JointHazardMapCalculator calculator = new JointHazardMapCalculator(config.getInput());
-            calculator.calcHazardCurves();
+            JointHazardMapCalculator calculator = config.calculate();
 
             for (double period : periods) {
                 for (ReturnPeriods rp : SolHazardMapCalc.MAP_RPS) {
@@ -268,9 +250,6 @@ public class HazardVariabilityReport {
 
             if (results.plotter == null) {
                 results.plotter = calculator;
-            } else {
-                // everything this run contributes has been extracted, so let the solution go
-                config.release();
             }
         }
         return results;
@@ -564,7 +543,7 @@ public class HazardVariabilityReport {
 
     // ---------------------------------------------------------------- plumbing
 
-    /** What the summary says about one run, kept so that its solution can be released. */
+    /** What the summary says about one run. */
     protected static class Run {
         protected final String name;
         protected final int numSections;

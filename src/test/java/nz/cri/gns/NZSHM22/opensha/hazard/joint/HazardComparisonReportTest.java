@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jfree.data.Range;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +24,7 @@ import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
 import org.opensha.commons.geo.Region;
 import org.opensha.commons.util.cpt.CPT;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 
 /** Tests for {@link HazardComparisonReport}: the side by side hazard comparison report. */
 public class HazardComparisonReportTest {
@@ -402,5 +404,87 @@ public class HazardComparisonReportTest {
             images.add(matcher.group(1));
         }
         return images;
+    }
+
+    // ---- hazard cache: solutions with the curves the report needs
+
+    static GriddedRegion cacheRegion() {
+        return new GriddedRegion(
+                new Region(new Location(-41.6, 174.5), new Location(-41.1, 175.2)),
+                0.25,
+                GriddedRegion.ANCHOR_0_0);
+    }
+
+    File writeSolution(FaultSystemSolution solution, String name) throws Exception {
+        File file = new File(tempFolder.getRoot(), name);
+        solution.write(file);
+        return file;
+    }
+
+    /** Whether a solution carries the curves the given inputs need for every period. */
+    static boolean hasCurves(FaultSystemSolution solution, JointHazardInput input) {
+        HazardMapCurves module = solution.getModule(HazardMapCurves.class);
+        if (module == null) {
+            return false;
+        }
+        return module.getKeys()
+                .containsAll(HazardMapCurves.Key.keys(input, solution, input.getPeriods()));
+    }
+
+    /**
+     * A solution without joint ruptures gets curves for both of its roles in a comparison report: a
+     * joint source of its own, and a part of a combined source.
+     */
+    @Test
+    public void testAddsCurvesForBothModes() throws Exception {
+        File file = writeSolution(makeCrustalSolution(), "crustal.zip");
+        File output = HazardComparisonReport.addHazardCurves(file, cacheRegion());
+        assertEquals(new File(tempFolder.getRoot(), "crustal_hazardCache.zip"), output);
+        assertNull(
+                "the original is left alone",
+                FaultSystemSolution.load(file).getModule(HazardMapCurves.class));
+
+        FaultSystemSolution loaded = FaultSystemSolution.load(output);
+        assertTrue(
+                hasCurves(
+                        loaded,
+                        JointHazardInput.forSolution(loaded, JointHazardInput.GmmMode.JOINT_RUPTURE)
+                                .setRegion(cacheRegion())));
+
+        JointHazardInput combined =
+                JointHazardInput.combined(loaded, makeSubductionSolution())
+                        .setRegion(cacheRegion());
+        assertTrue(hasCurves(combined.getParts().get(0), combined));
+        assertEquals(
+                2 * JointHazardInput.DEFAULT_PERIODS.length,
+                loaded.getModule(HazardMapCurves.class).getKeys().size());
+    }
+
+    /** A solution with joint ruptures can only be calculated with the joint GMM. */
+    @Test
+    public void testJointSolutionGetsJointCurvesOnly() throws Exception {
+        File file = writeSolution(makeSolution(), "joint.zip");
+        FaultSystemSolution loaded =
+                FaultSystemSolution.load(
+                        HazardComparisonReport.addHazardCurves(file, cacheRegion()));
+        assertTrue(
+                hasCurves(
+                        loaded,
+                        JointHazardInput.forSolution(loaded, JointHazardInput.GmmMode.JOINT_RUPTURE)
+                                .setRegion(cacheRegion())));
+        assertEquals(
+                List.of(JointHazardInput.GmmMode.JOINT_RUPTURE),
+                loaded.getModule(HazardMapCurves.class).getKeys().stream()
+                        .map(key -> key.gmmMode)
+                        .distinct()
+                        .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testHazardCacheFile() {
+        File solution = new File("dir", "InversionSolution-abc.zip");
+        File cache = HazardComparisonReport.hazardCacheFile(solution);
+        assertEquals("InversionSolution-abc_hazardCache.zip", cache.getName());
+        assertEquals(solution.getAbsoluteFile().getParentFile(), cache.getParentFile());
     }
 }

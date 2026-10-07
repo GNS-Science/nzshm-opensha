@@ -25,6 +25,7 @@ import org.opensha.commons.gui.plot.PlotUtils;
 import org.opensha.commons.mapping.gmt.elements.GMT_CPT_Files;
 import org.opensha.commons.util.cpt.CPT;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
+import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc;
 import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnPeriods;
 
@@ -150,6 +151,61 @@ public class HazardComparisonReport {
             HazardReportSource first, HazardReportSource second, File outputPath)
             throws IOException {
         return new HazardComparisonReport(first, second, outputPath).generate();
+    }
+
+    /**
+     * Writes a copy of a solution file with the hazard map curves that a report needs for it at the
+     * default region and periods, so that a report on the copy reads them instead of calculating.
+     * The copy is named after the original: {@code foo.zip} is copied to {@code
+     * foo_hazardCache.zip}, see {@link #hazardCacheFile}. The original is left alone.
+     *
+     * <p>Curves are calculated in {@link JointHazardInput.GmmMode#JOINT_RUPTURE}, for the solution
+     * used as a joint source, and also in {@link JointHazardInput.GmmMode#PER_TECTONIC_REGION}, for
+     * the solution used as a part of a combined source, unless it has joint ruptures, which that
+     * mode cannot calculate. A report that sets its own region or periods needs other curves.
+     *
+     * @param solutionFile the solution to calculate the curves for
+     * @return the copy that was written
+     */
+    public static File addHazardCurves(File solutionFile) throws IOException {
+        return addHazardCurves(solutionFile, null);
+    }
+
+    /** Where {@link #addHazardCurves(File)} writes a solution with its curves. */
+    public static File hazardCacheFile(File solutionFile) {
+        String name = solutionFile.getName();
+        if (name.toLowerCase().endsWith(".zip")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        return new File(solutionFile.getAbsoluteFile().getParentFile(), name + "_hazardCache.zip");
+    }
+
+    /**
+     * As {@link #addHazardCurves(File)}, over the given region.
+     *
+     * @param region the map region, or null for the default one
+     */
+    protected static File addHazardCurves(File solutionFile, GriddedRegion region)
+            throws IOException {
+        FaultSystemSolution solution =
+                JointSolutions.backfill(FaultSystemSolution.load(solutionFile));
+        List<JointHazardInput.GmmMode> modes = new ArrayList<>();
+        modes.add(JointHazardInput.GmmMode.JOINT_RUPTURE);
+        if (!new JointHazardInput(solution).validate().isJoint()) {
+            modes.add(JointHazardInput.GmmMode.PER_TECTONIC_REGION);
+        }
+        for (JointHazardInput.GmmMode mode : modes) {
+            JointHazardInput input = new JointHazardInput(solution).setGmmMode(mode);
+            if (region != null) {
+                input.setRegion(region);
+            }
+            System.out.println("Calculating hazard map curves in " + mode);
+            new JointHazardMapCalculator(input).attachCurves();
+        }
+        File output = hazardCacheFile(solutionFile);
+        solution.write(output);
+        System.out.println("Wrote solution with hazard map curves to " + output.getAbsolutePath());
+        return output;
     }
 
     public HazardComparisonReport(
@@ -294,17 +350,9 @@ public class HazardComparisonReport {
                 + ".";
     }
 
+    /** Sets up the hazard calculation of a config, using its cache. */
     protected JointHazardMapCalculator calculate(HazardReportSource config) {
-        System.out.println(
-                "Calculating hazard for "
-                        + config.getName()
-                        + " at "
-                        + config.getInput().getRegion().getNodeCount()
-                        + " sites using "
-                        + config.getInput().getGmmMode());
-        JointHazardMapCalculator calculator = new JointHazardMapCalculator(config.getInput());
-        calculator.calcHazardCurves();
-        return calculator;
+        return config.calculate();
     }
 
     /** One hazard map per period and return period, for each config, plus their difference. */
@@ -392,8 +440,8 @@ public class HazardComparisonReport {
         ReportPage.Section section = new ReportPage.Section("Hazard sources", "sources");
         SiteSourcePage pages =
                 new SiteSourcePage(
-                        new SiteSourceExplorer(firstCalc.getSetup()),
-                        new SiteSourceExplorer(secondCalc.getSetup()),
+                        new SiteSourceExplorer(firstCalc),
+                        new SiteSourceExplorer(secondCalc),
                         first.getName(),
                         second.getName());
         pages.setNoChangeColor(noChangeColor);
@@ -903,7 +951,6 @@ public class HazardComparisonReport {
                         "Crustal / interface / joint ruptures",
                         ruptureMix(firstValidation),
                         ruptureMix(secondValidation))
-                .addRow("Minimum rupture rate", rateCutoff(first), rateCutoff(second))
                 .addRow(
                         "Region",
                         region.getNodeCount()
@@ -911,14 +958,6 @@ public class HazardComparisonReport {
                                 + (float) region.getSpacing()
                                 + " degrees")
                 .addRow("Periods", periodLabels());
-    }
-
-    /**
-     * The rupture rate cutoff a config was calculated with. See {@link JointSolutions#filterRates}.
-     */
-    protected static String rateCutoff(HazardReportSource config) {
-        double rate = config.getInput().getMinRuptureRate();
-        return rate > 0 ? (float) rate + " /yr" : "none";
     }
 
     protected static String ruptureMix(JointHazardInput.ValidationResult validation) {

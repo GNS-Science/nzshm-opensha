@@ -119,11 +119,6 @@ public class DivergingCPT {
         return new Builder(palette, min, max);
     }
 
-    /** A linear ramp with the defaults, i.e. {@code ramp(palette, min, max).build()}. */
-    public static CPT centredOnZero(CPT palette, double min, double max) {
-        return ramp(palette, min, max).build();
-    }
-
     /** Collects the choices a ramp is built from. See {@link DivergingCPT#ramp}. */
     public static class Builder {
 
