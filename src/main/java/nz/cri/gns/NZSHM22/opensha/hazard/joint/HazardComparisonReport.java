@@ -118,7 +118,7 @@ public class HazardComparisonReport {
      * The colour the no-change band is drawn in unless {@link #setNoChangeColor} says otherwise.
      * See {@link #NO_CHANGE_PERCENT}.
      */
-    public static final Color DEFAULT_NO_CHANGE_COLOR = DivergingCPT.DEFAULT_ZERO_COLOR;
+    public static final Color DEFAULT_NO_CHANGE_COLOR = new Color(255, 255, 255);
 
     /**
      * Annual exceedance probability below which curve values are ignored when comparing. Curves get
