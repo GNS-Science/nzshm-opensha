@@ -1,6 +1,7 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +18,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.BuildInfoModule;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import org.opensha.sha.earthquake.faultSysSolution.modules.SplittableRuptureModule;
+import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
 
 /**
  * Filters a rupture set by magnitude, dropping the ruptures that fall outside the minimum and
@@ -163,6 +165,12 @@ public class MagFilteredRupSet {
         FaultSystemRupSet filtered = original.getForRuptureSubSet(retainedRuptureIds);
         if (clusterRuptures != null) {
             original.addModule(clusterRuptures);
+            // getForRuptureSubSet() retains all sections, so cluster ruptures remain valid
+            List<ClusterRupture> retained = new ArrayList<>();
+            for (int ruptureId : retainedRuptureIds) {
+                retained.add(clusterRuptures.get(ruptureId));
+            }
+            filtered.addModule(ClusterRuptures.instance(filtered, retained));
         }
 
         for (Class<? extends OpenSHA_Module> type : RUPTURE_COUNT_AGNOSTIC_MODULES) {
