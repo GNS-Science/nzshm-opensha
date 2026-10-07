@@ -4,6 +4,8 @@ import static nz.cri.gns.NZSHM22.opensha.hazard.joint.JointTestSolutions.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,9 +38,9 @@ import org.opensha.sha.imr.param.IntensityMeasureParams.PGA_Param;
 import org.opensha.sha.util.TectonicRegionType;
 
 /**
- * Tests for {@link JointHazardCalcSetup} and {@link JointHazardMapCalculator}: the GMM setup and
- * the maps, curves and plots built on top of it. The test solution lives in {@link
- * JointTestSolutions}.
+ * Tests for {@link JointHazardMapCalculator}: the GMMs, the map curves and how they are combined
+ * and cached, and the maps, curves and plots built on top of them. The test solution lives in
+ * {@link JointTestSolutions}.
  */
 public class JointHazardMapCalculatorTest {
 
@@ -51,17 +53,17 @@ public class JointHazardMapCalculatorTest {
      */
     @Test
     public void testGmmSupplierMapIsSingleEntry() {
-        Map<TectonicRegionType, ?> map = JointHazardCalcSetup.gmmSupplierMap();
+        Map<TectonicRegionType, ?> map = JointHazardMapCalculator.gmmSupplierMap();
         assertEquals(1, map.size());
         assertTrue(map.containsKey(TectonicRegionType.ACTIVE_SHALLOW));
-        assertTrue(JointHazardCalcSetup.buildGmm() instanceof JointRuptureExperimentalIMR);
+        assertTrue(JointHazardMapCalculator.buildGmm() instanceof JointRuptureExperimentalIMR);
     }
 
     /** The per-TRT map has a GMM for each region type, and they are different models. */
     @Test
     public void testPerTrtGmmSupplierMap() {
         Map<TectonicRegionType, Supplier<ScalarIMR>> map =
-                JointHazardCalcSetup.perTrtGmmSupplierMap();
+                JointHazardMapCalculator.perTrtGmmSupplierMap();
         assertEquals(2, map.size());
 
         ScalarIMR crustal = map.get(TectonicRegionType.ACTIVE_SHALLOW).get();
@@ -114,7 +116,7 @@ public class JointHazardMapCalculatorTest {
     }
 
     /**
-     * The setup gives the rupture set its tectonic region types in {@link
+     * The calculator gives the rupture set its tectonic region types in {@link
      * JointHazardInput.GmmMode#JOINT_RUPTURE} too, even though the single-entry GMM map does not
      * dispatch on them.
      *
@@ -132,7 +134,7 @@ public class JointHazardMapCalculatorTest {
     public void testJointModeAppliesTectonicRegimes() {
         JointHazardInput input = new JointHazardInput(makeSolution());
         assertEquals(JointHazardInput.GmmMode.JOINT_RUPTURE, input.getGmmMode());
-        new JointHazardCalcSetup(input);
+        new JointHazardMapCalculator(input);
 
         RupSetTectonicRegimes regimes =
                 input.getSolution().getRupSet().getModule(RupSetTectonicRegimes.class);
@@ -148,8 +150,9 @@ public class JointHazardMapCalculatorTest {
      */
     @Test
     public void testJointModeErfSourcesCarryTectonicRegionTypes() {
-        JointHazardCalcSetup setup = new JointHazardCalcSetup(new JointHazardInput(makeSolution()));
-        BaseFaultSystemSolutionERF erf = setup.getCalc().getERF();
+        JointHazardMapCalculator calculator =
+                new JointHazardMapCalculator(new JointHazardInput(makeSolution()));
+        BaseFaultSystemSolutionERF erf = calculator.getCalc().getERF();
         erf.updateForecast();
 
         Set<TectonicRegionType> trts = EnumSet.noneOf(TectonicRegionType.class);
@@ -170,7 +173,7 @@ public class JointHazardMapCalculatorTest {
     @Test
     public void testMapXValsExtendOneDecade() {
         ArbitrarilyDiscretizedFunc standard = IMT_Info.getUSGS_SA_Function();
-        ArbitrarilyDiscretizedFunc xVals = JointHazardCalcSetup.mapXVals();
+        ArbitrarilyDiscretizedFunc xVals = JointHazardMapCalculator.mapXVals();
 
         assertEquals(standard.size() + 1, xVals.size());
         assertEquals(standard.getMinX() * 0.1, xVals.getMinX(), 1e-12);
@@ -234,7 +237,8 @@ public class JointHazardMapCalculatorTest {
     /** A site curve for a single solution, calculated with the per-TRT GMMs. */
     private static DiscretizedFunc perTrtSiteCurve(FaultSystemSolution solution) {
         return new JointHazardMapCalculator(
-                        JointHazardInput.perTectonicRegion(solution)
+                        JointHazardInput.forSolution(
+                                        solution, JointHazardInput.GmmMode.PER_TECTONIC_REGION)
                                 .setRegion(smallRegion())
                                 .setPeriods(0d)
                                 .setNumThreads(1))
@@ -272,7 +276,9 @@ public class JointHazardMapCalculatorTest {
     public void testMixedSolutionPerTectonicRegion() {
         JointHazardMapCalculator calculator =
                 new JointHazardMapCalculator(
-                        JointHazardInput.perTectonicRegion(makeMixedSolution())
+                        JointHazardInput.forSolution(
+                                        makeMixedSolution(),
+                                        JointHazardInput.GmmMode.PER_TECTONIC_REGION)
                                 .setRegion(smallRegion())
                                 .setPeriods(0d)
                                 .setNumThreads(1));
@@ -314,7 +320,7 @@ public class JointHazardMapCalculatorTest {
     public void testJointRuptureShakesHarderThanItsParts() {
         FaultSystemRupSet rupSet = makeRupSet(0d);
 
-        ScalarIMR gmm = JointHazardCalcSetup.buildGmm();
+        ScalarIMR gmm = JointHazardMapCalculator.buildGmm();
         gmm.setIntensityMeasure(PGA_Param.NAME);
         Site site = new Site(SITE);
         for (Parameter<?> param : gmm.getSiteParams()) {
@@ -464,5 +470,240 @@ public class JointHazardMapCalculatorTest {
         } catch (java.io.IOException e) {
             fail(e.getMessage());
         }
+    }
+
+    // ---- map curves: parts, combination and HazardMapCurves modules
+
+    /** A calculator that records the periods of every calculation it builds. */
+    static class CountingCalculator extends JointHazardMapCalculator {
+        final List<double[]> built = new ArrayList<>();
+
+        CountingCalculator(JointHazardInput input) {
+            super(input);
+        }
+
+        @Override
+        protected SolHazardMapCalc buildCalc(FaultSystemSolution solution, double... periods) {
+            built.add(periods);
+            return super.buildCalc(solution, periods);
+        }
+    }
+
+    static CountingCalculator calculator(FaultSystemSolution solution, double... periods) {
+        return new CountingCalculator(
+                HazardMapCurvesTest.input(solution, periods).setNumThreads(1));
+    }
+
+    /** A solution with curves for the given periods attached, written and loaded again. */
+    FaultSystemSolution solutionWithCurves(double... periods) throws Exception {
+        FaultSystemSolution solution = makeSolution();
+        calculator(solution, periods).attachCurves();
+        File file = new File(tempFolder.getRoot(), "solution.zip");
+        solution.write(file);
+        return FaultSystemSolution.load(file);
+    }
+
+    @Test
+    public void testUsesCurvesFromModule() throws Exception {
+        CountingCalculator expected = calculator(makeSolution(), 0d);
+        expected.calcHazardCurves();
+
+        CountingCalculator actual = calculator(solutionWithCurves(0d), 0d);
+        actual.calcHazardCurves();
+        assertTrue("should not calculate", actual.built.isEmpty());
+
+        GriddedGeoDataSet expectedMap = expected.getCalc().buildMap(0d, ReturnPeriods.TWO_IN_50);
+        GriddedGeoDataSet actualMap = actual.getCalc().buildMap(0d, ReturnPeriods.TWO_IN_50);
+        for (int i = 0; i < expectedMap.size(); i++) {
+            assertEquals(expectedMap.get(i), actualMap.get(i), 1e-6 * expectedMap.get(i));
+        }
+
+        // the ERF is still there for site curves
+        DiscretizedFunc expectedSite = expected.calcSiteCurve(SITE, 0d);
+        DiscretizedFunc actualSite = actual.calcSiteCurve(SITE, 0d);
+        for (int i = 0; i < expectedSite.size(); i++) {
+            assertEquals(expectedSite.getY(i), actualSite.getY(i), 1e-12);
+        }
+    }
+
+    @Test
+    public void testOnlyMissingPeriodsAreCalculated() throws Exception {
+        FaultSystemSolution solution = solutionWithCurves(0d);
+        CountingCalculator calculator = calculator(solution, 0d, 1d);
+        calculator.calcHazardCurves();
+        assertEquals(1, calculator.built.size());
+        assertArrayEquals(new double[] {1d}, calculator.built.get(0), 0d);
+        assertNotNull(calculator.getCalc().buildMap(0d, ReturnPeriods.TEN_IN_50));
+        assertNotNull(calculator.getCalc().buildMap(1d, ReturnPeriods.TEN_IN_50));
+
+        // using the module does not add to it
+        assertEquals(1, solution.getModule(HazardMapCurves.class).getKeys().size());
+    }
+
+    @Test
+    public void testOtherInputsAreCalculated() throws Exception {
+        FaultSystemSolution solution = solutionWithCurves(0d);
+        CountingCalculator calculator =
+                new CountingCalculator(
+                        HazardMapCurvesTest.input(solution, 0d)
+                                .setRegion(HazardMapCurvesTest.region(0.2))
+                                .setNumThreads(1));
+        calculator.calcHazardCurves();
+        assertEquals(1, calculator.built.size());
+    }
+
+    @Test
+    public void testWithoutModule() {
+        CountingCalculator calculator = calculator(makeSolution(), 0d);
+        calculator.calcHazardCurves();
+        assertEquals(1, calculator.built.size());
+        assertNotNull(calculator.getCalc().buildMap(0d, ReturnPeriods.TEN_IN_50));
+    }
+
+    static CountingCalculator combinedCalculator(FaultSystemSolution... solutions) {
+        return new CountingCalculator(
+                JointHazardInput.combined(solutions)
+                        .setRegion(HazardMapCurvesTest.region(0.25))
+                        .setPeriods(0d)
+                        .setNumThreads(1));
+    }
+
+    /** Writes a solution and loads it again. */
+    FaultSystemSolution roundTrip(FaultSystemSolution solution, String name) throws Exception {
+        File file = new File(tempFolder.getRoot(), name);
+        solution.write(file);
+        return FaultSystemSolution.load(file);
+    }
+
+    static void assertMapsEqual(
+            JointHazardMapCalculator expected, JointHazardMapCalculator actual) {
+        for (ReturnPeriods rp :
+                new ReturnPeriods[] {ReturnPeriods.TWO_IN_50, ReturnPeriods.TEN_IN_50}) {
+            GriddedGeoDataSet expectedMap = expected.getCalc().buildMap(0d, rp);
+            GriddedGeoDataSet actualMap = actual.getCalc().buildMap(0d, rp);
+            for (int i = 0; i < expectedMap.size(); i++) {
+                assertEquals(expectedMap.get(i), actualMap.get(i), 1e-6 * expectedMap.get(i));
+            }
+        }
+    }
+
+    @Test
+    public void testCombinedMatchesMerged() {
+        CountingCalculator combined =
+                combinedCalculator(makeCrustalSolution(), makeSubductionSolution());
+        combined.calcHazardCurves();
+        assertEquals("one calculation per part", 2, combined.built.size());
+
+        JointHazardMapCalculator merged =
+                new JointHazardMapCalculator(
+                        new JointHazardInput(
+                                        JointSolutions.merge(
+                                                makeCrustalSolution(), makeSubductionSolution()))
+                                .setGmmMode(JointHazardInput.GmmMode.PER_TECTONIC_REGION)
+                                .setRegion(HazardMapCurvesTest.region(0.25))
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+        merged.calcHazardCurves();
+
+        DiscretizedFunc[] expected = merged.getCalc().getCurves(0d);
+        DiscretizedFunc[] actual = combined.getCalc().getCurves(0d);
+        for (int node = 0; node < expected.length; node++) {
+            for (int j = 0; j < expected[node].size(); j++) {
+                double y = expected[node].getY(j);
+                assertEquals(y, actual[node].getY(j), 1e-9 * y + 1e-15);
+            }
+        }
+        assertMapsEqual(merged, combined);
+
+        // the merged ERF is still there for site curves
+        DiscretizedFunc expectedSite = merged.calcSiteCurve(SITE, 0d);
+        DiscretizedFunc actualSite = combined.calcSiteCurve(SITE, 0d);
+        for (int i = 0; i < expectedSite.size(); i++) {
+            assertEquals(expectedSite.getY(i), actualSite.getY(i), 1e-12);
+        }
+    }
+
+    @Test
+    public void testCombinedUsesPartModules() throws Exception {
+        FaultSystemSolution crustal = makeCrustalSolution();
+        FaultSystemSolution subduction = makeSubductionSolution();
+        CountingCalculator first = combinedCalculator(crustal, subduction);
+        first.attachCurves();
+        assertEquals(1, crustal.getModule(HazardMapCurves.class).getKeys().size());
+        assertEquals(1, subduction.getModule(HazardMapCurves.class).getKeys().size());
+
+        CountingCalculator second =
+                combinedCalculator(
+                        roundTrip(crustal, "crustal.zip"), roundTrip(subduction, "subduction.zip"));
+        second.calcHazardCurves();
+        assertTrue("should not calculate", second.built.isEmpty());
+        assertMapsEqual(first, second);
+    }
+
+    @Test
+    public void testCombinedReusesCurvesOfASinglePart() throws Exception {
+        // curves of the crustal solution calculated on its own serve the combination
+        FaultSystemSolution crustal = makeCrustalSolution();
+        new CountingCalculator(
+                        JointHazardInput.forSolution(
+                                        crustal, JointHazardInput.GmmMode.PER_TECTONIC_REGION)
+                                .setRegion(HazardMapCurvesTest.region(0.25))
+                                .setPeriods(0d)
+                                .setNumThreads(1))
+                .attachCurves();
+
+        CountingCalculator combined =
+                combinedCalculator(roundTrip(crustal, "crustal.zip"), makeSubductionSolution());
+        combined.calcHazardCurves();
+        assertEquals("only the subduction part is calculated", 1, combined.built.size());
+
+        CountingCalculator expected =
+                combinedCalculator(makeCrustalSolution(), makeSubductionSolution());
+        expected.calcHazardCurves();
+        assertMapsEqual(expected, combined);
+    }
+
+    @Test
+    public void testAttachesToTheBackfilledPart() throws Exception {
+        FaultSystemSolution legacy = makeLegacySubductionSolution();
+        JointHazardInput input =
+                JointHazardInput.forSolution(legacy, JointHazardInput.GmmMode.JOINT_RUPTURE)
+                        .setRegion(HazardMapCurvesTest.region(0.25))
+                        .setPeriods(0d)
+                        .setNumThreads(1);
+        FaultSystemSolution part = input.getParts().get(0);
+        assertNotSame("a legacy solution is backfilled into a copy", legacy, part);
+
+        new CountingCalculator(input).attachCurves();
+        assertNotNull(part.getModule(HazardMapCurves.class));
+        assertNull(legacy.getModule(HazardMapCurves.class));
+
+        CountingCalculator reloaded =
+                new CountingCalculator(
+                        JointHazardInput.forSolution(
+                                        roundTrip(part, "backfilled.zip"),
+                                        JointHazardInput.GmmMode.JOINT_RUPTURE)
+                                .setRegion(HazardMapCurvesTest.region(0.25))
+                                .setPeriods(0d)
+                                .setNumThreads(1));
+        reloaded.calcHazardCurves();
+        assertTrue("should not calculate", reloaded.built.isEmpty());
+    }
+
+    @Test
+    public void testCombine() {
+        DiscretizedFunc[] combined =
+                JointHazardMapCalculator.combine(
+                        Arrays.asList(oneNode(0.1, 0.01), oneNode(0.2, 0)));
+        assertEquals(1 - 0.9 * 0.8, combined[0].getY(0), 1e-15);
+        assertEquals(0.01, combined[0].getY(1), 1e-15);
+    }
+
+    /** Curves for a single node, with two intensity levels. */
+    static DiscretizedFunc[] oneNode(double y0, double y1) {
+        ArbitrarilyDiscretizedFunc curve = new ArbitrarilyDiscretizedFunc();
+        curve.set(0.1, y0);
+        curve.set(1d, y1);
+        return new DiscretizedFunc[] {curve};
     }
 }

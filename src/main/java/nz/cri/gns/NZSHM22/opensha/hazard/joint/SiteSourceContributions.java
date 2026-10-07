@@ -31,7 +31,7 @@ import org.opensha.sha.faultSurface.FaultSection;
  * approximate: it is done in rate space, where the ruptures do not interact.
  *
  * <p>Ruptures dropped by the source filters, and ruptures whose ground motion never reaches the
- * level, contribute zero. See {@link JointHazardCalcSetup#sourceFilters()}.
+ * level, contribute zero. See {@link JointHazardMapCalculator#sourceFilters()}.
  */
 public class SiteSourceContributions {
 

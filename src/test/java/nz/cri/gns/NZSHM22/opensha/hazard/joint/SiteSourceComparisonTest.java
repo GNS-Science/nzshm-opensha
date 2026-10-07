@@ -109,7 +109,7 @@ public class SiteSourceComparisonTest {
 
     /**
      * Only the reference solution has to reach the level. A comparison solution whose hazard has
-     * collapsed contributes zero everywhere, which is the finding rather than an error.
+     * collapsed contributes next to nothing, which is the finding rather than an error.
      */
     @Test
     public void testCompareAllowsAComparisonThatNoLongerReachesTheLevel() {
@@ -118,8 +118,9 @@ public class SiteSourceComparisonTest {
                         explorer(RATE), explorer(NEGLIGIBLE_RATE), SITE, 0d, RETURN_PERIOD);
 
         assertNotNull(comparison);
-        assertTrue(comparison.getReference().getTotalRate() > 0);
-        assertEquals(0d, comparison.getComparison().getTotalRate(), 0d);
+        double reference = comparison.getReference().getTotalRate();
+        assertTrue(reference > 0);
+        assertEquals(0d, comparison.getComparison().getTotalRate(), 1e-6 * reference);
     }
 
     /** Both solutions route hazard through all four sections, so all four are compared. */

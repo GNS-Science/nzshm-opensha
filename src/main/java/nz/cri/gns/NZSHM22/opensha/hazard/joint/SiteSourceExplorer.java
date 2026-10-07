@@ -22,9 +22,9 @@ import org.opensha.sha.util.TectonicRegionType;
  * <p>This is a prototype for exploring the sources of a site's hazard, so it deliberately keeps the
  * whole per-rupture vector rather than a top-N list.
  *
- * <p>It reuses the ERF, the GMMs and the source filters of {@link JointHazardCalcSetup}, so the
- * numbers are consistent with the maps and site curves of {@link JointHazardMapCalculator} — the
- * contributions of a site sum to that site's rate of exceedance.
+ * <p>It reuses the ERF, the GMMs and the source filters of {@link JointHazardMapCalculator}, so the
+ * numbers are consistent with its maps and site curves — the contributions of a site sum to that
+ * site's rate of exceedance.
  *
  * <p>Under the hood this is OpenSHA's {@link DisaggregationCalculator}. That calculator returns a
  * contribution for <em>every</em> source that survives the distance filters, sorted by
@@ -51,24 +51,19 @@ public class SiteSourceExplorer {
     public static final int NUM_DIST_BINS = 30;
     public static final double DELTA_DIST = 20d;
 
-    private final JointHazardCalcSetup setup;
     private final JointHazardMapCalculator calculator;
 
-    public SiteSourceExplorer(JointHazardCalcSetup setup) {
-        this.setup = setup;
-        this.calculator = new JointHazardMapCalculator(setup);
+    public SiteSourceExplorer(JointHazardMapCalculator calculator) {
+        this.calculator = calculator;
     }
 
-    public SiteSourceExplorer(JointHazardInput input) {
-        this(new JointHazardCalcSetup(input));
-    }
-
+    /** An explorer of a single solution, with the default inputs. */
     public SiteSourceExplorer(FaultSystemSolution solution) {
-        this(new JointHazardInput(solution));
+        this(new JointHazardMapCalculator(new JointHazardInput(solution)));
     }
 
-    public JointHazardCalcSetup getSetup() {
-        return setup;
+    public JointHazardMapCalculator getCalculator() {
+        return calculator;
     }
 
     /** The hazard curve at the site, in linear IML against annual probability of exceedance. */
@@ -119,16 +114,6 @@ public class SiteSourceExplorer {
     }
 
     /**
-     * Per-rupture contributions to the hazard at a site, at the intensity measure level the site's
-     * own hazard curve reaches at the given return period. This is the usual framing: "what drives
-     * the 10% in 50 year shaking at Wellington".
-     */
-    public SiteSourceContributions explore(
-            Location location, double period, ReturnPeriods returnPeriod) {
-        return exploreAtIml(location, period, imlForReturnPeriod(location, period, returnPeriod));
-    }
-
-    /**
      * Per-rupture contributions to the hazard at a site, at a given intensity measure level.
      *
      * @param location the site
@@ -163,7 +148,7 @@ public class SiteSourceExplorer {
         if (contributions != null) {
             return contributions;
         }
-        FaultSystemSolution solution = setup.getInput().getSolution();
+        FaultSystemSolution solution = calculator.getInput().getSolution();
         return new SiteSourceContributions(
                 solution, location, period, iml, new double[solution.getRupSet().getNumRuptures()]);
     }
@@ -174,10 +159,10 @@ public class SiteSourceExplorer {
      * @return the contributions, or null if nothing contributes to exceeding the level
      */
     protected SiteSourceContributions disaggregate(Location location, double period, double iml) {
-        FaultSystemSolution solution = setup.getInput().getSolution();
-        BaseFaultSystemSolutionERF erf = setup.getCalc().getERF();
-        EnumMap<TectonicRegionType, ScalarIMR> gmms = setup.buildGmmMap(period);
-        Site site = setup.buildSite(location);
+        FaultSystemSolution solution = calculator.getInput().getSolution();
+        BaseFaultSystemSolutionERF erf = calculator.getCalc().getERF();
+        EnumMap<TectonicRegionType, ScalarIMR> gmms = calculator.buildGmmMap(period);
+        Site site = calculator.buildSite(location);
 
         DisaggregationCalculator disagg = new DisaggregationCalculator();
         disagg.setMagRange(MIN_MAG, NUM_MAG_BINS, DELTA_MAG);
@@ -192,7 +177,7 @@ public class SiteSourceExplorer {
                         site,
                         gmms,
                         erf,
-                        JointHazardCalcSetup.sourceFilters(),
+                        JointHazardMapCalculator.sourceFilters(),
                         DisaggregationCalculator.getDefaultParams());
         if (!success) {
             return null;

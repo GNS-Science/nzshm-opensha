@@ -51,17 +51,16 @@ import org.opensha.sha.faultSurface.FaultSection;
  *
  * <p>The top of the scale is anchored on {@link #setMaxRate}, or on the largest contribution on the
  * map, rounded up to a whole decade; the bottom is either {@link #setOmitBelowRate} or {@link
- * #setNumDecades} decades below the top.
+ * #NUM_DECADES} decades below the top.
  */
 public class SiteSourceMapPlotter {
 
-    /** Default number of decades of contribution that the colour scale covers. */
-    public static final int DEFAULT_NUM_DECADES = 3;
+    /** Number of decades of contribution that the colour scale covers by default. */
+    public static final int NUM_DECADES = 3;
 
     /** Default padding, in km, around the contributing sections when the region is derived. */
     public static final double DEFAULT_BUFFER_KM = 50d;
 
-    private int numDecades = DEFAULT_NUM_DECADES;
     private double bufferKm = DEFAULT_BUFFER_KM;
     private Region region;
     private CPT cpt;
@@ -70,21 +69,11 @@ public class SiteSourceMapPlotter {
     private double unitYears = Double.NaN;
 
     /**
-     * Sets how many decades of contribution the colour scale covers below the largest contributing
-     * section. Defaults to {@link #DEFAULT_NUM_DECADES}.
-     */
-    public SiteSourceMapPlotter setNumDecades(int numDecades) {
-        Preconditions.checkArgument(numDecades > 0, "numDecades must be positive");
-        this.numDecades = numDecades;
-        return this;
-    }
-
-    /**
      * Sets the contribution, in 1/yr, below which a section is left off the map. The threshold
-     * becomes the bottom of the colour scale, so it takes the place of {@link #setNumDecades}.
+     * becomes the bottom of the colour scale, so it takes the place of {@link #NUM_DECADES}.
      *
      * <p>Unset by default, in which case every section that is a source for the site is drawn, the
-     * scale runs {@link #setNumDecades} decades below the largest contribution, and anything below
+     * scale runs {@link #NUM_DECADES} decades below the largest contribution, and anything below
      * that is clamped to the bottom colour.
      *
      * @param omitBelowRate the threshold in 1/yr, or {@link Double#NaN} to draw every source
@@ -191,7 +180,7 @@ public class SiteSourceMapPlotter {
         // several maps of the same site on one scale.
         double logMax =
                 Math.ceil(Math.log10(Double.isNaN(maxRate) ? largest * years : maxRate * years));
-        double logMin = Double.isNaN(omitBelowRate) ? logMax - numDecades : Math.log10(omitBelow);
+        double logMin = Double.isNaN(omitBelowRate) ? logMax - NUM_DECADES : Math.log10(omitBelow);
         // with a threshold nothing drawn falls below the scale, so the clamp only bites when there
         // is none and the bottom decade has to hold whatever is under it
         List<FaultSection> drawn = drawn(rupSet, values, omitBelow);

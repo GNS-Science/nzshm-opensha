@@ -115,54 +115,6 @@ public class JointSolutions {
     }
 
     /**
-     * A copy of the solution with every rupture rate below {@code minRate} set to zero, which takes
-     * those ruptures out of the hazard calculation altogether.
-     *
-     * <p>{@code BaseFaultSystemSolutionERF} only builds a source for a rupture whose rate is
-     * strictly positive, so zeroing a rate is enough to remove it; the rupture set is untouched and
-     * rupture indices are preserved, which matters because {@link SiteSourceExplorer} maps ERF
-     * sources back to rupture indices. A long inversion tail of ruptures that contribute nothing
-     * measurable to the hazard can be most of the rupture count, so dropping it is most of the
-     * calculation time.
-     *
-     * <p>The rupture set is shared with the original solution rather than copied, and the modules
-     * are carried over. Modules derived from the rates, such as fitted magnitude-frequency
-     * distributions, are carried over unchanged and so no longer describe the filtered rates
-     * exactly; nothing in the hazard calculation reads them.
-     *
-     * @param minRate the smallest rate that still reaches the ERF; zero or less filters nothing
-     * @return the filtered solution, or the original one if nothing was dropped
-     */
-    public static FaultSystemSolution filterRates(FaultSystemSolution solution, double minRate) {
-        if (!(minRate > 0)) {
-            return solution;
-        }
-        double[] rates = solution.getRateForAllRups().clone();
-        int dropped = 0;
-        for (int r = 0; r < rates.length; r++) {
-            if (rates[r] > 0 && rates[r] < minRate) {
-                rates[r] = 0d;
-                dropped++;
-            }
-        }
-        if (dropped == 0) {
-            return solution;
-        }
-        System.out.println(
-                "Dropped "
-                        + dropped
-                        + " of "
-                        + rates.length
-                        + " ruptures with a rate below "
-                        + (float) minRate);
-        FaultSystemSolution filtered = new FaultSystemSolution(solution.getRupSet(), rates);
-        for (OpenSHA_Module module : solution.getModules(true)) {
-            filtered.addModule(module);
-        }
-        return filtered;
-    }
-
-    /**
      * Whether a rupture set is missing the section properties the joint hazard calculation needs. A
      * section without a tectonic region type, or with one other than {@link
      * TectonicRegionType#ACTIVE_SHALLOW} or {@link TectonicRegionType#SUBDUCTION_INTERFACE}, means

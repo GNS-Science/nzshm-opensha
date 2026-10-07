@@ -3,7 +3,6 @@ package nz.cri.gns.NZSHM22.opensha.hazard.joint;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import nz.cri.gns.NZSHM22.opensha.data.location.NzshmCommonLocations;
 import nz.cri.gns.NZSHM22.opensha.data.region.NewZealandRegions;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
@@ -40,12 +39,12 @@ import org.opensha.sha.util.TectonicRegionType;
  *
  * <p>Those two assumptions only apply to {@link GmmMode#JOINT_RUPTURE}. In {@link
  * GmmMode#PER_TECTONIC_REGION} — crustal and subduction solutions calculated together, see {@link
- * #combined}, or a single solution holding both kinds of rupture, see {@link #perTectonicRegion} —
- * each source is calculated with the GMM for its own tectonic region type, so no joint area scaling
- * is involved and joint ruptures are rejected instead.
+ * #combined}, or a single solution holding both kinds of rupture, see {@link #forSolution} — each
+ * source is calculated with the GMM for its own tectonic region type, so no joint area scaling is
+ * involved and joint ruptures are rejected instead.
  *
- * <p>Once a {@link JointHazardCalcSetup} has been built on top of these inputs they are locked and
- * the setters throw.
+ * <p>Once a {@link JointHazardMapCalculator} has been built on top of these inputs they are locked
+ * and the setters throw.
  */
 public class JointHazardInput {
 
@@ -80,12 +79,6 @@ public class JointHazardInput {
     public static final double[] DEFAULT_PERIODS = {0d, 1d};
 
     /**
-     * Default smallest rupture rate that reaches the hazard calculation, in events per year. See
-     * {@link #setMinRuptureRate}.
-     */
-    public static final double DEFAULT_MIN_RUPTURE_RATE = 1e-9;
-
-    /**
      * Sites that hazard curves are calculated for: the nzshm-common "NZ" locations. See {@link
      * NzshmCommonLocations}.
      */
@@ -99,57 +92,32 @@ public class JointHazardInput {
      */
     public static final double MAX_FRACTIONAL_MAG_DIFF = 0.05;
 
-    /** Loads the solution on demand. Never null; see {@link #getSolution()}. */
-    private final Supplier<FaultSystemSolution> solutionSupplier;
+    /** The solution the calculation runs on. */
+    private final FaultSystemSolution solution;
 
-    /**
-     * Whether {@link #release()} can actually let go of the solution, i.e. whether the supplier can
-     * produce it again. False for inputs handed a solution that is already in memory.
-     */
-    private final boolean releasable;
-
-    /**
-     * The solution as the supplier produced it, before {@link #minRuptureRate} is applied. Null
-     * before the first {@link #getSolution()} and after a {@link #release()}.
-     */
-    private FaultSystemSolution rawSolution;
-
-    /**
-     * The solution the calculation uses, i.e. {@link #rawSolution} with its negligible rupture
-     * rates dropped. Null until it is derived, and discarded again whenever {@link
-     * #setMinRuptureRate} changes what would be dropped.
-     */
-    private FaultSystemSolution solution;
+    /** The solutions the calculation is made of. See {@link #getParts()}. */
+    private final List<FaultSystemSolution> parts;
 
     private GmmMode gmmMode = GmmMode.JOINT_RUPTURE;
     private GriddedRegion region;
     private double spacing = DEFAULT_SPACING;
     private double[] periods = DEFAULT_PERIODS;
     private int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-    private double minRuptureRate = DEFAULT_MIN_RUPTURE_RATE;
 
     private boolean locked = false;
 
-    /**
-     * Inputs for a solution that is already in memory. Such an input cannot be {@link #release()
-     * released}: there would be no way of getting the solution back.
-     */
+    /** Inputs for a single solution, which is also the only part. */
     public JointHazardInput(FaultSystemSolution solution) {
-        Preconditions.checkNotNull(solution, "need a solution");
-        this.solutionSupplier = () -> solution;
-        this.releasable = false;
+        this(solution, List.of(Preconditions.checkNotNull(solution, "need a solution")));
     }
 
     /**
-     * Inputs for a solution that is loaded on demand and can be {@link #release() released} again,
-     * so that a report over many runs does not have to hold them all at once.
-     *
-     * @param solutionSupplier loads the solution, called again after every release
+     * @param solution the solution the calculation runs on
+     * @param parts the solutions it is made of, see {@link #getParts()}
      */
-    public JointHazardInput(Supplier<FaultSystemSolution> solutionSupplier) {
-        this.solutionSupplier =
-                Preconditions.checkNotNull(solutionSupplier, "need a solution supplier");
-        this.releasable = true;
+    protected JointHazardInput(FaultSystemSolution solution, List<FaultSystemSolution> parts) {
+        this.solution = Preconditions.checkNotNull(solution, "need a solution");
+        this.parts = parts;
     }
 
     /**
@@ -160,29 +128,19 @@ public class JointHazardInput {
      * preserve.
      *
      * <p>A single solution is passed through unmerged, i.e. backfilled and given its tectonic
-     * region types but not copied, which makes this equivalent to {@link #perTectonicRegion}.
+     * region types but not copied, which makes this equivalent to {@link #forSolution} in {@link
+     * GmmMode#PER_TECTONIC_REGION}.
      *
      * @throws IllegalArgumentException if no solution is given
      */
     public static JointHazardInput combined(FaultSystemSolution... solutions) {
-        return new JointHazardInput(JointSolutions.merge(solutions))
+        Preconditions.checkArgument(solutions.length > 0, "need at least one solution");
+        FaultSystemSolution[] backfilled = new FaultSystemSolution[solutions.length];
+        for (int i = 0; i < solutions.length; i++) {
+            backfilled[i] = JointSolutions.backfill(solutions[i]);
+        }
+        return new JointHazardInput(JointSolutions.merge(backfilled), List.of(backfilled))
                 .setGmmMode(GmmMode.PER_TECTONIC_REGION);
-    }
-
-    /**
-     * Inputs for a single solution that holds both crustal and subduction ruptures but no joint
-     * ruptures. Each rupture is calculated with the GMM for its own tectonic region type.
-     */
-    public static JointHazardInput perTectonicRegion(FaultSystemSolution solution) {
-        return forSolution(solution, GmmMode.PER_TECTONIC_REGION);
-    }
-
-    /**
-     * Inputs for a single solution whose ruptures may span both tectonic region types, calculated
-     * with the experimental joint GMM.
-     */
-    public static JointHazardInput joint(FaultSystemSolution solution) {
-        return forSolution(solution, GmmMode.JOINT_RUPTURE);
     }
 
     /**
@@ -195,42 +153,23 @@ public class JointHazardInput {
     }
 
     /**
-     * The solution the calculation runs on: the one these inputs were built from, loaded on first
-     * use if they were given a supplier, with rupture rates below {@link #getMinRuptureRate()}
-     * dropped. See {@link JointSolutions#filterRates}.
+     * The solution the calculation runs on: the one these inputs were built from, or for a {@link
+     * #combined} input the merge of its solutions.
      */
     public FaultSystemSolution getSolution() {
-        if (solution == null) {
-            if (rawSolution == null) {
-                rawSolution =
-                        Preconditions.checkNotNull(solutionSupplier.get(), "no solution supplied");
-            }
-            solution = JointSolutions.filterRates(rawSolution, minRuptureRate);
-        }
         return solution;
     }
 
-    /** Whether the solution is in memory, i.e. loaded and not released since. */
-    public boolean isLoaded() {
-        return rawSolution != null;
-    }
-
     /**
-     * Lets go of the solution so that it can be garbage collected, for a caller that is done with
-     * it. The next {@link #getSolution()} loads it again.
+     * The solutions the calculation is made of: for an input built by {@link #combined}, the
+     * separate solutions in the order they were given, backfilled; for any other input, just {@link
+     * #getSolution()}.
      *
-     * <p>Only inputs built from a supplier can be released; one handed a solution directly has no
-     * way of getting it back and is left alone.
-     *
-     * @return whether the solution was actually released
+     * <p>{@link JointHazardMapCalculator} calculates the parts separately and combines their
+     * curves, so that each part can carry its own {@link HazardMapCurves}.
      */
-    public boolean release() {
-        if (!releasable) {
-            return false;
-        }
-        rawSolution = null;
-        solution = null;
-        return true;
+    public List<FaultSystemSolution> getParts() {
+        return parts;
     }
 
     /** Sets how ground motions are calculated. Defaults to {@link GmmMode#JOINT_RUPTURE}. */
@@ -262,10 +201,10 @@ public class JointHazardInput {
     /**
      * Sets the calculation periods. 0 is PGA, positive values are SA periods.
      *
-     * <p>PGV (-1) is rejected: {@link JointHazardCalcSetup} applies a single SA intensity measure
-     * level grid to every period, which spans roughly 0.00025 to 10 g and is orders of magnitude
-     * below real PGV values in cm/s. A PGV curve would saturate over the whole grid and the map
-     * would silently come out flat at the largest level rather than fail.
+     * <p>PGV (-1) is rejected: {@link JointHazardMapCalculator} applies a single SA intensity
+     * measure level grid to every period, which spans roughly 0.00025 to 10 g and is orders of
+     * magnitude below real PGV values in cm/s. A PGV curve would saturate over the whole grid and
+     * the map would silently come out flat at the largest level rather than fail.
      */
     public JointHazardInput setPeriods(double... periods) {
         checkNotLocked();
@@ -283,33 +222,6 @@ public class JointHazardInput {
         }
         this.periods = periods;
         return this;
-    }
-
-    /**
-     * Sets the smallest rupture rate, in events per year, that reaches the hazard calculation.
-     * Ruptures below it are dropped by {@link JointSolutions#filterRates} before the ERF is built.
-     * Defaults to {@link #DEFAULT_MIN_RUPTURE_RATE}.
-     *
-     * <p>An inversion solution typically has a long tail of ruptures whose rates are so low that
-     * they move no hazard curve anywhere, and each of them still costs a source in the ERF and a
-     * ground motion evaluation at every site. Dropping them is the cheapest way to speed a
-     * calculation up. Pass zero to keep every rupture.
-     *
-     * @throws IllegalArgumentException if the rate is negative
-     */
-    public JointHazardInput setMinRuptureRate(double minRuptureRate) {
-        checkNotLocked();
-        Preconditions.checkArgument(
-                minRuptureRate >= 0, "minRuptureRate cannot be negative, got %s", minRuptureRate);
-        this.minRuptureRate = minRuptureRate;
-        // the filtered solution was derived from the old rate, so let it be derived again
-        this.solution = null;
-        return this;
-    }
-
-    /** The smallest rupture rate that reaches the hazard calculation. */
-    public double getMinRuptureRate() {
-        return minRuptureRate;
     }
 
     public JointHazardInput setNumThreads(int numThreads) {
@@ -347,8 +259,8 @@ public class JointHazardInput {
     }
 
     /**
-     * Freezes the inputs so that the setters throw. Called by {@link JointHazardCalcSetup} when a
-     * calculation is set up on top of them, because changing the region or the periods afterwards
+     * Freezes the inputs so that the setters throw. Called by {@link JointHazardMapCalculator} when
+     * a calculation is set up on top of them, because changing the region or the periods afterwards
      * would not reach the calculator that has already been built.
      */
     public void lock() {
