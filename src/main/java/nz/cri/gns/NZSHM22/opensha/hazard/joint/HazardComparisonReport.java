@@ -188,7 +188,33 @@ public class HazardComparisonReport {
     protected static File addHazardCurves(File solutionFile, GriddedRegion region)
             throws IOException {
         FaultSystemSolution solution =
-                JointSolutions.backfill(FaultSystemSolution.load(solutionFile));
+                attachHazardCurves(FaultSystemSolution.load(solutionFile), region);
+        File output = hazardCacheFile(solutionFile);
+        solution.write(output);
+        System.out.println("Wrote solution with hazard map curves to " + output.getAbsolutePath());
+        return output;
+    }
+
+    /**
+     * Attaches the hazard map curves that a report needs for a solution, as {@link
+     * #addHazardCurves(File)} does, but in memory. Write the returned solution to keep them.
+     *
+     * @param solution the solution to calculate the curves for
+     * @return the solution carrying the curves: the given one, or its backfilled copy if it
+     *     predates fault section properties, see {@link JointSolutions#backfill}
+     */
+    public static FaultSystemSolution attachHazardCurves(FaultSystemSolution solution) {
+        return attachHazardCurves(solution, null);
+    }
+
+    /**
+     * As {@link #attachHazardCurves(FaultSystemSolution)}, over the given region.
+     *
+     * @param region the map region, or null for the default one
+     */
+    protected static FaultSystemSolution attachHazardCurves(
+            FaultSystemSolution solution, GriddedRegion region) {
+        solution = JointSolutions.backfill(solution);
         List<JointHazardInput.GmmMode> modes = new ArrayList<>();
         modes.add(JointHazardInput.GmmMode.JOINT_RUPTURE);
         if (!new JointHazardInput(solution).validate().isJoint()) {
@@ -202,10 +228,7 @@ public class HazardComparisonReport {
             System.out.println("Calculating hazard map curves in " + mode);
             new JointHazardMapCalculator(input).attachCurves();
         }
-        File output = hazardCacheFile(solutionFile);
-        solution.write(output);
-        System.out.println("Wrote solution with hazard map curves to " + output.getAbsolutePath());
-        return output;
+        return solution;
     }
 
     public HazardComparisonReport(
