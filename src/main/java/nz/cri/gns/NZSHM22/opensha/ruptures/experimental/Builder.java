@@ -41,12 +41,18 @@ public class Builder {
             }
         }
 
-        FaultSystemRupSet accumulated = new RuptureAccumulator().addRupSets(rupSets).build();
-
-        File accumulatedFile = makeTempFile(accumulated);
+        String inputFileName;
+        if (rupSets.size() == 1) {
+            // Skip the accumulator so that section ids and original ids are preserved
+            inputFileName =
+                    backfill ? makeTempFile(rupSets.get(0)).getAbsolutePath() : ruptureSets.get(0);
+        } else {
+            FaultSystemRupSet accumulated = new RuptureAccumulator().addRupSets(rupSets).build();
+            inputFileName = makeTempFile(accumulated).getAbsolutePath();
+        }
 
         Thinning.Config thinningConfig = new Thinning.Config();
-        thinningConfig.ruptureSetFileName = accumulatedFile.getAbsolutePath();
+        thinningConfig.ruptureSetFileName = inputFileName;
         thinningConfig.outputFileName = Files.createTempFile("thinning", ".csv").toString();
 
         Thinning.apply(thinningConfig);

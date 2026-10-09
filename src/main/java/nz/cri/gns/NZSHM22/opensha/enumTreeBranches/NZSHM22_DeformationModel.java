@@ -605,7 +605,16 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
             return deformations;
         }
 
+        /**
+         * Applies the deformation model to the sections of the rupture set. Sections are matched by
+         * their original id if present, otherwise by their section id.
+         *
+         * @param rupSet the rupture set
+         * @param predicate optional filter on section ids, may be null
+         * @throws IllegalStateException if no section matches the deformation model
+         */
         public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
+            int matches = 0;
             for (FaultSection section : rupSet.getFaultSectionDataList()) {
                 if (predicate != null && !predicate.test(section.getSectionId())) {
                     continue;
@@ -642,8 +651,14 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
                                     + ")");
                     section.setAveSlipRate(deformation.slip);
                     section.setSlipRateStdDev(deformation.stdv);
+                    matches++;
                 }
             }
+            Preconditions.checkState(
+                    matches > 0,
+                    "Deformation model "
+                            + (customModel != null ? "(custom model)" : fileName)
+                            + " does not match any sections in the rupture set.");
         }
     }
 
