@@ -74,8 +74,13 @@ public class RuptureAccumulator {
             sectionIdMapping.put(section.getSectionId(), newSectionId);
             FaultSection newSection = GeoJSONFaultSection.fromFaultSection(section);
             FaultSectionProperties props = new FaultSectionProperties(newSection);
-            props.setOriginalId(newSection.getSectionId());
-            props.setOriginalParent(newSection.getParentSectionId());
+            // keep original ids if the section has already been renumbered before
+            if (props.getOriginalId() == null) {
+                props.setOriginalId(newSection.getSectionId());
+            }
+            if (props.getOriginalParent() == null) {
+                props.setOriginalParent(newSection.getParentSectionId());
+            }
             newSection.setSectionId(newSectionId);
             newSection.setParentSectionId(
                     parentIdMapping.computeIfAbsent(
