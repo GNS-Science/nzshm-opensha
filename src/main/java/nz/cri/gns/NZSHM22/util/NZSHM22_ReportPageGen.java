@@ -12,7 +12,10 @@ import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRupturePlot;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureProportionPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.MaxMagnitudeMapPlot;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.ParticipationChangeMapPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
@@ -135,6 +138,9 @@ public class NZSHM22_ReportPageGen {
         possiblePlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
         possibleRupSetPlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
         possiblePlots.put("JointRupturePlot", new JointRupturePlot());
+        possiblePlots.put("JointRuptureProportionPlot", new JointRuptureProportionPlot());
+        possiblePlots.put("MaxMagnitudeMapPlot", new MaxMagnitudeMapPlot());
+        possiblePlots.put("ParticipationChangeMapPlot", new ParticipationChangeMapPlot());
     }
 
     /**
@@ -289,6 +295,11 @@ public class NZSHM22_ReportPageGen {
         }
         addNamedFaults(solution.getRupSet());
         addSynthesizedTargets(solution.getRupSet());
+        if (compSolution != null && !compSolution.getRupSet().hasModule(ClusterRuptures.class)) {
+            compSolution
+                    .getRupSet()
+                    .addModule(new ClusterRuptures.SingleStranded(compSolution.getRupSet(), null));
+        }
         RupSetMetadata solMeta = new RupSetMetadata(name, solution);
 
         ReportMetadata meta = null;
