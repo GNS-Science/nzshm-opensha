@@ -14,7 +14,6 @@ import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionMfds;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRupturePlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureProportionPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.JointRuptureRatePlot;
-import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.MaxMagnitudeMapPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.ParticipationChangeMapPlot;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionSummaryTable;
@@ -139,7 +138,6 @@ public class NZSHM22_ReportPageGen {
         possibleRupSetPlots.put("JointRuptureRatePlot", new JointRuptureRatePlot());
         possiblePlots.put("JointRupturePlot", new JointRupturePlot());
         possiblePlots.put("JointRuptureProportionPlot", new JointRuptureProportionPlot());
-        possiblePlots.put("MaxMagnitudeMapPlot", new MaxMagnitudeMapPlot());
         possiblePlots.put("ParticipationChangeMapPlot", new ParticipationChangeMapPlot());
     }
 

@@ -12,11 +12,14 @@ import org.junit.rules.TemporaryFolder;
 import org.opensha.commons.data.xyz.GriddedGeoDataSet;
 import org.opensha.commons.geo.GriddedRegion;
 import org.opensha.commons.geo.Location;
+import org.opensha.refFaultParamDb.vo.FaultSectionPrefData;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.reports.ReportMetadata;
 import org.opensha.sha.earthquake.faultSysSolution.reports.RupSetMetadata;
 import org.opensha.sha.faultSurface.FaultSection;
+import org.opensha.sha.faultSurface.FaultTrace;
+import org.opensha.sha.faultSurface.GeoJSONFaultSection;
 
 /** Tests for {@link ParticipationChangeMapPlot}. */
 public class ParticipationChangeMapPlotTest {
@@ -26,12 +29,25 @@ public class ParticipationChangeMapPlotTest {
 
     @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
+    protected static FaultSection makeSection(int id, double lon) {
+        FaultTrace trace = new FaultTrace("trace");
+        trace.add(new Location(-41, lon));
+        trace.add(new Location(-41.2, lon));
+        FaultSectionPrefData pref = new FaultSectionPrefData();
+        pref.setSectionId(id);
+        pref.setSectionName("Section " + id);
+        pref.setFaultTrace(trace);
+        pref.setAveDip(90);
+        pref.setAveRake(90);
+        pref.setAveUpperDepth(0);
+        pref.setAveLowerDepth(10);
+        pref.setDipDirection((float) trace.getDipDirection());
+        return GeoJSONFaultSection.fromFaultSection(pref);
+    }
+
     /** Two sections ~250 km apart, one rupture each. */
     protected static FaultSystemSolution makeSolution(double[] rates) {
-        List<FaultSection> sections =
-                List.of(
-                        MaxMagnitudeMapPlotTest.makeSection(0, 173),
-                        MaxMagnitudeMapPlotTest.makeSection(1, 176));
+        List<FaultSection> sections = List.of(makeSection(0, 173), makeSection(1, 176));
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builder(sections, List.of(List.of(0), List.of(1)))
                         .rupMags(new double[] {7.0, 7.0})
@@ -44,9 +60,9 @@ public class ParticipationChangeMapPlotTest {
      * across both.
      */
     protected static FaultSystemSolution makeJointSolution(double[] rates) {
-        FaultSection crustal = MaxMagnitudeMapPlotTest.makeSection(0, 173);
+        FaultSection crustal = makeSection(0, 173);
         new FaultSectionProperties(crustal).setPartition(PartitionPredicate.CRUSTAL);
-        FaultSection subduction = MaxMagnitudeMapPlotTest.makeSection(1, 176);
+        FaultSection subduction = makeSection(1, 176);
         new FaultSectionProperties(subduction).setPartition(PartitionPredicate.HIKURANGI);
         FaultSystemRupSet rupSet =
                 FaultSystemRupSet.builder(
