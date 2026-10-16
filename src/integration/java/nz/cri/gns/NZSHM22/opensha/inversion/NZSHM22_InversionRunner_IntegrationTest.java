@@ -13,7 +13,6 @@ import org.dom4j.DocumentException;
 import org.junit.Test;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
-import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ClusterRuptures;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
@@ -39,19 +38,6 @@ public class NZSHM22_InversionRunner_IntegrationTest {
                 // .setSlipRateConstraint("BOTH", 1000, 1000)
                 .setSlipRateUncertaintyConstraint(1000, 2)
                 .setUncertaintyWeightedMFDWeights(0.5, 0.5, 0.5);
-    }
-
-    @Test
-    public void testRunExclusion() throws DocumentException, IOException {
-        NZSHM22_AbstractInversionRunner runner = buildRunner().setExcludeRupturesBelowMinMag(true);
-        FaultSystemSolution solution = runner.runInversion();
-
-        for (int r = 0; r < solution.getRupSet().getNumRuptures(); r++) {
-            if (((NZSHM22_InversionFaultSystemRuptSet) solution.getRupSet())
-                    .isRuptureBelowSectMinMag(r)) {
-                assertEquals(0, solution.getRateForRup(r), 0);
-            }
-        }
     }
 
     /**

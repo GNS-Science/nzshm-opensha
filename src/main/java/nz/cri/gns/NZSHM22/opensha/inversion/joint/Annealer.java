@@ -6,11 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.inversion.LoggingCompletionCriteria;
 import nz.cri.gns.NZSHM22.opensha.ruptures.NZSHM22_AbstractRuptureSetBuilder;
 import org.dom4j.DocumentException;
-import org.opensha.commons.data.IntegerSampler;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.InversionInputGenerator;
@@ -20,7 +18,6 @@ import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ReweightEvenFitS
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.SimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.ThreadedSimulatedAnnealing;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.sa.completion.*;
-import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import scratch.UCERF3.inversion.UCERF3InversionConfiguration;
 
 public class Annealer {
@@ -34,31 +31,6 @@ public class Annealer {
     public Annealer(AnnealingConfig config, FaultSystemRupSet rupSet) {
         this.config = config;
         this.rupSet = rupSet;
-    }
-
-    /**
-     * Creates a sampler that excludes ruptures that are below the minMag of any of its sections.
-     *
-     * @return an IntegerSampler or null
-     */
-    protected IntegerSampler createExclusionSampler() {
-        Set<Integer> exclusions = new HashSet<>();
-        boolean[] isBelowMinMag =
-                NZSHM22_FaultSystemRupSetCalc.computeWhichRupsFallBelowSectionMinMags(
-                        rupSet, rupSet.getModule(ModSectMinMags.class));
-        for (int r = 0; r < rupSet.getNumRuptures(); r++) {
-            if (isBelowMinMag[r]) {
-                exclusions.add(r);
-            }
-        }
-        if (!exclusions.isEmpty()) {
-            System.out.println(
-                    "Excluding " + exclusions.size() + " ruptures that are below section minMag.");
-            return new IntegerSampler.ExclusionIntegerSampler(
-                    0, rupSet.getNumRuptures(), exclusions);
-        } else {
-            return null;
-        }
     }
 
     protected CompletionCriteria createCompletionCriteria() throws IOException {
@@ -247,12 +219,6 @@ public class Annealer {
         tsa.setNonnegativeityConstraintAlgorithm(config.nonNegAlgorithm);
         if (!(config.coolingSchedule == null)) tsa.setCoolingFunc(config.coolingSchedule);
 
-        if (config.excludeRupturesBelowMinMag) {
-            IntegerSampler sampler = createExclusionSampler();
-            if (sampler != null) {
-                tsa.setRuptureSampler(sampler);
-            }
-        }
         tsa.iterate(progress);
         tsa.shutdown();
 

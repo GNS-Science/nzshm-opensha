@@ -101,7 +101,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
     protected double[] initialSolution;
     protected double[] variablePerturbationBasis;
     protected boolean varPertBasisAsInititalSolution;
-    protected boolean excludeRupturesBelowMinMag = false;
     protected boolean unmodifiedSlipRateStdvs = false;
 
     protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
@@ -397,18 +396,6 @@ public abstract class NZSHM22_AbstractInversionRunner {
 
     public NZSHM22_AbstractInversionRunner setSpatialSeisPDF(String spatialSeisPDF) {
         this.spatialSeisPDF = NZSHM22_SpatialSeisPDF.valueOf(spatialSeisPDF);
-        return this;
-    }
-
-    /**
-     * Exclude ruptures that are below MinMag. false by default.
-     *
-     * @param excludeRupturesBelowMinMag
-     * @return
-     */
-    public NZSHM22_AbstractInversionRunner setExcludeRupturesBelowMinMag(
-            boolean excludeRupturesBelowMinMag) {
-        this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
         return this;
     }
 
