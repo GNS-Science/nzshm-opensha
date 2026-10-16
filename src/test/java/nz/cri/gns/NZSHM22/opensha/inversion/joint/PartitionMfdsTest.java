@@ -38,18 +38,49 @@ public class PartitionMfdsTest {
     }
 
     @Test
-    public void synthesizeSumsPartitionMfds() {
+    public void synthesizeSumsPartitionSupraSeisMfds() {
         PartitionMfds partitionMfds = new PartitionMfds();
         partitionMfds.mfds.put(PartitionPredicate.CRUSTAL, targets(1, mfd(5)));
         partitionMfds.mfds.put(PartitionPredicate.HIKURANGI, targets(10, mfd(50)));
 
         InversionTargetMFDs synthesized = partitionMfds.synthesize(null);
 
-        assertEquals(11, synthesized.getTotalRegionalMFD().getY(0), DELTA);
         assertEquals(22, synthesized.getTotalOnFaultSupraSeisMFD().getY(0), DELTA);
-        assertEquals(33, synthesized.getTotalOnFaultSubSeisMFD().getY(0), DELTA);
-        assertEquals(44, synthesized.getTrulyOffFaultMFD().getY(0), DELTA);
-        assertEquals(11, synthesized.getTotalRegionalMFD().getY(NZ_NUM_BINS - 1), DELTA);
+        assertEquals(22, synthesized.getTotalOnFaultSupraSeisMFD().getY(NZ_NUM_BINS - 1), DELTA);
+    }
+
+    /** Subduction MFDs reach higher magnitudes than the default range and must not be cut off. */
+    @Test
+    public void synthesizeKeepsFullMagnitudeRange() {
+        IncrementalMagFreqDist subduction = new IncrementalMagFreqDist(5.05, 48, DELTA_MAG);
+        subduction.set(47, 7); // M9.75
+        PartitionMfds partitionMfds = new PartitionMfds();
+        partitionMfds.mfds.put(PartitionPredicate.CRUSTAL, targets(1, mfd(5)));
+        partitionMfds.mfds.put(
+                PartitionPredicate.HIKURANGI,
+                new InversionTargetMFDs.Precomputed(
+                        null, null, subduction, null, null, List.of(), null, null));
+
+        IncrementalMagFreqDist supra = partitionMfds.synthesize(null).getTotalOnFaultSupraSeisMFD();
+
+        assertEquals(9.75, supra.getMaxX(), DELTA);
+        assertEquals(7, supra.getY(9.75), DELTA);
+        assertEquals(2, supra.getY(5.05), DELTA);
+    }
+
+    /** Only the crustal partition has these, so they don't apply to the joint rupture set. */
+    @Test
+    public void synthesizeOmitsCrustalOnlyMfds() {
+        PartitionMfds partitionMfds = new PartitionMfds();
+        partitionMfds.mfds.put(PartitionPredicate.CRUSTAL, targets(1, mfd(5)));
+        partitionMfds.mfds.put(PartitionPredicate.HIKURANGI, targets(10, mfd(50)));
+
+        InversionTargetMFDs synthesized = partitionMfds.synthesize(null);
+
+        assertNull(synthesized.getTotalRegionalMFD());
+        assertNull(synthesized.getTotalOnFaultSubSeisMFD());
+        assertNull(synthesized.getTrulyOffFaultMFD());
+        assertNull(synthesized.getTotalGriddedSeisMFD());
     }
 
     /** Partition constraints only apply to their partition and are not part of the result. */
