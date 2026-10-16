@@ -258,6 +258,31 @@ public class NZSHM22_DeformationModelsTest {
                 message);
     }
 
+    // a deformation model that matches no sections is an error
+    @Test
+    public void testApplyToNoMatches() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        NZSHM22_DeformationModel.CUSTOM.setCustomModel("100000, 100000, 1, 2\n");
+
+        String message = null;
+        try {
+            NZSHM22_DeformationModel.CUSTOM.applyTo(ruptSet, null);
+        } catch (IllegalStateException x) {
+            message = x.getMessage();
+        }
+        assertEquals(
+                "Deformation model (custom model) does not match any sections in the rupture set.",
+                message);
+    }
+
+    // a deformation model that matches no sections within the predicate is an error
+    @Test(expected = IllegalStateException.class)
+    public void testApplyToNoMatchesInPartition() throws DocumentException, IOException {
+        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        NZSHM22_DeformationModel.CUSTOM.setCustomModel("0, 0, 1, 2\n");
+        NZSHM22_DeformationModel.CUSTOM.applyTo(ruptSet, (sectionId) -> sectionId == 1);
+    }
+
     // error messages of deformations loaded from a file carry the source line number
     @Test
     public void testApplyToErrorRowNumber() throws DocumentException, IOException {

@@ -21,7 +21,9 @@ public enum PartitionPredicate {
             case TVZ:
                 return (sectionId) -> props(ruptureSet, sectionId).getTvz();
             case SANS_TVZ:
-                return (sectionId) -> !props(ruptureSet, sectionId).getTvz();
+                return (sectionId) ->
+                        props(ruptureSet, sectionId).getPartition() == PartitionPredicate.CRUSTAL
+                                && !props(ruptureSet, sectionId).getTvz();
             case CRUSTAL:
                 return (sectionId) ->
                         props(ruptureSet, sectionId).getPartition() == PartitionPredicate.CRUSTAL;
