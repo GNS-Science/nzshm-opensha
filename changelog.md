@@ -9,6 +9,7 @@ one. Add your entries to `## TBD`; see [Releases](README.md#releases) for the re
 
 - Upgraded to Java 21
 - ⚠️`[behaviour change inversion]` Ruptures are now filtered by min and max mag before calculating target MFDs and inversion. In the joint inversion, each rupture has to satisfy the min and max mag of every partition it belongs to.
+- As part of always filtering ruptures, `MaxMagType` and `setExcludeRupturesBelowMinMag()` have been removed. 
 
 ## [2.0.0] - 2026-08-14
 
