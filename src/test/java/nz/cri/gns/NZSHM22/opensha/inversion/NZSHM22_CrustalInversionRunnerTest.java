@@ -155,7 +155,7 @@ public class NZSHM22_CrustalInversionRunnerTest {
         NZSHM22_CrustalInversionRunner runner = makeRunner(rupSet);
         runner.setMinMags(6.95, 6.95);
         // maxMagSans one bin below the largest rupture drops that rupture
-        runner.setMaxMags("MANIPULATE_MFD", maxMag - 0.1, maxMag - 0.1);
+        runner.setMaxMags(maxMag - 0.1, maxMag - 0.1);
         runner.configure();
 
         assertEquals(minOnly.rupSet.getNumRuptures() - 1, runner.rupSet.getNumRuptures());

@@ -12,19 +12,12 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
 
     protected double maxMagSans;
     protected double maxMagTvz;
-    protected MaxMagType maxMagType = MaxMagType.NONE;
-
-    public enum MaxMagType {
-        NONE,
-        MANIPULATE_MFD;
-    }
 
     public NZSHM22_MagBounds() {}
 
-    public NZSHM22_MagBounds(double maxMagSans, double maxMagTvz, MaxMagType type) {
+    public NZSHM22_MagBounds(double maxMagSans, double maxMagTvz) {
         this.maxMagSans = maxMagSans;
         this.maxMagTvz = maxMagTvz;
-        this.maxMagType = type;
     }
 
     public double getMaxMagSans() {
@@ -41,14 +34,6 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
 
     public void setMaxMagTvz(double maxMagTvz) {
         this.maxMagTvz = maxMagTvz;
-    }
-
-    public MaxMagType getMaxMagType() {
-        return maxMagType;
-    }
-
-    public void setMaxMagType(MaxMagType maxMagType) {
-        this.maxMagType = maxMagType;
     }
 
     @Override
@@ -80,8 +65,6 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
             out.value(value.maxMagSans);
             out.name("maxMagTvz");
             out.value(value.maxMagTvz);
-            out.name("maxMagType");
-            out.value(value.maxMagType.name());
             out.endObject();
         }
 
@@ -97,7 +80,9 @@ public class NZSHM22_MagBounds implements LogicTreeNode {
                         bounds.maxMagTvz = in.nextDouble();
                         break;
                     case "maxMagType":
-                        bounds.maxMagType = MaxMagType.valueOf(in.nextString());
+                        if (in.nextString().equals("NONE")) {
+                            throw new RuntimeException("MaxMagType.NONE is no longer supported");
+                        }
                         break;
                 }
             }

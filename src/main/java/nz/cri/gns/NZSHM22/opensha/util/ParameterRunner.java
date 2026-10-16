@@ -189,7 +189,10 @@ public class ParameterRunner {
         double maxMagSans = arguments.getDouble("max_mag_sans");
         double maxMagTvz = arguments.getDouble("max_mag_tvz");
         String maxMagType = arguments.get("max_mag_type");
-        runner.setMaxMags(maxMagType, maxMagSans, maxMagTvz);
+        if (maxMagType.equals("NONE")) {
+            throw new RuntimeException("MaxMagType.NONE is no longer supported");
+        }
+        runner.setMaxMags(maxMagSans, maxMagTvz);
 
         double srf_sans = arguments.getDouble("sans_slip_rate_factor", 1.0);
         double srf_tvz = arguments.getDouble("tvz_slip_rate_factor", 1.0);

@@ -65,8 +65,7 @@ public class InversionRunnerComparisonIntegrationTest {
         NZSHM22_CrustalInversionRunner crustalRunner =
                 configureCrustalRunner(createMagBoundsTestRupSet());
         crustalRunner.setMinMags(FILTER_MIN_MAG, FILTER_MIN_MAG);
-        crustalRunner.setMaxMags(
-                crustalPartition.maxMagType.name(), FILTER_MAX_MAG, FILTER_MAX_MAG);
+        crustalRunner.setMaxMags(FILTER_MAX_MAG, FILTER_MAX_MAG);
 
         assertRunnersEquals(inversionRunner, crustalRunner);
 
