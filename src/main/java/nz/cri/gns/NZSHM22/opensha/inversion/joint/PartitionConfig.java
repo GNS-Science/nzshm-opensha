@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_MagBounds;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.MagFilteredRupSet;
@@ -40,7 +39,6 @@ public class PartitionConfig {
     // only required for crustal
     public double maxMag = MagFilteredRupSet.NO_MAX_MAG;
     // only required for crustal
-    public NZSHM22_MagBounds.MaxMagType maxMagType = NZSHM22_MagBounds.MaxMagType.NONE;
     public double mfdTransitionMag;
     public double mfdEqualityConstraintWt;
     public double mfdInequalityConstraintWt;
