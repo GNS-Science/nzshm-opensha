@@ -43,7 +43,7 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
                             paleoProbabilityModel));
 
             if (config.getpaleoParentRateSmoothnessConstraintWeight() > 0) {
-                HashSet<Integer> paleoParentIDs = new HashSet();
+                HashSet<Integer> paleoParentIDs = new HashSet<>();
                 for (UncertainDataConstraint.SectMappedUncertainDataConstraint constraint :
                         paleoRateConstraints) {
                     paleoParentIDs.add(

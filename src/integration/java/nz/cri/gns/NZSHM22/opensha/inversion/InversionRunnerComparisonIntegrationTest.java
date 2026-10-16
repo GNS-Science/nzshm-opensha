@@ -319,7 +319,6 @@ public class InversionRunnerComparisonIntegrationTest {
         parameterRunner.setUpCrustalInversionRunner(runner);
 
         runner.setRuptureSetArchiveInput(archiveInput);
-        runner.setExcludeRupturesBelowMinMag(true);
         runner.setRepeatable(true);
         runner.setIterationCompletionCriteria(100);
         runner.setSelectionIterations(1);
@@ -340,7 +339,6 @@ public class InversionRunnerComparisonIntegrationTest {
         parameterRunner.setUpSubductionInversionRunner(runner);
 
         runner.setRuptureSetArchiveInput(archiveInput);
-        runner.setExcludeRupturesBelowMinMag(true);
         runner.setRepeatable(true);
         runner.setIterationCompletionCriteria(100);
         runner.setSelectionIterations(1);

@@ -2,13 +2,6 @@
 
 Most of these are probably useful to keep for experimenting.
 
-- ` NZSHM22_AbstractInversionRunner.setExcludeRupturesBelowMinMag()`
-    - https://github.com/GNS-Science/nzshm-opensha/issues/152 
-    - if set to true, ruptures are excluded (by sampler) if `rupSet.isRuptureBelowSectMinMag(r)` is true
-    - if set to false, `NZSHM22_CrustalInversionConfiguration` will call `newConfig.setMinimizationConstraintWt(minimizationConstraintWt);`
-- `NZSHM22_CrustalInversionRunner.setEnableMinMaxSampler()`
-    - https://github.com/GNS-Science/nzshm-opensha/issues/190 
-    - if set to true, ruptures are excluded (by sampler) if `(mag < minMag_Sans || mag > maxMagSans)`
 - `NZSHM22_AbstractInversionRunner.setVariablePerturbationBasis()`
     - https://github.com/GNS-Science/nzshm-opensha/issues/296 
     - double array that can be used as variable perturbation basis. Optional, there is a default

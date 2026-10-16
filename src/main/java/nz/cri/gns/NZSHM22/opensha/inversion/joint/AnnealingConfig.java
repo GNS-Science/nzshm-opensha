@@ -31,7 +31,6 @@ public class AnnealingConfig {
     protected long iterationCompletionCriteria;
 
     protected double[] variablePerturbationBasis;
-    protected boolean excludeRupturesBelowMinMag = false;
 
     protected InversionMisfitStats.Quantity reweightTargetQuantity = null;
 
@@ -286,17 +285,6 @@ public class AnnealingConfig {
     public AnnealingConfig setNonnegativityConstraintType(
             NonnegativityConstraintType nonNegAlgorithm) {
         this.nonNegAlgorithm = nonNegAlgorithm;
-        return this;
-    }
-
-    /**
-     * Exclude ruptures that are below MinMag. false by default.
-     *
-     * @param excludeRupturesBelowMinMag
-     * @return
-     */
-    public AnnealingConfig setExcludeRupturesBelowMinMag(boolean excludeRupturesBelowMinMag) {
-        this.excludeRupturesBelowMinMag = excludeRupturesBelowMinMag;
         return this;
     }
 }
