@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
@@ -56,20 +57,37 @@ public class PartitionMfds implements ArchivableModule {
         return mfds.get(partition);
     }
 
-    public static SummedMagFreqDist safeAdd(SummedMagFreqDist base, IncrementalMagFreqDist added) {
-        if (added == null) {
-            return base;
+    /**
+     * Sums MFDs into an MFD that spans the magnitude range of all of them, so that no bins are
+     * dropped. The range starts at NZ_MIN_MAG or lower.
+     *
+     * @param added the MFDs to sum, null entries are ignored
+     * @return the summed MFD, or null if there are no non-null MFDs
+     */
+    public static SummedMagFreqDist sum(List<IncrementalMagFreqDist> added) {
+        List<IncrementalMagFreqDist> present =
+                added.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (present.isEmpty()) {
+            return null;
         }
-        if (base == null) {
-            base = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        double minMag = NZ_MIN_MAG;
+        double maxMag = NZ_MIN_MAG + (NZ_NUM_BINS - 1) * DELTA_MAG;
+        for (IncrementalMagFreqDist mfd : present) {
+            minMag = Math.min(minMag, mfd.getMinX());
+            maxMag = Math.max(maxMag, mfd.getMaxX());
         }
-        base.addIncrementalMagFreqDist(added);
-        return base;
+        int numBins = (int) Math.round((maxMag - minMag) / DELTA_MAG) + 1;
+        SummedMagFreqDist result = new SummedMagFreqDist(minMag, numBins, DELTA_MAG);
+        for (IncrementalMagFreqDist mfd : present) {
+            result.addIncrementalMagFreqDist(mfd);
+        }
+        return result;
     }
 
     /**
-     * Creates target MFDs for the whole joint rupture set by summing the total regional, on-fault
-     * supra-seismogenic, on-fault sub-seismogenic and truly off-fault MFDs of all partitions. The
+     * Creates target MFDs for the whole joint rupture set by summing the on-fault supra-seismogenic
+     * MFDs of all partitions. Total regional, sub-seismogenic and truly off-fault MFDs are left out
+     * as only the crustal partition has them, so they would not describe the joint rupture set. The
      * result has no MFD constraints, as those only apply to their own partition. Use {@link
      * nz.cri.gns.NZSHM22.opensha.inversion.joint.reporting.PartitionPlotWrapper} to plot them
      * against the partition's rupture set. The partition MFDs are not modified.
@@ -78,28 +96,13 @@ public class PartitionMfds implements ArchivableModule {
      * @return the summed target MFDs
      */
     public InversionTargetMFDs synthesize(FaultSystemRupSet rupSet) {
-        SummedMagFreqDist totalRegionalMFD = null;
-        SummedMagFreqDist onFaultSupraSeisMFD = null;
-        SummedMagFreqDist onFaultSubSeisMFD = null;
-        SummedMagFreqDist trulyOffFaultMFD = null;
-
-        for (InversionTargetMFDs partitionMFDs : mfds.values()) {
-            totalRegionalMFD = safeAdd(totalRegionalMFD, partitionMFDs.getTotalRegionalMFD());
-            onFaultSupraSeisMFD =
-                    safeAdd(onFaultSupraSeisMFD, partitionMFDs.getTotalOnFaultSupraSeisMFD());
-            onFaultSubSeisMFD =
-                    safeAdd(onFaultSubSeisMFD, partitionMFDs.getTotalOnFaultSubSeisMFD());
-            trulyOffFaultMFD = safeAdd(trulyOffFaultMFD, partitionMFDs.getTrulyOffFaultMFD());
-        }
+        SummedMagFreqDist onFaultSupraSeisMFD =
+                sum(
+                        mfds.values().stream()
+                                .map(InversionTargetMFDs::getTotalOnFaultSupraSeisMFD)
+                                .collect(Collectors.toList()));
         return new InversionTargetMFDs.Precomputed(
-                rupSet,
-                totalRegionalMFD,
-                onFaultSupraSeisMFD,
-                onFaultSubSeisMFD,
-                trulyOffFaultMFD,
-                List.of(),
-                null,
-                null);
+                rupSet, null, onFaultSupraSeisMFD, null, null, List.of(), null, null);
     }
 
     @Override

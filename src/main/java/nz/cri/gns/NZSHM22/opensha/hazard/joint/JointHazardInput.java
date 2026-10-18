@@ -248,14 +248,24 @@ public class JointHazardInput {
      */
     public GriddedRegion getRegion() {
         if (region == null) {
-            region =
-                    new GriddedRegion(
-                            new NewZealandRegions.NZ_TEST().getBorder(),
-                            BorderType.MERCATOR_LINEAR,
-                            spacing,
-                            GriddedRegion.ANCHOR_0_0);
+            region = defaultRegion(spacing);
         }
         return region;
+    }
+
+    /**
+     * The region hazard maps are calculated over unless one is set explicitly: {@link
+     * NewZealandRegions.NZ_TEST} at the given spacing. See {@link #getRegion()}.
+     *
+     * @param spacing grid spacing in degrees
+     * @return a new gridded region
+     */
+    public static GriddedRegion defaultRegion(double spacing) {
+        return new GriddedRegion(
+                new NewZealandRegions.NZ_TEST().getBorder(),
+                BorderType.MERCATOR_LINEAR,
+                spacing,
+                GriddedRegion.ANCHOR_0_0);
     }
 
     /**

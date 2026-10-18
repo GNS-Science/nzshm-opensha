@@ -93,6 +93,7 @@ public class JointRupturePlotTest {
         String allText = String.join("\n", lines);
         assertTrue(allText.contains("joint_partic_crustal.png"));
         assertTrue(allText.contains("joint_partic_subduction.png"));
+        assertTrue(allText.contains("joint_partic_all.png"));
         assertTrue(allText.contains("joint_only_mfds.png"));
         assertTrue(allText.contains("joint_only_mfds_cumulative.png"));
 
@@ -108,6 +109,7 @@ public class JointRupturePlotTest {
                 List.of(
                         "joint_partic_crustal.png",
                         "joint_partic_subduction.png",
+                        "joint_partic_all.png",
                         "joint_only_mfds.png",
                         "joint_only_mfds_cumulative.png")) {
             assertTrue(name, new File(resourcesDir, name).exists());

@@ -275,7 +275,9 @@ public class HazardComparisonReportTest {
 
         CPT cpt =
                 HazardComparisonReport.percentDiffCPT(
-                        diff, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
+                        diff,
+                        HazardComparisonReport.DEFAULT_NO_CHANGE_PERCENT,
+                        HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
 
         assertEquals(Color.LIGHT_GRAY, cpt.getNanColor());
         // NaN nodes are ignored when the ramp is fitted
@@ -305,6 +307,39 @@ public class HazardComparisonReportTest {
         assertNotEquals(HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR, cpt.getColor(0f));
     }
 
+    /** A larger no-change percentage widens the band drawn in the no-change colour. */
+    @Test
+    public void testPercentDiffCPTTakesTheNoChangePercent() throws Exception {
+        GriddedRegion region = mapRegion();
+        GriddedGeoDataSet diff = new GriddedGeoDataSet(region, false);
+        for (int i = 0; i < region.getNodeCount(); i++) {
+            diff.set(i, -33d + 219d * i / (double) (region.getNodeCount() - 1));
+        }
+        Color noChange = HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR;
+        CPT narrow = HazardComparisonReport.percentDiffCPT(diff, 1d, noChange);
+        CPT wide = HazardComparisonReport.percentDiffCPT(diff, 5d, noChange);
+
+        assertNotEquals(noChange, narrow.getColor(3f));
+        assertEquals(noChange, wide.getColor(3f));
+    }
+
+    /** The no-change percentage has to be positive, since it is the floor of a log ramp. */
+    @Test
+    public void testSetNoChangePercentRejectsNonPositive() {
+        HazardComparisonReport report =
+                new HazardComparisonReport(
+                        org.mockito.Mockito.mock(HazardReportSource.class),
+                        org.mockito.Mockito.mock(HazardReportSource.class),
+                        new File("unused"));
+        assertSame(report, report.setNoChangePercent(2d));
+        try {
+            report.setNoChangePercent(0d);
+            fail("expected IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
     /** The ramp a difference map gets when its percentage changes run from min to max. */
     private static CPT percentDiffCPT(double min, double max) throws Exception {
         return percentDiffCPT(min, max, HazardComparisonReport.DEFAULT_NO_CHANGE_COLOR);
@@ -318,7 +353,8 @@ public class HazardComparisonReportTest {
         for (int i = 0; i < region.getNodeCount(); i++) {
             diff.set(i, min + (max - min) * i / (double) (region.getNodeCount() - 1));
         }
-        return HazardComparisonReport.percentDiffCPT(diff, noChangeColor);
+        return HazardComparisonReport.percentDiffCPT(
+                diff, HazardComparisonReport.DEFAULT_NO_CHANGE_PERCENT, noChangeColor);
     }
 
     /** The curve ratio ignores the tail where the two curves are just noise. */

@@ -243,11 +243,18 @@ public class JointRupturePlot extends AbstractRupSetPlot implements SolidFillPlo
             mapTable.initNewLine();
             mapTable.addColumn(MarkdownUtils.boldCentered("Crustal Sections"));
             mapTable.addColumn(MarkdownUtils.boldCentered("Subduction Sections"));
+            mapTable.addColumn(MarkdownUtils.boldCentered("All Joint Rupture Sections"));
             mapTable.finalizeLine();
             mapTable.initNewLine();
-            for (String name : List.of("crustal", "subduction")) {
-                List<FaultSection> sections =
-                        name.equals("crustal") ? crustalSections : subductionSections;
+            // subduction first so that crustal sections are drawn on top
+            List<FaultSection> allSections = new ArrayList<>(subductionSections);
+            allSections.addAll(crustalSections);
+            Map<String, List<FaultSection>> mapSections = new LinkedHashMap<>();
+            mapSections.put("crustal", crustalSections);
+            mapSections.put("subduction", subductionSections);
+            mapSections.put("all", allSections);
+            for (String name : mapSections.keySet()) {
+                List<FaultSection> sections = mapSections.get(name);
                 if (sections.isEmpty()) {
                     mapTable.addColumn("_No sections_");
                     continue;
