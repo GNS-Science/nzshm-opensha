@@ -32,7 +32,6 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
 
     private double maxMagTVZ = 20.0;
     private double maxMagSans = 20.0;
-    private NZSHM22_MagBounds.MaxMagType maxMagType = NZSHM22_MagBounds.MaxMagType.NONE;
 
     private double paleoRateConstraintWt = 0;
     private double paleoParentRateSmoothnessConstraintWeight = 0;
@@ -105,9 +104,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         return this;
     }
 
-    public NZSHM22_CrustalInversionRunner setMaxMags(
-            String maxMagType, double maxMagSans, double maxMagTVZ) {
-        this.maxMagType = NZSHM22_MagBounds.MaxMagType.valueOf(maxMagType);
+    public NZSHM22_CrustalInversionRunner setMaxMags(double maxMagSans, double maxMagTVZ) {
         this.maxMagSans = maxMagSans;
         this.maxMagTVZ = maxMagTVZ;
         return this;
@@ -206,9 +203,7 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
                     new NZSHM22_Regions(
                             NewZealandRegions.NZ, new NewZealandRegions.NZ_EMPTY_GRIDDED()));
         }
-        if (maxMagType != NZSHM22_MagBounds.MaxMagType.NONE) {
-            branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ, maxMagType));
-        }
+        branch.setValue(new NZSHM22_MagBounds(maxMagSans, maxMagTVZ));
         if (tvzSlipRateFactor != -1 || sansSlipRateFactor != -1) {
             branch.setValue(new NZSHM22_SlipRateFactors(sansSlipRateFactor, tvzSlipRateFactor));
         }
@@ -261,41 +256,22 @@ public class NZSHM22_CrustalInversionRunner extends NZSHM22_AbstractInversionRun
         // this contains all inversion weights
         NZSHM22_CrustalInversionConfiguration inversionConfiguration;
 
-        if (maxMagType == NZSHM22_MagBounds.MaxMagType.MANIPULATE_MFD) {
-            inversionConfiguration =
-                    NZSHM22_CrustalInversionConfiguration.forModel(
-                            this,
-                            inversionModel,
-                            rupSet,
-                            initialSolution,
-                            totalRateM5_Sans,
-                            totalRateM5_TVZ,
-                            bValue_Sans,
-                            bValue_TVZ,
-                            minMag_Sans,
-                            minMag_TVZ,
-                            maxMagSans,
-                            maxMagTVZ,
-                            mfdUncertWtdConstraintPower,
-                            mfdUncertWtdConstraintScalar);
-        } else {
-            inversionConfiguration =
-                    NZSHM22_CrustalInversionConfiguration.forModel(
-                            this,
-                            inversionModel,
-                            rupSet,
-                            initialSolution,
-                            totalRateM5_Sans,
-                            totalRateM5_TVZ,
-                            bValue_Sans,
-                            bValue_TVZ,
-                            minMag_Sans,
-                            minMag_TVZ,
-                            100,
-                            100,
-                            mfdUncertWtdConstraintPower,
-                            mfdUncertWtdConstraintScalar);
-        }
+        inversionConfiguration =
+                NZSHM22_CrustalInversionConfiguration.forModel(
+                        this,
+                        inversionModel,
+                        rupSet,
+                        initialSolution,
+                        totalRateM5_Sans,
+                        totalRateM5_TVZ,
+                        bValue_Sans,
+                        bValue_TVZ,
+                        minMag_Sans,
+                        minMag_TVZ,
+                        maxMagSans,
+                        maxMagTVZ,
+                        mfdUncertWtdConstraintPower,
+                        mfdUncertWtdConstraintScalar);
 
         inversionConfiguration
                 .setPaleoRateConstraintWt(paleoRateConstraintWt)
