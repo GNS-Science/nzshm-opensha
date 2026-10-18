@@ -46,10 +46,10 @@ import org.opensha.sha.earthquake.faultSysSolution.util.SolHazardMapCalc.ReturnP
  * runs from the smallest to the largest change on the map, so nothing is clipped, and it colours
  * decreases and increases at the same rate, so a change of a given size looks the same whichever
  * way it went. Colour follows the logarithm of the change in both directions, so an outlier
- * somewhere does not flatten the rest of the map, and changes under {@link #NO_CHANGE_PERCENT}
- * count as none and are drawn in the no-change colour of {@link #setNoChangeColor}. See {@link
- * #percentDiffCPT}. Figure captions report the same numbers. Clicking any figure opens it full
- * size.
+ * somewhere does not flatten the rest of the map, and changes under the no-change percentage of
+ * {@link #setNoChangePercent} count as none and are drawn in the no-change colour of {@link
+ * #setNoChangeColor}. See {@link #percentDiffCPT}. Figure captions report the same numbers.
+ * Clicking any figure opens it full size.
  *
  * <p>Both configs must be calculated over the same region and the same periods, otherwise the maps
  * cannot be differenced. Use {@link #setRegion} or {@link #setSpacing} to set them together.
@@ -108,16 +108,16 @@ public class HazardComparisonReport {
     protected static final double EMPTY_DIFF_SCALE = 1d;
 
     /**
-     * Percentage change below which the difference maps call it no change: the floor of their log
-     * colour ramp, and the half-width of the band drawn in the no-change colour. An absolute figure
-     * rather than a share of the map's range, so that it means the same thing on every map in the
-     * report. See {@link #percentDiffCPT}.
+     * Default percentage change below which the difference maps call it no change: the floor of
+     * their log colour ramp, and the half-width of the band drawn in the no-change colour. An
+     * absolute figure rather than a share of the map's range, so that it means the same thing on
+     * every map in the report. See {@link #setNoChangePercent} and {@link #percentDiffCPT}.
      */
-    protected static final double NO_CHANGE_PERCENT = 1d;
+    public static final double DEFAULT_NO_CHANGE_PERCENT = 1d;
 
     /**
      * The colour the no-change band is drawn in unless {@link #setNoChangeColor} says otherwise.
-     * See {@link #NO_CHANGE_PERCENT}.
+     * See {@link #DEFAULT_NO_CHANGE_PERCENT}.
      */
     public static final Color DEFAULT_NO_CHANGE_COLOR = new Color(255, 255, 255);
 
@@ -137,6 +137,7 @@ public class HazardComparisonReport {
     protected Map<String, Location> sites = defaultSites();
     protected Map<String, Location> sourceSites = defaultSourceSites();
     protected Color noChangeColor = DEFAULT_NO_CHANGE_COLOR;
+    protected double noChangePercent = DEFAULT_NO_CHANGE_PERCENT;
     protected File imageDir;
 
     /**
@@ -293,6 +294,19 @@ public class HazardComparisonReport {
         return this;
     }
 
+    /**
+     * Sets the percentage change below which the hazard difference maps call it no change and draw
+     * it in the no-change colour. Defaults to {@link #DEFAULT_NO_CHANGE_PERCENT}.
+     *
+     * @param noChangePercent the threshold in percent, must be positive
+     */
+    public HazardComparisonReport setNoChangePercent(double noChangePercent) {
+        Preconditions.checkArgument(
+                noChangePercent > 0d, "no-change percent must be positive: %s", noChangePercent);
+        this.noChangePercent = noChangePercent;
+        return this;
+    }
+
     /** Sets the map region of both configs, so that the two maps can be differenced. */
     public HazardComparisonReport setRegion(GriddedRegion region) {
         first.getInput().setRegion(region);
@@ -436,7 +450,7 @@ public class HazardComparisonReport {
                                         imageDir,
                                         prefix + "_diff",
                                         diffMap,
-                                        percentDiffCPT(diffMap, noChangeColor),
+                                        percentDiffCPT(diffMap, noChangePercent, noChangeColor),
                                         differenceLabel(),
                                         "% change, " + periodLabel + ", " + rp.label),
                         "Difference",
@@ -787,7 +801,7 @@ public class HazardComparisonReport {
      * <p>Colour is spent on the logarithm of the change, out from zero in both directions, so that
      * one node that moved by a couple of hundred percent does not push every ordinary change into
      * the first sliver of the palette and leave the map looking flat. The ramp bottoms out at
-     * {@link #NO_CHANGE_PERCENT}: smaller changes count as none and are drawn in {@code
+     * {@code noChangePercent}: smaller changes count as none and are drawn in {@code
      * noChangeColor}, which says which cells did not really move rather than leaving them to fade
      * into the palette. That floor is an absolute percentage, so a cell is the no-change colour on
      * the same terms on every map in the report.
@@ -807,10 +821,13 @@ public class HazardComparisonReport {
      * are drawn in grey. See {@link #percentDiff}.
      *
      * @param percentMap the percentage change map the ramp is fitted to
+     * @param noChangePercent the percentage change below which a cell counts as no change. See
+     *     {@link #setNoChangePercent}.
      * @param noChangeColor the colour of the no-change band, or null for the palette's own neutral
      *     colour. See {@link #setNoChangeColor}.
      */
-    protected static CPT percentDiffCPT(GriddedGeoDataSet percentMap, Color noChangeColor)
+    protected static CPT percentDiffCPT(
+            GriddedGeoDataSet percentMap, double noChangePercent, Color noChangeColor)
             throws IOException {
         double[] values = finiteValues(percentMap);
         // finiteValues sorts, so the extremes are the ends; clamped so that a map that moved only
@@ -824,7 +841,7 @@ public class HazardComparisonReport {
 
         CPT cpt =
                 DivergingCPT.ramp(GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), min, max)
-                        .logFloor(NO_CHANGE_PERCENT)
+                        .logFloor(noChangePercent)
                         .zeroColor(noChangeColor)
                         .build();
         cpt.setNanColor(Color.LIGHT_GRAY);

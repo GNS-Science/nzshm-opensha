@@ -239,6 +239,32 @@ public class ParticipationChangeMapPlotTest {
         assertTrue(Double.isNaN(change.get(4)));
     }
 
+    /** A larger no-change percentage widens the band drawn as no change. */
+    @Test
+    public void testChangeCPTTakesTheNoChangePercent() throws Exception {
+        GriddedGeoDataSet change = new GriddedGeoDataSet(region(), false);
+        for (int i = 0; i < change.size(); i++) {
+            change.set(i, -50 + 150.0 * i / (change.size() - 1));
+        }
+        java.awt.Color white = java.awt.Color.WHITE;
+        assertNotEquals(white, ParticipationChangeMapPlot.changeCPT(change, 1).getColor(3f));
+        assertEquals(white, ParticipationChangeMapPlot.changeCPT(change, 5).getColor(3f));
+    }
+
+    /** The no-change percentage has to be positive, since it is the floor of a log ramp. */
+    @Test
+    public void testSetNoChangePercent() {
+        ParticipationChangeMapPlot plot = new ParticipationChangeMapPlot(region(), RADIUS);
+        assertSame(plot, plot.setNoChangePercent(2));
+        assertEquals(2, plot.noChangePercent, DELTA);
+        try {
+            plot.setNoChangePercent(0);
+            fail("expected IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
     /** Writes primary, comparison and change maps for all sections. */
     @Test
     public void testPlotWithComparison() throws Exception {

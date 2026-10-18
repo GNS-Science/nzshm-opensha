@@ -81,8 +81,11 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
      */
     protected static final int MAX_DECADES = 5;
 
-    /** Changes smaller than this percentage are drawn as no change. */
-    protected static final double NO_CHANGE_PERCENT = 1;
+    /**
+     * Default percentage below which changes are drawn as no change. See {@link
+     * #setNoChangePercent}.
+     */
+    public static final double DEFAULT_NO_CHANGE_PERCENT = 1;
 
     protected static final String PREFIX = "partic_change_map";
 
@@ -134,6 +137,7 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
     protected final GriddedRegion outline;
     protected final double radius;
     protected final Binning binning;
+    protected double noChangePercent = DEFAULT_NO_CHANGE_PERCENT;
 
     /**
      * Creates a plot on {@link NewZealandRegions.NZ_RECTANGLE} at the hazard map spacing, outlined
@@ -198,6 +202,20 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
         this.outline = outline;
         this.radius = radius;
         this.binning = binning;
+    }
+
+    /**
+     * Sets the percentage change below which the change maps call it no change and draw it in
+     * white. Defaults to {@link #DEFAULT_NO_CHANGE_PERCENT}.
+     *
+     * @param noChangePercent the threshold in percent, must be positive
+     * @return this plot
+     */
+    public ParticipationChangeMapPlot setNoChangePercent(double noChangePercent) {
+        Preconditions.checkArgument(
+                noChangePercent > 0, "no-change percent must be positive: %s", noChangePercent);
+        this.noChangePercent = noChangePercent;
+        return this;
     }
 
     @Override
@@ -489,15 +507,19 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
     /**
      * A diverging CPT with log spacing out from zero, spanning the change map but clipped at {@link
      * #MAX_PERCENT}. Changes below -100% cannot happen.
+     *
+     * @param change the percentage change map
+     * @param noChangePercent changes smaller than this percentage are drawn as no change
      */
-    protected static CPT changeCPT(GriddedGeoDataSet change) throws IOException {
+    protected static CPT changeCPT(GriddedGeoDataSet change, double noChangePercent)
+            throws IOException {
         double[] values = finiteValues(change);
-        double min = values.length == 0 ? 0 : Math.min(-NO_CHANGE_PERCENT * 2, values[0]);
+        double min = values.length == 0 ? 0 : Math.min(-noChangePercent * 2, values[0]);
         double max =
                 values.length == 0
                         ? 0
                         : Math.max(
-                                NO_CHANGE_PERCENT * 2,
+                                noChangePercent * 2,
                                 Math.min(MAX_PERCENT, values[values.length - 1]));
         if (values.length == 0) {
             min = -10;
@@ -505,7 +527,7 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
         }
         CPT cpt =
                 DivergingCPT.ramp(GMT_CPT_Files.DIVERGING_VIK_UNIFORM.instance(), min, max)
-                        .logFloor(NO_CHANGE_PERCENT)
+                        .logFloor(noChangePercent)
                         .zeroColor(Color.WHITE)
                         .build();
         cpt.setNanColor(NAN_COLOR);
@@ -702,7 +724,7 @@ public class ParticipationChangeMapPlot extends AbstractRupSetPlot {
                             resourcesDir,
                             changePrefix,
                             change,
-                            changeCPT(change),
+                            changeCPT(change, noChangePercent),
                             primaryName + " vs " + meta.comparison.name,
                             "% change, " + label.toLowerCase());
             images.add(changePrefix);
