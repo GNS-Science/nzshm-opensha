@@ -42,6 +42,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
     // HIKURANGI-KERMADEC
     // Trench-creeping model used in 2022
+    @Deprecated
     SBD_0_2A_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape, creeping at trench",
             "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv",
