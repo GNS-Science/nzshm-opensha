@@ -7,6 +7,7 @@ import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import java.io.IOException;
 import java.util.List;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.SharedConstraintGenerator;
 import org.dom4j.DocumentException;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class CrustalInversionTargetMFDsTest {
         CrustalInversionTargetMFDs targetMFDs = new CrustalInversionTargetMFDs(rupSet, partition);
 
         IncrementalMagFreqDist constraint = targetMFDs.getMFD_Constraints().get(0);
-        assertTrue(rupSet.getMaxMag() < constraint.getMaxX() + constraint.getDelta() / 2);
+        assertTrue(MFDManipulation.containsMag(constraint, rupSet.getMaxMag()));
         IncrementalMagFreqDist uncertainty = targetMFDs.getMfdUncertaintyConstraints().get(0);
         assertEquals(constraint.getMaxX(), uncertainty.getMaxX(), 1e-9);
     }

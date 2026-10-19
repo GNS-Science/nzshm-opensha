@@ -39,7 +39,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
     // default bins. MFDs are extended beyond MAX_MAG if the rupture set has larger ruptures.
     public static final double MIN_MAG = 5.05;
     public static final double MAX_MAG = 9.65;
-    public static final double DELTA_MAG = 0.1;
 
     protected List<IncrementalMagFreqDist> mfdEqIneqConstraints = new ArrayList<>();
     protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints = new ArrayList<>();

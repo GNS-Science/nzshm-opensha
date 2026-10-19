@@ -34,8 +34,6 @@ public class MFDManipulation {
     static {
         // the bins have to work for crustal and subduction, and line up with their MFD bins
         Preconditions.checkState(
-                MAG_BINS.getDelta() == NZSHM22_SubductionInversionTargetMFDs.DELTA_MAG);
-        Preconditions.checkState(
                 NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
                         == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
         double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
@@ -59,29 +57,6 @@ public class MFDManipulation {
                 && bin <= MAG_BINS.getClosestXIndex(maxMag));
     }
 
-    /** The minimum bin centre and number of bins of a range of {@link #MAG_BINS} bins. */
-    protected static class MagBins {
-        final double minX;
-        final int numBins;
-
-        protected MagBins(double minX, int numBins) {
-            this.minX = minX;
-            this.numBins = numBins;
-        }
-    }
-
-    /**
-     * Returns the {@link #MAG_BINS} bins from the bin containing minMag up to and including the bin
-     * containing maxMag.
-     */
-    protected static MagBins magBins(double minMag, double maxMag) {
-        int minBin = MAG_BINS.getClosestXIndex(minMag);
-        int maxBin = MAG_BINS.getClosestXIndex(maxMag);
-        Preconditions.checkArgument(
-                minBin <= maxBin, "minMag %s is above maxMag %s", minMag, maxMag);
-        return new MagBins(MAG_BINS.getX(minBin), maxBin - minBin + 1);
-    }
-
     /**
      * Creates an empty MFD with the {@link #MAG_BINS} bins from the bin containing minMag to the
      * bin containing maxMag.
@@ -91,8 +66,12 @@ public class MFDManipulation {
      * @return the MFD
      */
     public static IncrementalMagFreqDist createIncrementalMFD(double minMag, double maxMag) {
-        MagBins bins = magBins(minMag, maxMag);
-        return new IncrementalMagFreqDist(bins.minX, bins.numBins, MAG_BINS.getDelta());
+        int minBin = MAG_BINS.getClosestXIndex(minMag);
+        int maxBin = MAG_BINS.getClosestXIndex(maxMag);
+        Preconditions.checkArgument(
+                minBin <= maxBin, "minMag %s is above maxMag %s", minMag, maxMag);
+        return new IncrementalMagFreqDist(
+                MAG_BINS.getX(minBin), maxBin - minBin + 1, MAG_BINS.getDelta());
     }
 
     /**
@@ -104,8 +83,8 @@ public class MFDManipulation {
      * @return the MFD
      */
     public static SummedMagFreqDist createSummedMFD(double minMag, double maxMag) {
-        MagBins bins = magBins(minMag, maxMag);
-        return new SummedMagFreqDist(bins.minX, bins.numBins, MAG_BINS.getDelta());
+        IncrementalMagFreqDist bins = createIncrementalMFD(minMag, maxMag);
+        return new SummedMagFreqDist(bins.getMinX(), bins.size(), bins.getDelta());
     }
 
     /**
@@ -118,8 +97,8 @@ public class MFDManipulation {
      */
     public static GutenbergRichterMagFreqDist createGutenbergRichterMFD(
             double minMag, double maxMag) {
-        MagBins bins = magBins(minMag, maxMag);
-        return new GutenbergRichterMagFreqDist(bins.minX, bins.numBins, MAG_BINS.getDelta());
+        IncrementalMagFreqDist bins = createIncrementalMFD(minMag, maxMag);
+        return new GutenbergRichterMagFreqDist(bins.getMinX(), bins.size(), bins.getDelta());
     }
 
     /**
