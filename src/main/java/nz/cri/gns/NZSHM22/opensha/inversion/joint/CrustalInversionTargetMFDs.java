@@ -54,7 +54,8 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
     public static final double NZ_MIN_MAG = 5.05; // used instead of UCERF3 value 0.05
-    public static final int NZ_NUM_BINS = 40; // used instead of UCERF3 value 90
+    // centre of the last default bin. MFDs are extended beyond this if ruptures are larger.
+    public static final double NZ_MAX_MAG = 8.95;
 
     RegionalTargetMFDs sansTvz;
 
@@ -132,10 +133,8 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             double onFaultRegionRateMgt5 = config.totalRateM5 * fractionSeisOnFault;
 
             // make the total target GR MFD with empty bins
-            // extended beyond NZ_NUM_BINS if ruptures are larger than the default range
-            double mfdMaxMag =
-                    Math.max(
-                            NZ_MIN_MAG + (NZ_NUM_BINS - 1) * DELTA_MAG, regionalRupSet.getMaxMag());
+            // extended beyond NZ_MAX_MAG if ruptures are larger than the default range
+            double mfdMaxMag = Math.max(NZ_MAX_MAG, regionalRupSet.getMaxMag());
             totalTargetGR = MFDManipulation.createGutenbergRichterMFD(NZ_MIN_MAG, mfdMaxMag);
 
             // populate the MFD bins

@@ -48,7 +48,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
      */
     protected List<Double> mMinsPerSection(FaultSystemRupSet rupSet) {
         ModSectMinMags finalMinMags = rupSet.getModule(ModSectMinMags.class);
-        // extended beyond NZ_NUM_BINS if magnitudes are larger than the default range, so that
+        // extended beyond NZ_MAX_MAG if magnitudes are larger than the default range, so that
         // section min mags are not clamped to the last default bin
         double maxMag = rupSet.getMaxMag();
         for (int s = 0; s < rupSet.getNumSections(); s++) {
@@ -57,11 +57,7 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
         IncrementalMagFreqDist bins =
                 MFDManipulation.createIncrementalMFD(
                         NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
-                        Math.max(
-                                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
-                                        + (NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS - 1)
-                                                * NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG,
-                                maxMag));
+                        Math.max(NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG, maxMag));
         ArrayList<GutenbergRichterMagFreqDist> grNuclMFD_List =
                 FaultSystemRupSetCalc.calcImpliedGR_NuclMFD_ForEachSection(
                         rupSet, bins.getMinX(), bins.size(), bins.getDelta());

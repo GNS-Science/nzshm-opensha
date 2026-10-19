@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
@@ -30,10 +31,9 @@ public class NZSHM22_FaultSystemRupSetCalcTest {
         GriddedSeisUtils gsu = mock(GriddedSeisUtils.class);
         when(gsu.pdfValForSection(0)).thenReturn(1.2);
         GutenbergRichterMagFreqDist totalTargetGR =
-                new GutenbergRichterMagFreqDist(
+                MFDManipulation.createGutenbergRichterMFD(
                         NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
-                        NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS,
-                        NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG);
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG);
 
         // populate the MFD bins
         totalTargetGR.setAllButTotMoRate(

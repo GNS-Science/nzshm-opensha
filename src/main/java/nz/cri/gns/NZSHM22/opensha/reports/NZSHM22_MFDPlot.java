@@ -40,7 +40,7 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
     protected void plotNZSHM22_MFDs(
             List<MFD_Plot> plots, NZSHM22_CrustalInversionTargetMFDs targetMFDs) {
 
-        // sized like the total target GR, which may extend beyond NZ_NUM_BINS
+        // sized like the total target GR, which may extend beyond NZ_MAX_MAG
         IncrementalMagFreqDist totalTargetGR = targetMFDs.getSansTvz().totalTargetGR;
         SummedMagFreqDist targetOnFaultSupraSeisMFDs =
                 MFDManipulation.createSummedMFD(totalTargetGR.getMinX(), totalTargetGR.getMaxX());

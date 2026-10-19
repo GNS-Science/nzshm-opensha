@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs;
 import org.junit.Test;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
 import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
@@ -471,5 +472,35 @@ public class MFDManipulationTest {
             assertTrue(MFDManipulation.containsMag(mfd, 5.05));
             assertTrue(MFDManipulation.containsMag(mfd, mag));
         }
+    }
+
+    @Test
+    public void testCrustalMaxMagIsLastDefaultBin() {
+        IncrementalMagFreqDist mfd =
+                MFDManipulation.createIncrementalMFD(
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG);
+        assertEquals(40, mfd.size());
+        assertEquals(NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG, mfd.getMaxX(), 1e-9);
+    }
+
+    @Test
+    public void testJointCrustalMaxMagIsLastDefaultBin() {
+        IncrementalMagFreqDist mfd =
+                MFDManipulation.createIncrementalMFD(
+                        CrustalInversionTargetMFDs.NZ_MIN_MAG,
+                        CrustalInversionTargetMFDs.NZ_MAX_MAG);
+        assertEquals(40, mfd.size());
+        assertEquals(CrustalInversionTargetMFDs.NZ_MAX_MAG, mfd.getMaxX(), 1e-9);
+    }
+
+    @Test
+    public void testSubductionMaxMagIsBinCentre() {
+        IncrementalMagFreqDist mfd =
+                MFDManipulation.createIncrementalMFD(
+                        NZSHM22_SubductionInversionTargetMFDs.MIN_MAG,
+                        NZSHM22_SubductionInversionTargetMFDs.MAX_MAG);
+        assertEquals(47, mfd.size());
+        assertEquals(NZSHM22_SubductionInversionTargetMFDs.MAX_MAG, mfd.getMaxX(), 1e-9);
     }
 }

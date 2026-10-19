@@ -1,10 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG;
 import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
-import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS;
 import static org.opensha.commons.util.modules.helpers.FileBackedModule.getInputStream;
 import static org.opensha.commons.util.modules.helpers.FileBackedModule.initEntry;
-import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import java.io.*;
 import java.util.HashMap;
@@ -72,7 +71,7 @@ public class PartitionMfds implements ArchivableModule {
             return null;
         }
         double minMag = NZ_MIN_MAG;
-        double maxMag = NZ_MIN_MAG + (NZ_NUM_BINS - 1) * DELTA_MAG;
+        double maxMag = NZ_MAX_MAG;
         for (IncrementalMagFreqDist mfd : present) {
             minMag = Math.min(minMag, mfd.getMinX());
             maxMag = Math.max(maxMag, mfd.getMaxX());
