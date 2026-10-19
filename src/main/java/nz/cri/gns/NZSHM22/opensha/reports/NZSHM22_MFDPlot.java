@@ -1,9 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.reports;
 
-import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
-import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS;
-import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
-
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.File;
@@ -11,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import org.jfree.data.Range;
 import org.opensha.commons.data.function.EvenlyDiscretizedFunc;
@@ -43,8 +40,10 @@ public class NZSHM22_MFDPlot extends AbstractRupSetPlot {
     protected void plotNZSHM22_MFDs(
             List<MFD_Plot> plots, NZSHM22_CrustalInversionTargetMFDs targetMFDs) {
 
+        // sized like the total target GR, which may extend beyond NZ_NUM_BINS
+        IncrementalMagFreqDist totalTargetGR = targetMFDs.getSansTvz().totalTargetGR;
         SummedMagFreqDist targetOnFaultSupraSeisMFDs =
-                new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+                MFDManipulation.createSummedMFD(totalTargetGR.getMinX(), totalTargetGR.getMaxX());
         targetOnFaultSupraSeisMFDs.addIncrementalMagFreqDist(
                 targetMFDs.getSansTvz().targetOnFaultSupraSeisMFDs);
         if (!targetMFDs.getTvz().isEmpty) {

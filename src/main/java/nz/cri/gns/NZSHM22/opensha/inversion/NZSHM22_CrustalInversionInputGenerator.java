@@ -1,10 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import java.util.*;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.InversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.*;
-import scratch.UCERF3.utils.U3SectionMFD_constraint;
 
 /**
  * This class is used to generate inversion inputs (A/A_ineq matrices, d/d_ineq vectors) for a given
@@ -57,16 +55,6 @@ public class NZSHM22_CrustalInversionInputGenerator extends BaseInversionInputGe
                                 config.getpaleoParentRateSmoothnessConstraintWeight(),
                                 paleoParentIDs));
             }
-        }
-
-        // MFD Subsection nucleation MFD constraint
-        ArrayList<U3SectionMFD_constraint> MFDConstraints = null;
-        if (config.getNucleationMFDConstraintWt() > 0.0) {
-            MFDConstraints =
-                    NZSHM22_FaultSystemRupSetCalc.getCharInversionSectMFD_Constraints(rupSet);
-            constraints.add(
-                    new U3MFDSubSectNuclInversionConstraint(
-                            rupSet, config.getNucleationMFDConstraintWt(), MFDConstraints));
         }
 
         return constraints;

@@ -6,9 +6,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint.FilteredFaultSystemRupSetTest;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
 import org.dom4j.DocumentException;
@@ -158,7 +158,7 @@ public class RuptureSetSetupTest {
 
     static final int SUB_SECTION = 1;
 
-    static final double BIN = NZSHM22_FaultSystemRupSetCalc.MAG_BINS.getDelta();
+    static final double BIN = MFDManipulation.MAG_BINS.getDelta();
 
     /** The magnitude of the part of the joint rupture that is on the specified section. */
     static double jointPartitionMag(Config config, int section) {

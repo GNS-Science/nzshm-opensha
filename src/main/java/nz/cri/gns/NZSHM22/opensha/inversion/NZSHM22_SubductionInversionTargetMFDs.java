@@ -35,7 +35,8 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
  */
 public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs {
 
-    // discretization parameters for MFDs
+    // discretization parameters for MFDs. MFDs are extended beyond NUM_MAG bins if the rupture set
+    // has larger ruptures.
     public static final double MIN_MAG = 5.05; //
     public static final double MAX_MAG = 9.75;
     public static final int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
@@ -56,9 +57,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             double mfdUncertaintyWeightedConstraintPower,
             double mfdUncertaintyWeightedConstraintScalar) {
 
-        // make the total target GR MFD
+        // make the total target GR MFD, extending it if ruptures are larger than the default range
+        double mfdMaxMag = Math.max(MIN_MAG + (NUM_MAG - 1) * DELTA_MAG, invRupSet.getMaxMag());
         GutenbergRichterMagFreqDist totalTargetGR =
-                new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+                MFDManipulation.createGutenbergRichterMFD(MIN_MAG, mfdMaxMag);
 
         // sorting out scaling
         double roundedMmaxOnFault =
@@ -67,7 +69,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
                 MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue); // TODO: revisit
 
         SummedMagFreqDist targetOnFaultSupraSeisMFD =
-                new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+                MFDManipulation.createSummedMFD(MIN_MAG, mfdMaxMag);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
         targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
 
@@ -84,6 +86,11 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         this.totalTargetGR = MFDManipulation.trimMFD(totalTargetGR, mfdMinMag, maxMag);
         this.targetOnFaultSupraSeisMFD =
                 MFDManipulation.trimMFD(targetOnFaultSupraSeisMFD, mfdMinMag, maxMag);
+        Preconditions.checkState(
+                MFDManipulation.containsMag(this.targetOnFaultSupraSeisMFD, invRupSet.getMaxMag()),
+                "MFD %s does not cover rupture set max mag %s",
+                this.targetOnFaultSupraSeisMFD.getName(),
+                invRupSet.getMaxMag());
         this.mfdEqIneqConstraints.add(this.targetOnFaultSupraSeisMFD);
         this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
         if (mfdUncertaintyWeightedConstraintWt > 0.0) {

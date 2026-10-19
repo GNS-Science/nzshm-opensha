@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import org.opensha.commons.util.io.archive.ArchiveInput;
 import org.opensha.commons.util.io.archive.ArchiveOutput;
 import org.opensha.commons.util.modules.ArchivableModule;
@@ -76,8 +77,7 @@ public class PartitionMfds implements ArchivableModule {
             minMag = Math.min(minMag, mfd.getMinX());
             maxMag = Math.max(maxMag, mfd.getMaxX());
         }
-        int numBins = (int) Math.round((maxMag - minMag) / DELTA_MAG) + 1;
-        SummedMagFreqDist result = new SummedMagFreqDist(minMag, numBins, DELTA_MAG);
+        SummedMagFreqDist result = MFDManipulation.createSummedMFD(minMag, maxMag);
         for (IncrementalMagFreqDist mfd : present) {
             result.addIncrementalMagFreqDist(mfd);
         }

@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.IntPredicate;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
@@ -95,7 +94,7 @@ public class MagFilteredRupSetTest {
     }
 
     protected static int bin(double mag) {
-        return NZSHM22_FaultSystemRupSetCalc.MAG_BINS.getClosestXIndex(mag);
+        return MFDManipulation.MAG_BINS.getClosestXIndex(mag);
     }
 
     @Test
@@ -129,7 +128,7 @@ public class MagFilteredRupSetTest {
     /** Ruptures are compared to the bounds by magnitude bin, not by magnitude. */
     @Test
     public void comparesBinsRatherThanMagnitudes() {
-        IncrementalMagFreqDist bins = NZSHM22_FaultSystemRupSetCalc.MAG_BINS;
+        IncrementalMagFreqDist bins = MFDManipulation.MAG_BINS;
         int bin = bin(mags[1]);
         double lowerBinEdge = bins.getX(bin) - (bins.getDelta() / 2);
         double upperBinEdge = bins.getX(bin) + (bins.getDelta() / 2);

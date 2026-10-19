@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
 import nz.cri.gns.NZSHM22.opensha.griddedSeismicity.NZSHM22_GriddedData;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionRunner;
 import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
 import nz.cri.gns.NZSHM22.opensha.util.*;
@@ -20,6 +21,7 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemSolution;
 import org.opensha.sha.earthquake.faultSysSolution.modules.ModSectMinMags;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
+import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.analysis.FaultSystemRupSetCalc;
 
 /**
@@ -37,14 +39,32 @@ public class NZSHM22_PolygonisedDistributedModelBuilder {
 
     public NZSHM22_PolygonisedDistributedModelBuilder() {}
 
+    /**
+     * Returns the min mag of each section, snapped to the centre of its NZSHM22 MFD bin. This is
+     * the larger of the section's smallest rupture and its {@link ModSectMinMags} value.
+     *
+     * @param rupSet the rupture set, must have a {@link ModSectMinMags} module
+     * @return the min mag of each section
+     */
     protected List<Double> mMinsPerSection(FaultSystemRupSet rupSet) {
         ModSectMinMags finalMinMags = rupSet.getModule(ModSectMinMags.class);
+        // extended beyond NZ_NUM_BINS if magnitudes are larger than the default range, so that
+        // section min mags are not clamped to the last default bin
+        double maxMag = rupSet.getMaxMag();
+        for (int s = 0; s < rupSet.getNumSections(); s++) {
+            maxMag = Math.max(maxMag, finalMinMags.getMinMagForSection(s));
+        }
+        IncrementalMagFreqDist bins =
+                MFDManipulation.createIncrementalMFD(
+                        NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
+                        Math.max(
+                                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
+                                        + (NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS - 1)
+                                                * NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG,
+                                maxMag));
         ArrayList<GutenbergRichterMagFreqDist> grNuclMFD_List =
                 FaultSystemRupSetCalc.calcImpliedGR_NuclMFD_ForEachSection(
-                        rupSet,
-                        NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG,
-                        NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS,
-                        NZSHM22_CrustalInversionTargetMFDs.DELTA_MAG);
+                        rupSet, bins.getMinX(), bins.size(), bins.getDelta());
         List<Double> result = new ArrayList<>();
         for (int s = 0; s < grNuclMFD_List.size(); s++) {
             GutenbergRichterMagFreqDist grNuclMFD = grNuclMFD_List.get(s);

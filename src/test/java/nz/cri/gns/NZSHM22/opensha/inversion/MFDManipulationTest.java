@@ -385,4 +385,91 @@ public class MFDManipulationTest {
         IncrementalMagFreqDist actual = MFDManipulation.swapZeros(dist, Math.PI);
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testCreateMFDsUseMagBins() {
+        // 5.0 and 9.0 are on bin boundaries and go into the upper bin
+        List<EvenlyDiscretizedFunc> mfds =
+                List.of(
+                        MFDManipulation.createIncrementalMFD(5.0, 9.0),
+                        MFDManipulation.createSummedMFD(5.0, 9.0),
+                        MFDManipulation.createGutenbergRichterMFD(5.0, 9.0));
+        for (EvenlyDiscretizedFunc mfd : mfds) {
+            assertEquals(5.05, mfd.getMinX(), 1e-9);
+            assertEquals(9.05, mfd.getMaxX(), 1e-9);
+            assertEquals(41, mfd.size());
+            assertEquals(MFDManipulation.MAG_BINS.getDelta(), mfd.getDelta(), 1e-9);
+        }
+        assertTrue(mfds.get(1) instanceof SummedMagFreqDist);
+        assertTrue(mfds.get(2) instanceof GutenbergRichterMagFreqDist);
+    }
+
+    @Test
+    public void testCreateMFDBinsLineUpWithMagBins() {
+        IncrementalMagFreqDist mfd = MFDManipulation.createIncrementalMFD(6.83, 8.21);
+        assertEquals(6.85, mfd.getMinX(), 1e-9);
+        assertEquals(8.25, mfd.getMaxX(), 1e-9);
+        IncrementalMagFreqDist bins = MFDManipulation.MAG_BINS;
+        for (int i = 0; i < mfd.size(); i++) {
+            assertEquals(bins.getX(bins.getClosestXIndex(mfd.getX(i))), mfd.getX(i), 1e-9);
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateMFDMinAboveMax() {
+        MFDManipulation.createIncrementalMFD(8, 7);
+    }
+
+    /** The bins line up with the NZSHM22 MFD bins. */
+    @Test
+    public void testMagBinsLineUpWithTheMfdBins() {
+        IncrementalMagFreqDist bins = MFDManipulation.MAG_BINS;
+        double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
+        assertEquals(mfdMinMag, bins.getX(bins.getClosestXIndex(mfdMinMag)), 1e-9);
+    }
+
+    /** The bins span every magnitude bound that can be configured. */
+    @Test
+    public void testMagBinsSpanEverySensibleMagnitude() {
+        IncrementalMagFreqDist bins = MFDManipulation.MAG_BINS;
+        assertTrue(bins.getMinX() < 0.1);
+        assertTrue(bins.getMaxX() >= 20);
+    }
+
+    /**
+     * Magnitudes outside the bins get the outermost bin, which is below or above any bound that can
+     * be configured. The magnitude comparisons rely on this.
+     */
+    @Test
+    public void testMagBinsPlaceMagnitudesOutsideThemAtTheEnds() {
+        IncrementalMagFreqDist bins = MFDManipulation.MAG_BINS;
+
+        assertEquals(0, bins.getClosestXIndex(bins.getMinX() - bins.getDelta()));
+        assertEquals(0, bins.getClosestXIndex(-100));
+
+        assertEquals(bins.size() - 1, bins.getClosestXIndex(bins.getMaxX() + bins.getDelta()));
+        assertEquals(bins.size() - 1, bins.getClosestXIndex(100));
+    }
+
+    @Test
+    public void testContainsMag() {
+        IncrementalMagFreqDist mfd = MFDManipulation.createIncrementalMFD(5.05, 8.95);
+        assertTrue(MFDManipulation.containsMag(mfd, 5.0));
+        assertTrue(MFDManipulation.containsMag(mfd, 5.05));
+        assertTrue(MFDManipulation.containsMag(mfd, 8.95));
+        assertTrue(MFDManipulation.containsMag(mfd, 8.99));
+        // magnitudes on a bin boundary belong to the upper bin
+        assertFalse(MFDManipulation.containsMag(mfd, 4.99));
+        assertFalse(MFDManipulation.containsMag(mfd, 9.0));
+        assertFalse(MFDManipulation.containsMag(mfd, 9.5));
+    }
+
+    @Test
+    public void testCreatedMFDsContainMinAndMaxMag() {
+        for (double mag = 5.1; mag < 11; mag += 0.001) {
+            IncrementalMagFreqDist mfd = MFDManipulation.createIncrementalMFD(5.05, mag);
+            assertTrue(MFDManipulation.containsMag(mfd, 5.05));
+            assertTrue(MFDManipulation.containsMag(mfd, mag));
+        }
+    }
 }
