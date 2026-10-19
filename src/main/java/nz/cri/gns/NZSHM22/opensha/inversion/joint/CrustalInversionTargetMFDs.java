@@ -1,6 +1,5 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
-import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -183,13 +182,6 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             targetOnFaultSupraSeisMFDs =
                     MFDManipulation.trimMFD(
                             tempTargetOnFaultSupraSeisMFD, config.minMag, config.maxMag);
-            Preconditions.checkState(
-                    MFDManipulation.containsMag(
-                            targetOnFaultSupraSeisMFDs, regionalRupSet.getMaxMag()),
-                    "MFD %s does not cover rupture set max mag %s",
-                    targetOnFaultSupraSeisMFDs.getName(),
-                    regionalRupSet.getMaxMag());
-            //  targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,

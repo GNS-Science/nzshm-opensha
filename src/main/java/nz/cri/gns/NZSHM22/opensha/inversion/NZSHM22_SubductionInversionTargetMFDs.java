@@ -84,11 +84,6 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
         this.totalTargetGR = MFDManipulation.trimMFD(totalTargetGR, mfdMinMag, maxMag);
         this.targetOnFaultSupraSeisMFD =
                 MFDManipulation.trimMFD(targetOnFaultSupraSeisMFD, mfdMinMag, maxMag);
-        Preconditions.checkState(
-                MFDManipulation.containsMag(this.targetOnFaultSupraSeisMFD, invRupSet.getMaxMag()),
-                "MFD %s does not cover rupture set max mag %s",
-                this.targetOnFaultSupraSeisMFD.getName(),
-                invRupSet.getMaxMag());
         this.mfdEqIneqConstraints.add(this.targetOnFaultSupraSeisMFD);
         this.mfdConstraintComponents = List.of(this.targetOnFaultSupraSeisMFD);
         if (mfdUncertaintyWeightedConstraintWt > 0.0) {
