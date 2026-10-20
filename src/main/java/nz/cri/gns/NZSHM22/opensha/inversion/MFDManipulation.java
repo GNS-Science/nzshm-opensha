@@ -12,16 +12,16 @@ import org.opensha.sha.magdist.SummedMagFreqDist;
 import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
 /**
- * Creates and manipulates NZSHM22 MFDs. All NZSHM22 MFDs use the bins of {@link #MAG_BINS}, create
- * new MFDs with {@link #createIncrementalMFD(double, double)}, {@link #createSummedMFD(double,
- * double)} or {@link #createGutenbergRichterMFD(double, double)} so that bin boundaries line up.
+ * Creates and manipulates NZSHM MFDs. All NZSHM MFDs use the bins of {@link #MAG_BINS}, create new
+ * MFDs with {@link #createIncrementalMFD(double, double)}, {@link #createSummedMFD(double, double)}
+ * or {@link #createGutenbergRichterMFD(double, double)} so that bin boundaries line up.
  */
 public class MFDManipulation {
 
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
     /**
-     * The magnitude bins of all NZSHM22 MFDs, and the bins that rupture magnitudes and magnitude
+     * The magnitude bins of all NZSHM MFDs, and the bins that rupture magnitudes and magnitude
      * bounds are compared in. The same discretisation is used for crustal and subduction. The range
      * spans every sensible minimum and maximum magnitude, so anything below or above it is safely
      * outside any bound that can be configured.
