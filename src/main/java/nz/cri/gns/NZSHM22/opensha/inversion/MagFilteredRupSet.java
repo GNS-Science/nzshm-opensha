@@ -6,7 +6,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
@@ -25,8 +24,7 @@ import org.opensha.sha.earthquake.faultSysSolution.ruptures.ClusterRupture;
  * maximum magnitude bounds. Joint rupture sets are filtered with {@link #filter(FaultSystemRupSet,
  * Config)}, which tests each partition of a rupture against that partition's bounds. Other rupture
  * sets can be filtered with {@link #filter(FaultSystemRupSet, double, double)}. Magnitudes are
- * compared by magnitude bin, see {@link NZSHM22_FaultSystemRupSetCalc#isWithinBounds(double,
- * double, double)}.
+ * compared by magnitude bin, see {@link MFDManipulation#isWithinBounds(double, double, double)}.
  */
 public class MagFilteredRupSet {
 
@@ -46,7 +44,7 @@ public class MagFilteredRupSet {
      * A maximum magnitude that is above the highest magnitude bin and therefore does not exclude
      * any rupture.
      */
-    public static final double NO_MAX_MAG = NZSHM22_FaultSystemRupSetCalc.MAG_BINS.getMaxX();
+    public static final double NO_MAX_MAG = MFDManipulation.MAG_BINS.getMaxX();
 
     protected MagFilteredRupSet() {}
 
@@ -74,7 +72,7 @@ public class MagFilteredRupSet {
         // same as FilteredFaultSystemRupSet: a rupture entirely inside the partition keeps its
         // magnitude, independent of whether the section areas add up to the rupture area
         if (partitionSections.size() == sections.size()) {
-            return NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+            return MFDManipulation.isWithinBounds(
                     partitionConfig.minMag,
                     partitionConfig.maxMag,
                     rupSet.getMagForRup(ruptureIndex));
@@ -88,7 +86,7 @@ public class MagFilteredRupSet {
                         rupSet.getAreaForRup(ruptureIndex),
                         rupSet.getMagForRup(ruptureIndex));
 
-        return NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
+        return MFDManipulation.isWithinBounds(
                 partitionConfig.minMag, partitionConfig.maxMag, partitionMag);
     }
 
@@ -130,9 +128,7 @@ public class MagFilteredRupSet {
             FaultSystemRupSet original, double minMag, double maxMag) {
         boolean[] drop = new boolean[original.getNumRuptures()];
         for (int r = 0; r < drop.length; r++) {
-            drop[r] =
-                    !NZSHM22_FaultSystemRupSetCalc.isWithinBounds(
-                            minMag, maxMag, original.getMagForRup(r));
+            drop[r] = !MFDManipulation.isWithinBounds(minMag, maxMag, original.getMagForRup(r));
         }
         return filter(original, drop);
     }

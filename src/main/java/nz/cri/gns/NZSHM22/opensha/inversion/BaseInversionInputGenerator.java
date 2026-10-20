@@ -62,8 +62,6 @@ public class BaseInversionInputGenerator extends InversionInputGenerator {
         System.out.println(
                 "config.getMagnitudeInequalityConstraintWt(): "
                         + config.getMagnitudeInequalityConstraintWt());
-        System.out.println(
-                "config.getNucleationMFDConstraintWt():" + config.getNucleationMFDConstraintWt());
 
         // builds constraint instances
         List<InversionConstraint> constraints = new ArrayList<>();

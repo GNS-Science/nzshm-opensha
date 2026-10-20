@@ -139,11 +139,11 @@ public class RuptureSetSetup {
         applySlipRateFactor(PartitionPredicate.TVZ, config.tvzSlipRateFactor, ruptureSet);
         applySlipRateFactor(PartitionPredicate.SANS_TVZ, config.sansSlipRateFactor, ruptureSet);
 
-        createModSectMinMags(config);
-
         // ruptures outside the magnitude bounds are dropped before anything is derived from the
         // rupture set, so that target MFDs and the constraint matrix only cover valid ruptures.
         filterByMagnitude(config);
+
+        createModSectMinMags(config);
 
         // the partition rupture sets take a filtered copy of the joint rupture set's slip modules,
         // so they have to be built after all modules above have been set up.

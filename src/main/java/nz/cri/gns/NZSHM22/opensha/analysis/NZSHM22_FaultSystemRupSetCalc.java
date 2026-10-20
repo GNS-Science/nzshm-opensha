@@ -1,13 +1,9 @@
 package nz.cri.gns.NZSHM22.opensha.analysis;
 
-import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
-
-import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs;
-import nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_SubductionInversionTargetMFDs;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.RegionalRupSetData;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.Config;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionConfig;
@@ -381,47 +377,16 @@ public class NZSHM22_FaultSystemRupSetCalc extends FaultSystemRupSetCalc {
      */
     public static boolean isRuptureBelowSectMinMag(
             FaultSystemRupSet fltSystRupSet, int rupIndex, ModSectMinMags modMinMags) {
-        int rupBin = MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
+        int rupBin =
+                MFDManipulation.MAG_BINS.getClosestXIndex(fltSystRupSet.getMagForRup(rupIndex));
 
         for (int s : fltSystRupSet.getSectionsIndicesForRup(rupIndex)) {
-            int sectionBin = MAG_BINS.getClosestXIndex(modMinMags.getMinMagForSection(s));
+            int sectionBin =
+                    MFDManipulation.MAG_BINS.getClosestXIndex(modMinMags.getMinMagForSection(s));
             if (rupBin < sectionBin) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * The magnitude bins that rupture magnitudes and magnitude bounds are compared in. The bin
-     * centres line up with the NZSHM22 MFD bins, which is the same discretisation for crustal and
-     * subduction, but the range spans every sensible minimum and maximum magnitude. Anything below
-     * or above it is therefore safely outside any bound that can be configured.
-     *
-     * <p>Do not modify.
-     */
-    public static final IncrementalMagFreqDist MAG_BINS =
-            new IncrementalMagFreqDist(0.05, 201, DELTA_MAG);
-
-    static {
-        // the bins have to work for crustal and subduction, and line up with their MFD bins
-        Preconditions.checkState(DELTA_MAG == NZSHM22_SubductionInversionTargetMFDs.DELTA_MAG);
-        Preconditions.checkState(
-                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
-                        == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
-        double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
-        Preconditions.checkState(
-                Math.abs(MAG_BINS.getX(MAG_BINS.getClosestXIndex(mfdMinMag)) - mfdMinMag) < 1e-9,
-                "the magnitude bins do not line up with the MFD bins");
-    }
-
-    /**
-     * Returns true if the specified magnitude is at least the same bin as minMag and at most the
-     * same bin as maxMag.
-     */
-    public static boolean isWithinBounds(double minMag, double maxMag, double mag) {
-        int bin = MAG_BINS.getClosestXIndex(mag);
-        return (bin >= MAG_BINS.getClosestXIndex(minMag)
-                && bin <= MAG_BINS.getClosestXIndex(maxMag));
     }
 }

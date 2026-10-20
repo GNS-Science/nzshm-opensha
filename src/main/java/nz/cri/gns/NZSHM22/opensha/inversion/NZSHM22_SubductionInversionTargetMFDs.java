@@ -35,11 +35,10 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
  */
 public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs {
 
-    // discretization parameters for MFDs
-    public static final double MIN_MAG = 5.05; //
-    public static final double MAX_MAG = 9.75;
-    public static final int NUM_MAG = (int) ((MAX_MAG - MIN_MAG) * 10.0d);
-    public static final double DELTA_MAG = 0.1;
+    // discretization parameters for MFDs. MIN_MAG and MAX_MAG are the centres of the first and last
+    // default bins. MFDs are extended beyond MAX_MAG if the rupture set has larger ruptures.
+    public static final double MIN_MAG = 5.05;
+    public static final double MAX_MAG = 9.65;
 
     protected List<IncrementalMagFreqDist> mfdEqIneqConstraints = new ArrayList<>();
     protected List<UncertainIncrMagFreqDist> mfdUncertaintyConstraints = new ArrayList<>();
@@ -56,9 +55,10 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
             double mfdUncertaintyWeightedConstraintPower,
             double mfdUncertaintyWeightedConstraintScalar) {
 
-        // make the total target GR MFD
+        // make the total target GR MFD, extending it if ruptures are larger than the default range
+        double mfdMaxMag = Math.max(MAX_MAG, invRupSet.getMaxMag());
         GutenbergRichterMagFreqDist totalTargetGR =
-                new GutenbergRichterMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+                MFDManipulation.createGutenbergRichterMFD(MIN_MAG, mfdMaxMag);
 
         // sorting out scaling
         double roundedMmaxOnFault =
@@ -67,7 +67,7 @@ public class NZSHM22_SubductionInversionTargetMFDs extends U3InversionTargetMFDs
                 MIN_MAG, roundedMmaxOnFault, totalRateM5, bValue); // TODO: revisit
 
         SummedMagFreqDist targetOnFaultSupraSeisMFD =
-                new SummedMagFreqDist(MIN_MAG, NUM_MAG, DELTA_MAG);
+                MFDManipulation.createSummedMFD(MIN_MAG, mfdMaxMag);
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
         targetOnFaultSupraSeisMFD.setName("targetOnFaultSupraSeisMFD");
 

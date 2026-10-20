@@ -1,15 +1,15 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_MAX_MAG;
 import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_MIN_MAG;
-import static nz.cri.gns.NZSHM22.opensha.inversion.joint.CrustalInversionTargetMFDs.NZ_NUM_BINS;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseDoubleMatrix2D;
 import java.io.IOException;
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredInversionConstraint;
@@ -19,7 +19,6 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.ConstraintWeightingType;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.MFDInversionConstraint;
 import org.opensha.sha.earthquake.faultSysSolution.inversion.constraints.impl.SlipRateInversionConstraint;
-import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
@@ -36,7 +35,7 @@ public class FilteredInversionConstraintTest {
                         PartitionPredicate.CRUSTAL.getPredicate(original),
                         ScalingRelationships.SHAW_2009_MOD);
         IncrementalMagFreqDist mfd =
-                new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+                MFDManipulation.createGutenbergRichterMFD(NZ_MIN_MAG, NZ_MAX_MAG);
         for (int bin = 0; bin < mfd.getClosestXIndex(mfd.getMaxX()); bin++) {
             mfd.set(bin, bin);
         }

@@ -39,7 +39,7 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     //	private double rupRateConstraintWt;
     //	private double participationSmoothnessConstraintWt;
     //	private double participationConstraintMagBinSize;
-    private double nucleationMFDConstraintWt;
+    // private double nucleationMFDConstraintWt;
     //	private double mfdSmoothnessConstraintWt;
 
     //	private double rupRateSmoothingConstraintWt;
@@ -185,16 +185,6 @@ public class AbstractInversionConfiguration implements XMLSaveable {
     public AbstractInversionConfiguration setMinimumRuptureRateBasis(
             double[] minimumRuptureRateBasis) {
         this.minimumRuptureRateBasis = minimumRuptureRateBasis;
-        return this;
-    }
-
-    public double getNucleationMFDConstraintWt() {
-        return nucleationMFDConstraintWt;
-    }
-
-    public AbstractInversionConfiguration setNucleationMFDConstraintWt(
-            double relativeNucleationMFDConstraintWt) {
-        this.nucleationMFDConstraintWt = relativeNucleationMFDConstraintWt;
         return this;
     }
 

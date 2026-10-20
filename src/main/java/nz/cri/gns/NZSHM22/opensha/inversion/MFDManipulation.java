@@ -9,22 +9,109 @@ import org.opensha.commons.data.uncertainty.UncertainIncrMagFreqDist;
 import org.opensha.sha.magdist.GutenbergRichterMagFreqDist;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
 import org.opensha.sha.magdist.SummedMagFreqDist;
+import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 
+/**
+ * Creates and manipulates NZSHM MFDs. All NZSHM MFDs use the bins of {@link #MAG_BINS}, create new
+ * MFDs with {@link #createIncrementalMFD(double, double)}, {@link #createSummedMFD(double, double)}
+ * or {@link #createGutenbergRichterMFD(double, double)} so that bin boundaries line up.
+ */
 public class MFDManipulation {
 
     public static final double FIRST_WEIGHT_POWER_MAG = 7.0;
 
     /**
-     * Return true iff the MFD covers the specified magnitude.
+     * The magnitude bins of all NZSHM MFDs, and the bins that rupture magnitudes and magnitude
+     * bounds are compared in. The same discretisation is used for crustal and subduction. The range
+     * spans every sensible minimum and maximum magnitude, so anything below or above it is safely
+     * outside any bound that can be configured.
      *
-     * @param mfd an EvenlyDiscretizedFunc
+     * <p>Do not modify.
+     */
+    public static final IncrementalMagFreqDist MAG_BINS =
+            new IncrementalMagFreqDist(0.05, 201, U3InversionTargetMFDs.DELTA_MAG);
+
+    static {
+        // the bins have to work for crustal and subduction, and line up with their MFD bins
+        Preconditions.checkState(
+                NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG
+                        == NZSHM22_SubductionInversionTargetMFDs.MIN_MAG);
+        double mfdMinMag = NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
+        Preconditions.checkState(
+                Math.abs(MAG_BINS.getX(MAG_BINS.getClosestXIndex(mfdMinMag)) - mfdMinMag) < 1e-9,
+                "the magnitude bins do not line up with the MFD bins");
+    }
+
+    /**
+     * Returns true if the specified magnitude is at least the same bin as minMag and at most the
+     * same bin as maxMag.
+     *
+     * @param minMag the lower bound
+     * @param maxMag the upper bound
+     * @param mag the magnitude to test
+     * @return whether the magnitude is within the bounds
+     */
+    public static boolean isWithinBounds(double minMag, double maxMag, double mag) {
+        int bin = MAG_BINS.getClosestXIndex(mag);
+        return (bin >= MAG_BINS.getClosestXIndex(minMag)
+                && bin <= MAG_BINS.getClosestXIndex(maxMag));
+    }
+
+    /**
+     * Creates an empty MFD with the {@link #MAG_BINS} bins from the bin containing minMag to the
+     * bin containing maxMag.
+     *
+     * @param minMag a magnitude in the first bin
+     * @param maxMag a magnitude in the last bin
+     * @return the MFD
+     */
+    public static IncrementalMagFreqDist createIncrementalMFD(double minMag, double maxMag) {
+        int minBin = MAG_BINS.getClosestXIndex(minMag);
+        int maxBin = MAG_BINS.getClosestXIndex(maxMag);
+        Preconditions.checkArgument(
+                minBin <= maxBin, "minMag %s is above maxMag %s", minMag, maxMag);
+        return new IncrementalMagFreqDist(
+                MAG_BINS.getX(minBin), maxBin - minBin + 1, MAG_BINS.getDelta());
+    }
+
+    /**
+     * Creates an empty summed MFD with the {@link #MAG_BINS} bins from the bin containing minMag to
+     * the bin containing maxMag.
+     *
+     * @param minMag a magnitude in the first bin
+     * @param maxMag a magnitude in the last bin
+     * @return the MFD
+     */
+    public static SummedMagFreqDist createSummedMFD(double minMag, double maxMag) {
+        IncrementalMagFreqDist bins = createIncrementalMFD(minMag, maxMag);
+        return new SummedMagFreqDist(bins.getMinX(), bins.size(), bins.getDelta());
+    }
+
+    /**
+     * Creates an empty Gutenberg-Richter MFD with the {@link #MAG_BINS} bins from the bin
+     * containing minMag to the bin containing maxMag.
+     *
+     * @param minMag a magnitude in the first bin
+     * @param maxMag a magnitude in the last bin
+     * @return the MFD
+     */
+    public static GutenbergRichterMagFreqDist createGutenbergRichterMFD(
+            double minMag, double maxMag) {
+        IncrementalMagFreqDist bins = createIncrementalMFD(minMag, maxMag);
+        return new GutenbergRichterMagFreqDist(bins.getMinX(), bins.size(), bins.getDelta());
+    }
+
+    /**
+     * Returns true iff the {@link #MAG_BINS} bin of the magnitude lies between the first and last
+     * bin of the MFD. MFD constraints silently ignore ruptures above the last bin, so target MFDs
+     * used for constraints must contain the rupture set max mag.
+     *
+     * @param mfd an MFD aligned with {@link #MAG_BINS}
      * @param magnitude a magnitude
      * @return whether the magnitude has a bin in the mfd
      */
     public static boolean containsMag(EvenlyDiscretizedFunc mfd, double magnitude) {
-        int bin = mfd.getClosestXIndex(magnitude);
-        double checkMag = mfd.getX(bin);
-        return Math.abs(magnitude - checkMag) < (mfd.getDelta() * 0.5);
+        return isWithinBounds(mfd.getMinX(), mfd.getMaxX(), magnitude);
     }
 
     /**
@@ -84,9 +171,11 @@ public class MFDManipulation {
      */
     protected static int[] trimBins(
             IncrementalMagFreqDist originalMFD, double minMag, double maxMag) {
-        double halfDelta = originalMFD.getDelta() / 2;
         Preconditions.checkArgument(
-                minMag >= originalMFD.getMinX() - halfDelta, "minMag %s is below the MFD", minMag);
+                MAG_BINS.getClosestXIndex(minMag)
+                        >= MAG_BINS.getClosestXIndex(originalMFD.getMinX()),
+                "minMag %s is below the MFD",
+                minMag);
         maxMag = Math.min(maxMag, originalMFD.getMaxX());
         int startBin = originalMFD.getClosestXIndex(minMag);
         int endBin = originalMFD.getClosestXIndex(maxMag);

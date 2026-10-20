@@ -1,6 +1,8 @@
 package nz.cri.gns.NZSHM22.opensha.inversion;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
@@ -111,5 +113,21 @@ public class NZSHM22_SubductionInversionTargetMFDsTest {
                         9.65,
                         0.0),
                 getPoints(actualConstraint));
+    }
+
+    @Test
+    public void testMFDExtendsToCoverLargeRuptures() {
+        // the default MFD range ends at 9.65, covering up to 9.7
+        FaultSystemRupSet rupSet = mock(FaultSystemRupSet.class);
+        when(rupSet.getMaxMag()).thenReturn(9.78);
+
+        NZSHM22_SubductionInversionTargetMFDs mfds =
+                new NZSHM22_SubductionInversionTargetMFDs(rupSet, 21.5, 1.1, 9.15, 7.05, 1, 0, 0.1);
+
+        IncrementalMagFreqDist constraint = mfds.getMfdEqIneqConstraints().get(0);
+        assertEquals(9.75, constraint.getMaxX(), 1e-9);
+        assertTrue(constraint.getY(constraint.size() - 1) > 0);
+        assertEquals(9.75, mfds.getMfdUncertaintyConstraints().get(0).getMaxX(), 1e-9);
+        assertEquals(9.75, mfds.getTotalRegionalMFD().getMaxX(), 1e-9);
     }
 }

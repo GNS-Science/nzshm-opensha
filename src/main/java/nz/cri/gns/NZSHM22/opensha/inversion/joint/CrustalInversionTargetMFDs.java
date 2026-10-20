@@ -53,7 +53,8 @@ import scratch.UCERF3.inversion.U3InversionTargetMFDs;
 public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
     public static final double NZ_MIN_MAG = 5.05; // used instead of UCERF3 value 0.05
-    public static final int NZ_NUM_BINS = 40; // used instead of UCERF3 value 90
+    // centre of the last default bin. MFDs are extended beyond this if ruptures are larger.
+    public static final double NZ_MAX_MAG = 8.95;
 
     RegionalTargetMFDs sansTvz;
 
@@ -131,7 +132,9 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             double onFaultRegionRateMgt5 = config.totalRateM5 * fractionSeisOnFault;
 
             // make the total target GR MFD with empty bins
-            totalTargetGR = new GutenbergRichterMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+            // extended beyond NZ_MAX_MAG if ruptures are larger than the default range
+            double mfdMaxMag = Math.max(NZ_MAX_MAG, regionalRupSet.getMaxMag());
+            totalTargetGR = MFDManipulation.createGutenbergRichterMFD(NZ_MIN_MAG, mfdMaxMag);
 
             // populate the MFD bins
             double roundedMmaxOnFault =
@@ -165,13 +168,13 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
 
             // TODO: use computeMinSeismoMagForSections to find NZ values and explain 7.4
             // histogram to look for min values > 7.X
-            totalSubSeismoOnFaultMFD = new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+            totalSubSeismoOnFaultMFD = MFDManipulation.createSummedMFD(NZ_MIN_MAG, mfdMaxMag);
             for (GutenbergRichterMagFreqDist mfd : subSeismoOnFaultMFD_List) {
                 totalSubSeismoOnFaultMFD.addIncrementalMagFreqDist(mfd);
             }
 
             SummedMagFreqDist tempTargetOnFaultSupraSeisMFD =
-                    new SummedMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+                    MFDManipulation.createSummedMFD(NZ_MIN_MAG, mfdMaxMag);
             tempTargetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(totalTargetGR);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(trulyOffFaultMFD);
             tempTargetOnFaultSupraSeisMFD.subtractIncrementalMagFreqDist(totalSubSeismoOnFaultMFD);
@@ -179,7 +182,6 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
             targetOnFaultSupraSeisMFDs =
                     MFDManipulation.trimMFD(
                             tempTargetOnFaultSupraSeisMFD, config.minMag, config.maxMag);
-            //  targetOnFaultSupraSeisMFDs.setRegion(region);
             uncertaintyMFD =
                     MFDManipulation.addMfdUncertainty(
                             targetOnFaultSupraSeisMFDs,
@@ -265,10 +267,9 @@ public class CrustalInversionTargetMFDs extends U3InversionTargetMFDs {
         subSeismoOnFaultMFDs = new SubSeismoOnFaultMFDs(subSeismoOnFaultMFD_List);
 
         targetOnFaultSupraSeisMFD =
-                new SummedMagFreqDist(
+                MFDManipulation.createSummedMFD(
                         sansTvz.targetOnFaultSupraSeisMFDs.getMinX(),
-                        sansTvz.targetOnFaultSupraSeisMFDs.size(),
-                        DELTA_MAG);
+                        sansTvz.targetOnFaultSupraSeisMFDs.getMaxX());
         targetOnFaultSupraSeisMFD.addIncrementalMagFreqDist(sansTvz.targetOnFaultSupraSeisMFDs);
 
         totalTargetGR.setName("totalTargetGR.all");

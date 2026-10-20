@@ -1,11 +1,12 @@
 package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
+import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MAX_MAG;
 import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_MIN_MAG;
-import static nz.cri.gns.NZSHM22.opensha.inversion.NZSHM22_CrustalInversionTargetMFDs.NZ_NUM_BINS;
 import static org.junit.Assert.*;
 import static scratch.UCERF3.inversion.U3InversionTargetMFDs.DELTA_MAG;
 
 import java.util.List;
+import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import org.junit.Test;
 import org.opensha.sha.earthquake.faultSysSolution.modules.InversionTargetMFDs;
 import org.opensha.sha.magdist.IncrementalMagFreqDist;
@@ -17,7 +18,7 @@ public class PartitionMfdsTest {
 
     /** An MFD with the same rate in every bin. */
     protected static IncrementalMagFreqDist mfd(double rate) {
-        IncrementalMagFreqDist mfd = new IncrementalMagFreqDist(NZ_MIN_MAG, NZ_NUM_BINS, DELTA_MAG);
+        IncrementalMagFreqDist mfd = MFDManipulation.createIncrementalMFD(NZ_MIN_MAG, NZ_MAX_MAG);
         for (int i = 0; i < mfd.size(); i++) {
             mfd.set(i, rate);
         }
@@ -46,7 +47,7 @@ public class PartitionMfdsTest {
         InversionTargetMFDs synthesized = partitionMfds.synthesize(null);
 
         assertEquals(22, synthesized.getTotalOnFaultSupraSeisMFD().getY(0), DELTA);
-        assertEquals(22, synthesized.getTotalOnFaultSupraSeisMFD().getY(NZ_NUM_BINS - 1), DELTA);
+        assertEquals(22, synthesized.getTotalOnFaultSupraSeisMFD().getY(NZ_MAX_MAG), DELTA);
     }
 
     /** Subduction MFDs reach higher magnitudes than the default range and must not be cut off. */
