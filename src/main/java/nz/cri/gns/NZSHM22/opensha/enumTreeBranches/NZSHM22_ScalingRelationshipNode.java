@@ -9,9 +9,9 @@ import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.Stirling2021SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.TMG2017CruScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.TMG2017SubScalingRelationship;
-import org.opensha.commons.logicTree.JsonAdapterHelper;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
+import org.opensha.commons.util.json.JsonAdapterHelper;
 import org.opensha.sha.earthquake.faultSysSolution.RupSetScalingRelationship;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 

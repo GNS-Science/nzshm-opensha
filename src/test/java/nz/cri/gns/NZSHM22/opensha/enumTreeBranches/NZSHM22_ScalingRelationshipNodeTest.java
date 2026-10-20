@@ -10,7 +10,7 @@ import java.io.StringWriter;
 import nz.cri.gns.NZSHM22.opensha.calc.SimplifiedScalingRelationship;
 import nz.cri.gns.NZSHM22.opensha.calc.TMG2017CruScalingRelationship;
 import org.junit.Test;
-import org.opensha.commons.logicTree.JsonAdapterHelper;
+import org.opensha.commons.util.json.JsonAdapterHelper;
 import scratch.UCERF3.enumTreeBranches.ScalingRelationships;
 
 public class NZSHM22_ScalingRelationshipNodeTest {

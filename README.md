@@ -13,13 +13,9 @@ git clone https://github.com/GNS-Science/opensha.git &&\
 git clone https://github.com/GNS-Science/nzshm-opensha.git
  ```
 
-You might need to check out the correct branch for the `opensha` project. The branch name will be in `gradle.yml` in the
-`nzshm-opensha` project as the `ref` of the `Clone opensha` step. As of writing, this is
-`fix/rup-normalization-2024`.
-
 ```bash
 cd opensha
-git checkout fix/rup-normalization
+git checkout master
 ```
 
 ### Now you can jump into this project

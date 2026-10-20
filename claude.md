@@ -3,7 +3,7 @@ Use LSP.
 
 ## Project Overview
 
-Java 11 / Gradle project implementing the New Zealand Seismic Hazard Model 2022 (NZSHM22), built on top of the OpenSHA framework. The upstream OpenSHA repo must be checked out at `../opensha` (branch `fix/rup-normalization-2024`).
+Java 11 / Gradle project implementing the New Zealand Seismic Hazard Model 2022 (NZSHM22), built on top of the OpenSHA framework. The upstream OpenSHA repo must be checked out at `../opensha` (branch `master`).
 
 ## Commands
 
