@@ -31,7 +31,8 @@ public class NamedFaults {
                 new PrintWriter(
                         new FileWriter(
                                 new File(
-                                        "src/main/resources/faultModels/"
+                                        // a local checkout of nzshm-input-models
+                                        "../nzshm-input-models/models/faultModels/"
                                                 + faultModel.getFileName()
                                                 + ".FaultsByNameAlt.txt")))) {
             CSVFile<String> csv =
