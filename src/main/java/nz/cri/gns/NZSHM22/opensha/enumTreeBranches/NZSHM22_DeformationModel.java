@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
+import nz.cri.gns.NZSHM22.opensha.inputs.FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.PartitionPredicate;
 import nz.cri.gns.NZSHM22.opensha.ruptures.FaultSectionProperties;
 import org.dom4j.DocumentException;
@@ -817,7 +818,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         try {
             FaultSectionList sections = new FaultSectionList();
             InputStream in = new FileInputStream(subductionFaultModelFile.toFile());
-            NZSHM22_FaultModels.fetchFaultSections(sections, in, false, 10000, "", partition);
+            FaultModels.fetchFaultSections(sections, in, false, 10000, "", partition);
 
             try (PrintWriter out =
                     new PrintWriter(

@@ -12,14 +12,17 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * Reads input model files (fault models, deformation models, ...) from
- * the main branch of https://github.com/voj/nzshm-input-models. Files are downloaded once per run
- * into {@link #CACHE_DIR}.
+ * Reads input model files (fault models, deformation models, ...) from the main branch of
+ * https://github.com/voj/nzshm-input-models. Files are downloaded once per run into {@link
+ * #CACHE_DIR}.
  */
 public class InputModels {
 
     static final String BASE_URL =
             "https://raw.githubusercontent.com/voj/nzshm-input-models/main/models/";
+
+    /** Suffix appended to an input model file's path to get its meta data file. */
+    public static final String META_DATA_SUFFIX = ".meta.json";
 
     /** Temporary folder holding downloaded files, as {@code <path>}. */
     public static final Path CACHE_DIR;
@@ -50,6 +53,25 @@ public class InputModels {
                 return null;
             }
             return Files.newInputStream(file);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Loads the meta data of an input model file, stored in a file named path + {@value
+     * #META_DATA_SUFFIX}.
+     *
+     * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml"
+     * @return the meta data, or null if there is no meta data file
+     */
+    public static InputModelMetaData getMetaData(String path) {
+        InputStream in = getStream(path + META_DATA_SUFFIX);
+        if (in == null) {
+            return null;
+        }
+        try {
+            return InputModelMetaData.parse(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
