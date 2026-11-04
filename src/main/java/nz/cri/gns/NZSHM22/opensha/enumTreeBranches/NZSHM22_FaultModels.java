@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import nz.cri.gns.NZSHM22.opensha.faults.FaultSectionList;
-import nz.cri.gns.NZSHM22.opensha.inputs.FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inputs.FaultModel;
 import nz.cri.gns.NZSHM22.opensha.inputs.InputModelMetaData;
 import org.dom4j.DocumentException;
 import org.opensha.commons.logicTree.LogicTreeBranch;
@@ -124,7 +124,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_1_PUY_30("old/puysegur_tiles_30km_maxd60km_halfcoupled.csv");
 
-    private final FaultModels model;
+    private final FaultModel model;
 
     /**
      * @param fileName path below the faultModels folder of nzshm-input-models, or null for a custom
@@ -133,12 +133,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     NZSHM22_FaultModels(String fileName) {
         this.model =
                 fileName == null
-                        ? new FaultModels(InputModelMetaData.parse(FaultModels.CUSTOM_META_DATA))
-                        : new FaultModels(fileName);
+                        ? new FaultModel(InputModelMetaData.parse(FaultModel.CUSTOM_META_DATA))
+                        : new FaultModel(fileName);
     }
 
     /** The fault model that this logic tree node passes through to. */
-    public FaultModels getModel() {
+    public FaultModel getModel() {
         return model;
     }
 
@@ -172,7 +172,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         if (model.getFileName() == null) {
             return null;
         }
-        return FaultModels.getStream(fileName);
+        return FaultModel.getStream(fileName);
     }
 
     /**

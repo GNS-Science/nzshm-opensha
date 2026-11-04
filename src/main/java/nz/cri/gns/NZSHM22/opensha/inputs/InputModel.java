@@ -16,7 +16,7 @@ import java.nio.file.StandardCopyOption;
  * https://github.com/voj/nzshm-input-models. Files are downloaded once per run into {@link
  * #CACHE_DIR}.
  */
-public class InputModels {
+public class InputModel {
 
     static final String BASE_URL =
             "https://raw.githubusercontent.com/voj/nzshm-input-models/main/models/";
@@ -38,7 +38,7 @@ public class InputModels {
     private static final HttpClient CLIENT =
             HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
-    private InputModels() {}
+    private InputModel() {}
 
     /**
      * Opens an input model file, downloading it if necessary.

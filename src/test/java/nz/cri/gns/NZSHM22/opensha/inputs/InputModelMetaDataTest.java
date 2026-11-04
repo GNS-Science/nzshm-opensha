@@ -18,7 +18,7 @@ public class InputModelMetaDataTest {
     }
 
     static void writeCached(String path, String content) throws IOException {
-        Path file = InputModels.CACHE_DIR.resolve(path);
+        Path file = InputModel.CACHE_DIR.resolve(path);
         Files.createDirectories(file.getParent());
         Files.writeString(file, content);
     }
@@ -40,8 +40,8 @@ public class InputModelMetaDataTest {
 
     @Test
     public void testInputModelsGetMetaData() throws IOException {
-        writeCached("test/meta.xml" + InputModels.META_DATA_SUFFIX, "{\"name\": \"n\"}");
-        InputModelMetaData meta = InputModels.getMetaData("test/meta.xml");
+        writeCached("test/meta.xml" + InputModel.META_DATA_SUFFIX, "{\"name\": \"n\"}");
+        InputModelMetaData meta = InputModel.getMetaData("test/meta.xml");
         assertEquals("n", meta.getString("name", null));
     }
 
@@ -53,10 +53,10 @@ public class InputModelMetaDataTest {
     @Test
     public void testFaultModelsUsesMetaData() throws IOException {
         writeCached(
-                FaultModels.MODELS_PATH + "metaTest.csv" + InputModels.META_DATA_SUFFIX,
+                FaultModel.MODELS_PATH + "metaTest.csv" + InputModel.META_DATA_SUFFIX,
                 "{\"modelName\": \"fromMeta\", \"crustal\": false, \"parentSectionId\": 10000,"
                         + " \"partition\": \"HIKURANGI\"}");
-        FaultModels model = new FaultModels("metaTest.csv");
+        FaultModel model = new FaultModel("metaTest.csv");
         assertEquals("fromMeta", model.getModelName());
         assertFalse(model.isCrustal());
         assertNull(model.getTvzDomain());
@@ -66,7 +66,7 @@ public class InputModelMetaDataTest {
 
     @Test
     public void testCustomFaultModel() {
-        FaultModels model = new FaultModels(InputModelMetaData.parse(FaultModels.CUSTOM_META_DATA));
+        FaultModel model = new FaultModel(InputModelMetaData.parse(FaultModel.CUSTOM_META_DATA));
         assertNull(model.getFileName());
         assertTrue(model.isCrustal());
         assertEquals("4", model.getTvzDomain());
@@ -76,7 +76,7 @@ public class InputModelMetaDataTest {
 
     @Test(expected = IllegalStateException.class)
     public void testMissingMetaData() throws IOException {
-        writeCached(FaultModels.MODELS_PATH + "noMeta.xml" + InputModels.META_DATA_SUFFIX, "{}");
-        new FaultModels("noMeta.xml").getModelName();
+        writeCached(FaultModel.MODELS_PATH + "noMeta.xml" + InputModel.META_DATA_SUFFIX, "{}");
+        new FaultModel("noMeta.xml").getModelName();
     }
 }

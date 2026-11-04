@@ -22,7 +22,7 @@ import org.opensha.commons.util.XMLUtils;
  * A fault model, loaded from the faultModels folder of the nzshm-input-models repo or from custom
  * data.
  */
-public class FaultModels {
+public class FaultModel {
 
     /** Location of the fault model files in the nzshm-input-models repo. */
     static final String MODELS_PATH = "faultModels/";
@@ -61,7 +61,7 @@ public class FaultModels {
      *
      * @param fileName path below the faultModels folder
      */
-    public FaultModels(String fileName) {
+    public FaultModel(String fileName) {
         this.fileName = fileName;
     }
 
@@ -70,7 +70,7 @@ public class FaultModels {
      *
      * @param metaData the model's meta data
      */
-    public FaultModels(InputModelMetaData metaData) {
+    public FaultModel(InputModelMetaData metaData) {
         this.fileName = null;
         this.metaData = metaData;
     }
@@ -159,7 +159,7 @@ public class FaultModels {
         if (metaData == null) {
             synchronized (this) {
                 if (metaData == null) {
-                    InputModelMetaData loaded = InputModels.getMetaData(MODELS_PATH + fileName);
+                    InputModelMetaData loaded = InputModel.getMetaData(MODELS_PATH + fileName);
                     if (loaded == null) {
                         throw new IllegalStateException(
                                 "No meta data in nzshm-input-models for fault model " + fileName);
@@ -208,7 +208,7 @@ public class FaultModels {
      * @return the file's content, or null if the file does not exist
      */
     public static InputStream getStream(String fileName) {
-        return InputModels.getStream(MODELS_PATH + fileName);
+        return InputModel.getStream(MODELS_PATH + fileName);
     }
 
     /**
