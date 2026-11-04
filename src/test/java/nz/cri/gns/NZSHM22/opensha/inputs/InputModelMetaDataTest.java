@@ -45,6 +45,23 @@ public class InputModelMetaDataTest {
         assertEquals("n", meta.getString("name", null));
     }
 
+    @Test
+    public void testLocalFile() throws IOException {
+        Path dir = Files.createTempDirectory("inputModelTest");
+        Path file = dir.resolve("local.xml");
+        Files.writeString(file, "content");
+        Files.writeString(
+                dir.resolve("local.xml" + InputModel.META_DATA_SUFFIX), "{\"name\": \"local\"}");
+        String path = InputModel.FILE_PREFIX + file;
+
+        try (var in = InputModel.getStream(path)) {
+            assertEquals("content", new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        assertEquals("local", InputModel.getMetaData(path).getString("name", null));
+        assertNull(InputModel.getStream(InputModel.FILE_PREFIX + dir.resolve("missing.xml")));
+        assertNull(InputModel.getMetaData(InputModel.FILE_PREFIX + dir.resolve("missing.xml")));
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testRequiredKeyMissing() throws IOException {
         parse("{}").getString("missing");
@@ -62,6 +79,26 @@ public class InputModelMetaDataTest {
         assertNull(model.getTvzDomain());
         assertEquals(10000, model.getParentSectionId());
         assertEquals(PartitionPredicate.HIKURANGI, model.getPartition());
+    }
+
+    @Test
+    public void testLocalFaultModel() throws IOException {
+        Path file = Files.createTempDirectory("faultModelTest").resolve("fm.xml");
+        Files.writeString(file, "content");
+        Files.writeString(
+                Path.of(file + InputModel.META_DATA_SUFFIX),
+                "{\"modelName\": \"local\", \"crustal\": true, \"partition\": \"CRUSTAL\"}");
+        FaultModel model = new FaultModel(InputModel.FILE_PREFIX + file);
+        assertEquals("local", model.getModelName());
+        try (var in = FaultModel.getStream(InputModel.FILE_PREFIX + file)) {
+            assertEquals("content", new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testResolve() {
+        assertEquals("dir/a.xml", InputModel.resolve("dir/", "a.xml"));
+        assertEquals("file://C:/a.xml", InputModel.resolve("dir/", "file://C:/a.xml"));
     }
 
     @Test

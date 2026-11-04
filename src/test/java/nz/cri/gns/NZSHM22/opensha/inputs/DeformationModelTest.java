@@ -29,6 +29,19 @@ public class DeformationModelTest {
     }
 
     @Test
+    public void testLocalFile() throws IOException {
+        java.nio.file.Path file =
+                java.nio.file.Files.createTempDirectory("deformationModelTest").resolve("dm.csv");
+        java.nio.file.Files.writeString(file, "0, 0, 1, 2\n");
+        java.nio.file.Files.writeString(
+                java.nio.file.Path.of(file + InputModel.META_DATA_SUFFIX),
+                "{\"description\": \"local\"}");
+        DeformationModel model = new DeformationModel(InputModel.FILE_PREFIX + file);
+        assertEquals("local", model.getDescription());
+        assertEquals(1, model.getDeformations().get(0).slip, DELTA);
+    }
+
+    @Test
     public void testNoData() throws DocumentException, IOException {
         DeformationModel model = new DeformationModel(DeformationModel.FAULT_MODEL);
         assertFalse(model.hasData());

@@ -24,6 +24,9 @@ public class InputModel {
     /** Suffix appended to an input model file's path to get its meta data file. */
     public static final String META_DATA_SUFFIX = ".meta.json";
 
+    /** Prefix marking a path as a local file rather than a file in the GitHub repo. */
+    public static final String FILE_PREFIX = "file://";
+
     /** Temporary folder holding downloaded files, as {@code <path>}. */
     public static final Path CACHE_DIR;
 
@@ -41,13 +44,31 @@ public class InputModel {
     private InputModel() {}
 
     /**
-     * Opens an input model file, downloading it if necessary.
+     * Builds the path of an input model file. Local files (starting with {@value #FILE_PREFIX}) are
+     * returned unchanged.
      *
-     * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml"
+     * @param dir folder below the repo's models directory, e.g. "faultModels/"
+     * @param fileName file name below dir, or a local file such as "file://C:/models/cfm.xml"
+     * @return the path to pass to {@link #getStream(String)} or {@link #getMetaData(String)}
+     */
+    public static String resolve(String dir, String fileName) {
+        return fileName.startsWith(FILE_PREFIX) ? fileName : dir + fileName;
+    }
+
+    /**
+     * Opens an input model file, downloading it if necessary. Paths starting with {@value
+     * #FILE_PREFIX} are read from the local file system instead.
+     *
+     * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml", or a
+     *     local file such as "file://C:/models/cfm.xml"
      * @return the file's content, or null if the file does not exist
      */
     public static InputStream getStream(String path) {
         try {
+            if (path.startsWith(FILE_PREFIX)) {
+                Path local = Path.of(path.substring(FILE_PREFIX.length()));
+                return Files.isRegularFile(local) ? Files.newInputStream(local) : null;
+            }
             Path file = CACHE_DIR.resolve(path);
             if (!Files.isRegularFile(file) && !download(path, file)) {
                 return null;
@@ -62,7 +83,8 @@ public class InputModel {
      * Loads the meta data of an input model file, stored in a file named path + {@value
      * #META_DATA_SUFFIX}.
      *
-     * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml"
+     * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml", or a
+     *     local file such as "file://C:/models/cfm.xml"
      * @return the meta data, or null if there is no meta data file
      */
     public static InputModelMetaData getMetaData(String path) {

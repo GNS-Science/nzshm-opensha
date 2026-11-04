@@ -159,7 +159,8 @@ public class FaultModel {
         if (metaData == null) {
             synchronized (this) {
                 if (metaData == null) {
-                    InputModelMetaData loaded = InputModel.getMetaData(MODELS_PATH + fileName);
+                    InputModelMetaData loaded =
+                            InputModel.getMetaData(InputModel.resolve(MODELS_PATH, fileName));
                     if (loaded == null) {
                         throw new IllegalStateException(
                                 "No meta data in nzshm-input-models for fault model " + fileName);
@@ -204,11 +205,11 @@ public class FaultModel {
     /**
      * Opens a fault model file from the main branch of the nzshm-input-models repo.
      *
-     * @param fileName path below the faultModels folder
+     * @param fileName path below the faultModels folder, or a local file starting with "file://"
      * @return the file's content, or null if the file does not exist
      */
     public static InputStream getStream(String fileName) {
-        return InputModel.getStream(MODELS_PATH + fileName);
+        return InputModel.getStream(InputModel.resolve(MODELS_PATH, fileName));
     }
 
     /**

@@ -100,7 +100,8 @@ public class DeformationModel {
         if (metaData == null) {
             synchronized (this) {
                 if (metaData == null) {
-                    InputModelMetaData loaded = InputModel.getMetaData(MODELS_PATH + fileName);
+                    InputModelMetaData loaded =
+                            InputModel.getMetaData(InputModel.resolve(MODELS_PATH, fileName));
                     if (loaded == null) {
                         throw new IllegalStateException(
                                 "No meta data in nzshm-input-models for deformation model "
@@ -168,7 +169,7 @@ public class DeformationModel {
         if (customModel != null) {
             return new ByteArrayInputStream(customModel.getBytes(StandardCharsets.UTF_8));
         }
-        InputStream in = InputModel.getStream(MODELS_PATH + fileName);
+        InputStream in = InputModel.getStream(InputModel.resolve(MODELS_PATH, fileName));
         if (in == null) {
             throw new UncheckedIOException(
                     new FileNotFoundException(
