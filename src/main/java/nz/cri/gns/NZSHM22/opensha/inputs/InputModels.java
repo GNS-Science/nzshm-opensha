@@ -10,21 +10,18 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.regex.Pattern;
 
 /**
  * Reads input model files (fault models, deformation models, ...) from
- * https://github.com/voj/nzshm-input-models at a given commit. Files are downloaded once per run
+ * the main branch of https://github.com/voj/nzshm-input-models. Files are downloaded once per run
  * into {@link #CACHE_DIR}.
  */
 public class InputModels {
 
-    static final String BASE_URL = "https://raw.githubusercontent.com/voj/nzshm-input-models/";
+    static final String BASE_URL =
+            "https://raw.githubusercontent.com/voj/nzshm-input-models/main/models/";
 
-    /** Only full commit hashes are accepted: branches and tags can move. */
-    static final Pattern COMMIT = Pattern.compile("[0-9a-f]{40}");
-
-    /** Temporary folder holding downloaded files, as {@code <commit>/<path>}. */
+    /** Temporary folder holding downloaded files, as {@code <path>}. */
     public static final Path CACHE_DIR;
 
     static {
@@ -43,18 +40,13 @@ public class InputModels {
     /**
      * Opens an input model file, downloading it if necessary.
      *
-     * @param commit full nzshm-input-models commit hash to read the file at
      * @param path path below the repo's models directory, e.g. "faultModels/cfm_1_0A_all.xml"
-     * @return the file's content, or null if the file does not exist at that commit
+     * @return the file's content, or null if the file does not exist
      */
-    public static InputStream getStream(String commit, String path) {
-        if (commit == null || !COMMIT.matcher(commit).matches()) {
-            throw new IllegalArgumentException(
-                    "Expected a full nzshm-input-models commit hash, got: " + commit);
-        }
+    public static InputStream getStream(String path) {
         try {
-            Path file = CACHE_DIR.resolve(commit).resolve(path);
-            if (!Files.isRegularFile(file) && !download(commit, path, file)) {
+            Path file = CACHE_DIR.resolve(path);
+            if (!Files.isRegularFile(file) && !download(path, file)) {
                 return null;
             }
             return Files.newInputStream(file);
@@ -64,8 +56,8 @@ public class InputModels {
     }
 
     /** Downloads the file to target. Returns false if it does not exist on GitHub. */
-    static boolean download(String commit, String path, Path target) throws IOException {
-        String url = BASE_URL + commit + "/models/" + path;
+    static boolean download(String path, Path target) throws IOException {
+        String url = BASE_URL + path;
         Files.createDirectories(target.getParent());
         // Download to a temp file and move it into place, so that another thread never reads a
         // partially downloaded file.

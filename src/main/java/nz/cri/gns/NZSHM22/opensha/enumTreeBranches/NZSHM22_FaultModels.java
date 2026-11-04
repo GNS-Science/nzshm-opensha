@@ -19,7 +19,7 @@ import org.opensha.sha.faultSurface.FaultSection;
 import scratch.UCERF3.enumTreeBranches.FaultModels;
 
 public enum NZSHM22_FaultModels implements LogicTreeNode {
-    CUSTOM("The fault model is specified in a file outside the logic tree", null, null, "4"),
+    CUSTOM("The fault model is specified in a file outside the logic tree", null, "4"),
 
     // CRUSTAL/UPPER-PLATE
     // CFM 1.0 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults,
@@ -27,12 +27,10 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // depth filtering: nothing shallower than 3.9
     CFM_1_0A_DOM_ALL(
             "CFM 1.0 all NZ faults, with Dfc depths and CFM Domains",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "cfm_1_0A_all.xml",
             "4"),
     CFM_1_0A_DOM_SANSTVZ(
             "CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "cfm_1_0A_no_tvz.xml",
             "4"),
 
@@ -40,12 +38,10 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // with depths scaled from Dfc and CFM Domains
     CFM_1_0_DOM_ALL(
             "CFM 1.0 all NZ faults, with Dfc depths and CFM Domains",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "cfm_1_0_domain_all.xml",
             "4"),
     CFM_1_0_DOM_SANSTVZ(
             "CFM 1.0 sans TVZ faults, with Dfc depths and CFM Domains",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "cfm_1_0_domain_no_tvz.xml",
             "4"),
 
@@ -54,7 +50,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_2A_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape, creeping at trench",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -62,7 +57,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // 2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
     SBD_HKR_TC_30_TRIM(
             "2022 trench-creeping model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "hk_tile_parameters_creeping_trench_slip_deficit_v2a_30_trimmed.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -70,7 +64,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // Trench-locked model used in 2022
     SBD_0_3_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near East Cape and locked near trench.",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "hk_tile_parameters_locked_trench_slip_deficit_v2_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -78,7 +71,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // 2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026
     SBD_HKR_TL_30_TRIM(
             "2022 trench-locked model, but trimmed at 25.5 S (actual Louisville Ridge) - Sept 2026",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "hk_tile_parameters_locked_trench_slip_deficit_v2_30_trimmed.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -90,7 +82,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     // size (15km)
     SBD_0_2_PUY_15(
             "Puysegur, 15km, 50% coupling, corrected dip direction",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "puysegur_tiles_15km_maxd60km_halfcoupled_dipcorr.csv",
             10000,
             PartitionPredicate.PUYSEGUR),
@@ -101,114 +92,95 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     CFM_0_9D_ALL_D90(
             "CFM 0.9revD all NZ faults, depth 90, with shallower TVZ depths",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9d_d90_all.xml"),
     @Deprecated
     CFM_0_9D_SANSTVZ_D90(
             "CFM 0.9revD sans TVZ, depth 90, with shallower TVZ depths",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9d_d90_no_tvz.xml"),
 
     // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
     @Deprecated
     CFM_0_9C_ALL_D90(
             "CFM 0.9revC all NZ faults, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9c_d90_all.xml"),
     @Deprecated
     CFM_0_9C_SANSTVZ_D90(
             "CFM 0.9revC sans TVZ, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9c_d90_no_tvz.xml"),
 
     @Deprecated
     CFM_0_9C_ALL_2010(
             "CFM 0.9revC all NZ faults, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9c_d90_all_stirling_depths.xml"),
     @Deprecated
     CFM_0_9C_SANSTVZ_2010(
             "CFM 0.9revC sans TVZ, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9c_d90_no_tvz_stirling_depths.xml"),
 
     // CFM 0.9 crustal files without either A-US or 0-slip rate, with and without slow TVZ faults
     @Deprecated
     CFM_0_9B_ALL_D90(
             "CFM 0.9revB all NZ faults, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9b_d90_all.xml"),
     @Deprecated
     CFM_0_9B_SANSTVZ_D90(
             "CFM 0.9revB sans TVZ, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9b_d90_no_tvz.xml"),
     @Deprecated
     CFM_0_9B_ALL_2010(
             "CFM 0.9revB all NZ faults, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9b_d90_all_stirling_depths.xml"),
     @Deprecated
     CFM_0_9B_SANSTVZ_2010(
             "CFM 0.9revB sans TVZ, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9b_d90_no_tvz_stirling_depths.xml"),
 
     // These for deprecated models have their rake 180 degrees off
     @Deprecated
     CFM_0_9A_ALL_D90(
             "CFM 0.9revA all NZ faults, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9a_d90_all.xml"),
     @Deprecated
     CFM_0_9A_SANSTVZ_D90(
             "CFM 0.9revA sans TVZ, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9a_d90_no_tvz.xml"),
     @Deprecated
     CFM_0_9_ALL_2010(
             "CFM 0.9 all NZ faults, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9_d90_all_stirling_depths.xml"),
     @Deprecated
     CFM_0_9_SANSTVZ_2010(
             "CFM 0.9 sans TVZ, 2010 Stirling depth",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9_d90_no_tvz_stirling_depths.xml"),
 
     @Deprecated
     CFM_0_9_ALL_D90(
             "CFM 0.9 all NZ faults, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9_d90_all.xml"),
     @Deprecated
     CFM_0_9_SANSTVZ_D90(
             "CFM 0.9 sans TVZ, depth 90",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/cfm_0_9_d90_no_tvz.xml"),
 
     @Deprecated
     CFM_0_3_SANSTVZ(
             "CFM 0.3 sans TVZ",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/SANSTVZ2_crustal_opensha.xml"),
 
     // these two are missing the slip_deficit (mm/yr) column
-    //    SBD_0_1_HKR_30("Hikurangi 30km", "a708a78c3edb9b613a082b086f139e1553ec1bf9",
+    //    SBD_0_1_HKR_30("Hikurangi 30km", 
     // "subduction_tile_parameters_30.csv", 10000),
-    //    SBD_0_1_HKR_10("Hikurangi 10km", "a708a78c3edb9b613a082b086f139e1553ec1bf9",
+    //    SBD_0_1_HKR_10("Hikurangi 10km", 
     // "subduction_tile_parameters.csv", 10000),
     @Deprecated
     SBD_0_1_HKR_KRM_10(
             "Hikurangi,Kermadec 10km",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_10.csv",
             10000,
             PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_1_HKR_KRM_30(
             "Hikurangi,Kermadec 30km",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -216,14 +188,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_1_HKR_LR_10(
             "Hikurangi, Kermadec to Louisville ridge, 10km",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_10-short.csv",
             10000,
             PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_1_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_30-short.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -231,14 +201,12 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_1_HKR_LR_10_FEC(
             "Hikurangi, Kermadec to Louisville ridge, 10km - with slip deficit smoothed near east cape",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_10-short-flat-eastcape.csv",
             10000,
             PartitionPredicate.HIKURANGI),
     @Deprecated
     SBD_0_1_HKR_LR_30_FEC(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_30-short-flat-eastcape.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -246,7 +214,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_2_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - with slip deficit smoothed near east cape",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_creeping_trench_slip_deficit_v2_30.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -254,7 +221,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_4_HKR_LR_30(
             "Hikurangi, Kermadec to Louisville ridge, 30km - higher overall slip rates, aka Kermits revenge",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/hk_tile_parameters_highkermsliprate_v2.csv",
             10000,
             PartitionPredicate.HIKURANGI),
@@ -263,7 +229,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     @Deprecated
     SBD_0_1_PUY_30(
             "Puysegur, 30km, 50% coupling",
-            "a708a78c3edb9b613a082b086f139e1553ec1bf9",
             "old/puysegur_tiles_30km_maxd60km_halfcoupled.csv",
             10000,
             PartitionPredicate.PUYSEGUR);
@@ -272,9 +237,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     private static final String MODELS_PATH = "faultModels/";
 
     private final String modelName;
-
-    /** The nzshm-input-models commit that fileName is read at. */
-    private final String commit;
 
     private final String fileName;
     private final boolean crustal;
@@ -287,9 +249,8 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     private String customModel;
     private String customNamedFaults;
 
-    NZSHM22_FaultModels(String modelName, String commit, String fileName) {
+    NZSHM22_FaultModels(String modelName, String fileName) {
         this.modelName = modelName;
-        this.commit = commit;
         this.fileName = fileName;
         this.crustal = true;
         this.id = -1;
@@ -297,9 +258,8 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
         this.partition = PartitionPredicate.CRUSTAL;
     }
 
-    NZSHM22_FaultModels(String modelName, String commit, String fileName, String tvzDomain) {
+    NZSHM22_FaultModels(String modelName, String fileName, String tvzDomain) {
         this.modelName = modelName;
-        this.commit = commit;
         this.fileName = fileName;
         this.crustal = true;
         this.id = -1;
@@ -309,12 +269,10 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
     NZSHM22_FaultModels(
             String modelName,
-            String commit,
             String fileName,
             int subductionId,
             PartitionPredicate partition) {
         this.modelName = modelName;
-        this.commit = commit;
         this.fileName = fileName;
         this.crustal = false;
         this.id = subductionId;
@@ -344,15 +302,15 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
     }
 
     /**
-     * Opens a fault model file from the nzshm-input-models repo, at this model's commit.
+     * Opens a fault model file from the main branch of the nzshm-input-models repo.
      *
-     * @return the file's content, or null if the file does not exist or this model has no commit
+     * @return the file's content, or null if the file does not exist or this model has no file
      */
     public InputStream getStream(String fileName) {
-        if (commit == null) {
+        if (this.fileName == null) {
             return null;
         }
-        return InputModels.getStream(commit, MODELS_PATH + fileName);
+        return InputModels.getStream(MODELS_PATH + fileName);
     }
 
     /**
@@ -373,10 +331,7 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
             try (InputStream in = getStream(fileName)) {
                 if (in == null) {
                     throw new FileNotFoundException(
-                            "Fault model file not found in nzshm-input-models at "
-                                    + commit
-                                    + ": "
-                                    + fileName);
+                            "Fault model file not found in nzshm-input-models: " + fileName);
                 }
                 fetchFaultSections(sections, in, crustal, id, modelName, partition);
             }
@@ -458,11 +413,6 @@ public enum NZSHM22_FaultModels implements LogicTreeNode {
 
     public String getFileName() {
         return fileName;
-    }
-
-    /** The nzshm-input-models commit that the fault model file is read at. */
-    public String getCommit() {
-        return commit;
     }
 
     public int getParentSectionId() {
