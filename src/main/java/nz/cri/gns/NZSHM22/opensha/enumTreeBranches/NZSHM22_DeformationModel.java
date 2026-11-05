@@ -1,18 +1,26 @@
 package nz.cri.gns.NZSHM22.opensha.enumTreeBranches;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.inputs.DeformationModel;
-import nz.cri.gns.NZSHM22.opensha.inputs.InputModelMetaData;
 import org.opensha.commons.logicTree.LogicTreeBranch;
 import org.opensha.commons.logicTree.LogicTreeLevel;
 import org.opensha.commons.logicTree.LogicTreeNode;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 
+/**
+ * Logic tree node for the deformation models of the legacy (non-joint) inversion. Passes through to
+ * a {@link DeformationModel}.
+ */
 public enum NZSHM22_DeformationModel implements LogicTreeNode {
-    FAULT_MODEL(DeformationModel.FAULT_MODEL),
+    // use the slip rates of the fault model
+    FAULT_MODEL(),
 
-    CUSTOM(DeformationModel.CUSTOM),
+    // the deformation model is specified in a file outside the logic tree, see setCustomModel()
+    CUSTOM(),
 
     GEOD_NO_PRIOR_2022_RmlsZToxMDAwODc_(
             "slip_deficit_rates_no_prior_correcteduncert_NZSHM22_RuptureSet-UnVwdHVyZUdlbmVyYXRpb25UYXNrOjEwMDAzOA==.dat"),
@@ -286,7 +294,8 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
     SBD_0_3_HKR_LR_30_EXP_LTP5("old/dm_hk_trenchlocked_exp_perturbation5.csv"),
     ;
 
-    private final DeformationModel model;
+    // not final: the CUSTOM model is replaced by setCustomModel()
+    private DeformationModel model;
 
     /**
      * @param fileName path below the deformationModels folder of nzshm-input-models. Model
@@ -296,14 +305,15 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
         this.model = new DeformationModel(fileName);
     }
 
-    /**
-     * @param metaData meta data of a model without a file
-     */
-    NZSHM22_DeformationModel(InputModelMetaData metaData) {
-        this.model = new DeformationModel(metaData);
+    /** A logic tree node without a model of its own: FAULT_MODEL, or CUSTOM until data is set. */
+    NZSHM22_DeformationModel() {
+        this.model = null;
     }
 
-    /** The deformation model that this logic tree node passes through to. */
+    /**
+     * The deformation model that this logic tree node passes through to, or null for FAULT_MODEL
+     * and for CUSTOM without data.
+     */
     public DeformationModel getModel() {
         return model;
     }
@@ -315,7 +325,8 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
      * @param customModel the CSV data of a deformation model
      */
     public void setCustomModel(String customModel) {
-        model.setCustomModel(customModel);
+        Preconditions.checkState(this == CUSTOM, "Only the CUSTOM model can be set");
+        model = customModel == null ? null : DeformationModel.fromData(customModel);
     }
 
     /**
@@ -326,20 +337,32 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
      * @throws IOException if the file cannot be read
      */
     public void setCustomModelFile(String fileName) throws IOException {
-        model.setCustomModelFile(fileName);
+        setCustomModel(Files.readString(Paths.get(fileName)));
     }
 
+    /** Returns the data of the CUSTOM model, or null for all other models. */
     public String getCustomModel() {
-        return model.getCustomModel();
+        return this == CUSTOM && model != null ? model.getData() : null;
     }
 
     /** Used for testing only */
     public void load() {
-        model.load();
+        if (model != null) {
+            model.load();
+        }
     }
 
+    /**
+     * Applies the deformation model to the sections of the rupture set. Does nothing if there is no
+     * model.
+     *
+     * @param rupSet the rupture set
+     * @param predicate optional filter on section ids, may be null
+     */
     public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
-        model.applyTo(rupSet, predicate);
+        if (model != null) {
+            model.applyTo(rupSet, predicate);
+        }
     }
 
     @Override
@@ -368,7 +391,7 @@ public enum NZSHM22_DeformationModel implements LogicTreeNode {
      * @return the path below the deformationModels folder, or null
      */
     public String getFileName() {
-        return model.getFileName();
+        return model == null ? null : model.getPath();
     }
 
     public static LogicTreeLevel<LogicTreeNode> level() {

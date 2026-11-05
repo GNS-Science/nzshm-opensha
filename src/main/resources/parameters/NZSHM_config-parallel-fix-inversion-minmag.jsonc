@@ -27,7 +27,6 @@
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": true,
 
-      "deformationModel": "FAULT_MODEL",
       "totalRateM5": 3.4,
       "bValue": 0.959,
       "minMag": 6.8,
@@ -49,7 +48,7 @@
       "slipRateUncertaintyConstraintWt": 0.0,
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": false,
-      "deformationModel": "SBD_0_2A_HKR_MMIN7PT5_EXP_LTP1A",
+      "deformationModel": "sliprateperturbations/dm_xhk_lockedtrench_Mmin7pt5_exp_perturbation1a.csv",
       "totalRateM5": 21.5,
       "bValue": 1.097,
       "minMag": 7.5,

@@ -25,7 +25,7 @@ public class DeformationModelTest {
         DeformationModel model = new DeformationModel("metaTest.csv");
         assertEquals("desc", model.getDescription());
         assertEquals("comp", model.getCompatibility());
-        assertTrue(model.hasData());
+        assertFalse(model.isLocal());
     }
 
     @Test
@@ -39,29 +39,49 @@ public class DeformationModelTest {
         DeformationModel model = new DeformationModel(InputModel.FILE_PREFIX + file);
         assertEquals("local", model.getDescription());
         assertEquals(1, model.getDeformations().get(0).slip, DELTA);
+        assertTrue(model.isLocal());
+        assertEquals("0, 0, 1, 2\n", model.getData());
+    }
+
+    // meta data is optional for local files
+    @Test
+    public void testLocalFileWithoutMetaData() throws IOException {
+        java.nio.file.Path file =
+                java.nio.file.Files.createTempDirectory("deformationModelTest").resolve("dm.csv");
+        java.nio.file.Files.writeString(file, "0, 0, 1, 2\n");
+        DeformationModel model = new DeformationModel(InputModel.FILE_PREFIX + file);
+        assertNull(model.getDescription());
+        assertNull(model.getCompatibility());
+        assertEquals(2, model.getDeformations().get(0).stdv, DELTA);
+    }
+
+    // meta data is required for files in the repo
+    @Test(expected = IllegalStateException.class)
+    public void testRepoFileWithoutMetaData() throws IOException {
+        InputModelMetaDataTest.writeCached(DeformationModel.MODELS_PATH + "noMeta.csv", "0,0,1,2");
+        new DeformationModel("noMeta.csv").getMetaData();
     }
 
     @Test
-    public void testNoData() throws DocumentException, IOException {
-        DeformationModel model = new DeformationModel(DeformationModel.FAULT_MODEL);
-        assertFalse(model.hasData());
-        assertEquals("any", model.getCompatibility());
-        FaultSystemRupSet ruptSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
-        // does nothing
-        model.applyTo(ruptSet, null);
-        assertEquals(0.2, ruptSet.getFaultSectionData(0).getOrigAveSlipRate(), DELTA);
+    public void testFromData() {
+        DeformationModel model = DeformationModel.fromData("0, 0, 1, 2\n");
+        assertNull(model.getPath());
+        assertFalse(model.isLocal());
+        assertNull(model.getDescription());
+        assertEquals("0, 0, 1, 2\n", model.getData());
+        assertEquals(1, model.getDeformations().get(0).slip, DELTA);
     }
 
     // row numbers reflect the actual position in the file, comments included
     @Test
     public void testRowNumbers() {
-        DeformationModel helper = new DeformationModel((String) null);
-        helper.setCustomModel(
-                "% a comment\n"
-                        + "0, 0, 1, 2\n"
-                        + "// another comment\n"
-                        + "// and another one\n"
-                        + "1, 1, 3, 4\n");
+        DeformationModel helper =
+                DeformationModel.fromData(
+                        "% a comment\n"
+                                + "0, 0, 1, 2\n"
+                                + "// another comment\n"
+                                + "// and another one\n"
+                                + "1, 1, 3, 4\n");
 
         Map<Integer, SlipDeformation> deformations = helper.getDeformations();
 
@@ -72,8 +92,9 @@ public class DeformationModelTest {
     // parse errors report the actual line number
     @Test
     public void testParseErrorRowNumber() {
-        DeformationModel helper = new DeformationModel((String) null);
-        helper.setCustomModel("% a comment\n" + "0, 0, 1, 2\n" + "1, 1, not a number, 4\n");
+        DeformationModel helper =
+                DeformationModel.fromData(
+                        "% a comment\n" + "0, 0, 1, 2\n" + "1, 1, not a number, 4\n");
 
         String message = null;
         try {

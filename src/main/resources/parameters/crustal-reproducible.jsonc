@@ -34,7 +34,6 @@
       "slipRateUncertaintyConstraintScalingFactor": 0.0,
       "unmodifiedSlipRateStdvs": true,
 
-      "deformationModel": "FAULT_MODEL",
       "totalRateM5": 3.4,
       "bValue": 0.959,
       "minMag": 6.799,

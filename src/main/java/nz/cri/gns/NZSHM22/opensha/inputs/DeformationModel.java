@@ -26,8 +26,9 @@ import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
 /**
- * A deformation model, loaded from the deformationModels folder of the nzshm-input-models repo or
- * from custom data. Applies slip rates and standard deviations to the sections of a rupture set.
+ * A deformation model, loaded from the deformationModels folder of the nzshm-input-models repo,
+ * from a local file (path prefixed with {@value InputModel#FILE_PREFIX}), or from CSV data. Applies
+ * slip rates and standard deviations to the sections of a rupture set.
  */
 public class DeformationModel {
 
@@ -40,43 +41,36 @@ public class DeformationModel {
     /** Meta data key for the fault models or rupture sets this model is compatible with. */
     public static final String META_COMPATIBILITY = "compatibility";
 
-    /** Meta data of the model that uses the slip rates of the fault model. */
-    public static final InputModelMetaData FAULT_MODEL =
-            InputModelMetaData.parse(
-                    "{\"description\": \"Use deformation model as provided by the fault model\","
-                            + " \"compatibility\": \"any\"}");
+    /** Meta data of models that have none, such as local files without a meta data file. */
+    static final InputModelMetaData NO_META_DATA = InputModelMetaData.parse("{}");
 
-    /** Meta data of the model whose data is set with {@link #setCustomModel}. */
-    public static final InputModelMetaData CUSTOM =
-            InputModelMetaData.parse(
-                    "{\"description\": \"The deformation model is specified in a file outside the"
-                            + " logic tree\", \"compatibility\": \"any\"}");
-
-    private final String fileName;
+    private final String path;
 
     private volatile InputModelMetaData metaData;
     private volatile Map<Integer, SlipDeformation> deformations;
-
-    private String customModel;
+    private volatile String data;
 
     /**
-     * Creates a deformation model from a file in the nzshm-input-models repo. Model properties are
-     * read from the file's meta data.
+     * Creates a deformation model from a file. Model properties are read from the file's meta data.
      *
-     * @param fileName path below the deformationModels folder
+     * @param path path below the deformationModels folder of the nzshm-input-models repo, or a
+     *     local file prefixed with {@value InputModel#FILE_PREFIX}
      */
-    public DeformationModel(String fileName) {
-        this.fileName = fileName;
+    public DeformationModel(String path) {
+        this.path = path;
     }
 
     /**
-     * Creates a deformation model without a file. Data can be set with {@link #setCustomModel}.
+     * Creates a deformation model from CSV data. The model has no meta data.
      *
-     * @param metaData the model's meta data
+     * @param data the CSV data of a deformation model
+     * @return the deformation model
      */
-    public DeformationModel(InputModelMetaData metaData) {
-        this.fileName = null;
-        this.metaData = metaData;
+    public static DeformationModel fromData(String data) {
+        DeformationModel model = new DeformationModel((String) null);
+        model.data = data;
+        model.metaData = NO_META_DATA;
+        return model;
     }
 
     /** One row of a deformation model file. */
@@ -91,21 +85,25 @@ public class DeformationModel {
     }
 
     /**
-     * Returns the meta data of the deformation model. Loaded from the repo once on first use.
+     * Returns the meta data of the deformation model. Loaded once on first use. Meta data is
+     * optional for local files.
      *
      * @return the meta data
-     * @throws IllegalStateException if the deformation model file has no meta data
+     * @throws IllegalStateException if a deformation model file in the repo has no meta data
      */
     public InputModelMetaData getMetaData() {
         if (metaData == null) {
             synchronized (this) {
                 if (metaData == null) {
                     InputModelMetaData loaded =
-                            InputModel.getMetaData(InputModel.resolve(MODELS_PATH, fileName));
+                            InputModel.getMetaData(InputModel.resolve(MODELS_PATH, path));
                     if (loaded == null) {
-                        throw new IllegalStateException(
-                                "No meta data in nzshm-input-models for deformation model "
-                                        + fileName);
+                        if (!isLocal()) {
+                            throw new IllegalStateException(
+                                    "No meta data in nzshm-input-models for deformation model "
+                                            + path);
+                        }
+                        loaded = NO_META_DATA;
                     }
                     metaData = loaded;
                 }
@@ -114,9 +112,9 @@ public class DeformationModel {
         return metaData;
     }
 
-    /** Returns the description. */
+    /** Returns the description, or null if there is none. */
     public String getDescription() {
-        return getMetaData().getString(META_DESCRIPTION);
+        return getMetaData().getString(META_DESCRIPTION, null);
     }
 
     /** Returns the fault models or rupture sets this model is compatible with, or null. */
@@ -124,56 +122,51 @@ public class DeformationModel {
         return getMetaData().getString(META_COMPATIBILITY, null);
     }
 
-    /** Returns the path below the deformationModels folder, or null if there is no file. */
-    public String getFileName() {
-        return fileName;
+    /** Returns the path of the model's file, or null if the model was created from data. */
+    public String getPath() {
+        return path;
+    }
+
+    /** Returns true if the model is read from a local file rather than from the repo. */
+    public boolean isLocal() {
+        return path != null && path.startsWith(InputModel.FILE_PREFIX);
     }
 
     /**
-     * Sets the deformation model as CSV text data. Discards any previously loaded deformations.
+     * Returns the CSV data of the deformation model. Read once on first use.
      *
-     * @param customModel the CSV data of a deformation model
+     * @return the CSV data
      */
-    public void setCustomModel(String customModel) {
-        this.customModel = customModel;
-        this.deformations = null;
+    public String getData() {
+        if (data == null) {
+            synchronized (this) {
+                if (data == null) {
+                    try (InputStream in = openFile()) {
+                        data = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                    } catch (IOException x) {
+                        throw new UncheckedIOException(x);
+                    }
+                }
+            }
+        }
+        return data;
     }
 
     /**
-     * Sets the deformation model to the contents of the specified file.
-     *
-     * @param fileName the path of a deformation model CSV file
-     * @throws IOException if the file cannot be read
-     */
-    public void setCustomModelFile(String fileName) throws IOException {
-        setCustomModel(Files.readString(Paths.get(fileName)));
-    }
-
-    /** Returns the custom CSV data, or null if none has been set. */
-    public String getCustomModel() {
-        return customModel;
-    }
-
-    /** Returns true if this model has deformation data, either from a file or custom. */
-    public boolean hasData() {
-        return fileName != null || customModel != null;
-    }
-
-    /**
-     * Returns a stream of the deformation model data, either the custom data or the file from the
-     * nzshm-input-models repo.
+     * Returns a stream of the deformation model's CSV data.
      *
      * @return a stream of CSV data
      */
     public InputStream getStream() {
-        if (customModel != null) {
-            return new ByteArrayInputStream(customModel.getBytes(StandardCharsets.UTF_8));
-        }
-        InputStream in = InputModel.getStream(InputModel.resolve(MODELS_PATH, fileName));
+        return new ByteArrayInputStream(getData().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Opens the model's file in the repo or on the local file system. */
+    protected InputStream openFile() {
+        InputStream in = InputModel.getStream(InputModel.resolve(MODELS_PATH, path));
         if (in == null) {
             throw new UncheckedIOException(
-                    new FileNotFoundException(
-                            "Deformation model file not found in nzshm-input-models: " + fileName));
+                    new FileNotFoundException("Deformation model file not found: " + path));
         }
         return in;
     }
@@ -231,26 +224,20 @@ public class DeformationModel {
         return deformations;
     }
 
-    /** Loads the deformation data if there is any. Used for testing. */
+    /** Loads and parses the deformation data. Used for testing. */
     public void load() {
-        if (hasData()) {
-            getDeformations();
-        }
+        getDeformations();
     }
 
     /**
      * Applies the deformation model to the sections of the rupture set. Sections are matched by
-     * their original id if present, otherwise by their section id. Does nothing if the model has no
-     * data.
+     * their original id if present, otherwise by their section id.
      *
      * @param rupSet the rupture set
      * @param predicate optional filter on section ids, may be null
      * @throws IllegalStateException if no section matches the deformation model
      */
     public void applyTo(FaultSystemRupSet rupSet, IntPredicate predicate) {
-        if (!hasData()) {
-            return;
-        }
         int matches = 0;
         for (FaultSection section : rupSet.getFaultSectionDataList()) {
             if (predicate != null && !predicate.test(section.getSectionId())) {
@@ -294,7 +281,7 @@ public class DeformationModel {
         Preconditions.checkState(
                 matches > 0,
                 "Deformation model "
-                        + (customModel != null ? "(custom model)" : fileName)
+                        + (path == null ? "(custom model)" : path)
                         + " does not match any sections in the rupture set.");
     }
 
