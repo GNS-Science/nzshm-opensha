@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.inversion.MFDManipulation;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraint.FilteredFaultSystemRupSetTest;
@@ -46,7 +45,6 @@ public class RuptureSetSetupTest {
         config.tvzSlipRateFactor = slipRateFactor;
 
         PartitionConfig partition = new PartitionConfig(PartitionPredicate.CRUSTAL);
-        partition.deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
         partition.minMag = 6.8;
         config.partitions.add(partition);
 

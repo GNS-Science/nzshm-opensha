@@ -3,8 +3,8 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_SpatialSeisPDF;
+import nz.cri.gns.NZSHM22.opensha.inputs.DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.inversion.AbstractInversionConfiguration;
 import nz.cri.gns.NZSHM22.opensha.inversion.MagFilteredRupSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.constraints.FilteredFaultSystemRupSet;
@@ -28,9 +28,9 @@ public class PartitionConfig {
     public double slipRateUncertaintyConstraintWt;
     public double slipRateUncertaintyConstraintScalingFactor;
     public boolean unmodifiedSlipRateStdvs;
-    public NZSHM22_DeformationModel deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
-    // path of a deformation model CSV file, only valid with NZSHM22_DeformationModel.CUSTOM
-    public String deformationModelFile;
+    // a file below the deformationModels folder of nzshm-input-models, or a local file prefixed
+    // with "file://". null to use the slip rates of the fault model.
+    public String deformationModel;
 
     // MFD section
     public double totalRateM5;
@@ -52,6 +52,9 @@ public class PartitionConfig {
     // crustal only
     public double polygonMinBufferSize;
 
+    // hydrated from deformationModel, null if there is none
+    public transient DeformationModel hydratedDeformationModel;
+
     public transient Config parentConfig;
     public transient FilteredFaultSystemRupSet partitionRuptureSet;
     public transient List<IncrementalMagFreqDist> mfdConstraints;
@@ -64,6 +67,15 @@ public class PartitionConfig {
     /** Used by Gson so that field defaults apply to values missing from the JSON config. */
     protected PartitionConfig() {
         this(null);
+    }
+
+    /**
+     * Creates {@link #hydratedDeformationModel} from {@link #deformationModel}. The model's data is
+     * loaded lazily.
+     */
+    public void hydrateDeformationModel() {
+        hydratedDeformationModel =
+                deformationModel == null ? null : new DeformationModel(deformationModel);
     }
 
     public void init(Config config) {

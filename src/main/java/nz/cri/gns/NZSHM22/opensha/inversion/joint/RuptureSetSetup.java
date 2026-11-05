@@ -3,12 +3,10 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 import java.io.IOException;
 import java.util.function.IntPredicate;
 import nz.cri.gns.NZSHM22.opensha.analysis.NZSHM22_FaultSystemRupSetCalc;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_LogicTreeBranch;
 import nz.cri.gns.NZSHM22.opensha.inversion.MagFilteredRupSet;
 import nz.cri.gns.NZSHM22.opensha.inversion.joint.scaling.JointScalingRelationship;
-import nz.cri.gns.NZSHM22.opensha.ruptures.CustomDeformationModel;
 import nz.cri.gns.NZSHM22.opensha.ruptures.CustomFaultModel;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.earthquake.faultSysSolution.modules.AveSlipModule;
@@ -51,10 +49,10 @@ public class RuptureSetSetup {
 
         FaultSystemRupSet ruptureSet = config.ruptureSet;
         for (PartitionConfig partition : config.partitions) {
-            if (partition.deformationModelFile != null) {
-                partition.deformationModel.setCustomModelFile(partition.deformationModelFile);
+            if (partition.hydratedDeformationModel != null) {
+                partition.hydratedDeformationModel.applyTo(
+                        ruptureSet, partition.partitionPredicate);
             }
-            partition.deformationModel.applyTo(ruptureSet, partition.partitionPredicate);
         }
         SectSlipRates rates = SectSlipRates.fromFaultSectData(ruptureSet);
         ruptureSet.addModule(
@@ -126,12 +124,6 @@ public class RuptureSetSetup {
             NZSHM22_LogicTreeBranch ltb = ruptureSet.getModule(NZSHM22_LogicTreeBranch.class);
             NZSHM22_FaultModels faultModel = ltb.getValue(NZSHM22_FaultModels.class);
             faultModel.setCustomModel(customFaultModel.getModelData());
-        }
-
-        CustomDeformationModel customDeformationModel =
-                ruptureSet.getModule(CustomDeformationModel.class);
-        if (customDeformationModel != null) {
-            NZSHM22_DeformationModel.CUSTOM.setCustomModel(customDeformationModel.getModelData());
         }
 
         applyDeformationModel(config);

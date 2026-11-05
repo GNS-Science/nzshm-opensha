@@ -2,28 +2,27 @@ package nz.cri.gns.NZSHM22.opensha.inversion.joint;
 
 import static nz.cri.gns.NZSHM22.opensha.util.TestHelpers.createRupSetForSections;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_DeformationModel;
+import java.nio.file.Files;
+import java.util.zip.ZipFile;
 import nz.cri.gns.NZSHM22.opensha.enumTreeBranches.NZSHM22_FaultModels;
+import nz.cri.gns.NZSHM22.opensha.inputs.InputModel;
 import org.dom4j.DocumentException;
-import org.junit.After;
 import org.junit.Test;
+import org.opensha.commons.util.modules.ModuleArchive;
+import org.opensha.commons.util.modules.OpenSHA_Module;
 import org.opensha.sha.earthquake.faultSysSolution.FaultSystemRupSet;
 import org.opensha.sha.faultSurface.FaultSection;
 
-/** Tests side-loading a deformation model file via the joint inversion config. */
+/** Tests deformation models in the joint inversion config. */
 public class PartitionConfigDeformationTest {
-
-    /** The CUSTOM model is a mutable singleton, so we clear it after every test. */
-    @After
-    public void clearCustomModel() {
-        NZSHM22_DeformationModel.CUSTOM.setCustomModel(null);
-    }
 
     /**
      * Writes deformation model data where slip and stdv of each section equal its section id.
@@ -42,22 +41,25 @@ public class PartitionConfigDeformationTest {
         return file;
     }
 
-    public static Config configFor(FaultSystemRupSet rupSet, PartitionConfig partition) {
+    public static Config configFor(FaultSystemRupSet rupSet, PartitionConfig... partitions) {
         Config config = new Config();
         config.setRuptureSet(rupSet);
-        config.partitions.add(partition);
+        for (PartitionConfig partition : partitions) {
+            config.partitions.add(partition);
+        }
         return config;
     }
 
     @Test
-    public void testDeformationModelFile() throws DocumentException, IOException {
+    public void testLocalDeformationModel() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
         assertEquals(0.2, rupSet.getFaultSectionData(0).getOrigAveSlipRate(), 1e-9);
 
         PartitionConfig partition = new PartitionConfig(PartitionPredicate.CRUSTAL);
-        partition.deformationModel = NZSHM22_DeformationModel.CUSTOM;
-        partition.deformationModelFile = deformationFile(rupSet).getAbsolutePath();
+        partition.deformationModel =
+                InputModel.FILE_PREFIX + deformationFile(rupSet).getAbsolutePath();
         partition.partitionPredicate = (sectionId) -> true;
+        partition.hydrateDeformationModel();
 
         RuptureSetSetup.applyDeformationModel(configFor(rupSet, partition));
 
@@ -67,54 +69,73 @@ public class PartitionConfigDeformationTest {
         }
     }
 
-    // a deformation model file is only valid for the CUSTOM deformation model
+    // without a deformation model, the fault model's slip rates are used
     @Test
-    public void testInitRejectsFileWithoutCustomModel()
-            throws DocumentException, IOException, IllegalStateException {
+    public void testNoDeformationModel() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
 
         PartitionConfig partition = new PartitionConfig(PartitionPredicate.CRUSTAL);
-        partition.deformationModel = NZSHM22_DeformationModel.FAULT_MODEL;
-        partition.deformationModelFile = deformationFile(rupSet).getAbsolutePath();
+        partition.partitionPredicate = (sectionId) -> true;
+        partition.hydrateDeformationModel();
+        assertNull(partition.hydratedDeformationModel);
 
-        String message = null;
-        try {
-            configFor(rupSet, partition).init();
-        } catch (IllegalStateException x) {
-            message = x.getMessage();
-        }
-        assertTrue(
-                message,
-                message != null
-                        && message.startsWith(
-                                "deformationModelFile is only valid for the CUSTOM deformation"
-                                        + " model"));
+        RuptureSetSetup.applyDeformationModel(configFor(rupSet, partition));
+
+        assertEquals(0.2, rupSet.getFaultSectionData(0).getOrigAveSlipRate(), 1e-9);
     }
 
-    // only one partition may specify a deformation model file
     @Test
-    public void testInitRejectsTwoFiles() throws DocumentException, IOException {
+    public void testHydrateRepoDeformationModel() {
+        PartitionConfig partition = new PartitionConfig(PartitionPredicate.PUYSEGUR);
+        partition.deformationModel = "dm_puysegur.csv";
+        partition.hydrateDeformationModel();
+        assertEquals("dm_puysegur.csv", partition.hydratedDeformationModel.getPath());
+        assertFalse(partition.hydratedDeformationModel.isLocal());
+    }
+
+    // only local deformation models are stored, one per partition
+    @Test
+    public void testLocalDeformationModels() throws DocumentException, IOException {
         FaultSystemRupSet rupSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
-        String file = deformationFile(rupSet).getAbsolutePath();
+        File file = deformationFile(rupSet);
+        String data = Files.readString(file.toPath());
 
-        Config config = new Config();
-        config.setRuptureSet(rupSet);
-        for (PartitionPredicate predicate :
-                new PartitionPredicate[] {
-                    PartitionPredicate.CRUSTAL, PartitionPredicate.HIKURANGI
-                }) {
-            PartitionConfig partition = new PartitionConfig(predicate);
-            partition.deformationModel = NZSHM22_DeformationModel.CUSTOM;
-            partition.deformationModelFile = file;
-            config.partitions.add(partition);
+        PartitionConfig crustal = new PartitionConfig(PartitionPredicate.CRUSTAL);
+        crustal.deformationModel = InputModel.FILE_PREFIX + file.getAbsolutePath();
+        PartitionConfig hikurangi = new PartitionConfig(PartitionPredicate.HIKURANGI);
+        hikurangi.deformationModel = InputModel.FILE_PREFIX + file.getAbsolutePath();
+        PartitionConfig puysegur = new PartitionConfig(PartitionPredicate.PUYSEGUR);
+        puysegur.deformationModel = "dm_puysegur.csv";
+        PartitionConfig none = new PartitionConfig(PartitionPredicate.TVZ);
+        Config config = configFor(rupSet, crustal, hikurangi, puysegur, none);
+        for (PartitionConfig partition : config.partitions) {
+            partition.hydrateDeformationModel();
         }
 
-        String message = null;
-        try {
-            config.init();
-        } catch (IllegalStateException x) {
-            message = x.getMessage();
-        }
-        assertEquals("Only one partition can specify a deformationModelFile, but 2 do.", message);
+        LocalDeformationModels module = LocalDeformationModels.fromConfig(config);
+
+        File archiveFile = File.createTempFile("archive", ".zip");
+        archiveFile.deleteOnExit();
+        ModuleArchive<OpenSHA_Module> archive = new ModuleArchive<>();
+        archive.addModule(module);
+        archive.write(archiveFile);
+        LocalDeformationModels actual =
+                new ModuleArchive<>(new ZipFile(archiveFile), OpenSHA_Module.class)
+                        .getModule(LocalDeformationModels.class);
+
+        assertEquals(2, actual.getModels().size());
+        assertTrue(actual.getModels().containsKey(PartitionPredicate.CRUSTAL));
+        assertEquals(
+                crustal.deformationModel, actual.getModels().get(PartitionPredicate.CRUSTAL).path);
+        assertEquals(data, actual.getModels().get(PartitionPredicate.CRUSTAL).data);
+        assertEquals(data, actual.getModels().get(PartitionPredicate.HIKURANGI).data);
+    }
+
+    @Test
+    public void testNoLocalDeformationModels() throws DocumentException, IOException {
+        FaultSystemRupSet rupSet = createRupSetForSections(NZSHM22_FaultModels.CFM_1_0A_DOM_ALL);
+        PartitionConfig partition = new PartitionConfig(PartitionPredicate.CRUSTAL);
+        partition.hydrateDeformationModel();
+        assertNull(LocalDeformationModels.fromConfig(configFor(rupSet, partition)));
     }
 }
